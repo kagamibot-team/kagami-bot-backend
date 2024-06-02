@@ -1,11 +1,3 @@
-# passbot
+# 关于 Passthem-bot
 
-## How to start
-
-1. generate project using `nb create` .
-2. install plugins using `nb plugin install` .
-3. run your bot using `nb run` .
-
-## Documentation
-
-See [Docs](https://nonebot.dev/)
+这个 bot 目前仍在开发，不向外提供服务。
