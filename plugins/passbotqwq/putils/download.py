@@ -3,18 +3,17 @@ import asyncio
 
 
 import requests
-import urllib3
 import ssl
 
 
 # IDK why but works
-class TLSAdapter(requests.adapters.HTTPAdapter):
+class TLSAdapter(requests.adapters.HTTPAdapter): # type: ignore
     def init_poolmanager(self, *args, **kwargs):
         context = ssl.create_default_context()
         context.check_hostname = False
         context.set_ciphers("DEFAULT")
         kwargs['ssl_context'] = context
-        return super().init_poolmanager(*args, **kwargs)
+        return super().init_poolmanager(*args, **kwargs) # type: ignore
 
 
 def request_new_tst(url: str):

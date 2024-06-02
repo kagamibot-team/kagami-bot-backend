@@ -22,7 +22,7 @@ class PydanticDataManager(Generic[T]):
         if not os.path.exists(self.filePath):
             self.save()
 
-        _data: dict[int, T] = {}
+        _data: dict[int, T] = {} # type: ignore
 
         try:
             with open(self.filePath, 'r', encoding='utf-8') as f:
