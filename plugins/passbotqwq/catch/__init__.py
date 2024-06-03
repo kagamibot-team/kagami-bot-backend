@@ -40,7 +40,7 @@ from .messages import (
     storageCheck,
     addAward1,
 )
-from .commands import CheckEnvironment, enabledCommand
+from .commands import CallbackBase, CheckEnvironment, WaitForMoreInformationException, enabledCommand
 
 
 eventMatcher = on()
@@ -52,6 +52,8 @@ async def finish(message: Message) -> NoReturn:
 
 flag: dict[int, int] = {}
 
+callbacks: dict[int, CallbackBase | None] = {}
+
 award_create_tmp: dict[int, Award] = {}
 
 WHITELIST_NO_WUM = ["136468747", "963431993"]
@@ -62,6 +64,13 @@ def getFlag(uid: int):
         flag[uid] = 0
 
     return flag[uid]
+
+
+def getCallbacks(uid: int):
+    if uid not in callbacks.keys():
+        callbacks[uid] = None
+    
+    return callbacks[uid]
 
 
 async def handleSpecial(sender: int, event: GroupMessageEvent):
@@ -172,13 +181,36 @@ async def _(bot: Bot, event: GroupMessageEvent):
         award_create_tmp[sender] = Award()
         await finish(addAward1())
 
-    env = CheckEnvironment(sender, text, event.message_id)
+    env = CheckEnvironment(sender, text, event.message_id, event.message)
+
+    callback = getCallbacks(sender)
+    if callback != None:
+        try:
+            message = await callback.callback(env)
+        except WaitForMoreInformationException as e:
+            callbacks[sender] = e.callback
+            if e.message is not None:
+                await finish(e.message)
+            raise FinishedException()
+
+        callbacks[sender] = None
+        
+        if message:
+            await finish(message)
+        
+        raise FinishedException()
 
     for command in enabledCommand:
-        res = await command.check(env)
+        try:
+            res = await command.check(env)
+        except WaitForMoreInformationException as e:
+            callbacks[sender] = e.callback
+            if e.message is not None:
+                await finish(e.message)
+            raise FinishedException()
 
         if res:
-            await finish(res)
+                await finish(res)
 
     if text.startswith("::删除奖品"):
         if len(text.split(" ")) == 2:
