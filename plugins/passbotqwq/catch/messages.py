@@ -1,6 +1,13 @@
 import math
 from .models import Award
-from .data import getLevelNameOfAward, globalData, userData
+from .data import (
+    getAllLevels,
+    getAwardsFromLevelId,
+    getLevelNameOfAward,
+    getPosibilities,
+    globalData,
+    userData,
+)
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
@@ -11,7 +18,7 @@ def getAward(userId: int, award: Award):
     return Message(
         [
             MessageSegment.at(userId),
-            MessageSegment.text("你刚刚抓到了一只：" + award.name + "！"),
+            MessageSegment.text(" 你刚刚抓到了一只：" + award.name + "！"),
             MessageSegment.image(pathlib.Path(award.imgPath)),
             MessageSegment.text(
                 "稀有度：" + globalData.get().getLevelByLid(award.levelId).name
@@ -77,7 +84,7 @@ def addAward1():
 
 
 def addAward2(awardTemp: Award):
-    levels = [f"{level.lid} - {level.name}" for level in globalData.get().levels]
+    levels = [f"{level.lid} - {level.name}" for level in globalData.get().levels if level.name != '名称已丢失']
 
     return Message(
         MessageSegment.text(
@@ -136,15 +143,32 @@ def noAwardNamed(name: str):
 
 
 def allLevels():
-    levels = [f"{l.name}: {l.weight}" for l in globalData.get().levels]
+    levels = [f"[{l.name}] 权重 {l.weight}" for l in globalData.get().levels]
 
-    return Message(MessageSegment.text("所有包含的等级：\n" + "; ".join(levels)))
+    return Message(MessageSegment.text("所有包含的等级：\n- " + "\n- ".join(levels)))
 
 
 def allAwards():
-    awards = [f"{a.name}: {getLevelNameOfAward(a)}" for a in globalData.get().awards]
+    _levels = getAllLevels()
 
-    return Message(MessageSegment.text("所有包含的奖品：\n" + ", ".join(awards)))
+    _result: list[str] = []
+
+    for level in _levels:
+        _awards = getAwardsFromLevelId(level.lid)
+
+        if len(_awards) == 0:
+            continue
+
+        if level.name == '名称已丢失':
+            continue
+
+        _result.append(
+            f"【{level.name}】爆率: {getPosibilities(level)}%\n" + "，".join([award.name for award in _awards])
+        )
+
+    result = "\n\n".join(_result)
+
+    return Message(MessageSegment.text("===== 奖池 =====\n" + result))
 
 
 def settingOk():

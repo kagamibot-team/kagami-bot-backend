@@ -1,6 +1,6 @@
 import os
 from ..putils import PydanticDataManager, PydanticDataManagerGlobal
-from .models import Award, GameGlobalConfig, UserData
+from .models import Award, GameGlobalConfig, Level, UserData
 
 
 userData = PydanticDataManager(
@@ -39,3 +39,29 @@ def getAwardByAwardName(name: str):
 
 def getLevelByLevelName(name: str):
     return [l for l in globalData.get().levels if l.name == name]
+
+
+def getAwardsFromLevelId(lid: int):
+    return [a for a in getAllAwards() if a.levelId == lid]
+
+
+def getAllLevels():
+    return sorted(globalData.get().levels, key=lambda level: -level.weight)
+
+
+def getAllAwards():
+    return globalData.get().awards
+
+
+def getWeightSum():
+    result = 0
+
+    for level in getAllLevels():
+        if len(getAwardsFromLevelId(level.lid)) > 0:
+            result += level.weight
+
+    return result
+
+
+def getPosibilities(level: Level):
+    return round(level.weight / getWeightSum() * 100, 2)
