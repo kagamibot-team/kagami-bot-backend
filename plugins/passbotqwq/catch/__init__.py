@@ -186,7 +186,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
     callback = getCallbacks(sender)
     if callback != None:
         try:
-            message = await callback.callback(env)
+            message = await callback.check(env)
         except WaitForMoreInformationException as e:
             callbacks[sender] = e.callback
             if e.message is not None:
