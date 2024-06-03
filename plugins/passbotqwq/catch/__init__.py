@@ -170,14 +170,9 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
         award = globalData.get().pick()
 
-        thisUser = userData.get(sender)
-
-        thisUser.addAward(award.aid)
-        thisUser.lastCatch = tm
-
-        userData.set(sender, thisUser)
-
-        save()
+        with userData.open(sender) as d:
+            d.addAward(award.aid)
+            d.lastCatch = tm
 
         await eventMatcher.finish(getAward(sender, award))
 
@@ -202,7 +197,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
             await eventMatcher.finish("已经删除了")
         await eventMatcher.finish("你的格式有问题，应该是 ::删除奖品 奖品的名字")
 
-    if re.match("^::(添加|增加|创建|新建|新增)等级$", text):
+    if re.match("^::(添加|增加|创建|新建|新增)等级", text):
         if not checkFormat(
             text, [ok(), ok(), not_negative(), not_negative()], [isFloat()]
         ):
@@ -212,21 +207,15 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
         if len([l for l in globalData.get().levels if l.name == args[1]]) > 0:
             await eventMatcher.finish("存在一个相同名字的等级")
-            return
-
-        if len(text.split(" ")) == 4:
-            level = globalData.get().addLevel(
-                args[1], float(args[2]), float(args[3]), 0
-            )
-        else:
-            level = globalData.get().addLevel(
-                args[1], float(args[2]), float(args[3]), float(args[4])
+        
+        with globalData as d:
+            _arg4 = float(args[4]) if len(args) == 5 else 0
+            d.addLevel(
+                args[1], float(args[2]), float(args[3]), _arg4
             )
 
         save()
         await eventMatcher.finish("创建成功！")
-        print(f"CREATED LEVEL (LID={level})")
-        return
 
     if text.startswith("::删除等级"):
         if len(text.split(" ")) == 2:
@@ -236,14 +225,11 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
             if len(removed) == 0:
                 await eventMatcher.finish("删除失败，因为不存在这个名字的等级")
-                return
 
             save()
             await eventMatcher.finish("删除成功")
-            return
 
         await eventMatcher.finish(deleteLevelWrongFormat())
-        return
 
     if text == "::所有等级":
         await eventMatcher.finish(allLevels())
