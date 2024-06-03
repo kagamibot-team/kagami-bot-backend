@@ -8,6 +8,7 @@ from .config import Config
 # IMPORT ALL SUB MODULES
 from . import catch
 from . import auto_reply
+from . import wum
 
 
 __plugin_meta__ = PluginMetadata(
