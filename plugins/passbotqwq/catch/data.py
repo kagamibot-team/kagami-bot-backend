@@ -38,6 +38,10 @@ def getLevelNameOfAward(award: Award):
     return globalData.get().getLevelByLid(award.levelId).name
 
 
+def getLevelOfAward(award: Award):
+    return globalData.get().getLevelByLid(award.levelId)
+
+
 def clearUnavailableAward():
     for user in userData.data.keys():
         uData = userData.get(user)

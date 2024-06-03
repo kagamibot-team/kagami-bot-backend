@@ -1,9 +1,10 @@
 import math
-from .models import Award
+from .models import Award, Level
 from .data import (
     getAllLevels,
     getAwardsFromLevelId,
     getLevelNameOfAward,
+    getLevelOfAward,
     getPosibilities,
     globalData,
     userData,
@@ -62,19 +63,23 @@ def storageCheck(userId: int):
 
     ac = userData.get(userId).awardCounter
 
+    kc_list: list[tuple[Award, int, Level]] = []
+
+    for a in ac.keys():
+        award = globalData.get().getAwardByAidStrong(a)
+        count = ac[a]
+        level = getLevelOfAward(award)
+
+        kc_list.append((award, count, level))
+
+    kc_list.sort(key=lambda a: a[2].weight * a[1])
+
+    result = [f"\n【{l.name}】{a.name} 共有 {c} 个" for a, c, l in kc_list]
+
     return Message(
         [
             MessageSegment.at(userId),
-            MessageSegment.text(
-                "你的仓库的库存如下：\n -"
-                + "\n -".join(
-                    [
-                        f"「{globalData.get().getAwardByAidStrong(a).name}」共有 {ac[a]} 个"
-                        for a in ac.keys()
-                        if ac[a] > 0 and globalData.get().haveAid(a)
-                    ]
-                )
-            ),
+            MessageSegment.text("你的仓库的库存如下：" + "".join(result)),
         ]
     )
 
@@ -84,7 +89,11 @@ def addAward1():
 
 
 def addAward2(awardTemp: Award):
-    levels = [f"{level.lid} - {level.name}" for level in globalData.get().levels if level.name != '名称已丢失']
+    levels = [
+        f"{level.lid} - {level.name}"
+        for level in globalData.get().levels
+        if level.name != "名称已丢失"
+    ]
 
     return Message(
         MessageSegment.text(
@@ -143,9 +152,12 @@ def noAwardNamed(name: str):
 
 
 def allLevels():
-    levels = [f"[{l.name}] 权重 {l.weight}" for l in globalData.get().levels]
+    levels = [
+        f"\n- 【{l.name}】权重 {l.weight} 爆率 {getPosibilities(l)}"
+        for l in getAllLevels()
+    ]
 
-    return Message(MessageSegment.text("所有包含的等级：\n- " + "\n- ".join(levels)))
+    return Message(MessageSegment.text("所有包含的等级：" + "".join(levels)))
 
 
 def allAwards():
@@ -159,11 +171,12 @@ def allAwards():
         if len(_awards) == 0:
             continue
 
-        if level.name == '名称已丢失':
+        if level.name == "名称已丢失":
             continue
 
         _result.append(
-            f"【{level.name}】爆率: {getPosibilities(level)}%\n" + "，".join([award.name for award in _awards])
+            f"【{level.name}】爆率: {getPosibilities(level)}%\n"
+            + "，".join([award.name for award in _awards])
         )
 
     result = "\n\n".join(_result)
