@@ -47,6 +47,8 @@ flag: dict[int, int] = {}
 
 award_create_tmp: dict[int, Award] = {}
 
+WHITELIST_NO_WUM = ["136468747", "963431993"]
+
 
 def getFlag(uid: int):
     if uid not in flag.keys():
@@ -156,7 +158,9 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
     if regex("^(抓抓|zz)$")(text):
         tm = time.time()
-        if userData.get(sender).lastCatch + globalData.get().timeDelta > tm:
+        delta = userData.get(sender).lastCatch + globalData.get().timeDelta - tm
+
+        if delta > 0:
             await eventMatcher.finish(
                 cannotGetAward(
                     sender,
@@ -165,9 +169,16 @@ async def _(bot: Bot, event: GroupMessageEvent):
             )
 
         award = globalData.get().pick()
-        userData.set(sender, userData.get(sender).addAward(award.aid))
-        userData.get(sender).lastCatch = tm
+
+        thisUser = userData.get(sender)
+
+        thisUser.addAward(award.aid)
+        thisUser.lastCatch = tm
+
+        userData.set(sender, thisUser)
+
         save()
+
         await eventMatcher.finish(getAward(sender, award))
 
     if regex("^(抓抓|zz) ?(help|帮助)$")(text):
@@ -249,7 +260,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
         save()
         await eventMatcher.finish("设置好了")
 
-    if text == "抓wum":
+    if text == "抓wum" and str(event.group_id) in WHITELIST_NO_WUM:
         await eventMatcher.finish(MessageSegment.text("别抓 wum 了，来「抓抓」吧"))
 
     if text == "::cheat":
