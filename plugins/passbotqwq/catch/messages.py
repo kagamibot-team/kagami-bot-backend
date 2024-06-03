@@ -147,6 +147,10 @@ def allAwards():
     return Message(MessageSegment.text("所有包含的奖品：\n" + ", ".join(awards)))
 
 
+def settingOk():
+    return Message(MessageSegment.text("设置好了"))
+
+
 def help():
     return Message(
         [

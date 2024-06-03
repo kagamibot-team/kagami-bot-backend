@@ -31,6 +31,11 @@ def clearUnavailableAward():
             if globalData.get().haveAid(key)
         }
 
+        userData.set(user, uData)
+
 
 def getAwardByAwardName(name: str):
     return [a for a in globalData.get().awards if a.name == name]
+
+def getLevelByLevelName(name: str):
+    return [l for l in globalData.get().levels if l.name == name]
