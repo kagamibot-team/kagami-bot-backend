@@ -3,6 +3,8 @@ import re
 import time
 from typing import Any, Callable, Coroutine, TypeVar, TypedDict
 
+from ..putils.draw import _hello_world
+
 from .messages import (
     allAwards,
     allLevels,
@@ -16,7 +18,13 @@ from .messages import (
     settingOk,
     storageCheck,
 )
-from .data import clearUnavailableAward, getAwardByAwardName, getLevelByLevelName, userData, globalData
+from .data import (
+    clearUnavailableAward,
+    getAwardByAwardName,
+    getLevelByLevelName,
+    userData,
+    globalData,
+)
 from ..putils.text_format_check import isFloat, regex, A_SIMPLE_RULE
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
@@ -33,6 +41,7 @@ KEYWORD_LEVEL = "(等级|级别)"
 class CheckEnvironment:
     sender: int
     text: str
+    message_id: int
 
 
 class CommandBase:
@@ -133,6 +142,17 @@ class CatchAllAwards(CommandBase):
     @match(regex(f"^:: ?{KEYWORD_EVERY}{KEYWORD_AWARDS}$"))
     async def check(self, env: CheckEnvironment) -> Message | None:
         return allAwards()
+
+
+class ImageTest(CommandBase):
+    @match(regex("^/hello$"))
+    async def check(self, env: CheckEnvironment) -> Message | None:
+        return Message(
+            [
+                MessageSegment.reply(env.message_id),
+                MessageSegment.image(_hello_world()),
+            ]
+        )
 
 
 class CatchSetInterval(Command):
@@ -270,7 +290,7 @@ class Clear(Command):
                     MessageSegment.text(f" 清空了 {result.group(2)} 的背包"),
                 ]
             )
-        
+
         clearUnavailableAward()
 
         awards = getAwardByAwardName(result.group(4))
@@ -287,7 +307,9 @@ class Clear(Command):
         return Message(
             [
                 MessageSegment.at(env.sender),
-                MessageSegment.text(f" 清空了 {result.group(2)} 背包里的所有 {result.group(4)}"),
+                MessageSegment.text(
+                    f" 清空了 {result.group(2)} 背包里的所有 {result.group(4)}"
+                ),
             ]
         )
 
@@ -301,5 +323,5 @@ enabledCommand: list[CommandBase] = [
     CatchSetInterval(),
     CatchChangeLevel(),
     Give(),
-    Clear(),
+    Clear()
 ]

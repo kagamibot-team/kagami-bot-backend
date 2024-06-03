@@ -172,7 +172,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
         award_create_tmp[sender] = Award()
         await finish(addAward1())
 
-    env = CheckEnvironment(sender, text)
+    env = CheckEnvironment(sender, text, event.message_id)
 
     for command in enabledCommand:
         res = await command.check(env)
