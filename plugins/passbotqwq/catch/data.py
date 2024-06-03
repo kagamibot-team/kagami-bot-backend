@@ -13,9 +13,25 @@ globalData = PydanticDataManagerGlobal(
 
 def save():
     clearUnavailableAward()
+    ensureNoSameAid()
 
     userData.save()
     globalData.save()
+
+
+def ensureNoSameAid():
+    with globalData as d:
+        awards = d.awards
+
+        d.awards = []
+
+        awardHashmap: set[int] = set()
+
+        for award in awards:
+            if award.aid in awardHashmap:
+                continue
+            
+            awardHashmap.add(award.aid)
 
 
 def getLevelNameOfAward(award: Award):
