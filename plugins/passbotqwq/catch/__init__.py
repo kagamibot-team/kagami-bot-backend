@@ -22,7 +22,7 @@ from ..putils.text_format_check import (
 )
 
 from .models import UserData, Award, GameGlobalConfig, Level
-from .data import getAwardByAwardName, globalData, userData, save
+from .data import getAwardByAwardName, getImageTarget, globalData, userData, save
 from .messages import (
     addAward2,
     addAward3,
@@ -138,20 +138,20 @@ async def handleSpecial(sender: int, event: GroupMessageEvent):
         if "type" in image.data.keys() and image.data["type"] == "flash":
             await finish(Message(MessageSegment.text("别发闪照，麻烦再发一张吧")))
 
-        fp = os.path.join(os.getcwd(), "data", "catch", f"award_{uuid.uuid4().hex}.png")
+        fp = getImageTarget(award_create_tmp[sender])
 
         await writeData(await download(image.data["url"]), fp)
         award_create_tmp[sender].updateImage(fp)
 
-        aid = globalData.get().addAward(
-            award_create_tmp[sender].name,
-            award_create_tmp[sender].levelId,
-            award_create_tmp[sender].imgPath,
-        )
+        with globalData as d:
+            aid = d.addAward(
+                award_create_tmp[sender].name,
+                award_create_tmp[sender].levelId,
+                award_create_tmp[sender].imgPath,
+            )
 
         print(f"CREATED AWARD (ID = {aid})")
 
-        save()
         flag[sender] = 0
         await finish(Message(MessageSegment.text("创建成功！")))
 
@@ -263,12 +263,6 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
     if text == "抓wum" and str(event.group_id) in WHITELIST_NO_WUM:
         await finish(Message(MessageSegment.text("别抓 wum 了，来「抓抓」吧")))
-
-    if text == "::cheat":
-        award = globalData.get().getAwardByAidStrong(7)
-        userData.set(sender, userData.get(sender).addAward(award.aid))
-        save()
-        await finish(getAward(sender, award))
 
     if regex("^(展示|disp|display)")(text):
         if not checkFormat(text, [ok(), ok()]):

@@ -19,6 +19,7 @@ class Award(BaseModel):
     aid: int = -1
     imgPath: str = DEFAULT_IMG
     name: str = "名称已丢失"
+    description: str = "这只小哥还没有描述，它只是静静地躺在这里，等待着别人给他下定义。"
     levelId: int = -1
 
     def updateImage(self, img: str):

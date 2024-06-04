@@ -1,3 +1,4 @@
+import base64
 import os
 from ..putils import PydanticDataManager, PydanticDataManagerGlobal
 from .models import Award, GameGlobalConfig, Level, UserData
@@ -7,7 +8,8 @@ userData = PydanticDataManager(
     UserData, os.path.join(os.getcwd(), "data", "catch", "users.json")
 )
 globalData = PydanticDataManagerGlobal(
-    GameGlobalConfig, os.path.join(os.getcwd(), "data", "catch", "global.json")
+    GameGlobalConfig, os.path.join(os.getcwd(), "data", "catch", "global.json"),
+    os.path.join(os.getcwd(), 'data', 'catch', 'backup')
 )
 
 
@@ -66,7 +68,7 @@ def getAwardsFromLevelId(lid: int):
 
 
 def getAllLevels():
-    return sorted(globalData.get().levels, key=lambda level: -level.weight)
+    return sorted([l for l in globalData.get().levels if len(getAwardsFromLevelId(l.lid)) > 0], key=lambda level: -level.weight)
 
 
 def getAllAwards():
@@ -85,3 +87,39 @@ def getWeightSum():
 
 def getPosibilities(level: Level):
     return round(level.weight / getWeightSum() * 100, 2)
+
+
+def getImageTarget(award: Award):
+    safename = base64.b64encode(award.name.encode()).decode().replace('/', '_').replace('+', '-')
+    return os.path.join(os.getcwd(), "data", "catch", "awards", f"{safename}.png")
+
+
+def _dev_migrate_images():
+    with globalData as d:
+        for award in d.awards:
+            with open(award.imgPath, 'rb') as f:
+                raw = f.read()
+            
+            with open(getImageTarget(award), 'wb') as f:
+                f.write(raw)
+            
+            os.remove(award.imgPath)
+            award.updateImage(getImageTarget(award))
+
+
+def getAllAwardsOfOneUser(uid: int):
+    aids: list[Award] = []
+    ac = userData.get(uid).awardCounter
+
+    for key in ac.keys():
+        if ac[key] <= 0:
+            continue
+
+        award = globalData.get().getAwardByAid(key)
+
+        if award is None:
+            continue
+
+        aids.append(award)
+    
+    return aids

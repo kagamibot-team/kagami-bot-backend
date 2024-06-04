@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from typing import Generic, Type, TypeVar
 from pydantic import BaseModel
 
@@ -69,10 +70,10 @@ class PydanticDataEditor(Generic[T]):
         self.base = base
         self.key = key
         self.d = self.base.get(self.key)
-    
+
     def __enter__(self):
         return self.d
-    
+
     def __exit__(self, *_, **__):
         self.base.set(self.key, self.d)
         self.base.save()
@@ -82,9 +83,11 @@ class PydanticDataManagerGlobal(Generic[T]):
     data: T
     cls: Type[T]
     filePath: str
+    backupFolder: str
 
-    def __init__(self, cls: Type[T], filePath: str) -> None:
+    def __init__(self, cls: Type[T], filePath: str, backupFolder: str = "") -> None:
         self.filePath = filePath
+        self.backupFolder = backupFolder
         self.cls = cls
         self.data = cls()
         self.load()
@@ -102,8 +105,20 @@ class PydanticDataManagerGlobal(Generic[T]):
         return None
 
     def save(self):
+        data = self.data.model_dump_json()
+
+        if self.backupFolder != "":
+            with open(
+                os.path.join(
+                    self.backupFolder,
+                    self.cls.__name__ + "_" + str(time.time()) + ".json",
+                ),
+                "wb",
+            ) as f:
+                f.write(data.encode())
+
         with open(self.filePath, "w", encoding="utf-8") as f:
-            f.write(self.data.model_dump_json())
+            f.write(data)
 
     def set(self, value: T):
         self.data = value
@@ -111,9 +126,9 @@ class PydanticDataManagerGlobal(Generic[T]):
 
     def get(self):
         return self.data
-    
+
     def __enter__(self):
         return self.data
-    
+
     def __exit__(self, *_, **__):
         self.save()

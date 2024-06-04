@@ -22,19 +22,25 @@ def getAward(userId: int, award: Award):
             MessageSegment.text(" 你刚刚抓到了一只：" + award.name + "！"),
             MessageSegment.image(pathlib.Path(award.imgPath)),
             MessageSegment.text(
-                "稀有度：" + globalData.get().getLevelByLid(award.levelId).name
+                "稀有度：【"
+                + globalData.get().getLevelByLid(award.levelId).name
+                + "】"
+                + f"\n\n{award.description}"
             ),
         ]
     )
 
 
-def displayAward(award: Award):
+def displayAward(award: Award, showDescription: bool=True):
     return Message(
         [
             MessageSegment.text("展示 " + award.name),
             MessageSegment.image(pathlib.Path(award.imgPath)),
             MessageSegment.text(
-                "稀有度：" + globalData.get().getLevelByLid(award.levelId).name
+                "稀有度：【"
+                + globalData.get().getLevelByLid(award.levelId).name
+                + "】"
+                + (f"\n\n{award.description}" if showDescription else "")
             ),
         ]
     )
@@ -66,13 +72,17 @@ def storageCheck(userId: int):
     kc_list: list[tuple[Award, int, Level]] = []
 
     for a in ac.keys():
-        award = globalData.get().getAwardByAidStrong(a)
+        award = globalData.get().getAwardByAid(a)
+
+        if award is None:
+            continue
+
         count = ac[a]
         level = getLevelOfAward(award)
 
         kc_list.append((award, count, level))
 
-    kc_list.sort(key=lambda a: a[2].weight * a[1])
+    kc_list.sort(key=lambda a: (a[2].weight, a[0].name))
 
     result = [f"\n【{l.name}】{a.name} 共有 {c} 个" for a, c, l in kc_list]
 
@@ -153,8 +163,9 @@ def noAwardNamed(name: str):
 
 def allLevels():
     levels = [
-        f"\n- 【{l.name}】权重 {l.weight} 爆率 {getPosibilities(l)}"
+        f"\n- 【{l.name}】权重 {l.weight} 爆率 {getPosibilities(l)} %"
         for l in getAllLevels()
+        if l.name != "名称已丢失"
     ]
 
     return Message(MessageSegment.text("所有包含的等级：" + "".join(levels)))
@@ -192,25 +203,24 @@ def modifyOk():
     return Message(MessageSegment.text("更改好了"))
 
 
-def help():
+def help(isAdmin=False):
+    normal = ["抓小哥", "抓小哥帮助", "库存", "抓小哥进度"]
+
+    admin = [
+        "::创建奖品",
+        "::删除奖品 名字",
+        "::创建等级 名字 权重 价值",
+        "::所有等级",
+        "::所有奖品",
+        "::设置周期 秒数",
+        "::更改等级 名称/权重 等级的名字",
+        "::更改奖品 名称/等级/图片/描述 奖品的名字",
+    ]
+
+    res = normal + admin if isAdmin else normal
+
     return Message(
         [
-            MessageSegment.text(
-                (
-                    "命令清单：\n"
-                    "- 抓抓\n"
-                    "- 抓抓帮助\n"
-                    "- 库存\n"
-                    "- ::创建奖品\n"
-                    "- ::删除奖品 名字\n"
-                    "- ::创建等级 名字 权重 价值\n"
-                    "- ::删除等级 名字\n"
-                    "- ::所有等级\n"
-                    "- ::所有奖品\n"
-                    "- ::设置周期 秒数\n"
-                    "- ::更改等级 名称/权重 等级的名字\n"
-                    "- ::更改奖品 名称/等级/图片 奖品的名字"
-                )
-            ),
+            MessageSegment.text(("===== 命令清单 =====\n" + "\n".join(res))),
         ]
     )

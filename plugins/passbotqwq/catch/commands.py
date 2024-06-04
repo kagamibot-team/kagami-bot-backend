@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-import os
+import pathlib
 import re
 import time
-from typing import Any, Callable, Coroutine, TypeVar, TypedDict
-import uuid
+from typing import Any, Callable, Coroutine, TypeVar
 from nonebot.exception import FinishedException
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
@@ -25,17 +24,24 @@ from .messages import (
     storageCheck,
 )
 from .data import (
+    _dev_migrate_images,
     clearUnavailableAward,
+    getAllAwardsOfOneUser,
+    getAllLevels,
     getAwardByAwardName,
+    getAwardsFromLevelId,
+    getImageTarget,
     getLevelByLevelName,
     userData,
     globalData,
 )
 from ..putils.text_format_check import isFloat, not_negative, regex, A_SIMPLE_RULE
 
+KEYWORD_BASE_COMMAND = "(抓小哥|zhua|ZHUA)"
 
 KEYWORD_CHANGE = "(更改|改变|修改|修正|修订|变化|调整|设置|更新)"
 KEYWORD_EVERY = "(所有|一切|全部)"
+KEYWORD_PROGRESS = "(进度|成就|进展)"
 
 KEYWORD_INTERVAL = "(时间|周期|间隔)"
 KEYWORD_AWARDS = "(物品|奖品|小哥)"
@@ -128,7 +134,7 @@ def match(rule: A_SIMPLE_RULE):
 
 
 class Catch(CommandBase):
-    @match(regex("^(抓抓|zz)$"))
+    @match(regex(f"^{KEYWORD_BASE_COMMAND}$"))
     async def check(self, env: CheckEnvironment):
         tm = time.time()
         delta = userData.get(env.sender).lastCatch + globalData.get().timeDelta - tm
@@ -141,18 +147,39 @@ class Catch(CommandBase):
         with userData.open(env.sender) as d:
             d.addAward(award.aid)
             d.lastCatch = tm
+        
+            countAward = d.awardCounter[award.aid]
 
-        return getAward(env.sender, award)
+        newOne = "【新!】" if countAward == 1 else ""
+
+        return Message(
+        [
+            MessageSegment.at(env.sender),
+            MessageSegment.text(f"\n{newOne}你刚刚抓到了你的第 {countAward} 只：" + award.name + "！"),
+            MessageSegment.image(pathlib.Path(award.imgPath)),
+            MessageSegment.text(
+                "稀有度：【"
+                + globalData.get().getLevelByLid(award.levelId).name
+                + "】"
+                + f"\n\n{award.description}"
+            ),
+        ]
+    )
 
 
-class CatchHelp(CommandBase):
-    @match(regex("^(抓抓|zz) ?(help|帮助)$"))
-    async def check(self, env: CheckEnvironment) -> Message | None:
-        return help()
+class CatchHelp(Command):
+    def __init__(self):
+        super().__init__(
+            f"^{KEYWORD_BASE_COMMAND}? ?(help|帮助)",
+            "( admin)?"
+        )
+    
+    def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        return help(result.group(3) != None)
 
 
 class CatchStorage(CommandBase):
-    @match(regex("^(抓抓|zz)?(库存|kc)$"))
+    @match(regex(f"^{KEYWORD_BASE_COMMAND}?(库存|kc)$"))
     async def check(self, env: CheckEnvironment) -> Message | None:
         return storageCheck(env.sender)
 
@@ -339,6 +366,36 @@ class Clear(Command):
         )
 
 
+class CatchProgress(Command):
+    def __init__(self):
+        super().__init__(
+            f"^{KEYWORD_BASE_COMMAND}{KEYWORD_PROGRESS}",
+            "$"
+        )
+    
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return None
+    
+    def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        prog: list[str] = []
+
+        awards = getAllAwardsOfOneUser(env.sender)
+
+        for level in getAllLevels():
+            if level.name == '名称已丢失':
+                continue
+
+            _awards = len([a for a in awards if a.levelId == level.lid])
+            _all = len(getAwardsFromLevelId(level.lid))
+
+            prog.append(f'等级【{level.name}】的收集进度 {_awards}/{_all}')
+        
+        return Message([
+            MessageSegment.at(env.sender),
+            MessageSegment.text("你的收集进度为：\n\n" + "\n".join(prog))
+        ])
+
+
 @dataclass
 class CatchModifyCallback(CallbackBase):
     modifyType: str
@@ -385,6 +442,15 @@ class CatchModifyCallback(CallbackBase):
             
             return modifyOk()
         
+        if self.modifyType == '描述':
+            self.modifyObject.description = env.text
+            
+            with globalData as d:
+                d.removeAwardsByName(self.modifyObject.name)
+                d.awards.append(self.modifyObject)
+            
+            return modifyOk()
+        
         if len(images := env.message.include('image')) != 1:
             raise WaitForMoreInformationException(self, self.callbackMessage(
                     env, '你没有发送图片，或者发送了多张图片'
@@ -392,7 +458,7 @@ class CatchModifyCallback(CallbackBase):
         
         image = images[0]
         
-        fp = os.path.join(os.getcwd(), "data", "catch", f"award_{uuid.uuid4().hex}.png")
+        fp = getImageTarget(self.modifyObject)
 
         await writeData(await download(image.data["url"]), fp)
 
@@ -408,7 +474,7 @@ class CatchModifyCallback(CallbackBase):
 class CatchModify(Command):
     def __init__(self):
         super().__init__(
-            f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_AWARDS} ?(名称|图片|等级)",
+            f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_AWARDS} ?(名称|图片|等级|描述)",
             " (\\S+)",
         )
 
@@ -419,6 +485,7 @@ class CatchModify(Command):
                 ' 格式错误，允许的格式有：\n'
                 '::更改奖品 名称 <奖品的名字>\n'
                 '::更改奖品 图片 <奖品的名字>\n'
+                '::更改奖品 描述 <奖品的名字>\n'
                 '::更改奖品 等级 <奖品的名字>'
             ),
         ])
@@ -527,4 +594,5 @@ enabledCommand: list[CommandBase] = [
     Clear(),
     CatchModify(),
     CatchLevelModify(),
+    CatchProgress(),
 ]
