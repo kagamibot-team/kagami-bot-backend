@@ -187,7 +187,7 @@ class CatchHelp(Command):
 class CatchStorage(CommandBase):
     @match(regex(f"^{KEYWORD_BASE_COMMAND}?(库存|kc)$"))
     async def check(self, env: CheckEnvironment) -> Message | None:
-        image, tm = drawStorage(env.sender)
+        image, tm = await drawStorage(env.sender)
         storageImage = imageToBytes(image)
 
         return Message(

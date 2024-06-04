@@ -3,6 +3,8 @@ import time
 
 import PIL
 import PIL.ImageDraw
+
+from plugins.passbotqwq.putils.threading import make_async
 from .models import Award
 from ..putils.draw.shapes import rectangle
 from ..putils.draw.images import addUponPaste, loadImage, addUpon
@@ -112,6 +114,7 @@ def drawStorageBlock(
     )
 
 
+@make_async
 def drawStorage(uid: int):
     beginTime = time.time()
     boxes: list[tuple[float, float]] = []
