@@ -412,16 +412,15 @@ class CatchModifyCallback(CallbackBase):
     
     async def callback(self, env: CheckEnvironment):
         if self.modifyType == '名称':
-            if ' ' in env.text:
+            if not re.match('^\\S+$', env.text):
                 raise WaitForMoreInformationException(self, self.callbackMessage(
                     env, '名称中不能包含空格'
                 ))
 
-            oldName = self.modifyObject.name
             self.modifyObject.name = env.text
             
             with globalData as d:
-                d.removeAwardsByName(oldName)
+                d.removeAwardsByAid(self.modifyObject.aid)
                 d.awards.append(self.modifyObject)
             
             return modifyOk()
@@ -590,8 +589,6 @@ enabledCommand: list[CommandBase] = [
     CatchAllAwards(),
     CatchAllLevel(),
     CatchSetInterval(),
-    Give(),
-    Clear(),
     CatchModify(),
     CatchLevelModify(),
     CatchProgress(),

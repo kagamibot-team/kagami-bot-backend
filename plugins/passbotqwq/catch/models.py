@@ -109,6 +109,11 @@ class GameGlobalConfig(BaseModel):
         self.awards = [a for a in self.awards if a.name != name]
         return removed
     
+    def removeAwardsByAid(self, aid: int):
+        removed = [a for a in self.awards if a.aid == aid]
+        self.awards = [a for a in self.awards if a.aid != aid]
+        return removed
+    
     def removeLevelByName(self, name: str):
         removed = [l for l in self.levels if l.name == name]
         self.levels = [l for l in self.levels if l.name != name]
