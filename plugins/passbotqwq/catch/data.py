@@ -34,6 +34,7 @@ def ensureNoSameAid():
                 continue
             
             awardHashmap.add(award.aid)
+            d.awards.append(award)
 
 
 def getLevelNameOfAward(award: Award):
@@ -69,6 +70,21 @@ def getAwardsFromLevelId(lid: int):
 
 def getAllLevels():
     return sorted([l for l in globalData.get().levels if len(getAwardsFromLevelId(l.lid)) > 0], key=lambda level: -level.weight)
+
+
+def getAllLevelsOfAwardList(awards: list[Award]):
+    levels = getAllLevels()
+
+    return [level for level in levels if len([a for a in awards if a.levelId == level.lid]) > 0][::-1]
+
+
+def getAwardCoundOfOneUser(uid: int, aid: int):
+    ac = userData.get(uid).awardCounter
+
+    if aid in ac.keys():
+        return ac[aid]
+    
+    return 0
 
 
 def getAllAwards():

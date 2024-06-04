@@ -8,7 +8,7 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 from ..putils.download import download, writeData
 from .models import Award, Level
-from ..putils.draw import _hello_world
+from ..putils.draw import _hello_world, imageToBytes
 from .messages import (
     allAwards,
     allLevels,
@@ -26,6 +26,8 @@ from .messages import (
 from .data import (
     _dev_migrate_images,
     clearUnavailableAward,
+    ensureNoSameAid,
+    getAllAwards,
     getAllAwardsOfOneUser,
     getAllLevels,
     getAwardByAwardName,
@@ -35,6 +37,7 @@ from .data import (
     userData,
     globalData,
 )
+from .images import drawStorage
 from ..putils.text_format_check import isFloat, not_negative, regex, A_SIMPLE_RULE
 
 KEYWORD_BASE_COMMAND = "(抓小哥|zhua|ZHUA)"
@@ -67,7 +70,7 @@ class CallbackBase(CommandBase):
             return Message(
                 [MessageSegment.at(env.sender), MessageSegment.text(" 已取消")]
             )
-        
+
         return await self.callback(env)
 
     async def callback(self, env: CheckEnvironment) -> Message | None:
@@ -147,41 +150,55 @@ class Catch(CommandBase):
         with userData.open(env.sender) as d:
             d.addAward(award.aid)
             d.lastCatch = tm
-        
+
             countAward = d.awardCounter[award.aid]
 
         newOne = "【新!】" if countAward == 1 else ""
 
         return Message(
-        [
-            MessageSegment.at(env.sender),
-            MessageSegment.text(f"\n{newOne}你刚刚抓到了你的第 {countAward} 只：" + award.name + "！"),
-            MessageSegment.image(pathlib.Path(award.imgPath)),
-            MessageSegment.text(
-                "稀有度：【"
-                + globalData.get().getLevelByLid(award.levelId).name
-                + "】"
-                + f"\n\n{award.description}"
-            ),
-        ]
-    )
+            [
+                MessageSegment.at(env.sender),
+                MessageSegment.text(
+                    f"\n{newOne}你刚刚抓到了你的第 {countAward} 只："
+                    + award.name
+                    + "！"
+                ),
+                MessageSegment.image(pathlib.Path(award.imgPath)),
+                MessageSegment.text(
+                    "稀有度：【"
+                    + globalData.get().getLevelByLid(award.levelId).name
+                    + "】"
+                    + f"\n\n{award.description}"
+                ),
+            ]
+        )
 
 
 class CatchHelp(Command):
     def __init__(self):
-        super().__init__(
-            f"^{KEYWORD_BASE_COMMAND}? ?(help|帮助)",
-            "( admin)?"
-        )
-    
-    def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        super().__init__(f"^{KEYWORD_BASE_COMMAND}? ?(help|帮助)", "( admin)?")
+
+    def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
         return help(result.group(3) != None)
 
 
 class CatchStorage(CommandBase):
     @match(regex(f"^{KEYWORD_BASE_COMMAND}?(库存|kc)$"))
     async def check(self, env: CheckEnvironment) -> Message | None:
-        return storageCheck(env.sender)
+        image, tm = drawStorage(env.sender)
+        storageImage = imageToBytes(image)
+
+        return Message(
+            [
+                MessageSegment.at(env.sender),
+                MessageSegment.text(f" 的小哥库存 (Render time: {round(tm, 2)})："),
+                MessageSegment.image(storageImage),
+            ]
+        )
+
+        # return storageCheck(env.sender)
 
 
 class CatchAllLevel(CommandBase):
@@ -193,6 +210,7 @@ class CatchAllLevel(CommandBase):
 class CatchAllAwards(CommandBase):
     @match(regex(f"^:: ?{KEYWORD_EVERY}{KEYWORD_AWARDS}$"))
     async def check(self, env: CheckEnvironment) -> Message | None:
+        ensureNoSameAid()
         return allAwards()
 
 
@@ -368,32 +386,33 @@ class Clear(Command):
 
 class CatchProgress(Command):
     def __init__(self):
-        super().__init__(
-            f"^{KEYWORD_BASE_COMMAND}{KEYWORD_PROGRESS}",
-            "$"
-        )
-    
+        super().__init__(f"^{KEYWORD_BASE_COMMAND}{KEYWORD_PROGRESS}", "$")
+
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return None
-    
-    def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+
+    def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
         prog: list[str] = []
 
         awards = getAllAwardsOfOneUser(env.sender)
 
         for level in getAllLevels():
-            if level.name == '名称已丢失':
+            if level.name == "名称已丢失":
                 continue
 
             _awards = len([a for a in awards if a.levelId == level.lid])
             _all = len(getAwardsFromLevelId(level.lid))
 
-            prog.append(f'等级【{level.name}】的收集进度 {_awards}/{_all}')
-        
-        return Message([
-            MessageSegment.at(env.sender),
-            MessageSegment.text("你的收集进度为：\n\n" + "\n".join(prog))
-        ])
+            prog.append(f"等级【{level.name}】的收集进度 {_awards}/{_all}")
+
+        return Message(
+            [
+                MessageSegment.at(env.sender),
+                MessageSegment.text("你的收集进度为：\n\n" + "\n".join(prog)),
+            ]
+        )
 
 
 @dataclass
@@ -401,62 +420,59 @@ class CatchModifyCallback(CallbackBase):
     modifyType: str
     modifyObject: Award
 
-    def callbackMessage(self, env: CheckEnvironment, reason: str = ''):
-        info: str = f' {reason}，请再次输入它的 ' if reason else ' 请输入它的 '
+    def callbackMessage(self, env: CheckEnvironment, reason: str = ""):
+        info: str = f" {reason}，请再次输入它的 " if reason else " 请输入它的 "
         info = info + self.modifyType
 
-        return Message([
-            MessageSegment.at(env.sender),
-            MessageSegment.text(info)
-        ])
-    
+        return Message([MessageSegment.at(env.sender), MessageSegment.text(info)])
+
     async def callback(self, env: CheckEnvironment):
-        if self.modifyType == '名称':
-            if not re.match('^\\S+$', env.text):
-                raise WaitForMoreInformationException(self, self.callbackMessage(
-                    env, '名称中不能包含空格'
-                ))
+        if self.modifyType == "名称":
+            if not re.match("^\\S+$", env.text):
+                raise WaitForMoreInformationException(
+                    self, self.callbackMessage(env, "名称中不能包含空格")
+                )
 
             self.modifyObject.name = env.text
-            
+
             with globalData as d:
                 d.removeAwardsByAid(self.modifyObject.aid)
                 d.awards.append(self.modifyObject)
-            
+
             return modifyOk()
-        
-        if self.modifyType == '等级':
+
+        if self.modifyType == "等级":
             level = getLevelByLevelName(env.text)
 
             if len(level) == 0:
-                raise WaitForMoreInformationException(self, self.callbackMessage(
-                    env, '你输入的等级不存在'
-                ))
-            
+                raise WaitForMoreInformationException(
+                    self, self.callbackMessage(env, "你输入的等级不存在")
+                )
+
             self.modifyObject.levelId = level[0].lid
-            
+
             with globalData as d:
                 d.removeAwardsByName(self.modifyObject.name)
                 d.awards.append(self.modifyObject)
-            
+
             return modifyOk()
-        
-        if self.modifyType == '描述':
+
+        if self.modifyType == "描述":
             self.modifyObject.description = env.text
-            
+
             with globalData as d:
                 d.removeAwardsByName(self.modifyObject.name)
                 d.awards.append(self.modifyObject)
-            
+
             return modifyOk()
-        
-        if len(images := env.message.include('image')) != 1:
-            raise WaitForMoreInformationException(self, self.callbackMessage(
-                    env, '你没有发送图片，或者发送了多张图片'
-                ))
-        
+
+        if len(images := env.message.include("image")) != 1:
+            raise WaitForMoreInformationException(
+                self, self.callbackMessage(env, "你没有发送图片，或者发送了多张图片")
+            )
+
         image = images[0]
-        
+
         fp = getImageTarget(self.modifyObject)
 
         await writeData(await download(image.data["url"]), fp)
@@ -478,16 +494,18 @@ class CatchModify(Command):
         )
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message([
-            MessageSegment.at(env.sender),
-            MessageSegment.text(
-                ' 格式错误，允许的格式有：\n'
-                '::更改奖品 名称 <奖品的名字>\n'
-                '::更改奖品 图片 <奖品的名字>\n'
-                '::更改奖品 描述 <奖品的名字>\n'
-                '::更改奖品 等级 <奖品的名字>'
-            ),
-        ])
+        return Message(
+            [
+                MessageSegment.at(env.sender),
+                MessageSegment.text(
+                    " 格式错误，允许的格式有：\n"
+                    "::更改奖品 名称 <奖品的名字>\n"
+                    "::更改奖品 图片 <奖品的名字>\n"
+                    "::更改奖品 描述 <奖品的名字>\n"
+                    "::更改奖品 等级 <奖品的名字>"
+                ),
+            ]
+        )
 
     def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
@@ -499,9 +517,9 @@ class CatchModify(Command):
 
         if len(award) == 0:
             return self.notExists(env, modifyObject)
-        
+
         callback = CatchModifyCallback(modifyType, award[0])
-        
+
         raise WaitForMoreInformationException(callback, callback.callbackMessage(env))
 
 
@@ -510,42 +528,39 @@ class CatchLevelModifyCallback(CallbackBase):
     modifyType: str
     modifyObject: Level
 
-    def callbackMessage(self, env: CheckEnvironment, reason: str = ''):
-        info: str = f' {reason}，请再次输入它的 ' if reason else ' 请输入它的 '
+    def callbackMessage(self, env: CheckEnvironment, reason: str = ""):
+        info: str = f" {reason}，请再次输入它的 " if reason else " 请输入它的 "
         info = info + self.modifyType
 
-        return Message([
-            MessageSegment.at(env.sender),
-            MessageSegment.text(info)
-        ])
-    
+        return Message([MessageSegment.at(env.sender), MessageSegment.text(info)])
+
     async def callback(self, env: CheckEnvironment):
-        if self.modifyType == '名称':
-            if ' ' in env.text:
-                raise WaitForMoreInformationException(self, self.callbackMessage(
-                    env, '名称中不能包含空格'
-                ))
+        if self.modifyType == "名称":
+            if " " in env.text:
+                raise WaitForMoreInformationException(
+                    self, self.callbackMessage(env, "名称中不能包含空格")
+                )
 
             oldName = self.modifyObject.name
             self.modifyObject.name = env.text
-            
+
             with globalData as d:
                 d.removeLevelByName(oldName)
                 d.levels.append(self.modifyObject)
-            
+
             return modifyOk()
-    
+
         if not not_negative()(env.text):
-            raise WaitForMoreInformationException(self, self.callbackMessage(
-                env, '请输入一个不小于零的数'
-            ))
-        
+            raise WaitForMoreInformationException(
+                self, self.callbackMessage(env, "请输入一个不小于零的数")
+            )
+
         self.modifyObject.weight = float(env.text)
-        
+
         with globalData as d:
             d.removeLevelByName(self.modifyObject.name)
             d.levels.append(self.modifyObject)
-        
+
         return modifyOk()
 
 
@@ -555,16 +570,18 @@ class CatchLevelModify(Command):
             f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_LEVEL} ?(名称|权重)",
             " (\\S+)",
         )
-        
+
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message([
-            MessageSegment.at(env.sender),
-            MessageSegment.text(
-                ' 格式错误，允许的格式有：\n'
-                '::更改等级 名称 <等级的名字>\n'
-                '::更改等级 权重 <等级的名字>'
-            ),
-        ])
+        return Message(
+            [
+                MessageSegment.at(env.sender),
+                MessageSegment.text(
+                    " 格式错误，允许的格式有：\n"
+                    "::更改等级 名称 <等级的名字>\n"
+                    "::更改等级 权重 <等级的名字>"
+                ),
+            ]
+        )
 
     def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
@@ -576,10 +593,33 @@ class CatchLevelModify(Command):
 
         if len(level) == 0:
             return self.notExists(env, modifyObject)
-        
+
         callback = CatchLevelModifyCallback(modifyType, level[0])
-        
+
         raise WaitForMoreInformationException(callback, callback.callbackMessage(env))
+
+
+class CatchFilterNoDescription(Command):
+    def __init__(self):
+        super().__init__(
+            f"^:: ?{KEYWORD_EVERY}?缺描述",
+            " *$",
+        )
+
+    def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
+        lacks = getAllAwards()
+        lacks = [
+            a.name
+            for a in lacks
+            if a.description
+            == "这只小哥还没有描述，它只是静静地躺在这里，等待着别人给他下定义。"
+        ]
+
+        return Message(
+            [MessageSegment.at(env.sender), MessageSegment.text(" " + ", ".join(lacks))]
+        )
 
 
 enabledCommand: list[CommandBase] = [
@@ -592,4 +632,5 @@ enabledCommand: list[CommandBase] = [
     CatchModify(),
     CatchLevelModify(),
     CatchProgress(),
+    CatchFilterNoDescription(),
 ]

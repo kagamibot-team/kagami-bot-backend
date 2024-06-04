@@ -6,11 +6,8 @@ import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
 
+from .typing import IMAGE, PILLOW_COLOR_LIKE, PILLOW_COLOR_LIKE_WEAK
 
-PILLOW_COLOR_LIKE = int | tuple[int] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int] | str | float | tuple[float]
-PILLOW_COLOR_LIKE_WEAK = PILLOW_COLOR_LIKE | None
-
-IMAGE = PIL.Image.Image
 
 FONT_HARMONYOS_SANS = r'C:\Windows\Fonts\HarmonyOS_Sans_SC_Regular.ttf'
 FONT_HARMONYOS_SANS_BLACK = r'C:\Windows\Fonts\HarmonyOS_Sans_SC_Black.ttf'
