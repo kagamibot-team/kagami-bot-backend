@@ -49,7 +49,7 @@ STORAGE_COUNT_COLOR = STORAGE_TEXT_COLOR
 STORAGE_COUNT_STROKE_COLOR = "#000000"
 STORAGE_COUNT_STROKE_WIDTH = 1
 
-STORAGE_COUNT_DX = -2
+STORAGE_COUNT_DX = 2
 STORAGE_COUNT_DY = -2
 
 # 计算值
@@ -105,7 +105,7 @@ def drawStorageBlock(
     drawText(
         draw,
         str(count),
-        x + STORAGE_BOX_WIDTH - tbox.right + STORAGE_COUNT_DX,
+        x + STORAGE_BOX_WIDTH + STORAGE_COUNT_DX,
         y + STORAGE_BOX_HEIGHT - tbox.bottom + STORAGE_COUNT_DY,
         STORAGE_COUNT_COLOR,
         STORAGE_COUNT_FONT,
