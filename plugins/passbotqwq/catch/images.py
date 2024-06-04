@@ -105,7 +105,7 @@ def drawStorageBlock(
     drawText(
         draw,
         str(count),
-        x + STORAGE_BOX_WIDTH + STORAGE_COUNT_DX,
+        x + STORAGE_COUNT_DX,
         y + STORAGE_BOX_HEIGHT - tbox.bottom + STORAGE_COUNT_DY,
         STORAGE_COUNT_COLOR,
         STORAGE_COUNT_FONT,
