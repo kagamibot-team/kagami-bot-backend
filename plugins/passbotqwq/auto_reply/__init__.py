@@ -27,9 +27,6 @@ def matchKagami(text: str):
 
 @eventMatcher.handle()
 async def lucky_star(bot: Bot, event: GroupMessageEvent):
-    if bot.self_id != "3687050325":
-        return
-
     message = event.get_plaintext()
 
     match = matchKagami(message)
