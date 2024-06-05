@@ -17,7 +17,7 @@ class TextBox:
     bottom: int
 
 
-FONT_BASE = os.path.join(os.getcwd(), 'res', 'catch', 'fonts')
+FONT_BASE = os.path.join(".", 'res', 'catch', 'fonts')
 
 
 def _res(fn: str):

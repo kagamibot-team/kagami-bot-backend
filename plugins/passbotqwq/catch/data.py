@@ -5,10 +5,10 @@ from .models import Award, GameGlobalConfig, Level, UserData
 
 
 userData = PydanticDataManager(
-    UserData, os.path.join(os.getcwd(), "data", "catch", "users.json")
+    UserData, os.path.join(".", "data", "catch", "users.json")
 )
 globalData = PydanticDataManagerGlobal(
-    GameGlobalConfig, os.path.join(os.getcwd(), "data", "catch", "global.json"),
+    GameGlobalConfig, os.path.join(".", "data", "catch", "global.json"),
     ""
 )
 
@@ -135,7 +135,7 @@ def getImageTarget(award: Award):
     uIndex: int = 0
 
     def _path():
-        return os.path.join(os.getcwd(), "data", "catch", "awards", f"{safename}_{uIndex}.png")
+        return os.path.join(".", "data", "catch", "awards", f"{safename}_{uIndex}.png")
 
     while os.path.exists(_path()):
         uIndex += 1

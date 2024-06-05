@@ -13,7 +13,7 @@ class WumGlobal(BaseModel):
     lastCaught: float = 0
 
 
-wumData = PydanticDataManagerGlobal(WumGlobal, os.path.join(os.getcwd(), 'data', 'wum', 'wum.json'))
+wumData = PydanticDataManagerGlobal(WumGlobal, os.path.join(".", 'data', 'wum', 'wum.json'))
 
 
 async def catchWum():

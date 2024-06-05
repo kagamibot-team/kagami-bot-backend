@@ -4,8 +4,8 @@ import time
 from pydantic import BaseModel, Field
 
 
-DEFAULT_IMG = os.path.join(os.getcwd(), "res", "catch", "default.png")
-DEFAULT_BG = os.path.join(os.getcwd(), "res", "catch", "default-bg.png")
+DEFAULT_IMG = os.path.join(".", "res", "catch", "default.png")
+DEFAULT_BG = os.path.join(".", "res", "catch", "default-bg.png")
 
 
 class Level(BaseModel):

@@ -328,7 +328,7 @@ def drawStorage(uid: int):
 @cache
 def drawAwardBoxImageHidden():
     return drawAwardBoxImage(
-        os.path.join(os.getcwd(), "res", "catch", "blank_placeholder.png")
+        os.path.join(".", "res", "catch", "blank_placeholder.png")
     )
 
 
