@@ -147,9 +147,6 @@ async def handleSpecial(sender: int, event: GroupMessageEvent):
 
 @eventMatcher.handle()
 async def _(bot: Bot, event: GroupMessageEvent):
-    if bot.self_id != "3687050325":
-        return
-
     sender = event.sender.user_id
 
     if sender == None:
