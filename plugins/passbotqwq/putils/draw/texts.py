@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import enum
+import os
 
 import PIL
 import PIL.ImageDraw
@@ -16,12 +17,19 @@ class TextBox:
     bottom: int
 
 
+FONT_BASE = os.path.join(os.getcwd(), 'res', 'catch', 'fonts')
+
+
+def _res(fn: str):
+    return os.path.join(FONT_BASE, fn)
+
+
 class Fonts(enum.Enum):
-    FONT_HARMONYOS_SANS = r"C:\Windows\Fonts\HarmonyOS_Sans_SC_Regular.ttf"
-    FONT_HARMONYOS_SANS_BLACK = r"C:\Windows\Fonts\HarmonyOS_Sans_SC_Black.ttf"
-    ALIMAMA_SHU_HEI = r"F:\AlimamaShuHeiTi-Bold.ttf"
-    JINGNAN_BOBO_HEI = r"c:\Users\Passt\AppData\Local\Microsoft\Windows\Fonts\荆南波波黑-Bold.ttf"
-    JIANGCHENG_YUANTI = r"C:\Windows\Fonts\江城圆体 500W.ttf"
+    FONT_HARMONYOS_SANS = _res("HarmonyOS_Sans_SC_Regular.ttf")
+    FONT_HARMONYOS_SANS_BLACK = _res("HarmonyOS_Sans_SC_Black.ttf")
+    ALIMAMA_SHU_HEI = _res("AlimamaShuHeiTi-Bold.ttf")
+    JINGNAN_BOBO_HEI = _res("荆南波波黑-Bold.ttf")
+    JIANGCHENG_YUANTI = _res("江城圆体 500W.ttf")
 
 
 def textFont(fontEnum: Fonts, fontSize: int):
