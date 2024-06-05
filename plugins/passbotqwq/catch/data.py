@@ -9,7 +9,7 @@ userData = PydanticDataManager(
 )
 globalData = PydanticDataManagerGlobal(
     GameGlobalConfig, os.path.join(os.getcwd(), "data", "catch", "global.json"),
-    os.path.join(os.getcwd(), 'data', 'catch', 'backup')
+    ""
 )
 
 
@@ -131,7 +131,16 @@ def getPosibilities(level: Level):
 
 def getImageTarget(award: Award):
     safename = base64.b64encode(award.name.encode()).decode().replace('/', '_').replace('+', '-')
-    return os.path.join(os.getcwd(), "data", "catch", "awards", f"{safename}.png")
+
+    uIndex: int = 0
+
+    def _path():
+        return os.path.join(os.getcwd(), "data", "catch", "awards", f"{safename}_{uIndex}.png")
+
+    while os.path.exists(_path()):
+        uIndex += 1
+
+    return _path()
 
 
 def _dev_migrate_images():
