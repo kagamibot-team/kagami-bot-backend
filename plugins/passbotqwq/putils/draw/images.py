@@ -3,7 +3,11 @@ import PIL
 import PIL.Image
 import PIL.ImageTransform
 
-from .typing import IMAGE
+import numpy as np
+import cv2
+import cv2.typing
+
+from .typing import CV2IMAGE, IMAGE
 
 
 def loadImage(fp: str):
@@ -12,7 +16,19 @@ def loadImage(fp: str):
 
 
 def addUponPaste(raw: IMAGE, src: IMAGE, x: int, y: int):
-    raw.paste(src, (x, y), src)
+    raw.paste(src, (x, y), src.convert("RGBA"))
+
+
+def toOpenCVImage(raw: IMAGE):
+    return cv2.cvtColor(np.array(raw), cv2.COLOR_RGB2BGR)
+
+
+def fromOpenCVImage(raw: CV2IMAGE):
+    return PIL.Image.fromarray(cv2.cvtColor(raw, cv2.COLOR_BGR2RGB))
+
+
+def fastPaste(raw: CV2IMAGE, src: CV2IMAGE, x: int, y: int):
+    raw[y: y + src.shape[0], x: x + src.shape[1]] = src
 
 
 def addUpon(

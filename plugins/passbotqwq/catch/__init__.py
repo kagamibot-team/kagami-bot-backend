@@ -1,24 +1,17 @@
 import asyncio
-import os
-import time
 from nonebot.plugin import on
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
 from nonebot.exception import FinishedException
-from typing import Any, NoReturn
-import uuid
+from typing import NoReturn
 import re
 
 from ..putils.download import download, writeData
 from ..putils.text_format_check import (
     checkFormat,
-    combine,
-    isDigit,
     isFloat,
-    literal,
     regex,
     ok,
     not_negative,
-    matchCommand,
 )
 
 from .models import UserData, Award, GameGlobalConfig, Level
@@ -26,18 +19,11 @@ from .data import getAwardByAwardName, getImageTarget, globalData, userData, sav
 from .messages import (
     addAward2,
     addAward3,
-    allAwards,
-    allLevels,
-    cannotGetAward,
     createLevelWrongFormat,
     deleteLevelWrongFormat,
     displayAward,
     displayWrongFormat,
-    getAward,
-    help,
     noAwardNamed,
-    setIntervalWrongFormat,
-    storageCheck,
     addAward1,
 )
 from .commands import CallbackBase, CheckEnvironment, WaitForMoreInformationException, enabledCommand
@@ -176,7 +162,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
     text = event.get_plaintext()
 
-    if re.match("^::(添加|增加|创建|新建|新增)奖品$", text):
+    if re.match("^::(添加|增加|创建|新建|新增)小哥$", text):
         flag[sender] = 1
         award_create_tmp[sender] = Award()
         await finish(addAward1())
@@ -212,18 +198,18 @@ async def _(bot: Bot, event: GroupMessageEvent):
         if res:
                 await finish(res)
 
-    if text.startswith("::删除奖品"):
+    if text.startswith("::删除小哥"):
         if len(text.split(" ")) == 2:
             with globalData as d:
-                awardList = d.removeAwardsByName(text.split("::删除奖品 ")[1])
+                awardList = d.removeAwardsByName(text.split("::删除小哥 ")[1])
 
             if len(awardList) == 0:
                 await finish(
-                    Message(MessageSegment.text("删除失败，因为没有这个名字的奖品"))
+                    Message(MessageSegment.text("删除失败，因为没有这个名字的小哥"))
                 )
             await finish(Message(MessageSegment.text("已经删除了")))
         await finish(
-            Message(MessageSegment.text("你的格式有问题，应该是 ::删除奖品 奖品的名字"))
+            Message(MessageSegment.text("你的格式有问题，应该是 ::删除小哥 小哥的名字"))
         )
 
     if re.match("^::(添加|增加|创建|新建|新增)等级", text):

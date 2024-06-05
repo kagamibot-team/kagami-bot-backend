@@ -6,6 +6,8 @@ from typing import Any, Callable, Coroutine, TypeVar
 from nonebot.exception import FinishedException
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
+from plugins.passbotqwq.catch.cores import handlePick
+
 from ..putils.download import download, writeData
 from .models import Award, Level
 from ..putils.draw import _hello_world, imageToBytes
@@ -13,32 +15,26 @@ from .messages import (
     allAwards,
     allLevels,
     cannotGetAward,
-    displayAward,
-    displayWrongFormat,
-    getAward,
+    caughtMessage,
     help,
     modifyOk,
-    noAwardNamed,
     setIntervalWrongFormat,
     settingOk,
-    storageCheck,
 )
 from .data import (
-    _dev_migrate_images,
     clearUnavailableAward,
     ensureNoSameAid,
     getAllAwards,
-    getAllAwardsOfOneUser,
-    getAllLevels,
     getAwardByAwardName,
-    getAwardsFromLevelId,
     getImageTarget,
     getLevelByLevelName,
+    save,
     userData,
     globalData,
 )
-from .images import drawStorage
-from ..putils.text_format_check import isFloat, not_negative, regex, A_SIMPLE_RULE
+
+from .images import drawStatus, drawStorage
+from ..putils.text_format_check import not_negative, regex, A_SIMPLE_RULE
 
 KEYWORD_BASE_COMMAND = "(抓小哥|zhua|ZHUA)"
 
@@ -47,8 +43,10 @@ KEYWORD_EVERY = "(所有|一切|全部)"
 KEYWORD_PROGRESS = "(进度|成就|进展)"
 
 KEYWORD_INTERVAL = "(时间|周期|间隔)"
-KEYWORD_AWARDS = "(物品|奖品|小哥)"
+KEYWORD_AWARDS = "(物品|小哥)"
 KEYWORD_LEVEL = "(等级|级别)"
+
+KEYWORD_CRAZY = "(连|l|狂|k)"
 
 
 @dataclass
@@ -103,6 +101,11 @@ class Command(CommandBase):
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         return None
+    
+    async def _handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
+        return self.handleCommand(env, result)
 
     async def check(self, env: CheckEnvironment) -> Message | None:
         if not re.match(self.commandPattern, env.text):
@@ -113,7 +116,7 @@ class Command(CommandBase):
         if not matchRes:
             return self.errorMessage(env)
 
-        return self.handleCommand(env, matchRes)
+        return await self._handleCommand(env, matchRes)
 
 
 CommandBaseSelf = TypeVar("CommandBaseSelf", bound="CommandBase")
@@ -136,42 +139,41 @@ def match(rule: A_SIMPLE_RULE):
     return _decorator
 
 
-class Catch(CommandBase):
-    @match(regex(f"^{KEYWORD_BASE_COMMAND}$"))
-    async def check(self, env: CheckEnvironment):
-        tm = time.time()
-        delta = userData.get(env.sender).lastCatch + globalData.get().timeDelta - tm
-
-        if delta > 0:
-            return cannotGetAward(env.sender, delta)
-
-        award = globalData.get().pick()
-
-        with userData.open(env.sender) as d:
-            d.addAward(award.aid)
-            d.lastCatch = tm
-
-            countAward = d.awardCounter[award.aid]
-
-        newOne = "【新!】" if countAward == 1 else ""
-
-        return Message(
-            [
-                MessageSegment.at(env.sender),
-                MessageSegment.text(
-                    f"\n{newOne}你刚刚抓到了你的第 {countAward} 只："
-                    + award.name
-                    + "！"
-                ),
-                MessageSegment.image(pathlib.Path(award.imgPath)),
-                MessageSegment.text(
-                    "稀有度：【"
-                    + globalData.get().getLevelByLid(award.levelId).name
-                    + "】"
-                    + f"\n\n{award.description}"
-                ),
-            ]
+class Catch(Command):
+    def __init__(self):
+        super().__init__(
+            f"^{KEYWORD_BASE_COMMAND} ?(\\d+)?",
+            "$"
         )
+    
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return None
+    
+    async def _handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        maxCount = 1
+
+        if result.group(2) is not None and result.group(2).isdigit():
+            maxCount = int(result.group(2))
+
+        picksResult = handlePick(env.sender, maxCount)
+
+        return await caughtMessage(picksResult)
+
+
+class CrazyCatch(Command):
+    def __init__(self):
+        super().__init__(
+            f"^({KEYWORD_CRAZY}{KEYWORD_BASE_COMMAND}|kz)",
+            "$"
+        )
+    
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return None
+    
+    async def _handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        picksResult = handlePick(env.sender, -1)
+
+        return await caughtMessage(picksResult)
 
 
 class CatchHelp(Command):
@@ -258,7 +260,7 @@ class CatchChangeLevel(Command):
             [
                 MessageSegment.at(env.sender),
                 MessageSegment.text(
-                    " 格式错了，应该是 ::改变奖品 等级 <奖品的名字> <等级的名字>"
+                    " 格式错了，应该是 ::改变小哥 等级 <小哥的名字> <等级的名字>"
                 ),
             ]
         )
@@ -273,7 +275,7 @@ class CatchChangeLevel(Command):
         levels = getLevelByLevelName(levelName)
 
         if len(awards) == 0:
-            return self.notExists(env, "奖品 " + awardName)
+            return self.notExists(env, "小哥 " + awardName)
 
         if len(levels) == 0:
             return self.notExists(env, "等级 " + levelName)
@@ -391,26 +393,36 @@ class CatchProgress(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return None
 
-    def handleCommand(
+    async def _handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        prog: list[str] = []
+        # prog: list[str] = []
 
-        awards = getAllAwardsOfOneUser(env.sender)
+        # awards = getAllAwardsOfOneUser(env.sender)
 
-        for level in getAllLevels():
-            if level.name == "名称已丢失":
-                continue
+        # for level in getAllLevels():
+        #     if level.name == "名称已丢失":
+        #         continue
 
-            _awards = len([a for a in awards if a.levelId == level.lid])
-            _all = len(getAwardsFromLevelId(level.lid))
+        #     _awards = len([a for a in awards if a.levelId == level.lid])
+        #     _all = len(getAwardsFromLevelId(level.lid))
 
-            prog.append(f"等级【{level.name}】的收集进度 {_awards}/{_all}")
+        #     prog.append(f"等级【{level.name}】的收集进度 {_awards}/{_all}")
+
+        # return Message(
+        #     [
+        #         MessageSegment.at(env.sender),
+        #         MessageSegment.text("你的收集进度为：\n\n" + "\n".join(prog)),
+        #     ]
+        # )
+        
+        image, tm = await drawStatus(env.sender)
 
         return Message(
             [
                 MessageSegment.at(env.sender),
-                MessageSegment.text("你的收集进度为：\n\n" + "\n".join(prog)),
+                MessageSegment.text(f" 的小哥收集进度 (Render time: {round(tm, 2)})："),
+                MessageSegment.image(imageToBytes(image)),
             ]
         )
 
@@ -499,10 +511,10 @@ class CatchModify(Command):
                 MessageSegment.at(env.sender),
                 MessageSegment.text(
                     " 格式错误，允许的格式有：\n"
-                    "::更改奖品 名称 <奖品的名字>\n"
-                    "::更改奖品 图片 <奖品的名字>\n"
-                    "::更改奖品 描述 <奖品的名字>\n"
-                    "::更改奖品 等级 <奖品的名字>"
+                    "::更改小哥 名称 <小哥的名字>\n"
+                    "::更改小哥 图片 <小哥的名字>\n"
+                    "::更改小哥 描述 <小哥的名字>\n"
+                    "::更改小哥 等级 <小哥的名字>"
                 ),
             ]
         )
@@ -541,12 +553,13 @@ class CatchLevelModifyCallback(CallbackBase):
                     self, self.callbackMessage(env, "名称中不能包含空格")
                 )
 
-            oldName = self.modifyObject.name
             self.modifyObject.name = env.text
 
             with globalData as d:
-                d.removeLevelByName(oldName)
+                d.removeLevelByLid(self.modifyObject.lid)
                 d.levels.append(self.modifyObject)
+            
+            save()
 
             return modifyOk()
 
@@ -624,6 +637,7 @@ class CatchFilterNoDescription(Command):
 
 enabledCommand: list[CommandBase] = [
     Catch(),
+    CrazyCatch(),
     CatchHelp(),
     CatchStorage(),
     CatchAllAwards(),

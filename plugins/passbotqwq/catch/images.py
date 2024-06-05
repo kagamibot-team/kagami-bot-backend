@@ -1,117 +1,228 @@
+from functools import cache
 import math
+from os import name
+import os
 import time
 
 import PIL
 import PIL.ImageDraw
 
-from plugins.passbotqwq.putils.threading import make_async
+from .cores import Pick
 from .models import Award
+from ..putils.threading import make_async
 from ..putils.draw.shapes import rectangle
-from ..putils.draw.images import addUponPaste, loadImage, addUpon
+from ..putils.draw.images import (
+    addUponPaste,
+    fastPaste,
+    fromOpenCVImage,
+    loadImage,
+    addUpon,
+    toOpenCVImage,
+)
 from ..putils.draw.texts import drawText, textBox, textFont, Fonts
-from ..putils.draw.typing import IMAGE
+from ..putils.draw.typing import IMAGE, PILLOW_COLOR_LIKE
 from ..putils.draw import newImage
 
 from .data import (
+    getAllAwards,
     getAllAwardsOfOneUser,
     getAllLevels,
     getAllLevelsOfAwardList,
+    getAwardByAwardId,
+    getAwardByAwardName,
     getAwardCoundOfOneUser,
+    getLevelOfAward,
+    userHaveAward,
 )
 
 
-WIDTH = 2000
-HEIGHT = 1600
+GLOBAL_BACKGROUND_COLOR = "#696361"
 
-STORAGE_MARGIN_LEFT = 30
-STORAGE_MARGIN_RIGHT = 30
-STORAGE_MARGIN_TOP = 70
-STORAGE_MARGIN_BOTTOM = 20
+IMAGE_RAW_WIDTH = 2000
+IMAGE_RAW_HEIGHT = 1600
 
-STORAGE_BOX_PADDING_X = 5
-STORAGE_BOX_PADDING_Y = 5
-STORAGE_BOX_MARGIN_LEFT = 0
-STORAGE_BOX_MARGIN_RIGHT = 0
-STORAGE_BOX_MARGIN_TOP = -10
-STORAGE_BOX_MARGIN_BOTTOM = 60
+STORAGE_MARGIN_LEFT = 60
+STORAGE_MARGIN_RIGHT = 60
+STORAGE_MARGIN_TOP = 140
+STORAGE_MARGIN_BOTTOM = 40
 
-STORAGE_BOX_SCALE = 0.04
+STORAGE_AWARD_BOX_XCOUNT_MAX = 4
 
-STORAGE_BOX_XCOUNT_MAX = 4
+STORAGE_TITLE_TEXT_COLOR = "#FFFFFF"
+STORAGE_TITLE_TEXT_FONT = textFont(Fonts.JINGNAN_BOBO_HEI, 48)
+STORAGE_TITLE_SPECIFIED_COLOR = {
+    0: "#d1cccb",
+    1: "#92d47b",
+    6: "#89c2e8",
+    2: "#d8adf7",
+    7: "#facb4b",
+}
 
-STORAGE_BACKGROUND_COLOR = "#696361"
-STORAGE_BOX_COLOR = "#9e9d95"
-STORAGE_TEXT_COLOR = "#FFFFFF"
+AWARD_BOX_PADDING_X = 10
+AWARD_BOX_PADDING_Y = 10
+AWARD_BOX_MARGIN_LEFT = 0
+AWARD_BOX_MARGIN_RIGHT = 0
+AWARD_BOX_MARGIN_TOP = -20
+AWARD_BOX_MARGIN_BOTTOM = 120
 
-STORAGE_TEXT_FONT = textFont(Fonts.JINGNAN_BOBO_HEI, 24)
-STORAGE_COUNT_FONT = textFont(Fonts.FONT_HARMONYOS_SANS_BLACK, 18)
-STORAGE_COUNT_COLOR = STORAGE_TEXT_COLOR
-STORAGE_COUNT_STROKE_COLOR = "#000000"
-STORAGE_COUNT_STROKE_WIDTH = 1
+AWARD_BOX_SCALE = 0.08
 
-STORAGE_COUNT_DX = 2
-STORAGE_COUNT_DY = -2
+AWARD_BOX_BACKGROUND_COLOR = "#9e9d95"
+
+AWARD_BOX_COUNT_FONT = textFont(Fonts.FONT_HARMONYOS_SANS_BLACK, 36)
+AWARD_BOX_COUNT_COLOR = STORAGE_TITLE_TEXT_COLOR
+AWARD_BOX_COUNT_STROKE_COLOR = "#000000"
+AWARD_BOX_COUNT_STROKE_WIDTH = 2
+
+AWARD_BOX_COUNT_DX = 4
+AWARD_BOX_COUNT_DY = -4
+
+AWARD_BOX_NAME_TOP = 8
+AWARD_BOX_NAME_LEFT = 4
+AWARD_BOX_NAME_LINE_HEIGHT = 40
+AWARD_BOX_NAME_FONT = textFont(Fonts.JIANGCHENG_YUANTI, 22)
+AWARD_BOX_NAME_COLOR = STORAGE_TITLE_TEXT_COLOR
+AWARD_BOX_NAME_STROKE_COLOR = "#000000"
+AWARD_BOX_NAME_STROKE_WIDTH = 0
+AWARD_BOX_NAME_COLOR_SPECIFIED = {
+    0: "#d1cccb",
+    1: "#92d47b",
+    6: "#89c2e8",
+    2: "#d8adf7",
+    7: "#facb4b",
+}
+AWARD_BOX_NAME_STROKE_COLOR_SPECIFIED: dict[int, str] = {}
+AWARD_BOX_NAME_STROKE_WIDTH_SPECIFIED: dict[int, int] = {}
+
+STATUS_MARGIN_LEFT = 60
+STATUS_MARGIN_RIGHT = 60
+STATUS_MARGIN_TOP = 140
+STATUS_MARGIN_BOTTOM = 40
+
+STATUS_MAX_ROW_COUNT = 6
+
+STATUS_PADDING_X = 10
+STATUS_PADDING_Y = 10
+
+STATUS_BACKGROUND_COLOR_SPECIFIED = {
+    0: "#d1cccb",
+    1: "#cdebc3",
+    6: "#c5dceb",
+    2: "#ecdff5",
+    7: "#fae9bb",
+}
+
+CAUGHT_BOX_MARGIN_LEFT = 30
+CAUGHT_BOX_MARGIN_RIGHT = 30
+CAUGHT_BOX_MARGIN_TOP = 30
+CAUGHT_BOX_MARGIN_BOTTOM = 30
 
 # 计算值
-STORAGE_BOX_WIDTH = WIDTH * STORAGE_BOX_SCALE
-STORAGE_BOX_HEIGHT = HEIGHT * STORAGE_BOX_SCALE
-
-STORAGE_SPECIFIED_COLOR = {
-    "壹": "#d1cccb",
-    "贰": "#92d47b",
-    "叁": "#89c2e8",
-    "肆": "#d8adf7",
-    "伍": "#facb4b",
-}
+AWARD_BOX_IMAGE_WIDTH = IMAGE_RAW_WIDTH * AWARD_BOX_SCALE
+AWARD_BOX_IMAGE_HEIGHT = IMAGE_RAW_HEIGHT * AWARD_BOX_SCALE
+AWARD_BOX_WIDTH = AWARD_BOX_IMAGE_WIDTH
+AWARD_BOX_HEIGHT = AWARD_BOX_IMAGE_HEIGHT + AWARD_BOX_NAME_LINE_HEIGHT
 
 
 def _get_width_of_boxes(count: int):
     return (
-        STORAGE_BOX_MARGIN_LEFT
-        + STORAGE_BOX_MARGIN_RIGHT
-        + STORAGE_BOX_PADDING_X * (count - 1)
-        + STORAGE_BOX_WIDTH * count
+        AWARD_BOX_MARGIN_LEFT
+        + AWARD_BOX_MARGIN_RIGHT
+        + AWARD_BOX_PADDING_X * (count - 1)
+        + AWARD_BOX_WIDTH * count
     )
 
 
 def _get_height_of_boxes(lines: int):
     return (
-        STORAGE_BOX_MARGIN_TOP
-        + STORAGE_BOX_MARGIN_BOTTOM
-        + STORAGE_BOX_PADDING_Y * (lines - 1)
-        + STORAGE_BOX_HEIGHT * lines
+        AWARD_BOX_MARGIN_TOP
+        + AWARD_BOX_MARGIN_BOTTOM
+        + AWARD_BOX_PADDING_Y * (lines - 1)
+        + AWARD_BOX_HEIGHT * lines
     )
 
 
-def drawStorageBlock(
-    src: IMAGE, award: Award, count: int, x: float, y: float, size: float = 0.1
+__cached_box_image: dict[tuple[str, PILLOW_COLOR_LIKE], IMAGE] = {}
+
+
+def drawAwardBoxImage(
+    awardURL: str, background: PILLOW_COLOR_LIKE = AWARD_BOX_BACKGROUND_COLOR
 ):
-    rectangle(src, x, y, STORAGE_BOX_WIDTH, STORAGE_BOX_HEIGHT, STORAGE_BOX_COLOR)
+    _key = (awardURL, background)
+
+    if _key in __cached_box_image:
+        return __cached_box_image[_key]
+
+    base = newImage(
+        (int(AWARD_BOX_IMAGE_WIDTH), int(AWARD_BOX_IMAGE_HEIGHT)),
+        background,
+    )
     addUponPaste(
-        src,
-        loadImage(award.imgPath).resize(
+        base,
+        loadImage(awardURL).resize(
             (
-                int(STORAGE_BOX_WIDTH),
-                int(STORAGE_BOX_HEIGHT),
+                int(AWARD_BOX_IMAGE_WIDTH),
+                int(AWARD_BOX_IMAGE_HEIGHT),
             )
         ),
-        int(x),
-        int(y),
+        0,
+        0,
     )
 
-    draw = PIL.ImageDraw.Draw(src)
-    tbox = textBox(str(count), STORAGE_COUNT_FONT)
+    __cached_box_image[_key] = base
+    return base
+
+
+def drawAwardBox(award: Award, count: str = ""):
+    base = newImage(
+        (int(AWARD_BOX_WIDTH), int(AWARD_BOX_HEIGHT)), GLOBAL_BACKGROUND_COLOR
+    )
+
+    base.paste(drawAwardBoxImage(award.imgPath), (0, 0))
+
+    draw = PIL.ImageDraw.Draw(base)
+    tbox = textBox(count, AWARD_BOX_COUNT_FONT)
 
     drawText(
         draw,
-        str(count),
-        x + STORAGE_COUNT_DX,
-        y + STORAGE_BOX_HEIGHT - tbox.bottom + STORAGE_COUNT_DY,
-        STORAGE_COUNT_COLOR,
-        STORAGE_COUNT_FONT,
-        STORAGE_COUNT_STROKE_COLOR,
-        STORAGE_COUNT_STROKE_WIDTH,
+        count,
+        AWARD_BOX_COUNT_DX,
+        AWARD_BOX_IMAGE_HEIGHT - tbox.bottom + AWARD_BOX_COUNT_DY,
+        AWARD_BOX_COUNT_COLOR,
+        AWARD_BOX_COUNT_FONT,
+        AWARD_BOX_COUNT_STROKE_COLOR,
+        AWARD_BOX_COUNT_STROKE_WIDTH,
     )
+
+    tbox = textBox(award.name, AWARD_BOX_NAME_FONT)
+
+    color = AWARD_BOX_NAME_COLOR
+
+    if award.levelId in AWARD_BOX_NAME_COLOR_SPECIFIED.keys():
+        color = AWARD_BOX_NAME_COLOR_SPECIFIED[award.levelId]
+
+    s_color = AWARD_BOX_NAME_STROKE_COLOR
+
+    if award.levelId in AWARD_BOX_NAME_STROKE_COLOR_SPECIFIED.keys():
+        s_color = AWARD_BOX_NAME_STROKE_COLOR_SPECIFIED[award.levelId]
+
+    s_width = AWARD_BOX_NAME_STROKE_WIDTH
+
+    if award.levelId in AWARD_BOX_NAME_STROKE_WIDTH_SPECIFIED.keys():
+        s_width = AWARD_BOX_NAME_STROKE_WIDTH_SPECIFIED[award.levelId]
+
+    drawText(
+        draw,
+        award.name,
+        AWARD_BOX_NAME_LEFT + AWARD_BOX_WIDTH / 2 - tbox.right / 2,
+        AWARD_BOX_IMAGE_HEIGHT + AWARD_BOX_NAME_TOP,
+        color,
+        AWARD_BOX_NAME_FONT,
+        s_color,
+        s_width,
+    )
+
+    return base
 
 
 @make_async
@@ -122,17 +233,17 @@ def drawStorage(uid: int):
     awards = getAllAwardsOfOneUser(uid)
 
     for level in getAllLevelsOfAwardList(getAllAwardsOfOneUser(uid)):
-        tbox = textBox(f"稀有度为【{level.name}】的全部小哥", STORAGE_TEXT_FONT)
+        tbox = textBox(f"稀有度为【{level.name}】的全部小哥", STORAGE_TITLE_TEXT_FONT)
         boxes.append((tbox.right - tbox.left, tbox.bottom - tbox.top))
 
         awardsLength = len([a for a in awards if a.levelId == level.lid])
 
-        if awardsLength >= STORAGE_BOX_XCOUNT_MAX:
+        if awardsLength >= STORAGE_AWARD_BOX_XCOUNT_MAX:
             boxes.append(
                 (
-                    _get_width_of_boxes(STORAGE_BOX_XCOUNT_MAX),
+                    _get_width_of_boxes(STORAGE_AWARD_BOX_XCOUNT_MAX),
                     _get_height_of_boxes(
-                        math.ceil(awardsLength / STORAGE_BOX_XCOUNT_MAX)
+                        math.ceil(awardsLength / STORAGE_AWARD_BOX_XCOUNT_MAX)
                     ),
                 )
             )
@@ -153,7 +264,7 @@ def drawStorage(uid: int):
             + STORAGE_MARGIN_TOP
             + STORAGE_MARGIN_BOTTOM,
         ),
-        STORAGE_BACKGROUND_COLOR,
+        GLOBAL_BACKGROUND_COLOR,
     )
 
     draw = PIL.ImageDraw.Draw(image)
@@ -164,12 +275,12 @@ def drawStorage(uid: int):
     pointer = 0
 
     for level in getAllLevelsOfAwardList(getAllAwardsOfOneUser(uid)):
-        tbox = textBox(f"稀有度为【{level.name}】的全部小哥", STORAGE_TEXT_FONT)
+        tbox = textBox(f"稀有度为【{level.name}】的全部小哥", STORAGE_TITLE_TEXT_FONT)
 
-        color = STORAGE_TEXT_COLOR
+        color = STORAGE_TITLE_TEXT_COLOR
 
-        if level.name in STORAGE_SPECIFIED_COLOR.keys():
-            color = STORAGE_SPECIFIED_COLOR[level.name]
+        if level.lid in STORAGE_TITLE_SPECIFIED_COLOR.keys():
+            color = STORAGE_TITLE_SPECIFIED_COLOR[level.lid]
 
         drawText(
             draw,
@@ -177,37 +288,34 @@ def drawStorage(uid: int):
             drawLeft - tbox.left,
             drawTop,
             color,
-            STORAGE_TEXT_FONT,
+            STORAGE_TITLE_TEXT_FONT,
         )
 
-        drawTop += STORAGE_BOX_MARGIN_TOP + boxes[pointer][1]
-        drawLeft += STORAGE_BOX_MARGIN_LEFT
+        drawTop += AWARD_BOX_MARGIN_TOP + boxes[pointer][1]
+        drawLeft += AWARD_BOX_MARGIN_LEFT
 
         levelAwards = [a for a in awards if a.levelId == level.lid]
 
         for ind, award in enumerate(levelAwards):
-            colX = ind % STORAGE_BOX_XCOUNT_MAX
-            colY = ind // STORAGE_BOX_XCOUNT_MAX
+            colX = ind % STORAGE_AWARD_BOX_XCOUNT_MAX
+            colY = ind // STORAGE_AWARD_BOX_XCOUNT_MAX
 
-            xDelta = colX * (STORAGE_BOX_WIDTH + STORAGE_BOX_PADDING_X)
-            yDelta = (
-                colY * (STORAGE_BOX_HEIGHT + STORAGE_BOX_PADDING_Y)
-                + boxes[pointer][1]
-            )
+            xDelta = colX * (AWARD_BOX_WIDTH + AWARD_BOX_PADDING_X)
+            yDelta = colY * (AWARD_BOX_HEIGHT + AWARD_BOX_PADDING_Y) + boxes[pointer][1]
 
-            drawStorageBlock(
+            addUponPaste(
                 image,
-                award,
-                getAwardCoundOfOneUser(uid, award.aid),
-                drawLeft + xDelta,
-                drawTop + yDelta,
-                STORAGE_BOX_SCALE,
+                drawAwardBox(award, str(getAwardCoundOfOneUser(uid, award.aid))),
+                int(drawLeft + xDelta),
+                int(drawTop + yDelta),
             )
 
-        drawLeft -= STORAGE_BOX_MARGIN_LEFT
+        drawLeft -= AWARD_BOX_MARGIN_LEFT
         drawTop += (
-            _get_height_of_boxes(math.ceil(len(levelAwards) / STORAGE_BOX_XCOUNT_MAX))
-            - STORAGE_BOX_MARGIN_TOP
+            _get_height_of_boxes(
+                math.ceil(len(levelAwards) / STORAGE_AWARD_BOX_XCOUNT_MAX)
+            )
+            - AWARD_BOX_MARGIN_TOP
         )
 
         pointer += 2
@@ -215,3 +323,85 @@ def drawStorage(uid: int):
     print(boxes)
 
     return image, time.time() - beginTime
+
+
+@cache
+def drawAwardBoxImageHidden():
+    return drawAwardBoxImage(
+        os.path.join(os.getcwd(), "res", "catch", "blank_placeholder.png")
+    )
+
+
+@make_async
+def drawStatus(uid: int):
+    begin = time.time()
+
+    awardsToDraw = sorted(
+        getAllAwards(), key=lambda a: (getLevelOfAward(a).weight, a.aid)
+    )
+
+    lines = math.ceil(len(awardsToDraw) / STATUS_MAX_ROW_COUNT)
+
+    image = newImage(
+        (
+            int(
+                STATUS_MARGIN_LEFT
+                + STATUS_MARGIN_RIGHT
+                + AWARD_BOX_IMAGE_WIDTH * STATUS_MAX_ROW_COUNT
+                + AWARD_BOX_PADDING_X * (STATUS_MAX_ROW_COUNT - 1)
+            ),
+            int(
+                STATUS_MARGIN_TOP
+                + STATUS_MARGIN_BOTTOM
+                + AWARD_BOX_IMAGE_HEIGHT * lines
+                + STATUS_PADDING_Y * (lines - 1)
+            ),
+        ),
+        GLOBAL_BACKGROUND_COLOR,
+    )
+
+    _image = toOpenCVImage(image)
+
+    for i, award in enumerate(awardsToDraw):
+        px = i % STATUS_MAX_ROW_COUNT
+        py = i // STATUS_MAX_ROW_COUNT
+
+        x = int(STATUS_MARGIN_LEFT + px * (AWARD_BOX_IMAGE_WIDTH + AWARD_BOX_PADDING_X))
+        y = int(
+            STATUS_MARGIN_RIGHT + py * (AWARD_BOX_IMAGE_HEIGHT + AWARD_BOX_PADDING_Y)
+        )
+
+        bg = AWARD_BOX_BACKGROUND_COLOR
+
+        level = getLevelOfAward(award)
+
+        if level.lid in STATUS_BACKGROUND_COLOR_SPECIFIED.keys():
+            bg = STATUS_BACKGROUND_COLOR_SPECIFIED[level.lid]
+
+        subImage = (
+            drawAwardBoxImage(award.imgPath, bg)
+            if userHaveAward(uid, award)
+            else drawAwardBoxImageHidden()
+        )
+        # image.paste(subImage, (x, y))
+        fastPaste(_image, toOpenCVImage(subImage), x, y)
+
+    return fromOpenCVImage(_image), time.time() - begin
+
+
+@make_async
+def drawCaughtBox(pick: Pick):
+    sub = drawAwardBox(
+        getAwardByAwardId(pick.awardId), f"{pick.fromNumber}→{pick.toNumber}"
+    )
+
+    image = newImage(
+        (
+            sub.size[0] + CAUGHT_BOX_MARGIN_LEFT + CAUGHT_BOX_MARGIN_RIGHT,
+            sub.size[1] + CAUGHT_BOX_MARGIN_TOP + CAUGHT_BOX_MARGIN_BOTTOM,
+        ), GLOBAL_BACKGROUND_COLOR
+    )
+
+    image.paste(sub, (CAUGHT_BOX_MARGIN_LEFT, CAUGHT_BOX_MARGIN_TOP))
+
+    return image

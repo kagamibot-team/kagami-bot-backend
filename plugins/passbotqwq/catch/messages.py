@@ -1,7 +1,13 @@
 import math
+import time
+
+from plugins.passbotqwq.putils.draw import imageToBytes
+
+from .cores import PicksResult
 from .models import Award, Level
 from .data import (
     getAllLevels,
+    getAwardByAwardId,
     getAwardsFromLevelId,
     getLevelNameOfAward,
     getLevelOfAward,
@@ -9,41 +15,75 @@ from .data import (
     globalData,
     userData,
 )
+from .images import drawCaughtBox
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 import pathlib
 
 
-def getAward(userId: int, award: Award):
+def displayAward(award: Award):
     return Message(
         [
-            MessageSegment.at(userId),
-            MessageSegment.text(" 你刚刚抓到了一只：" + award.name + "！"),
-            MessageSegment.image(pathlib.Path(award.imgPath)),
             MessageSegment.text(
-                "稀有度：【"
-                + globalData.get().getLevelByLid(award.levelId).name
-                + "】"
-                + f"\n\n{award.description}"
+                "展示 "
+                + award.name
+                + f"【{globalData.get().getLevelByLid(award.levelId).name}】"
             ),
+            MessageSegment.image(pathlib.Path(award.imgPath)),
+            MessageSegment.text(f"\n\n{award.description}"),
         ]
     )
 
 
-def displayAward(award: Award, showDescription: bool=True):
-    return Message(
-        [
-            MessageSegment.text("展示 " + award.name),
-            MessageSegment.image(pathlib.Path(award.imgPath)),
-            MessageSegment.text(
-                "稀有度：【"
-                + globalData.get().getLevelByLid(award.levelId).name
-                + "】"
-                + (f"\n\n{award.description}" if showDescription else "")
-            ),
-        ]
+async def caughtMessage(picksResult: PicksResult):
+    ms = [MessageSegment.at(picksResult.uid)]
+    maxPick = globalData.get().maximusPickCache
+    delta = globalData.get().timeDelta
+
+    nextTime = userData.get(picksResult.uid).pickCalcTime + delta
+
+    deltaTime = nextTime - time.time()
+
+    seconds = math.ceil(deltaTime % 60)
+    minutes = int(deltaTime / 60) % 60
+    hours = int(deltaTime / 3600)
+
+    timeStr = f"{seconds}秒"
+    if hours > 0:
+        timeStr = f"{hours}小时{minutes}分钟" + timeStr
+    elif minutes > 0:
+        timeStr = f"{minutes}分钟" + timeStr
+
+    if picksResult.counts() == 0:
+        return Message(
+            [
+                MessageSegment.at(picksResult.uid),
+                MessageSegment.text(f"小哥还没长成，请再等{timeStr}吧！"),
+            ]
+        )
+
+    ms.append(
+        MessageSegment.text(
+            f"\n剩余抓小哥次数：{picksResult.restCount}/{maxPick}\n下次次数恢复还需{timeStr}\n你刚刚一共抓了 {picksResult.counts()} 只小哥：\n"
+        )
     )
+
+    for pick in picksResult.picks:
+        award = getAwardByAwardId(pick.awardId)
+        level = getLevelOfAward(award)
+
+        image = await drawCaughtBox(pick)
+        ms.append(MessageSegment.image(imageToBytes(image)))
+
+        textBuild = f"【{level.name}】{award.name}\n{award.description}"
+
+        if pick.isNew():
+            textBuild = "【新!】" + textBuild
+
+        ms.append(MessageSegment.text(textBuild))
+
+    return Message(ms)
 
 
 def cannotGetAward(userId: int, delta: float):
@@ -95,7 +135,7 @@ def storageCheck(userId: int):
 
 
 def addAward1():
-    return Message(MessageSegment.text("(输入 ::cancel 取消)\n请输入奖品名称: >_<"))
+    return Message(MessageSegment.text("(输入 ::cancel 取消)\n请输入小哥名称: >_<"))
 
 
 def addAward2(awardTemp: Award):
@@ -111,8 +151,8 @@ def addAward2(awardTemp: Award):
                 (
                     "(输入 ::cancel 取消)\n",
                     "(输入 ::rev 回到上一步)\n",
-                    f"请输入奖品名称: {awardTemp.name}\n",
-                    "请输入奖品等级 (数字)): >_<\n(",
+                    f"请输入小哥名称: {awardTemp.name}\n",
+                    "请输入小哥等级 (数字)): >_<\n(",
                     "; ".join(levels),
                     ")",
                 )
@@ -129,8 +169,8 @@ def addAward3(awardTemp: Award):
             (
                 "(输入 ::cancel 取消)\n"
                 "(输入 ::rev 回到上一步)\n"
-                f"请输入奖品名称: {awardTemp.name}\n"
-                f"请输入奖品等级 (数字)): {level.name}\n"
+                f"请输入小哥名称: {awardTemp.name}\n"
+                f"请输入小哥等级 (数字)): {level.name}\n"
                 "请发送一张图片: >_<"
             )
         )
@@ -158,7 +198,7 @@ def displayWrongFormat():
 
 
 def noAwardNamed(name: str):
-    return Message(MessageSegment.text(f"没有叫做 {name} 的奖品"))
+    return Message(MessageSegment.text(f"没有叫做 {name} 的小哥"))
 
 
 def allLevels():
@@ -207,14 +247,14 @@ def help(isAdmin=False):
     normal = ["抓小哥", "抓小哥帮助", "库存", "抓小哥进度"]
 
     admin = [
-        "::创建奖品",
-        "::删除奖品 名字",
+        "::创建小哥",
+        "::删除小哥 名字",
         "::创建等级 名字 权重 价值",
         "::所有等级",
-        "::所有奖品",
+        "::所有小哥",
         "::设置周期 秒数",
         "::更改等级 名称/权重 等级的名字",
-        "::更改奖品 名称/等级/图片/描述 奖品的名字",
+        "::更改小哥 名称/等级/图片/描述 小哥的名字",
     ]
 
     res = normal + admin if isAdmin else normal

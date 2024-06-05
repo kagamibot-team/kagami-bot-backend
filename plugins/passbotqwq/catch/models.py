@@ -1,5 +1,6 @@
 import os
 import random
+import time
 from pydantic import BaseModel, Field
 
 
@@ -36,6 +37,8 @@ class GameGlobalConfig(BaseModel):
     aidMax: int = 0
 
     timeDelta: float = 3600
+
+    maximusPickCache: int = 6
 
     def addLevel(self, name: str, weight: float, prise: float, hue: float):
         self.levels.append(Level(lid=self.lidMax, name=name, weight=weight, hue=hue, prise=prise))
@@ -118,6 +121,11 @@ class GameGlobalConfig(BaseModel):
         removed = [l for l in self.levels if l.name == name]
         self.levels = [l for l in self.levels if l.name != name]
         return removed
+    
+    def removeLevelByLid(self, lid: int):
+        removed = [l for l in self.levels if l.lid == lid]
+        self.levels = [l for l in self.levels if l.lid != lid]
+        return removed
 
 
 class UserData(BaseModel):
@@ -125,6 +133,9 @@ class UserData(BaseModel):
     awardCounter: dict[int, int] = Field(default_factory=lambda: {})
     backgroundImage: str = DEFAULT_BG
     money: float = 0
+
+    pickCounts: int = 1
+    pickCalcTime: float = Field(default_factory=time.time)
 
     def addAward(self, aid: int):
         if aid in self.awardCounter.keys():
