@@ -1,23 +1,21 @@
-from functools import cache
+import base64
 import math
 import os
 import time
-
-from sqlalchemy import select
-
 import PIL
 import PIL.ImageDraw
 
+from sqlalchemy import select
 from nonebot.log import logger
 from nonebot_plugin_orm import async_scoped_session, get_session
 from nonebot import get_driver
 
-from .models.crud import selectAllLevelUserObtained
+from ..cores import Pick
 
-from .models.Basics import Award, AwardCountStorage, Level, UserData
+from ..models.crud import getAllAwards, isUserHaveAward, selectAllLevelUserObtained
+from ..models.Basics import Award, AwardCountStorage, Level, UserData
 
-from .cores import Pick
-from ..putils.draw.images import (
+from ...putils.draw.images import (
     addUponPaste,
     fastPaste,
     fromOpenCVImage,
@@ -25,15 +23,9 @@ from ..putils.draw.images import (
     toOpenCVImage,
     resize,
 )
-from ..putils.draw.texts import drawText, textBox, textFont, Fonts
-from ..putils.draw.typing import PILImage, PillowColorLike, PillowColorLikeStrong
-from ..putils.draw import newImage
-
-from .data import (
-    DBAward,
-    getLevelOfAward,
-    userHaveAward,
-)
+from ...putils.draw.texts import drawText, textBox, textFont, Fonts
+from ...putils.draw.typing import PILImage, PillowColorLike
+from ...putils.draw import newImage
 
 
 GLOBAL_BACKGROUND_COLOR = "#696361"
@@ -180,8 +172,7 @@ async def drawAwardBox(
 
 
 async def drawStorage(
-    session: async_scoped_session,
-    uid: int,
+    user: UserData,
     scale: float = AWARD_BOX_SCALE,
     maxRowCount: int = STORAGE_AWARD_BOX_XCOUNT_MAX,
     marginLeft: int = STORAGE_MARGIN_LEFT,
@@ -195,87 +186,99 @@ async def drawStorage(
     beginTime = time.time()
     lines: list[int] = []
 
+    session = get_session()
+
     boxHeight = IMAGE_RAW_HEIGHT * scale + AWARD_BOX_NAME_LINE_HEIGHT
     awardBoxes: list[list[AwardCountStorage]] = []
 
-    level_select = selectAllLevelUserObtained(uid).order_by(Level.weight)
-    levels = (await session.execute(level_select)).scalars()
+    level_select = selectAllLevelUserObtained(user).order_by(Level.weight)
 
-    for level in levels:
-        award_counter_select = (
-            select(AwardCountStorage)
-            .filter(AwardCountStorage.target_user.has(UserData.qq_id == uid))
-            .filter(AwardCountStorage.target_award.has(Award.level == level))
-            .order_by(-AwardCountStorage.award_count)
-        )
+    async with session.begin():
+        levels = (await session.execute(level_select)).scalars()
 
-        award_counters = (await session.execute(award_counter_select)).all()
-
-        lines.append(math.ceil(len(award_counters) / maxRowCount))
-        awardBoxes.append([ac.tuple()[0] for ac in award_counters])
-
-    image = await newImage(
-        (
-            int(
-                marginLeft
-                + marginRight
-                + IMAGE_RAW_WIDTH * scale * maxRowCount
-                + paddingX * (maxRowCount - 1)
-            ),
-            int(
-                marginTop
-                + marginBottom
-                + boxHeight * sum(lines)
-                + paddingY * (sum(lines) - 1)
-            ),
-        ),
-        backgroundColor,
-    )
-
-    drawTop = marginTop
-    drawLeft = marginLeft
-
-    for awardStorages in awardBoxes:
-        targetLevel = awardStorages[0].target_award.level
-
-        bgc = AWARD_BOX_BACKGROUND_COLOR
-
-        if targetLevel.data_id in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
-            bgc = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[targetLevel.data_id]  # type: ignore
-
-        for i, awardStorage in enumerate(awardStorages):
-            award = awardStorage.target_award
-
-            box = await drawAwardBox(award, str(awardStorage.award_count), bgc, scale)
-
-            await addUponPaste(
-                image,
-                box,
-                int(
-                    drawLeft + (i % maxRowCount) * (IMAGE_RAW_WIDTH * scale + paddingX)
-                ),
-                int(drawTop + (i // maxRowCount) * (boxHeight + paddingY)),
+        for level in levels:
+            award_counter_select = (
+                select(AwardCountStorage)
+                .filter(AwardCountStorage.target_user == user)
+                .filter(AwardCountStorage.target_award.has(Award.level == level))
+                .order_by(-AwardCountStorage.award_count)
             )
 
-        drawTop += math.ceil(len(awardStorages) / maxRowCount) * (boxHeight + paddingY)
+            award_counters = (await session.execute(award_counter_select)).all()
+
+            lines.append(math.ceil(len(award_counters) / maxRowCount))
+            awardBoxes.append([ac.tuple()[0] for ac in award_counters])
+
+        image = await newImage(
+            (
+                int(
+                    marginLeft
+                    + marginRight
+                    + IMAGE_RAW_WIDTH * scale * maxRowCount
+                    + paddingX * (maxRowCount - 1)
+                ),
+                int(
+                    marginTop
+                    + marginBottom
+                    + boxHeight * sum(lines)
+                    + paddingY * (sum(lines) - 1)
+                ),
+            ),
+            backgroundColor,
+        )
+
+        drawTop: float = marginTop
+        drawLeft: float = marginLeft
+
+        for awardStorages in awardBoxes:
+            targetLevel = awardStorages[0].target_award.level
+
+            bgc = AWARD_BOX_BACKGROUND_COLOR
+
+            if targetLevel.data_id in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
+                bgc = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[targetLevel.data_id]  # type: ignore
+
+            for i, awardStorage in enumerate(awardStorages):
+                award = awardStorage.target_award
+
+                box = await drawAwardBox(
+                    award, str(awardStorage.award_count), bgc, scale
+                )
+
+                await addUponPaste(
+                    image,
+                    box,
+                    int(
+                        drawLeft
+                        + (i % maxRowCount) * (IMAGE_RAW_WIDTH * scale + paddingX)
+                    ),
+                    int(drawTop + (i // maxRowCount) * (boxHeight + paddingY)),
+                )
+
+            drawTop += math.ceil(len(awardStorages) / maxRowCount) * (
+                boxHeight + paddingY
+            )
 
     return image, time.time() - beginTime
 
 
-@cache
-def drawAwardBoxImageHidden():
-    return drawAwardBoxImage(os.path.join(".", "res", "catch", "blank_placeholder.png"))
+async def drawAwardBoxImageHidden():
+    return await drawAwardBoxImage(os.path.join(".", "res", "catch", "blank_placeholder.png"))
 
 
 async def drawStatus(
-    uid: int,
-    scale: float = AWARD_BOX_SCALE,
+    session: async_scoped_session, user: UserData | None, scale: float = AWARD_BOX_SCALE
 ):
     begin = time.time()
 
-    awardsToDraw = DBAward().sorted(lambda a: (getLevelOfAward(a).weight, a.aid))
-
-    lines = math.ceil(len(awardsToDraw) / STATUS_MAX_ROW_COUNT)
+    awards = list(
+        (
+            await session.execute(
+                select(Award).order_by(-Award.level_id, Award.data_id)
+            )
+        ).scalars()
+    )
+    lines = math.ceil(len(awards) / STATUS_MAX_ROW_COUNT)
 
     image = await newImage(
         (
@@ -297,7 +300,7 @@ async def drawStatus(
 
     _image = await toOpenCVImage(image)
 
-    for i, award in enumerate(awardsToDraw):
+    for i, award in enumerate(awards):
         px = i % STATUS_MAX_ROW_COUNT
         py = i // STATUS_MAX_ROW_COUNT
 
@@ -310,16 +313,16 @@ async def drawStatus(
 
         bg = AWARD_BOX_BACKGROUND_COLOR
 
-        level = getLevelOfAward(award)
+        level = award.level
 
-        if level.lid in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
-            bg = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[level.lid]
+        if level.data_id in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
+            bg = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[level.data_id]  # type: ignore
 
-        subImage = await (
-            drawAwardBoxImage(award.imgPath, bg)
-            if userHaveAward(uid, award)
-            else drawAwardBoxImageHidden()
-        )
+        subImage = await drawAwardBoxImage(award.img_path, bg)
+
+        if user is not None and not isUserHaveAward(user, award):
+            subImage = await drawAwardBoxImageHidden()
+
         await fastPaste(_image, await toOpenCVImage(subImage), x, y)
 
     return await fromOpenCVImage(_image), time.time() - begin
@@ -358,3 +361,17 @@ async def preDrawEverything():
         await drawAwardBoxImage(award.img_path, bg)
 
     logger.info("Predraw finished")
+
+
+def getImageTarget(award: Award):
+    safename = base64.b64encode(award.name.encode()).decode().replace('/', '_').replace('+', '-')
+
+    uIndex: int = 0
+
+    def _path():
+        return os.path.join(".", "data", "catch", "awards", f"{safename}_{uIndex}.png")
+
+    while os.path.exists(_path()):
+        uIndex += 1
+
+    return _path()

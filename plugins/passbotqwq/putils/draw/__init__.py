@@ -21,7 +21,6 @@ def newImage(size: Tuple[int, int] = (500, 500), color: PillowColorLike = 'white
     return img
 
 
-@make_async
 def imageToBytes(img: PILImage):
     buffer = io.BytesIO()
     img.save(buffer, format='JPEG')

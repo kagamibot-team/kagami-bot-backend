@@ -1,36 +1,26 @@
 import math
 import time
 
-from plugins.passbotqwq.putils.draw import imageToBytes
 
-from .cores import PicksResult
-from .pydantic_models import PydanticAward, PydanticLevel
-from .data import (
-    pydanticGetAllLevels,
-    getAwardByAwardId,
-    getAwardsFromLevelId,
-    getLevelNameOfAward,
-    getLevelOfAward,
-    getPosibilities,
-    globalData,
-    userData,
-)
-from .images import drawCaughtBox
+from ..models.crud import getAllLevels
+from ..models.data import getPosibilities
+from ..models import Award
+from ..cores import PicksResult
+
+from .images import drawCaughtBox, drawStatus
+from ...putils.draw import imageToBytes
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
+from nonebot_plugin_orm import async_scoped_session
 
 import pathlib
 
 
-def displayAward(award: PydanticAward):
+def displayAward(award: Award):
     return Message(
         [
-            MessageSegment.text(
-                "展示 "
-                + award.name
-                + f"【{globalData.get().getLevelByLid(award.levelId).name}】"
-            ),
-            MessageSegment.image(pathlib.Path(award.imgPath)),
+            MessageSegment.text("展示 " + award.name + f"【{award.level.name}】"),
+            MessageSegment.image(pathlib.Path(award.img_path)),
             MessageSegment.text(f"\n\n{award.description}"),
         ]
     )
@@ -38,10 +28,10 @@ def displayAward(award: PydanticAward):
 
 async def caughtMessage(picksResult: PicksResult):
     ms = [MessageSegment.at(picksResult.uid)]
-    maxPick = globalData.get().maximusPickCache
-    delta = globalData.get().timeDelta
+    maxPick = picksResult.max_pick
+    delta = picksResult.time_delta
 
-    nextTime = userData.get(picksResult.uid).pickCalcTime + delta
+    nextTime = picksResult.pick_calc_time + delta
 
     deltaTime = math.ceil(nextTime - time.time())
 
@@ -74,7 +64,7 @@ async def caughtMessage(picksResult: PicksResult):
         level = award.level
 
         image = await drawCaughtBox(pick)
-        ms.append(MessageSegment.image(await imageToBytes(image)))
+        ms.append(MessageSegment.image(imageToBytes(image)))
 
         textBuild = f"【{level.name}】{award.name}\n{award.description}"
 
@@ -98,82 +88,6 @@ def cannotGetAward(userId: int, delta: float):
                 f"还需要 {hours} 小时 {minutes} 分钟 {seconds} 秒你才能抓哦"
             ),
         ]
-    )
-
-
-def storageCheck(userId: int):
-    if userData.get(userId).getAwardSum() == 0:
-        return Message(
-            [MessageSegment.at(userId), MessageSegment.text("你的仓库里什么也没有～")]
-        )
-
-    ac = userData.get(userId).awardCounter
-
-    kc_list: list[tuple[PydanticAward, int, PydanticLevel]] = []
-
-    for a in ac.keys():
-        award = globalData.get().getAwardByAid(a)
-
-        if award is None:
-            continue
-
-        count = ac[a]
-        level = getLevelOfAward(award)
-
-        kc_list.append((award, count, level))
-
-    kc_list.sort(key=lambda a: (a[2].weight, a[0].name))
-
-    result = [f"\n【{l.name}】{a.name} 共有 {c} 个" for a, c, l in kc_list]
-
-    return Message(
-        [
-            MessageSegment.at(userId),
-            MessageSegment.text("你的仓库的库存如下：" + "".join(result)),
-        ]
-    )
-
-
-def addAward1():
-    return Message(MessageSegment.text("(输入 ::cancel 取消)\n请输入小哥名称: >_<"))
-
-
-def addAward2(awardTemp: PydanticAward):
-    levels = [
-        f"{level.lid} - {level.name}"
-        for level in globalData.get().levels
-        if level.name != "名称已丢失"
-    ]
-
-    return Message(
-        MessageSegment.text(
-            "".join(
-                (
-                    "(输入 ::cancel 取消)\n",
-                    "(输入 ::rev 回到上一步)\n",
-                    f"请输入小哥名称: {awardTemp.name}\n",
-                    "请输入小哥等级 (数字)): >_<\n(",
-                    "; ".join(levels),
-                    ")",
-                )
-            )
-        )
-    )
-
-
-def addAward3(awardTemp: PydanticAward):
-    level = globalData.get().getLevelByLid(awardTemp.levelId)
-
-    return Message(
-        MessageSegment.text(
-            (
-                "(输入 ::cancel 取消)\n"
-                "(输入 ::rev 回到上一步)\n"
-                f"请输入小哥名称: {awardTemp.name}\n"
-                f"请输入小哥等级 (数字)): {level.name}\n"
-                "请发送一张图片: >_<"
-            )
-        )
     )
 
 
@@ -201,23 +115,25 @@ def noAwardNamed(name: str):
     return Message(MessageSegment.text(f"没有叫做 {name} 的小哥"))
 
 
-def allLevels():
+async def allLevels(session: async_scoped_session):
+    levelObjs = await getAllLevels(session)
+
     levels = [
-        f"\n- 【{l.name}】权重 {l.weight} 爆率 {getPosibilities(l)} %"
-        for l in pydanticGetAllLevels()
+        f"\n- 【{l.name}】权重 {l.weight} 爆率 {await getPosibilities(session, l)} %"
+        for l in levelObjs
         if l.name != "名称已丢失"
     ]
 
     return Message(MessageSegment.text("所有包含的等级：" + "".join(levels)))
 
 
-def allAwards():
-    _levels = pydanticGetAllLevels()
+async def allAwards(session: async_scoped_session):
+    _levels = await getAllLevels(session)
 
     _result: list[str] = []
 
     for level in _levels:
-        _awards = getAwardsFromLevelId(level.lid)
+        _awards = level.awards
 
         if len(_awards) == 0:
             continue
@@ -226,13 +142,20 @@ def allAwards():
             continue
 
         _result.append(
-            f"【{level.name}】爆率: {getPosibilities(level)}%\n"
+            f"【{level.name}】爆率: {await getPosibilities(session, level) * 100}%\n"
             + "，".join([award.name for award in _awards])
         )
 
     result = "\n\n".join(_result)
 
-    return Message(MessageSegment.text("===== 奖池 =====\n" + result))
+    image, _ = await drawStatus(session, None)
+
+    return Message(
+        [
+            MessageSegment.text("===== 奖池 =====\n" + result),
+            MessageSegment.image(imageToBytes(image)),
+        ]
+    )
 
 
 def settingOk():
@@ -253,9 +176,9 @@ def help(isAdmin=False):
     ]
 
     admin = [
-        "::创建小哥",
+        "::创建小哥 名字 等级",
         "::删除小哥 名字",
-        "::创建等级 名字 权重 价值",
+        # "::创建等级 名字 权重 价值",
         "::所有等级",
         "::所有小哥",
         "::设置周期 秒数",
@@ -272,4 +195,9 @@ def help(isAdmin=False):
     )
 
 
-updateHistory = {"0.2.0": ["修复间隔为 0 时报错的问题"]}
+updateHistory = {
+    "0.2.0": [
+        "将数据使用数据库储存",
+        "修复间隔为 0 时报错的问题",
+    ]
+}

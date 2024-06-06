@@ -259,20 +259,6 @@ def getPosibilities(level: PydanticLevel):
     return round(level.weight / getWeightSum() * 100, 2)
 
 
-def getImageTarget(award: PydanticAward):
-    safename = base64.b64encode(award.name.encode()).decode().replace('/', '_').replace('+', '-')
-
-    uIndex: int = 0
-
-    def _path():
-        return os.path.join(".", "data", "catch", "awards", f"{safename}_{uIndex}.png")
-
-    while os.path.exists(_path()):
-        uIndex += 1
-
-    return _path()
-
-
 @deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getAllAwardsOfOneUser(uid: int):
     aids: list[PydanticAward] = []

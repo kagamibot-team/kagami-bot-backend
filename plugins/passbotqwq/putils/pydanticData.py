@@ -41,8 +41,6 @@ class PydanticDataManager(Generic[T]):
         return None
 
     def save(self):
-        raise DeprecationWarning
-    
         obj = {str(key): self.data[key].model_dump() for key in self.data.keys()}
 
         with open(self.filePath, "w", encoding="utf-8") as f:
@@ -107,8 +105,6 @@ class PydanticDataManagerGlobal(Generic[T]):
         return None
 
     def save(self):
-        raise DeprecationWarning
-    
         data = self.data.model_dump_json()
 
         if self.backupFolder != "":

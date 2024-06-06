@@ -54,3 +54,5 @@ class UserData(Model, BaseMixin):
 
     pick_count_remain: Mapped[int] = mapped_column(default=0)
     pick_count_last_calculated: Mapped[float] = mapped_column(default=0)
+    pick_time_delta: Mapped[float] = mapped_column(default=3600)
+    pick_max_cache: Mapped[int] = mapped_column(default=6)

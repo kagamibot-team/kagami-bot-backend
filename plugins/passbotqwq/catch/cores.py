@@ -5,9 +5,9 @@ import time
 
 from sqlalchemy import select
 
+from .models.data import addAward
 from .models.crud import getAllAvailableLevels, getOrCreateUser
 from .models.Basics import Award, AwardCountStorage, UserData
-from .data import DBAward, userData, globalData
 
 from nonebot_plugin_orm import async_scoped_session
 
@@ -30,6 +30,9 @@ class PicksResult:
     picks: list[Pick]
     uid: int
     restCount: int
+    max_pick: int
+    time_delta: float
+    pick_calc_time: float
 
     def counts(self):
         return sum([p.delta() for p in self.picks])
@@ -44,9 +47,9 @@ async def pick(session: async_scoped_session, user: UserData) -> list[Award]:
     return [random.choice([a for a in awardsResult.scalars()])]
 
 
-async def recalcPickTime(session: async_scoped_session, user: UserData):
-    maxPick = globalData.get().maximusPickCache
-    timeDelta = globalData.get().timeDelta
+def recalcPickTime(user: UserData):
+    maxPick = user.pick_max_cache
+    timeDelta = user.pick_time_delta
     nowTime = time.time()
 
     if timeDelta == 0:
@@ -70,22 +73,22 @@ async def recalcPickTime(session: async_scoped_session, user: UserData):
     return user.pick_count_remain - nowTime
 
 
-async def canPickCount(session: async_scoped_session, user: UserData):
-    await recalcPickTime(session, user)
+def canPickCount(user: UserData):
+    recalcPickTime(user)
     return user.pick_count_remain
 
 
 async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int = 1) -> PicksResult:
     user = await getOrCreateUser(session, uid)
 
-    count = await canPickCount(session, user)
+    count = canPickCount(user)
 
     if maxPickCount > 0:
         count = min(maxPickCount, count)
     else:
         count = count
 
-    pickResult = PicksResult([], uid, user.pick_count_remain - count)
+    pickResult = PicksResult([], uid, user.pick_count_remain - count, user.pick_max_cache, user.pick_time_delta, user.pick_count_last_calculated)
 
     awards = list(itertools.chain(*[await pick(session, user) for _ in range(count)]))
     awardsDelta: dict[Award, int] = {}
@@ -99,22 +102,7 @@ async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int 
     user.pick_count_remain -= count
 
     for award in awardsDelta:
-        awardCounter = (await session.execute(select(AwardCountStorage).filter(
-            AwardCountStorage.target_user == user
-        ).filter(
-            AwardCountStorage.target_award == award
-        ))).scalar()
-
-        if awardCounter is None:
-            awardCounter = AwardCountStorage(
-                target_user = user,
-                target_award = award,
-                award_count = 0
-            )
-            session.add(awardCounter)
-
-        oldValue = awardCounter.award_count
-        awardCounter.award_count += 1
+        oldValue = await addAward(session, user, award, awardsDelta[award]) - awardsDelta[award]
 
         pickResult.picks.append(Pick(award, oldValue, oldValue + awardsDelta[award]))
 
