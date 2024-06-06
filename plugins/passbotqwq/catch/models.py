@@ -129,13 +129,13 @@ class GameGlobalConfig(BaseModel):
 
 
 class UserData(BaseModel):
-    lastCatch: float = 0
+    lastCatch: float = 1
     awardCounter: dict[int, int] = Field(default_factory=lambda: {})
     backgroundImage: str = DEFAULT_BG
     money: float = 0
 
     pickCounts: int = 1
-    pickCalcTime: float = Field(default_factory=time.time)
+    pickCalcTime: float = 0
 
     def addAward(self, aid: int):
         if aid in self.awardCounter.keys():
