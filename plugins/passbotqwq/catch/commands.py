@@ -295,7 +295,7 @@ class Give(Command):
         await addAward(env.session, await getOrCreateUser(env.session, int(result.group(1))), award, 1)
 
         message = Message(
-            [at(env.sender), text(f" : 已将 {award.name} 给予用户 "), at(env.sender)]
+            [at(env.sender), text(f" : 已将 {award.name} 给予用户 {result.group(1)}")]
         )
 
         await env.session.commit()
