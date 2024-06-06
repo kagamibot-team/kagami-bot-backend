@@ -4,7 +4,7 @@ import time
 from plugins.passbotqwq.putils.draw import imageToBytes
 
 from .cores import PicksResult
-from .models import Award, Level
+from .pydantic_models import PydanticAward, PydanticLevel
 from .data import (
     getAllLevels,
     getAwardByAwardId,
@@ -22,7 +22,7 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 import pathlib
 
 
-def displayAward(award: Award):
+def displayAward(award: PydanticAward):
     return Message(
         [
             MessageSegment.text(
@@ -109,7 +109,7 @@ def storageCheck(userId: int):
 
     ac = userData.get(userId).awardCounter
 
-    kc_list: list[tuple[Award, int, Level]] = []
+    kc_list: list[tuple[PydanticAward, int, PydanticLevel]] = []
 
     for a in ac.keys():
         award = globalData.get().getAwardByAid(a)
@@ -138,7 +138,7 @@ def addAward1():
     return Message(MessageSegment.text("(输入 ::cancel 取消)\n请输入小哥名称: >_<"))
 
 
-def addAward2(awardTemp: Award):
+def addAward2(awardTemp: PydanticAward):
     levels = [
         f"{level.lid} - {level.name}"
         for level in globalData.get().levels
@@ -161,7 +161,7 @@ def addAward2(awardTemp: Award):
     )
 
 
-def addAward3(awardTemp: Award):
+def addAward3(awardTemp: PydanticAward):
     level = globalData.get().getLevelByLid(awardTemp.levelId)
 
     return Message(

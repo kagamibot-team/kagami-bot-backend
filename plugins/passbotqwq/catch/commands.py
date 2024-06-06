@@ -6,10 +6,10 @@ from typing import Any, Callable, Coroutine, TypeVar
 from nonebot.exception import FinishedException
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
-from plugins.passbotqwq.catch.cores import handlePick
+from plugins.passbotqwq.catch.cores import pydanticHandlePick
+from plugins.passbotqwq.catch.pydantic_models import PydanticAward, PydanticLevel
 
 from ..putils.download import download, writeData
-from .models import Award, Level
 from ..putils.draw import _hello_world, imageToBytes
 from .messages import (
     allAwards,
@@ -31,6 +31,8 @@ from .data import (
     userData,
     globalData,
 )
+
+from .models import *
 
 from .images import drawStatus, drawStorage
 from ..putils.text_format_check import not_negative, regex, A_SIMPLE_RULE
@@ -166,7 +168,7 @@ class Catch(Command):
         if result.group(2) is not None and result.group(2).isdigit():
             maxCount = int(result.group(2))
 
-        picksResult = handlePick(env.sender, maxCount)
+        picksResult = pydanticHandlePick(env.sender, maxCount)
 
         return await caughtMessage(picksResult)
 
@@ -181,7 +183,7 @@ class CrazyCatch(Command):
     async def _handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        picksResult = handlePick(env.sender, -1)
+        picksResult = pydanticHandlePick(env.sender, -1)
 
         return await caughtMessage(picksResult)
 
@@ -439,7 +441,7 @@ class CatchProgress(Command):
 @dataclass
 class CatchModifyCallback(CallbackBase):
     modifyType: str
-    modifyObject: Award
+    modifyObject: PydanticAward
 
     def callbackMessage(self, env: CheckEnvironment, reason: str = ""):
         info: str = f" {reason}，请再次输入它的 " if reason else " 请输入它的 "
@@ -547,7 +549,7 @@ class CatchModify(Command):
 @dataclass
 class CatchLevelModifyCallback(CallbackBase):
     modifyType: str
-    modifyObject: Level
+    modifyObject: PydanticLevel
 
     def callbackMessage(self, env: CheckEnvironment, reason: str = ""):
         info: str = f" {reason}，请再次输入它的 " if reason else " 请输入它的 "
@@ -674,4 +676,5 @@ enabledCommand: list[CommandBase] = [
     CatchLevelModify(),
     CatchProgress(),
     CatchFilterNoDescription(),
+    ImageTest(),
 ]

@@ -1,15 +1,16 @@
 import base64
 import os
 
+import time
 from typing import Callable, Generic, TypeVar
 from typing_extensions import deprecated
 from ..putils.typing import SupportsRichComparison
 
 from ..putils import PydanticDataManager, PydanticDataManagerGlobal
-from .models import Award, GameGlobalConfig, Level, UserData
+from .pydantic_models import PydanticAward, GameGlobalConfig, PydanticLevel, UserData
 
 
-class AwardList(list[Award]):
+class AwardList(list[PydanticAward]):
     def aid(self):
         return [a.aid for a in self]
     
@@ -23,7 +24,7 @@ class AwardList(list[Award]):
         return set([a.levelId for a in self])
 
 
-class LevelList(list[Level]):
+class LevelList(list[PydanticLevel]):
     def lid(self):
         return [l.lid for l in self]
     
@@ -45,8 +46,12 @@ class ListFilter(Generic[T]):
     def get(self) -> list[T]:
         result = self.ls
 
+        beginTime = time.time()
+
         for limit in self.limitations:
             result = [v for v in result if limit(v)]
+
+        print("Filter of", self.__class__.__name__ , "spent", time.time() - beginTime)
         
         return result
     
@@ -63,7 +68,7 @@ class ListFilter(Generic[T]):
         return self()[0]
 
 
-class DBAward(ListFilter[Award]):
+class DBAward(ListFilter[PydanticAward]):
     def __init__(self) -> None:
         super().__init__(getAllAwards())
     
@@ -86,7 +91,7 @@ class DBAward(ListFilter[Award]):
         return AwardList(super().get())
 
 
-class DBLevel(ListFilter[Level]):
+class DBLevel(ListFilter[PydanticLevel]):
     def __init__(self) -> None:
         super().__init__(getAllLevels())
 
@@ -108,7 +113,7 @@ class DBLevel(ListFilter[Level]):
     def weightNotSmallerThan(self, weight: float = 0):
         return self._weight(lambda w: w >= weight)
     
-    def containAward(self, award: Award):
+    def containAward(self, award: PydanticAward):
         return self._limit(lambda l: award.levelId == l.lid)
 
     def name(self, name: str):
@@ -120,7 +125,7 @@ class DBLevel(ListFilter[Level]):
     def userHave(self, uid: int, atLeast: int = 1):
         return self._limit(lambda l: DBAward().userHave(uid, atLeast).lid(l.lid).len() > 0)
     
-    def containAwards(self, awards: list[Award]):
+    def containAwards(self, awards: list[PydanticAward]):
         return self._limit(lambda l: l.lid in AwardList(awards).lids())
 
 
@@ -177,11 +182,11 @@ def ensureNoSameLid():
             d.levels.append(level)
 
 
-def getLevelNameOfAward(award: Award):
+def getLevelNameOfAward(award: PydanticAward):
     return globalData.get().getLevelByLid(award.levelId).name
 
 
-def getLevelOfAward(award: Award):
+def getLevelOfAward(award: PydanticAward):
     return globalData.get().getLevelByLid(award.levelId)
 
 
@@ -197,7 +202,7 @@ def clearUnavailableAward():
         userData.set(user, uData)
 
 
-def userHaveAward(uid: int, award: Award):
+def userHaveAward(uid: int, award: PydanticAward):
     return len([a for a in getAllAwardsOfOneUser(uid) if a.aid == award.aid])
 
 
@@ -222,7 +227,7 @@ def getAwardsFromLevelId(lid: int):
 
 
 @deprecated('该方法将在未来移除，请使用 Filter 替代')
-def getAllLevelsOfAwardList(awards: list[Award]):
+def getAllLevelsOfAwardList(awards: list[PydanticAward]):
     levels = getAllLevels()
 
     return [level for level in levels if len([a for a in awards if a.levelId == level.lid]) > 0][::-1]
@@ -248,11 +253,11 @@ def getWeightSum():
     return result
 
 
-def getPosibilities(level: Level):
+def getPosibilities(level: PydanticLevel):
     return round(level.weight / getWeightSum() * 100, 2)
 
 
-def getImageTarget(award: Award):
+def getImageTarget(award: PydanticAward):
     safename = base64.b64encode(award.name.encode()).decode().replace('/', '_').replace('+', '-')
 
     uIndex: int = 0
@@ -268,7 +273,7 @@ def getImageTarget(award: Award):
 
 @deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getAllAwardsOfOneUser(uid: int):
-    aids: list[Award] = []
+    aids: list[PydanticAward] = []
     ac = userData.get(uid).awardCounter
 
     for key in ac.keys():

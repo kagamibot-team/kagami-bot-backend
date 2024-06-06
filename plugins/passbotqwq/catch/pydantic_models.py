@@ -8,7 +8,7 @@ DEFAULT_IMG = os.path.join(".", "res", "catch", "default.png")
 DEFAULT_BG = os.path.join(".", "res", "catch", "default-bg.png")
 
 
-class Level(BaseModel):
+class PydanticLevel(BaseModel):
     lid: int = -1
     name: str = "未命名等级"
     weight: float = 1
@@ -16,7 +16,7 @@ class Level(BaseModel):
     prise: float = 0
 
 
-class Award(BaseModel):
+class PydanticAward(BaseModel):
     aid: int = -1
     imgPath: str = DEFAULT_IMG
     name: str = "名称已丢失"
@@ -31,8 +31,8 @@ class Award(BaseModel):
 
 
 class GameGlobalConfig(BaseModel):
-    levels: list[Level] = Field(default_factory=lambda: [])
-    awards: list[Award] = Field(default_factory=lambda: [])
+    levels: list[PydanticLevel] = Field(default_factory=lambda: [])
+    awards: list[PydanticAward] = Field(default_factory=lambda: [])
     lidMax: int = 0
     aidMax: int = 0
 
@@ -41,13 +41,13 @@ class GameGlobalConfig(BaseModel):
     maximusPickCache: int = 6
 
     def addLevel(self, name: str, weight: float, prise: float, hue: float):
-        self.levels.append(Level(lid=self.lidMax, name=name, weight=weight, hue=hue, prise=prise))
+        self.levels.append(PydanticLevel(lid=self.lidMax, name=name, weight=weight, hue=hue, prise=prise))
         self.lidMax += 1
         return self.lidMax - 1
 
     def addAward(self, name: str, lid: int, imgPath: str):
         self.awards.append(
-            Award(aid=self.aidMax, imgPath=imgPath, name=name, levelId=lid)
+            PydanticAward(aid=self.aidMax, imgPath=imgPath, name=name, levelId=lid)
         )
 
         self.aidMax += 1
@@ -60,7 +60,7 @@ class GameGlobalConfig(BaseModel):
         if len(levelFiltered) > 0:
             return levelFiltered[0]
 
-        newOne = Level(lid=lid)
+        newOne = PydanticLevel(lid=lid)
         self.levels.append(newOne)
 
         if self.lidMax <= lid:

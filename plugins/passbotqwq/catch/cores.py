@@ -3,7 +3,7 @@ import itertools
 import random
 import time
 from .data import DBAward, DBLevel, getAllAwards, getAllLevelsOfAwardList, getAwardsFromLevelId, userData, globalData
-from .models import Award
+from .pydantic_models import PydanticAward
 
 
 @dataclass
@@ -32,7 +32,7 @@ class PicksResult:
         return sum([p.delta() for p in self.picks])
 
 
-def pick(uid: int) -> list[Award]:
+def pick(uid: int) -> list[PydanticAward]:
     allAvailableLevels = DBLevel().containAwards(getAllAwards())()
     level = random.choices(allAvailableLevels, [l.weight for l in allAvailableLevels])[0]
     awards = DBAward().lid(level.lid)()
@@ -71,7 +71,7 @@ def canPickCount(uid: int):
     return userData.get(uid).pickCounts
 
 
-def handlePick(uid: int, maxPickCount: int = 1) -> PicksResult:
+def pydanticHandlePick(uid: int, maxPickCount: int = 1) -> PicksResult:
     count = canPickCount(uid)
     if maxPickCount > 0:
         count = min(maxPickCount, count)

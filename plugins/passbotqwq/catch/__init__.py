@@ -1,4 +1,5 @@
 import asyncio
+from nonebot import on_message
 from nonebot.plugin import on
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
 from nonebot.exception import FinishedException
@@ -14,8 +15,8 @@ from ..putils.text_format_check import (
     not_negative,
 )
 
-from .models import UserData, Award, GameGlobalConfig, Level
-from .data import getAwardByAwardName, getImageTarget, globalData, userData, save
+from .pydantic_models import UserData, PydanticAward, GameGlobalConfig, PydanticLevel
+from .data import getAllAwards, getAllLevels, getAwardByAwardName, getImageTarget, globalData, userData, save
 from .messages import (
     addAward2,
     addAward3,
@@ -28,8 +29,72 @@ from .messages import (
 )
 from .commands import CallbackBase, CheckEnvironment, WaitForMoreInformationException, enabledCommand
 
+from .data import userData as ud
+
+from nonebot_plugin_orm import async_scoped_session
+from nonebot.params import EventMessage
+
+from . import models
+from nonebot.rule import fullmatch
+
 
 eventMatcher = on()
+
+basicHandler = on_message(fullmatch("::admin-migrate-database"), priority=10)
+
+
+@basicHandler.handle()
+async def _(session: async_scoped_session, event: GroupMessageEvent):
+    if event.sender.user_id != 514827965:
+        return
+
+    levels = sorted(getAllLevels(), key=lambda l: -l.weight)
+    awards = sorted(getAllAwards(), key=lambda x: x.aid)
+    userData = ud.data
+
+    for level in levels:
+        dbLevel = models.Level(
+            name=level.name,
+            weight=level.weight,
+        )
+
+        session.add(dbLevel)
+    
+    for award in awards:
+        dbAward = models.Award(
+            img_path=award.imgPath,
+            name=award.name,
+            description=award.description,
+            level=await session.get(models.Level, award.levelId)
+        )
+
+        session.add(dbAward)
+    
+    for uid in userData.keys():
+        user = userData[uid]
+
+        dbUserData = models.UserData(
+            qq_id=uid,
+            money=user.money,
+            pick_count_remain=user.pickCounts,
+            pick_count_last_calculated=user.pickCalcTime
+        )
+
+        session.add(dbUserData)
+    
+        for aid in user.awardCounter:
+            acount = user.awardCounter[aid]
+
+            dbAwardCountStorage = models.AwardCountStorage(
+                target_user = dbUserData,
+                target_award = await session.get(models.Award, aid),
+                award_count = acount
+            )
+
+            session.add(dbAwardCountStorage)
+    
+    await session.commit()
+    await finish(Message(MessageSegment.text("Done")))
 
 
 async def finish(message: Message) -> NoReturn:
@@ -40,7 +105,7 @@ flag: dict[int, int] = {}
 
 callbacks: dict[int, CallbackBase | None] = {}
 
-award_create_tmp: dict[int, Award] = {}
+award_create_tmp: dict[int, PydanticAward] = {}
 
 WHITELIST_NO_WUM = ["136468747", "963431993"]
 
@@ -161,7 +226,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
     if re.match("^::(添加|增加|创建|新建|新增)小哥$", text):
         flag[sender] = 1
-        award_create_tmp[sender] = Award()
+        award_create_tmp[sender] = PydanticAward()
         await finish(addAward1())
 
     env = CheckEnvironment(sender, text, event.message_id, event.message)
