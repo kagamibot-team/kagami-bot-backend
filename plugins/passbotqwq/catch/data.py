@@ -18,6 +18,9 @@ class AwardList(list[Award]):
     
     def name(self):
         return [a.name for a in self]
+    
+    def lids(self):
+        return set([a.levelId for a in self])
 
 
 class LevelList(list[Level]):
@@ -55,6 +58,9 @@ class ListFilter(Generic[T]):
     
     def sorted(self, key: Callable[[T], SupportsRichComparison]):
         return sorted(self(), key=key)
+    
+    def first(self):
+        return self()[0]
 
 
 class DBAward(ListFilter[Award]):
@@ -113,6 +119,9 @@ class DBLevel(ListFilter[Level]):
     
     def userHave(self, uid: int, atLeast: int = 1):
         return self._limit(lambda l: DBAward().userHave(uid, atLeast).lid(l.lid).len() > 0)
+    
+    def containAwards(self, awards: list[Award]):
+        return self._limit(lambda l: l.lid in AwardList(awards).lids())
 
 
 def save():

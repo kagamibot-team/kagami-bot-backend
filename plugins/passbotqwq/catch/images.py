@@ -17,7 +17,7 @@ from ..putils.draw.images import (
     toOpenCVImage,
 )
 from ..putils.draw.texts import drawText, textBox, textFont, Fonts
-from ..putils.draw.typing import IMAGE, PILLOW_COLOR_LIKE
+from ..putils.draw.typing import PILImage, PillowColorLike
 from ..putils.draw import newImage
 
 from .data import (
@@ -122,29 +122,11 @@ AWARD_BOX_WIDTH = AWARD_BOX_IMAGE_WIDTH
 AWARD_BOX_HEIGHT = AWARD_BOX_IMAGE_HEIGHT + AWARD_BOX_NAME_LINE_HEIGHT
 
 
-def _get_width_of_boxes(count: int):
-    return (
-        AWARD_BOX_MARGIN_LEFT
-        + AWARD_BOX_MARGIN_RIGHT
-        + AWARD_BOX_PADDING_X * (count - 1)
-        + AWARD_BOX_WIDTH * count
-    )
-
-
-def _get_height_of_boxes(lines: int):
-    return (
-        AWARD_BOX_MARGIN_TOP
-        + AWARD_BOX_MARGIN_BOTTOM
-        + AWARD_BOX_PADDING_Y * (lines - 1)
-        + AWARD_BOX_HEIGHT * lines
-    )
-
-
-__cached_box_image: dict[tuple[str, PILLOW_COLOR_LIKE], IMAGE] = {}
+__cached_box_image: dict[tuple[str, PillowColorLike], PILImage] = {}
 
 
 def drawAwardBoxImage(
-    awardURL: str, background: PILLOW_COLOR_LIKE = AWARD_BOX_BACKGROUND_COLOR
+    awardURL: str, background: PillowColorLike = AWARD_BOX_BACKGROUND_COLOR
 ):
     _key = (awardURL, background)
 
@@ -174,7 +156,7 @@ def drawAwardBoxImage(
 def drawAwardBox(
     award: Award,
     count: str = "",
-    bgColor: PILLOW_COLOR_LIKE = AWARD_BOX_BACKGROUND_COLOR,
+    bgColor: PillowColorLike = AWARD_BOX_BACKGROUND_COLOR,
 ):
     base = newImage(
         (int(AWARD_BOX_WIDTH), int(AWARD_BOX_HEIGHT)), GLOBAL_BACKGROUND_COLOR
@@ -295,102 +277,6 @@ def drawStorage(uid: int):
         )
 
     return image, time.time() - beginTime
-    beginTime = time.time()
-    boxes: list[tuple[float, float]] = []
-
-    awards = getAllAwardsOfOneUser(uid)
-
-    for level in getAllLevelsOfAwardList(getAllAwardsOfOneUser(uid)):
-        tbox = textBox(f"{level.name}", STORAGE_TITLE_TEXT_FONT)
-        boxes.append((tbox.right - tbox.left, tbox.bottom - tbox.top))
-
-        awardsLength = len([a for a in awards if a.levelId == level.lid])
-
-        if awardsLength >= STORAGE_AWARD_BOX_XCOUNT_MAX:
-            boxes.append(
-                (
-                    _get_width_of_boxes(STORAGE_AWARD_BOX_XCOUNT_MAX),
-                    _get_height_of_boxes(
-                        math.ceil(awardsLength / STORAGE_AWARD_BOX_XCOUNT_MAX)
-                    ),
-                )
-            )
-        else:
-            boxes.append(
-                (
-                    _get_width_of_boxes(awardsLength),
-                    _get_height_of_boxes(1),
-                )
-            )
-
-    image = newImage(
-        (
-            math.ceil(max([b[0] for b in boxes]))
-            + STORAGE_MARGIN_LEFT
-            + STORAGE_MARGIN_RIGHT,
-            math.ceil(sum([b[1] for b in boxes]))
-            + STORAGE_MARGIN_TOP
-            + STORAGE_MARGIN_BOTTOM,
-        ),
-        GLOBAL_BACKGROUND_COLOR,
-    )
-
-    draw = PIL.ImageDraw.Draw(image)
-
-    drawTop: float = STORAGE_MARGIN_TOP
-    drawLeft: float = STORAGE_MARGIN_LEFT
-
-    pointer = 0
-
-    for level in getAllLevelsOfAwardList(getAllAwardsOfOneUser(uid)):
-        tbox = textBox(f"{level.name}", STORAGE_TITLE_TEXT_FONT)
-
-        color = STORAGE_TITLE_TEXT_COLOR
-
-        if level.lid in STORAGE_TITLE_SPECIFIED_COLOR.keys():
-            color = STORAGE_TITLE_SPECIFIED_COLOR[level.lid]
-
-        drawText(
-            draw,
-            f"{level.name}",
-            drawLeft - tbox.left,
-            drawTop,
-            color,
-            STORAGE_TITLE_TEXT_FONT,
-        )
-
-        drawTop += AWARD_BOX_MARGIN_TOP + boxes[pointer][1]
-        drawLeft += AWARD_BOX_MARGIN_LEFT
-
-        levelAwards = [a for a in awards if a.levelId == level.lid]
-
-        for ind, award in enumerate(levelAwards):
-            colX = ind % STORAGE_AWARD_BOX_XCOUNT_MAX
-            colY = ind // STORAGE_AWARD_BOX_XCOUNT_MAX
-
-            xDelta = colX * (AWARD_BOX_WIDTH + AWARD_BOX_PADDING_X)
-            yDelta = colY * (AWARD_BOX_HEIGHT + AWARD_BOX_PADDING_Y) + boxes[pointer][1]
-
-            addUponPaste(
-                image,
-                drawAwardBox(award, str(getAwardCountOfOneUser(uid, award.aid))),
-                int(drawLeft + xDelta),
-                int(drawTop + yDelta),
-            )
-
-        drawLeft -= AWARD_BOX_MARGIN_LEFT
-        drawTop += (
-            _get_height_of_boxes(
-                math.ceil(len(levelAwards) / STORAGE_AWARD_BOX_XCOUNT_MAX)
-            )
-            - AWARD_BOX_MARGIN_TOP
-        )
-
-        pointer += 2
-
-    print(boxes)
-
-    return image, time.time() - beginTime
 
 
 @cache
@@ -402,9 +288,7 @@ def drawAwardBoxImageHidden():
 def drawStatus(uid: int):
     begin = time.time()
 
-    awardsToDraw = sorted(
-        getAllAwards(), key=lambda a: (getLevelOfAward(a).weight, a.aid)
-    )
+    awardsToDraw = DBAward().sorted(lambda a: (getLevelOfAward(a).weight, a.aid))
 
     lines = math.ceil(len(awardsToDraw) / STATUS_MAX_ROW_COUNT)
 
@@ -449,7 +333,6 @@ def drawStatus(uid: int):
             if userHaveAward(uid, award)
             else drawAwardBoxImageHidden()
         )
-        # image.paste(subImage, (x, y))
         fastPaste(_image, toOpenCVImage(subImage), x, y)
 
     return fromOpenCVImage(_image), time.time() - begin
@@ -457,9 +340,7 @@ def drawStatus(uid: int):
 
 @make_async
 def drawCaughtBox(pick: Pick):
-    sub = drawAwardBox(
-        getAwardByAwardId(pick.awardId), f"{pick.fromNumber}→{pick.toNumber}"
-    )
+    sub = drawAwardBox(pick.award(), f"{pick.fromNumber}→{pick.toNumber}")
 
     image = newImage(
         (

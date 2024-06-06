@@ -6,19 +6,19 @@ import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
 
-from .typing import IMAGE, PILLOW_COLOR_LIKE, PILLOW_COLOR_LIKE_WEAK
+from .typing import PILImage, PillowColorLike, PillowColorLikeWeak
 
 
 FONT_HARMONYOS_SANS = r'C:\Windows\Fonts\HarmonyOS_Sans_SC_Regular.ttf'
 FONT_HARMONYOS_SANS_BLACK = r'C:\Windows\Fonts\HarmonyOS_Sans_SC_Black.ttf'
 
 
-def newImage(size: Tuple[int, int] = (500, 500), color: PILLOW_COLOR_LIKE = 'white'):
+def newImage(size: Tuple[int, int] = (500, 500), color: PillowColorLike = 'white'):
     img = PIL.Image.new('RGB', size, color)
     return img
 
 
-def imageToBytes(img: IMAGE):
+def imageToBytes(img: PILImage):
     buffer = io.BytesIO()
     img.save(buffer, format='JPEG')
     return buffer.getvalue()

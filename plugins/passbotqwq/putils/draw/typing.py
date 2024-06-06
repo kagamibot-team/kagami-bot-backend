@@ -3,9 +3,9 @@ import PIL.Image
 import cv2
 
 
-PILLOW_COLOR_LIKE_STRONG = str | int | tuple[int, int, int] | tuple[int, int, int, int] | None
-PILLOW_COLOR_LIKE = int | tuple[int] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int] | str | float | tuple[float]
-PILLOW_COLOR_LIKE_WEAK = PILLOW_COLOR_LIKE | None
+PillowColorLikeStrong = str | int | tuple[int, int, int] | tuple[int, int, int, int] | None
+PillowColorLike = int | tuple[int] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int] | str | float | tuple[float]
+PillowColorLikeWeak = PillowColorLike | None
 
-IMAGE = PIL.Image.Image
-CV2IMAGE = cv2.typing.MatLike
+PILImage = PIL.Image.Image
+Cv2Image = cv2.typing.MatLike

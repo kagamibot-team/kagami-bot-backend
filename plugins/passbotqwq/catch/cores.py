@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import itertools
 import random
 import time
-from .data import getAllAwards, getAllLevelsOfAwardList, getAwardsFromLevelId, userData, globalData
+from .data import DBAward, DBLevel, getAllAwards, getAllLevelsOfAwardList, getAwardsFromLevelId, userData, globalData
 from .models import Award
 
 
@@ -17,6 +17,9 @@ class Pick:
 
     def delta(self):
         return self.toNumber - self.fromNumber
+    
+    def award(self):
+        return DBAward().aid(self.awardId).first()
 
 
 @dataclass
@@ -30,9 +33,9 @@ class PicksResult:
 
 
 def pick(uid: int) -> list[Award]:
-    allAvailableLevels = getAllLevelsOfAwardList(getAllAwards())
+    allAvailableLevels = DBLevel().containAwards(getAllAwards())()
     level = random.choices(allAvailableLevels, [l.weight for l in allAvailableLevels])[0]
-    awards = getAwardsFromLevelId(level.lid)
+    awards = DBAward().lid(level.lid)()
     return [random.choice(awards)]
 
 

@@ -6,7 +6,7 @@ import PIL
 import PIL.ImageDraw
 import PIL.ImageFont
 
-from .typing import PILLOW_COLOR_LIKE_WEAK, IMAGE, PILLOW_COLOR_LIKE_STRONG
+from .typing import PillowColorLikeWeak, PILImage, PillowColorLikeStrong
 
 
 @dataclass
@@ -44,9 +44,9 @@ def drawText(
     text: str,
     x: float,
     y: float,
-    color: PILLOW_COLOR_LIKE_STRONG,
+    color: PillowColorLikeStrong,
     font=DEFAULT_FONT,
-    strokeColor: PILLOW_COLOR_LIKE_STRONG = 0,
+    strokeColor: PillowColorLikeStrong = 0,
     strokeWidth: int = 0
 ):
     draw.text((x, y), text, fill=color, font=font, stroke_fill=strokeColor, stroke_width=strokeWidth)
