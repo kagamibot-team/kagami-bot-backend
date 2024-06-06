@@ -698,7 +698,7 @@ enabledCommand: list[CommandBase] = [
     CatchFilterNoDescription(),
     CatchRemoveAward(),
     CatchDisplay(),
-    CatchCreateAward()
-    # Give(),
-    # Clear(),
+    CatchCreateAward(),
+    Give(),
+    Clear(),
 ]
