@@ -17,7 +17,7 @@ class Level(Model, BaseMixin):
 
     level_color_code: Mapped[str] = mapped_column(default="#9e9d95")
 
-    awards: Mapped[set["Award"]] = relationship(back_populates="level")
+    awards: Mapped[set["Award"]] = relationship(back_populates="level", lazy="subquery")
 
 
 class Award(Model, BaseMixin):
@@ -28,7 +28,8 @@ class Award(Model, BaseMixin):
     description: Mapped[str] = mapped_column(default="这只小哥还没有描述，它只是静静地躺在这里，等待着别人给他下定义。")
 
     level_id = Column(Integer, ForeignKey('catch_level.data_id'))
-    level: Mapped[Level] = relationship(back_populates="awards")
+    level: Mapped[Level] = relationship(back_populates="awards", lazy="subquery")
+    binded_counters: Mapped[list["AwardCountStorage"]] = relationship(back_populates="target_award", lazy="subquery")
 
 
 class AwardCountStorage(Model, BaseMixin):
@@ -37,8 +38,8 @@ class AwardCountStorage(Model, BaseMixin):
     target_user_id = Column(Integer, ForeignKey('catch_user_data.data_id'))
     target_award_id = Column(Integer, ForeignKey('catch_award.data_id'))
 
-    target_user: Mapped["UserData"] = relationship(back_populates="award_counters")
-    target_award: Mapped[Award] = relationship()
+    target_user: Mapped["UserData"] = relationship(back_populates="award_counters", lazy="subquery")
+    target_award: Mapped[Award] = relationship(back_populates="binded_counters", lazy="subquery")
     
     award_count: Mapped[int] = mapped_column(default=0)
 
@@ -48,7 +49,7 @@ class UserData(Model, BaseMixin):
 
     qq_id: Mapped[int] = mapped_column(unique=True)
 
-    award_counters: Mapped[list[AwardCountStorage]] = relationship(back_populates='target_user')
+    award_counters: Mapped[list[AwardCountStorage]] = relationship(back_populates='target_user', lazy="subquery")
     money: Mapped[float] = mapped_column(default=0.0)
 
     pick_count_remain: Mapped[int] = mapped_column(default=0)

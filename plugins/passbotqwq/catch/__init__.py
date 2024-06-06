@@ -15,8 +15,9 @@ from ..putils.text_format_check import (
     not_negative,
 )
 
-from .pydantic_models import UserData, PydanticAward, GameGlobalConfig, PydanticLevel
-from .data import getAllAwards, getAllLevels, getAwardByAwardName, getImageTarget, globalData, userData, save
+from .models import Level
+from .pydantic_models import PydanticUserData, PydanticAward, GameGlobalConfig, PydanticLevel
+from .data import pydanticGetAllAwards, pydanticGetAllLevels, getAwardByAwardName, getImageTarget, globalData, userData, save
 from .messages import (
     addAward2,
     addAward3,
@@ -48,9 +49,12 @@ async def _(session: async_scoped_session, event: GroupMessageEvent):
     if event.sender.user_id != 514827965:
         return
 
-    levels = sorted(getAllLevels(), key=lambda l: -l.weight)
-    awards = sorted(getAllAwards(), key=lambda x: x.aid)
+    levels = sorted(pydanticGetAllLevels(), key=lambda l: -l.weight)
+    awards = sorted(pydanticGetAllAwards(), key=lambda x: x.aid)
     userData = ud.data
+
+    _levelMapper = {}
+    _awardMapper = {}
 
     for level in levels:
         dbLevel = models.Level(
@@ -59,16 +63,18 @@ async def _(session: async_scoped_session, event: GroupMessageEvent):
         )
 
         session.add(dbLevel)
+        _levelMapper[level.lid] = dbLevel
     
     for award in awards:
         dbAward = models.Award(
             img_path=award.imgPath,
             name=award.name,
             description=award.description,
-            level=await session.get(models.Level, award.levelId)
+            level=_levelMapper[award.levelId]
         )
 
         session.add(dbAward)
+        _awardMapper[award.aid] = dbAward
     
     for uid in userData.keys():
         user = userData[uid]
@@ -87,7 +93,7 @@ async def _(session: async_scoped_session, event: GroupMessageEvent):
 
             dbAwardCountStorage = models.AwardCountStorage(
                 target_user = dbUserData,
-                target_award = await session.get(models.Award, aid),
+                target_award = _awardMapper[aid],
                 award_count = acount
             )
 
@@ -95,6 +101,17 @@ async def _(session: async_scoped_session, event: GroupMessageEvent):
     
     await session.commit()
     await finish(Message(MessageSegment.text("Done")))
+
+
+testHandler = on_message(fullmatch("::test"), priority=10)
+
+
+@testHandler.handle()
+async def _(session: async_scoped_session, event: GroupMessageEvent):
+    await session.commit()
+    await session.get(Level, 0)
+
+    await testHandler.finish("1")
 
 
 async def finish(message: Message) -> NoReturn:
@@ -211,7 +228,7 @@ async def handleSpecial(sender: int, event: GroupMessageEvent):
 
 
 @eventMatcher.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
+async def _(session: async_scoped_session, bot: Bot, event: GroupMessageEvent):
     sender = event.sender.user_id
 
     if sender == None:
@@ -229,7 +246,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
         award_create_tmp[sender] = PydanticAward()
         await finish(addAward1())
 
-    env = CheckEnvironment(sender, text, event.message_id, event.message)
+    env = CheckEnvironment(sender, text, event.message_id, event.message, session)
 
     callback = getCallbacks(sender)
     if callback != None:
@@ -258,7 +275,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
             raise FinishedException()
 
         if res:
-                await finish(res)
+            await finish(res)
 
     if text.startswith("::删除小哥"):
         if len(text.split(" ")) == 2:

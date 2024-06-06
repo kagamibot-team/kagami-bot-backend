@@ -6,7 +6,7 @@ from plugins.passbotqwq.putils.draw import imageToBytes
 from .cores import PicksResult
 from .pydantic_models import PydanticAward, PydanticLevel
 from .data import (
-    getAllLevels,
+    pydanticGetAllLevels,
     getAwardByAwardId,
     getAwardsFromLevelId,
     getLevelNameOfAward,
@@ -70,11 +70,11 @@ async def caughtMessage(picksResult: PicksResult):
     )
 
     for pick in picksResult.picks:
-        award = getAwardByAwardId(pick.awardId)
-        level = getLevelOfAward(award)
+        award = pick.award
+        level = award.level
 
         image = await drawCaughtBox(pick)
-        ms.append(MessageSegment.image(imageToBytes(image)))
+        ms.append(MessageSegment.image(await imageToBytes(image)))
 
         textBuild = f"【{level.name}】{award.name}\n{award.description}"
 
@@ -204,7 +204,7 @@ def noAwardNamed(name: str):
 def allLevels():
     levels = [
         f"\n- 【{l.name}】权重 {l.weight} 爆率 {getPosibilities(l)} %"
-        for l in getAllLevels()
+        for l in pydanticGetAllLevels()
         if l.name != "名称已丢失"
     ]
 
@@ -212,7 +212,7 @@ def allLevels():
 
 
 def allAwards():
-    _levels = getAllLevels()
+    _levels = pydanticGetAllLevels()
 
     _result: list[str] = []
 

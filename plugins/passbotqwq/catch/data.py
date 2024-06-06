@@ -7,7 +7,7 @@ from typing_extensions import deprecated
 from ..putils.typing import SupportsRichComparison
 
 from ..putils import PydanticDataManager, PydanticDataManagerGlobal
-from .pydantic_models import PydanticAward, GameGlobalConfig, PydanticLevel, UserData
+from .pydantic_models import PydanticAward, GameGlobalConfig, PydanticLevel, PydanticUserData
 
 
 class AwardList(list[PydanticAward]):
@@ -70,7 +70,7 @@ class ListFilter(Generic[T]):
 
 class DBAward(ListFilter[PydanticAward]):
     def __init__(self) -> None:
-        super().__init__(getAllAwards())
+        super().__init__(pydanticGetAllAwards())
     
     def lid(self, lid: int):
         return self._limit(lambda a: a.levelId == lid)
@@ -93,7 +93,7 @@ class DBAward(ListFilter[PydanticAward]):
 
 class DBLevel(ListFilter[PydanticLevel]):
     def __init__(self) -> None:
-        super().__init__(getAllLevels())
+        super().__init__(pydanticGetAllLevels())
 
     def lid(self, lid: int):
         return self._limit(lambda l: l.lid == lid)
@@ -138,11 +138,13 @@ def save():
     globalData.save()
 
 
-def getAllAwards():
+@deprecated('启用数据库后，将不再使用 Pydantic 方法')
+def pydanticGetAllAwards():
     return AwardList(globalData.get().awards)
 
 
-def getAllLevels():
+@deprecated('启用数据库后，将不再使用 Pydantic 方法')
+def pydanticGetAllLevels():
     return LevelList(globalData.get().levels)
 
 
@@ -223,12 +225,12 @@ def getLevelByLevelName(name: str):
 
 @deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getAwardsFromLevelId(lid: int):
-    return [a for a in getAllAwards() if a.levelId == lid]
+    return [a for a in pydanticGetAllAwards() if a.levelId == lid]
 
 
 @deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getAllLevelsOfAwardList(awards: list[PydanticAward]):
-    levels = getAllLevels()
+    levels = pydanticGetAllLevels()
 
     return [level for level in levels if len([a for a in awards if a.levelId == level.lid]) > 0][::-1]
 
@@ -246,7 +248,7 @@ def getAwardCountOfOneUser(uid: int, aid: int):
 def getWeightSum():
     result = 0
 
-    for level in getAllLevels():
+    for level in pydanticGetAllLevels():
         if len(getAwardsFromLevelId(level.lid)) > 0:
             result += level.weight
 
@@ -291,7 +293,7 @@ def getAllAwardsOfOneUser(uid: int):
 
 
 userData = PydanticDataManager(
-    UserData, os.path.join(".", "data", "catch", "users.json")
+    PydanticUserData, os.path.join(".", "data", "catch", "users.json")
 )
 globalData = PydanticDataManagerGlobal(
     GameGlobalConfig, os.path.join(".", "data", "catch", "global.json"),

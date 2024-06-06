@@ -3,14 +3,15 @@ import pathlib
 import re
 import time
 from typing import Any, Callable, Coroutine, TypeVar
+from typing_extensions import deprecated
 from nonebot.exception import FinishedException
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
-from plugins.passbotqwq.catch.cores import pydanticHandlePick
+from plugins.passbotqwq.catch.cores import handlePick
 from plugins.passbotqwq.catch.pydantic_models import PydanticAward, PydanticLevel
 
 from ..putils.download import download, writeData
-from ..putils.draw import _hello_world, imageToBytes
+from ..putils.draw import imageToBytes
 from .messages import (
     allAwards,
     allLevels,
@@ -36,6 +37,8 @@ from .models import *
 
 from .images import drawStatus, drawStorage
 from ..putils.text_format_check import not_negative, regex, A_SIMPLE_RULE
+
+from nonebot_plugin_orm import async_scoped_session
 
 KEYWORD_BASE_COMMAND = "(抓小哥|zhua|ZHUA)"
 
@@ -66,6 +69,7 @@ class CheckEnvironment:
     text: str
     message_id: int
     message: Message
+    session: async_scoped_session
 
 
 class CommandBase:
@@ -108,15 +112,16 @@ class Command(CommandBase):
             ]
         )
 
-    def handleCommand(
+    @deprecated('不再使用同步')
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         return None
 
-    async def _handleCommand(
+    async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        return self.handleCommand(env, result)
+        return self.syncHandleCommand(env, result)
 
     async def check(self, env: CheckEnvironment) -> Message | None:
         if len(env.message.exclude('text')) > 0:
@@ -130,7 +135,7 @@ class Command(CommandBase):
         if not matchRes:
             return self.errorMessage(env)
 
-        return await self._handleCommand(env, matchRes)
+        return await self.handleCommand(env, matchRes)
 
 
 CommandBaseSelf = TypeVar("CommandBaseSelf", bound="CommandBase")
@@ -160,7 +165,7 @@ class Catch(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return None
 
-    async def _handleCommand(
+    async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         maxCount = 1
@@ -168,9 +173,11 @@ class Catch(Command):
         if result.group(2) is not None and result.group(2).isdigit():
             maxCount = int(result.group(2))
 
-        picksResult = pydanticHandlePick(env.sender, maxCount)
+        picksResult = await handlePick(env.session, env.sender, maxCount)
+        message = await caughtMessage(picksResult)
 
-        return await caughtMessage(picksResult)
+        await env.session.commit()
+        return message
 
 
 class CrazyCatch(Command):
@@ -180,19 +187,21 @@ class CrazyCatch(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return None
 
-    async def _handleCommand(
+    async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        picksResult = pydanticHandlePick(env.sender, -1)
+        picksResult = await handlePick(env.session, env.sender, -1)
+        message = await caughtMessage(picksResult)
 
-        return await caughtMessage(picksResult)
+        await env.session.commit()
+        return message
 
 
 class CatchHelp(Command):
     def __init__(self):
         super().__init__(f"^{KEYWORD_BASE_COMMAND}? ?(help|帮助)", "( admin)?")
 
-    def handleCommand(
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         return help(result.group(3) != None)
@@ -203,9 +212,9 @@ class CatchStorage(Command):
     commandPattern: str = f"^{KEYWORD_BASE_COMMAND}?{KEYWORD_STORAGE}"
     argsPattern: str = "$"
 
-    async def _handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
-        image, tm = await drawStorage(env.sender)
-        storageImage = imageToBytes(image)
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        image, tm = await drawStorage(env.session, env.sender)
+        storageImage = await imageToBytes(image)
 
         return Message(
             [
@@ -229,17 +238,6 @@ class CatchAllAwards(CommandBase):
         return allAwards()
 
 
-class ImageTest(CommandBase):
-    @match(regex("^/hello$"))
-    async def check(self, env: CheckEnvironment) -> Message | None:
-        return Message(
-            [
-                MessageSegment.reply(env.message_id),
-                MessageSegment.image(_hello_world()),
-            ]
-        )
-
-
 class CatchSetInterval(Command):
     def __init__(self):
         super().__init__(f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_INTERVAL}", " ?(-?[0-9]+)$")
@@ -247,7 +245,7 @@ class CatchSetInterval(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return setIntervalWrongFormat()
 
-    def handleCommand(
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         if not result.group(3).isdigit():
@@ -278,7 +276,7 @@ class CatchChangeLevel(Command):
             ]
         )
 
-    def handleCommand(
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         awardName = result.group(4)
@@ -318,7 +316,7 @@ class Give(Command):
             ]
         )
 
-    def handleCommand(
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         awards = DBAward().name(result.group(2)).get()
@@ -354,7 +352,7 @@ class Clear(Command):
             ]
         )
 
-    def handleCommand(
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         if result.group(2) == None:
@@ -404,7 +402,7 @@ class CatchProgress(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return None
 
-    async def _handleCommand(
+    async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         # prog: list[str] = []
@@ -433,7 +431,7 @@ class CatchProgress(Command):
             [
                 MessageSegment.at(env.sender),
                 MessageSegment.text(f" 的小哥收集进度 (Render time: {round(tm, 2)})："),
-                MessageSegment.image(imageToBytes(image)),
+                MessageSegment.image(await imageToBytes(image)),
             ]
         )
 
@@ -530,7 +528,7 @@ class CatchModify(Command):
             ]
         )
 
-    def handleCommand(
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         modifyType = result.group(3)
@@ -607,7 +605,7 @@ class CatchLevelModify(Command):
             ]
         )
 
-    def handleCommand(
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         modifyType = result.group(3)
@@ -630,7 +628,7 @@ class CatchFilterNoDescription(Command):
             " *$",
         )
 
-    def handleCommand(
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         lacks = DBAward().description().get()
@@ -654,7 +652,7 @@ class CatchDisplay(Command):
             ]
         )
 
-    def handleCommand(
+    def syncHandleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         name = result.group(3)
@@ -676,5 +674,4 @@ enabledCommand: list[CommandBase] = [
     CatchLevelModify(),
     CatchProgress(),
     CatchFilterNoDescription(),
-    ImageTest(),
 ]

@@ -6,6 +6,8 @@ import PIL
 import PIL.ImageDraw
 import PIL.ImageFont
 
+from ..threading import make_async
+
 from .typing import PillowColorLikeWeak, PILImage, PillowColorLikeStrong
 
 
@@ -39,6 +41,7 @@ def textFont(fontEnum: Fonts, fontSize: int):
 DEFAULT_FONT = textFont(Fonts.FONT_HARMONYOS_SANS, 12)
 
 
+@make_async
 def drawText(
     draw: PIL.ImageDraw.ImageDraw,
     text: str,

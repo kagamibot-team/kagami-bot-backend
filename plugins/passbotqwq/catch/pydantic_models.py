@@ -128,7 +128,7 @@ class GameGlobalConfig(BaseModel):
         return removed
 
 
-class UserData(BaseModel):
+class PydanticUserData(BaseModel):
     lastCatch: float = 1
     awardCounter: dict[int, int] = Field(default_factory=lambda: {})
     backgroundImage: str = DEFAULT_BG

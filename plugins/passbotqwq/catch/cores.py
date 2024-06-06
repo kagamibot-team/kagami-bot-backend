@@ -2,13 +2,19 @@ from dataclasses import dataclass
 import itertools
 import random
 import time
-from .data import DBAward, DBLevel, getAllAwards, getAllLevelsOfAwardList, getAwardsFromLevelId, userData, globalData
-from .pydantic_models import PydanticAward
+
+from sqlalchemy import select
+
+from .models.crud import getAllAvailableLevels, getOrCreateUser
+from .models.Basics import Award, AwardCountStorage, UserData
+from .data import DBAward, userData, globalData
+
+from nonebot_plugin_orm import async_scoped_session
 
 
 @dataclass
 class Pick:
-    awardId: int
+    award: Award
     fromNumber: int
     toNumber: int
 
@@ -17,9 +23,6 @@ class Pick:
 
     def delta(self):
         return self.toNumber - self.fromNumber
-    
-    def award(self):
-        return DBAward().aid(self.awardId).first()
 
 
 @dataclass
@@ -32,73 +35,87 @@ class PicksResult:
         return sum([p.delta() for p in self.picks])
 
 
-def pick(uid: int) -> list[PydanticAward]:
-    allAvailableLevels = DBLevel().containAwards(getAllAwards())()
-    level = random.choices(allAvailableLevels, [l.weight for l in allAvailableLevels])[0]
-    awards = DBAward().lid(level.lid)()
-    return [random.choice(awards)]
+async def pick(session: async_scoped_session, user: UserData) -> list[Award]:
+    allAvailableLevels = await getAllAvailableLevels(session)
+    level = random.choices(allAvailableLevels, [l.weight for l in allAvailableLevels])[
+        0
+    ]
+    awardsResult = await session.execute(select(Award).filter(Award.level == level))
+    return [random.choice([a for a in awardsResult.scalars()])]
 
 
-def recalcPickTime(uid: int):
+async def recalcPickTime(session: async_scoped_session, user: UserData):
     maxPick = globalData.get().maximusPickCache
     timeDelta = globalData.get().timeDelta
     nowTime = time.time()
 
-    with userData.open(uid) as d:
-        if timeDelta == 0:
-            d.pickCounts = maxPick
-            d.pickCalcTime = nowTime
-            return -1
+    if timeDelta == 0:
+        user.pick_count_remain = maxPick
+        user.pick_count_last_calculated = nowTime
+        return -1
 
-        if d.pickCounts >= maxPick:
-            d.pickCalcTime = nowTime
-            return -1
-        
-        countAdd = int((nowTime - d.pickCalcTime) / timeDelta)
-        d.pickCalcTime += countAdd * timeDelta
-        d.pickCounts += countAdd
+    if user.pick_count_remain >= maxPick:
+        user.pick_count_last_calculated = nowTime
+        return -1
 
-        if d.pickCounts >= maxPick:
-            d.pickCounts = maxPick
-            d.pickCalcTime = nowTime
-            return -1
-        
-        return d.pickCounts - nowTime
+    countAdd = int((nowTime - user.pick_count_last_calculated) / timeDelta)
+    user.pick_count_last_calculated += countAdd * timeDelta
+    user.pick_count_remain += countAdd
 
+    if user.pick_count_remain >= maxPick:
+        user.pick_count_remain = maxPick
+        user.pick_count_last_calculated = nowTime
+        return -1
 
-def canPickCount(uid: int):
-    recalcPickTime(uid)
-    return userData.get(uid).pickCounts
+    return user.pick_count_remain - nowTime
 
 
-def pydanticHandlePick(uid: int, maxPickCount: int = 1) -> PicksResult:
-    count = canPickCount(uid)
+async def canPickCount(session: async_scoped_session, user: UserData):
+    await recalcPickTime(session, user)
+    return user.pick_count_remain
+
+
+async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int = 1) -> PicksResult:
+    user = await getOrCreateUser(session, uid)
+
+    count = await canPickCount(session, user)
+
     if maxPickCount > 0:
         count = min(maxPickCount, count)
     else:
         count = count
 
-    pickResult = PicksResult([], uid, userData.get(uid).pickCounts - count)
+    pickResult = PicksResult([], uid, user.pick_count_remain - count)
 
-    awards = list(itertools.chain(*[pick(uid) for _ in range(count)]))
-    awardsDelta: dict[int, int] = {}
+    awards = list(itertools.chain(*[await pick(session, user) for _ in range(count)]))
+    awardsDelta: dict[Award, int] = {}
 
     for award in awards:
-        if award.aid in awardsDelta.keys():
-            awardsDelta[award.aid] += 1
+        if award.data_id in awardsDelta.keys():
+            awardsDelta[award] += 1
         else:
-            awardsDelta[award.aid] = 1
-    
-    with userData.open(uid) as d:
-        d.pickCounts -= count
+            awardsDelta[award] = 1
 
-        for aid in awardsDelta:
-            if aid not in d.awardCounter.keys():
-                d.awardCounter[aid] = 0
-            
-            oldValue = d.awardCounter[aid]
-            d.awardCounter[aid] += awardsDelta[aid]
+    user.pick_count_remain -= count
 
-            pickResult.picks.append(Pick(aid, oldValue, oldValue + awardsDelta[aid]))
-    
+    for award in awardsDelta:
+        awardCounter = (await session.execute(select(AwardCountStorage).filter(
+            AwardCountStorage.target_user == user
+        ).filter(
+            AwardCountStorage.target_award == award
+        ))).scalar()
+
+        if awardCounter is None:
+            awardCounter = AwardCountStorage(
+                target_user = user,
+                target_award = award,
+                award_count = 0
+            )
+            session.add(awardCounter)
+
+        oldValue = awardCounter.award_count
+        awardCounter.award_count += 1
+
+        pickResult.picks.append(Pick(award, oldValue, oldValue + awardsDelta[award]))
+
     return pickResult
