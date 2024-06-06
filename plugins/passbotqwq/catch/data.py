@@ -1,16 +1,101 @@
 import base64
+from dataclasses import dataclass
 import os
+from typing import Any, Callable, Generic, TypeVar
+from typing_extensions import deprecated
 from ..putils import PydanticDataManager, PydanticDataManagerGlobal
 from .models import Award, GameGlobalConfig, Level, UserData
 
 
-userData = PydanticDataManager(
-    UserData, os.path.join(".", "data", "catch", "users.json")
-)
-globalData = PydanticDataManagerGlobal(
-    GameGlobalConfig, os.path.join(".", "data", "catch", "global.json"),
-    ""
-)
+class AwardList(list[Award]):
+    def aid(self):
+        return [a.aid for a in self]
+    
+    def name(self):
+        return [a.name for a in self]
+
+
+class LevelList(list[Level]):
+    def lid(self):
+        return [l.lid for l in self]
+
+
+T = TypeVar('T')
+
+class ListFilter(Generic[T]):
+    def __init__(self, ls: list[T]) -> None:
+        self.ls = ls
+        self.limitations: list[Callable[[T], bool]] = []
+    
+    def _limit(self, limit: Callable[[T], bool]):
+        self.limitations.append(limit)
+        return self
+    
+    def get(self) -> list[T]:
+        result = self.ls
+
+        for limit in self.limitations:
+            result = [v for v in result if limit(v)]
+        
+        return result
+    
+    def __call__(self):
+        return self.get()
+
+
+class DBAward(ListFilter[Award]):
+    def __init__(self) -> None:
+        super().__init__(getAllAwards())
+    
+    def lid(self, lid: int):
+        return self._limit(lambda a: a.levelId == lid)
+
+    def userHave(self, uid: int, atLeast: int = 1):
+        return self._limit(lambda a: a.aid in getUserAwardCounter(uid).keys() and getUserAwardCounter(uid)[a.aid] >= atLeast)
+    
+    def name(self, name: str):
+        return self._limit(lambda a: a.name == name)
+    
+    def aid(self, aid: int):
+        return self._limit(lambda a: a.aid == aid)
+
+    def description(self, desc: str = "这只小哥还没有描述，它只是静静地躺在这里，等待着别人给他下定义。"):
+        return self._limit(lambda a: a.description == desc)
+    
+    def get(self):
+        return AwardList(super().get())
+
+
+class DBLevel(ListFilter[Level]):
+    def __init__(self) -> None:
+        super().__init__(getAllLevels())
+
+    def lid(self, lid: int):
+        return self._limit(lambda l: l.lid == lid)
+    
+    def _weight(self, weightLimiter: Callable[[float], bool]):
+        return self._limit(lambda l: weightLimiter(l.weight))
+    
+    def weightBiggerThan(self, weight: float = 0):
+        return self._weight(lambda w: w > weight)
+    
+    def weightSmallerThan(self, weight: float = 0):
+        return self._weight(lambda w: w < weight)
+    
+    def weightNotBiggerThan(self, weight: float = 0):
+        return self._weight(lambda w: w <= weight)
+    
+    def weightNotSmallerThan(self, weight: float = 0):
+        return self._weight(lambda w: w >= weight)
+    
+    def containAward(self, award: Award):
+        return self._limit(lambda l: award.levelId == l.lid)
+
+    def name(self, name: str):
+        return self._limit(lambda l: l.name == name)
+    
+    def get(self):
+        return LevelList(super().get())
 
 
 def save():
@@ -20,6 +105,18 @@ def save():
 
     userData.save()
     globalData.save()
+
+
+def getAllAwards():
+    return AwardList(globalData.get().awards)
+
+
+def getAllLevels():
+    return LevelList(globalData.get().levels)
+
+
+def getUserAwardCounter(uid: int):
+    return userData.get(uid).awardCounter
 
 
 def ensureNoSameAid():
@@ -78,31 +175,34 @@ def userHaveAward(uid: int, award: Award):
     return len([a for a in getAllAwardsOfOneUser(uid) if a.aid == award.aid])
 
 
+@deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getAwardByAwardName(name: str):
     return [a for a in globalData.get().awards if a.name == name]
 
+
+@deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getAwardByAwardId(aid: int):
     return [a for a in globalData.get().awards if a.aid == aid][0]
 
+
+@deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getLevelByLevelName(name: str):
     return [l for l in globalData.get().levels if l.name == name]
 
 
+@deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getAwardsFromLevelId(lid: int):
     return [a for a in getAllAwards() if a.levelId == lid]
 
 
-def getAllLevels():
-    return sorted([l for l in globalData.get().levels if len(getAwardsFromLevelId(l.lid)) > 0], key=lambda level: -level.weight)
-
-
+@deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getAllLevelsOfAwardList(awards: list[Award]):
     levels = getAllLevels()
 
     return [level for level in levels if len([a for a in awards if a.levelId == level.lid]) > 0][::-1]
 
 
-def getAwardCoundOfOneUser(uid: int, aid: int):
+def getAwardCountOfOneUser(uid: int, aid: int):
     ac = userData.get(uid).awardCounter
 
     if aid in ac.keys():
@@ -110,9 +210,6 @@ def getAwardCoundOfOneUser(uid: int, aid: int):
     
     return 0
 
-
-def getAllAwards():
-    return globalData.get().awards
 
 
 def getWeightSum():
@@ -143,19 +240,7 @@ def getImageTarget(award: Award):
     return _path()
 
 
-def _dev_migrate_images():
-    with globalData as d:
-        for award in d.awards:
-            with open(award.imgPath, 'rb') as f:
-                raw = f.read()
-            
-            with open(getImageTarget(award), 'wb') as f:
-                f.write(raw)
-            
-            os.remove(award.imgPath)
-            award.updateImage(getImageTarget(award))
-
-
+@deprecated('该方法将在未来移除，请使用 Filter 替代')
 def getAllAwardsOfOneUser(uid: int):
     aids: list[Award] = []
     ac = userData.get(uid).awardCounter
@@ -172,3 +257,12 @@ def getAllAwardsOfOneUser(uid: int):
         aids.append(award)
     
     return aids
+
+
+userData = PydanticDataManager(
+    UserData, os.path.join(".", "data", "catch", "users.json")
+)
+globalData = PydanticDataManagerGlobal(
+    GameGlobalConfig, os.path.join(".", "data", "catch", "global.json"),
+    ""
+)

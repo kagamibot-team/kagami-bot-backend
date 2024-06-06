@@ -30,7 +30,7 @@ from .data import (
     getAllLevelsOfAwardList,
     getAwardByAwardId,
     getAwardByAwardName,
-    getAwardCoundOfOneUser,
+    getAwardCountOfOneUser,
     getLevelOfAward,
     userHaveAward,
 )
@@ -305,7 +305,7 @@ def drawStorage(uid: int):
 
             addUponPaste(
                 image,
-                drawAwardBox(award, str(getAwardCoundOfOneUser(uid, award.aid))),
+                drawAwardBox(award, str(getAwardCountOfOneUser(uid, award.aid))),
                 int(drawLeft + xDelta),
                 int(drawTop + yDelta),
             )

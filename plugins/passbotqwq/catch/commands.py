@@ -22,12 +22,12 @@ from .messages import (
     settingOk,
 )
 from .data import (
+    DBAward,
+    DBLevel,
     clearUnavailableAward,
     ensureNoSameAid,
     getAllAwards,
-    getAwardByAwardName,
     getImageTarget,
-    getLevelByLevelName,
     save,
     userData,
     globalData,
@@ -47,6 +47,15 @@ KEYWORD_AWARDS = "(物品|小哥)"
 KEYWORD_LEVEL = "(等级|级别)"
 
 KEYWORD_CRAZY = "(连|l|狂|k)"
+KEYWORD_DISPLAY = "(展示|display|查看)"
+
+
+def at(sender: int):
+    return MessageSegment.at(sender)
+
+
+def text(text: str):
+    return MessageSegment.text(text)
 
 
 @dataclass
@@ -101,7 +110,7 @@ class Command(CommandBase):
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         return None
-    
+
     async def _handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
@@ -141,15 +150,14 @@ def match(rule: A_SIMPLE_RULE):
 
 class Catch(Command):
     def __init__(self):
-        super().__init__(
-            f"^{KEYWORD_BASE_COMMAND} ?(\\d+)?",
-            "$"
-        )
-    
+        super().__init__(f"^{KEYWORD_BASE_COMMAND} ?(\\d+)?", "$")
+
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return None
-    
-    async def _handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+
+    async def _handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
         maxCount = 1
 
         if result.group(2) is not None and result.group(2).isdigit():
@@ -162,15 +170,14 @@ class Catch(Command):
 
 class CrazyCatch(Command):
     def __init__(self):
-        super().__init__(
-            f"^({KEYWORD_CRAZY}{KEYWORD_BASE_COMMAND}|kz)",
-            "$"
-        )
-    
+        super().__init__(f"^({KEYWORD_CRAZY}{KEYWORD_BASE_COMMAND}|kz)", "$")
+
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return None
-    
-    async def _handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+
+    async def _handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
         picksResult = handlePick(env.sender, -1)
 
         return await caughtMessage(picksResult)
@@ -271,8 +278,8 @@ class CatchChangeLevel(Command):
         awardName = result.group(4)
         levelName = result.group(5)
 
-        awards = getAwardByAwardName(awardName)
-        levels = getLevelByLevelName(levelName)
+        awards = DBAward().name(awardName).get()
+        levels = DBLevel().name(levelName).get()
 
         if len(awards) == 0:
             return self.notExists(env, "小哥 " + awardName)
@@ -308,7 +315,7 @@ class Give(Command):
     def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        awards = getAwardByAwardName(result.group(2))
+        awards = DBAward().name(result.group(2)).get()
 
         if len(awards) == 0:
             return self.notExists(env, result.group(2))
@@ -365,15 +372,13 @@ class Clear(Command):
 
         clearUnavailableAward()
 
-        awards = getAwardByAwardName(result.group(4))
-
-        awardIDs = [a.aid for a in awards]
+        awards = DBAward().name(result.group(4)).get().aid()
 
         with userData.open(int(result.group(2))) as d:
             d.awardCounter = {
                 key: d.awardCounter[key]
                 for key in d.awardCounter.keys()
-                if key not in awardIDs
+                if key not in awards
             }
 
         return Message(
@@ -415,7 +420,7 @@ class CatchProgress(Command):
         #         MessageSegment.text("你的收集进度为：\n\n" + "\n".join(prog)),
         #     ]
         # )
-        
+
         image, tm = await drawStatus(env.sender)
 
         return Message(
@@ -454,7 +459,7 @@ class CatchModifyCallback(CallbackBase):
             return modifyOk()
 
         if self.modifyType == "等级":
-            level = getLevelByLevelName(env.text)
+            level = DBLevel().name(env.text).get()
 
             if len(level) == 0:
                 raise WaitForMoreInformationException(
@@ -525,7 +530,7 @@ class CatchModify(Command):
         modifyType = result.group(3)
         modifyObject = result.group(4)
 
-        award = getAwardByAwardName(modifyObject)
+        award = DBAward().name(modifyObject).get()
 
         if len(award) == 0:
             return self.notExists(env, modifyObject)
@@ -558,7 +563,7 @@ class CatchLevelModifyCallback(CallbackBase):
             with globalData as d:
                 d.removeLevelByLid(self.modifyObject.lid)
                 d.levels.append(self.modifyObject)
-            
+
             save()
 
             return modifyOk()
@@ -602,7 +607,7 @@ class CatchLevelModify(Command):
         modifyType = result.group(3)
         modifyObject = result.group(4)
 
-        level = getLevelByLevelName(modifyObject)
+        level = DBLevel().name(modifyObject).get()
 
         if len(level) == 0:
             return self.notExists(env, modifyObject)
@@ -622,17 +627,35 @@ class CatchFilterNoDescription(Command):
     def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        lacks = getAllAwards()
-        lacks = [
-            a.name
-            for a in lacks
-            if a.description
-            == "这只小哥还没有描述，它只是静静地躺在这里，等待着别人给他下定义。"
-        ]
+        lacks = DBAward().description().get()
+        lacks = [a.name for a in lacks]
 
         return Message(
             [MessageSegment.at(env.sender), MessageSegment.text(" " + ", ".join(lacks))]
         )
+
+
+@dataclass
+class CatchDisplay(Command):
+    commandPattern: str = f"^{KEYWORD_DISPLAY} ?{KEYWORD_AWARDS}"
+    argsPattern: str = " ?(\\S+)( admin)?$"
+
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return Message(
+            [
+                MessageSegment.at(env.sender),
+                MessageSegment.text(" 你的格式有问题，应该是 展示小哥 小哥名字"),
+            ]
+        )
+
+    def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
+        name = result.group(3)
+        award = DBAward().name(name)()
+
+        if len(award) == 0:
+            return Message([at(env.sender), text(f" 不存在名字叫 {name} 的小哥")])
 
 
 enabledCommand: list[CommandBase] = [
