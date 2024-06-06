@@ -26,10 +26,8 @@ from ..putils.draw import newImage
 from .data import (
     getAllAwards,
     getAllAwardsOfOneUser,
-    getAllLevels,
     getAllLevelsOfAwardList,
     getAwardByAwardId,
-    getAwardByAwardName,
     getAwardCountOfOneUser,
     getLevelOfAward,
     userHaveAward,

@@ -11,6 +11,9 @@ class AwardList(list[Award]):
     def aid(self):
         return [a.aid for a in self]
     
+    def len(self):
+        return len(self)
+    
     def name(self):
         return [a.name for a in self]
 
@@ -18,6 +21,9 @@ class AwardList(list[Award]):
 class LevelList(list[Level]):
     def lid(self):
         return [l.lid for l in self]
+    
+    def len(self):
+        return len(self)
 
 
 T = TypeVar('T')

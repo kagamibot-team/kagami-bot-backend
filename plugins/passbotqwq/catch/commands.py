@@ -26,7 +26,6 @@ from .data import (
     DBLevel,
     clearUnavailableAward,
     ensureNoSameAid,
-    getAllAwards,
     getImageTarget,
     save,
     userData,
