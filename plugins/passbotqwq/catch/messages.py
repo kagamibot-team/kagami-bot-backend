@@ -43,9 +43,9 @@ async def caughtMessage(picksResult: PicksResult):
 
     nextTime = userData.get(picksResult.uid).pickCalcTime + delta
 
-    deltaTime = nextTime - time.time()
+    deltaTime = math.ceil(nextTime - time.time())
 
-    seconds = math.ceil(deltaTime % 60)
+    seconds = deltaTime % 60
     minutes = int(deltaTime / 60) % 60
     hours = int(deltaTime / 3600)
 
@@ -264,3 +264,10 @@ def help(isAdmin=False):
             MessageSegment.text(("===== 命令清单 =====\n" + "\n".join(res))),
         ]
     )
+
+
+updateHistory = {
+    "0.2.0": [
+        "修复间隔为 0 时报错的问题"
+    ]
+}

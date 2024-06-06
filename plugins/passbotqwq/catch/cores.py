@@ -42,6 +42,11 @@ def recalcPickTime(uid: int):
     nowTime = time.time()
 
     with userData.open(uid) as d:
+        if timeDelta == 0:
+            d.pickCounts = maxPick
+            d.pickCalcTime = nowTime
+            return -1
+
         if d.pickCounts >= maxPick:
             d.pickCalcTime = nowTime
             return -1

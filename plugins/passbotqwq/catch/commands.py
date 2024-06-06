@@ -120,7 +120,7 @@ class Command(CommandBase):
         if len(env.message.exclude('text')) > 0:
             return None
         
-        if not re.match(self.commandPattern + "$", env.text):
+        if not re.match(self.commandPattern, env.text):
             return None
 
         matchRes = re.match(self.commandPattern + self.argsPattern, env.text)
