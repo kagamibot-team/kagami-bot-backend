@@ -1,20 +1,11 @@
 from nonebot.plugin import on
 from nonebot.adapters.onebot.v11 import (
-    GroupRequestEvent,
     Bot,
     GroupMessageEvent,
 )
 
 
 eventMatcher = on()
-
-
-@eventMatcher.handle()
-async def auto_join_group(bot: Bot, event: GroupRequestEvent):
-    if bot.self_id != "3687050325":
-        return
-
-    await event.approve(bot)
 
 
 def matchKagami(text: str):
@@ -26,7 +17,7 @@ def matchKagami(text: str):
 
 
 @eventMatcher.handle()
-async def lucky_star(bot: Bot, event: GroupMessageEvent):
+async def ping(bot: Bot, event: GroupMessageEvent):
     message = event.get_plaintext()
 
     match = matchKagami(message)
