@@ -39,7 +39,7 @@ KEYWORD_BASE_COMMAND = "(抓小哥|zhua|ZHUA)"
 
 KEYWORD_CHANGE = "(更改|改变|修改|修正|修订|变化|调整|设置|更新)"
 KEYWORD_EVERY = "(所有|一切|全部)"
-KEYWORD_PROGRESS = "(进度|成就|进展)"
+KEYWORD_PROGRESS = "(进度|成就|进展|jd)"
 
 KEYWORD_INTERVAL = "(时间|周期|间隔)"
 KEYWORD_AWARDS = "(物品|小哥)"

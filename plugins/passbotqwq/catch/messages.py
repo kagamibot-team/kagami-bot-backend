@@ -244,7 +244,13 @@ def modifyOk():
 
 
 def help(isAdmin=False):
-    normal = ["抓小哥", "抓小哥帮助", "库存", "抓小哥进度"]
+    normal = [
+        "抓小哥帮助(zhuahelp)：显示这条帮助信息",
+        "抓小哥(zhua)：进行一次抓",
+        "狂抓小哥(kz)：一次抓完所有可用次数",
+        "库存(kc)：展示个人仓库中的存量",
+        "抓小哥进度(zhuajd)：展示目前收集的进度",
+    ]
 
     admin = [
         "::创建小哥",
@@ -266,8 +272,4 @@ def help(isAdmin=False):
     )
 
 
-updateHistory = {
-    "0.2.0": [
-        "修复间隔为 0 时报错的问题"
-    ]
-}
+updateHistory = {"0.2.0": ["修复间隔为 0 时报错的问题"]}
