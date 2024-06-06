@@ -292,7 +292,7 @@ class Give(Command):
         if award is None:
             return self.notExists(env, result.group(2))
 
-        await addAward(env.session, await env.getSender(), award, 1)
+        await addAward(env.session, await getOrCreateUser(env.session, int(result.group(1))), award, 1)
 
         message = Message(
             [at(env.sender), text(f" : 已将 {award.name} 给予用户 "), at(env.sender)]
