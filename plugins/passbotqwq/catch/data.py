@@ -1,8 +1,10 @@
 import base64
-from dataclasses import dataclass
 import os
-from typing import Any, Callable, Generic, TypeVar
+
+from typing import Callable, Generic, TypeVar
 from typing_extensions import deprecated
+from ..putils.typing import SupportsRichComparison
+
 from ..putils import PydanticDataManager, PydanticDataManagerGlobal
 from .models import Award, GameGlobalConfig, Level, UserData
 
@@ -47,6 +49,12 @@ class ListFilter(Generic[T]):
     
     def __call__(self):
         return self.get()
+    
+    def len(self):
+        return len(self())
+    
+    def sorted(self, key: Callable[[T], SupportsRichComparison]):
+        return sorted(self(), key=key)
 
 
 class DBAward(ListFilter[Award]):
@@ -102,6 +110,9 @@ class DBLevel(ListFilter[Level]):
     
     def get(self):
         return LevelList(super().get())
+    
+    def userHave(self, uid: int, atLeast: int = 1):
+        return self._limit(lambda l: DBAward().userHave(uid, atLeast).lid(l.lid).len() > 0)
 
 
 def save():

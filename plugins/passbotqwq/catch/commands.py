@@ -47,6 +47,7 @@ KEYWORD_LEVEL = "(等级|级别)"
 
 KEYWORD_CRAZY = "(连|l|狂|k)"
 KEYWORD_DISPLAY = "(展示|display|查看)"
+KEYWORD_STORAGE = "(库存|kc)"
 
 
 def at(sender: int):
@@ -116,7 +117,10 @@ class Command(CommandBase):
         return self.handleCommand(env, result)
 
     async def check(self, env: CheckEnvironment) -> Message | None:
-        if not re.match(self.commandPattern, env.text):
+        if len(env.message.exclude('text')) > 0:
+            return None
+        
+        if not re.match(self.commandPattern + "$", env.text):
             return None
 
         matchRes = re.match(self.commandPattern + self.argsPattern, env.text)
@@ -192,9 +196,12 @@ class CatchHelp(Command):
         return help(result.group(3) != None)
 
 
-class CatchStorage(CommandBase):
-    @match(regex(f"^{KEYWORD_BASE_COMMAND}?(库存|kc)$"))
-    async def check(self, env: CheckEnvironment) -> Message | None:
+@dataclass
+class CatchStorage(Command):
+    commandPattern: str = f"^{KEYWORD_BASE_COMMAND}?{KEYWORD_STORAGE}"
+    argsPattern: str = "$"
+
+    async def _handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
         image, tm = await drawStorage(env.sender)
         storageImage = imageToBytes(image)
 
@@ -205,8 +212,6 @@ class CatchStorage(CommandBase):
                 MessageSegment.image(storageImage),
             ]
         )
-
-        # return storageCheck(env.sender)
 
 
 class CatchAllLevel(CommandBase):

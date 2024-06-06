@@ -1,6 +1,5 @@
 from functools import cache
 import math
-from os import name
 import os
 import time
 
@@ -10,13 +9,11 @@ import PIL.ImageDraw
 from .cores import Pick
 from .models import Award
 from ..putils.threading import make_async
-from ..putils.draw.shapes import rectangle
 from ..putils.draw.images import (
     addUponPaste,
     fastPaste,
     fromOpenCVImage,
     loadImage,
-    addUpon,
     toOpenCVImage,
 )
 from ..putils.draw.texts import drawText, textBox, textFont, Fonts
@@ -24,12 +21,15 @@ from ..putils.draw.typing import IMAGE, PILLOW_COLOR_LIKE
 from ..putils.draw import newImage
 
 from .data import (
+    DBAward,
+    DBLevel,
     getAllAwards,
     getAllAwardsOfOneUser,
     getAllLevelsOfAwardList,
     getAwardByAwardId,
     getAwardCountOfOneUser,
     getLevelOfAward,
+    getUserAwardCounter,
     userHaveAward,
 )
 
@@ -102,7 +102,7 @@ STATUS_MAX_ROW_COUNT = 6
 STATUS_PADDING_X = 10
 STATUS_PADDING_Y = 10
 
-STATUS_BACKGROUND_COLOR_SPECIFIED = {
+AWARD_BOX_BACKGROUND_COLOR_SPECIFIED = {
     0: "#d1cccb",
     1: "#cdebc3",
     6: "#c5dceb",
@@ -171,12 +171,16 @@ def drawAwardBoxImage(
     return base
 
 
-def drawAwardBox(award: Award, count: str = ""):
+def drawAwardBox(
+    award: Award,
+    count: str = "",
+    bgColor: PILLOW_COLOR_LIKE = AWARD_BOX_BACKGROUND_COLOR,
+):
     base = newImage(
         (int(AWARD_BOX_WIDTH), int(AWARD_BOX_HEIGHT)), GLOBAL_BACKGROUND_COLOR
     )
 
-    base.paste(drawAwardBoxImage(award.imgPath), (0, 0))
+    base.paste(drawAwardBoxImage(award.imgPath, bgColor), (0, 0))
 
     draw = PIL.ImageDraw.Draw(base)
     tbox = textBox(count, AWARD_BOX_COUNT_FONT)
@@ -226,12 +230,78 @@ def drawAwardBox(award: Award, count: str = ""):
 @make_async
 def drawStorage(uid: int):
     beginTime = time.time()
+    lines = 0
+
+    awardBoxes: list[list[Award]] = []
+
+    for level in DBLevel().userHave(uid).sorted(lambda l: -l.weight):
+        awards = (
+            DBAward()
+            .lid(level.lid)
+            .userHave(uid)
+            .sorted(lambda a: -getUserAwardCounter(uid)[a.aid])
+        )
+
+        lines += math.ceil(len(awards) / STORAGE_AWARD_BOX_XCOUNT_MAX)
+        awardBoxes.append(awards)
+
+    image = newImage(
+        (
+            int(
+                STORAGE_MARGIN_LEFT
+                + STORAGE_MARGIN_RIGHT
+                + AWARD_BOX_WIDTH * STORAGE_AWARD_BOX_XCOUNT_MAX
+                + AWARD_BOX_PADDING_X * (STORAGE_AWARD_BOX_XCOUNT_MAX - 1)
+            ),
+            int(
+                STORAGE_MARGIN_TOP
+                + STORAGE_MARGIN_BOTTOM
+                + AWARD_BOX_HEIGHT * lines
+                + AWARD_BOX_PADDING_Y * (lines - 1)
+            ),
+        ),
+        GLOBAL_BACKGROUND_COLOR,
+    )
+
+    drawTop = STORAGE_MARGIN_TOP
+    drawLeft = STORAGE_MARGIN_LEFT
+
+    for awards in awardBoxes:
+        bgc = AWARD_BOX_BACKGROUND_COLOR
+
+        if awards[0].levelId in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
+            bgc = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[awards[0].levelId]
+
+        for i, award in enumerate(awards):
+            box = drawAwardBox(award, str(getAwardCountOfOneUser(uid, award.aid)), bgc)
+
+            addUponPaste(
+                image,
+                box,
+                int(
+                    drawLeft
+                    + (i % STORAGE_AWARD_BOX_XCOUNT_MAX)
+                    * (AWARD_BOX_WIDTH + AWARD_BOX_PADDING_X)
+                ),
+                int(
+                    drawTop
+                    + (i // STORAGE_AWARD_BOX_XCOUNT_MAX)
+                    * (AWARD_BOX_HEIGHT + AWARD_BOX_PADDING_Y)
+                ),
+            )
+
+        drawTop += math.ceil(len(awards) / STORAGE_AWARD_BOX_XCOUNT_MAX) * (
+            AWARD_BOX_HEIGHT + AWARD_BOX_PADDING_Y
+        )
+
+    return image, time.time() - beginTime
+    beginTime = time.time()
     boxes: list[tuple[float, float]] = []
 
     awards = getAllAwardsOfOneUser(uid)
 
     for level in getAllLevelsOfAwardList(getAllAwardsOfOneUser(uid)):
-        tbox = textBox(f"稀有度为【{level.name}】的全部小哥", STORAGE_TITLE_TEXT_FONT)
+        tbox = textBox(f"{level.name}", STORAGE_TITLE_TEXT_FONT)
         boxes.append((tbox.right - tbox.left, tbox.bottom - tbox.top))
 
         awardsLength = len([a for a in awards if a.levelId == level.lid])
@@ -273,7 +343,7 @@ def drawStorage(uid: int):
     pointer = 0
 
     for level in getAllLevelsOfAwardList(getAllAwardsOfOneUser(uid)):
-        tbox = textBox(f"稀有度为【{level.name}】的全部小哥", STORAGE_TITLE_TEXT_FONT)
+        tbox = textBox(f"{level.name}", STORAGE_TITLE_TEXT_FONT)
 
         color = STORAGE_TITLE_TEXT_COLOR
 
@@ -282,7 +352,7 @@ def drawStorage(uid: int):
 
         drawText(
             draw,
-            f"稀有度为【{level.name}】的全部小哥",
+            f"{level.name}",
             drawLeft - tbox.left,
             drawTop,
             color,
@@ -325,9 +395,7 @@ def drawStorage(uid: int):
 
 @cache
 def drawAwardBoxImageHidden():
-    return drawAwardBoxImage(
-        os.path.join(".", "res", "catch", "blank_placeholder.png")
-    )
+    return drawAwardBoxImage(os.path.join(".", "res", "catch", "blank_placeholder.png"))
 
 
 @make_async
@@ -373,8 +441,8 @@ def drawStatus(uid: int):
 
         level = getLevelOfAward(award)
 
-        if level.lid in STATUS_BACKGROUND_COLOR_SPECIFIED.keys():
-            bg = STATUS_BACKGROUND_COLOR_SPECIFIED[level.lid]
+        if level.lid in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
+            bg = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[level.lid]
 
         subImage = (
             drawAwardBoxImage(award.imgPath, bg)
@@ -397,7 +465,8 @@ def drawCaughtBox(pick: Pick):
         (
             sub.size[0] + CAUGHT_BOX_MARGIN_LEFT + CAUGHT_BOX_MARGIN_RIGHT,
             sub.size[1] + CAUGHT_BOX_MARGIN_TOP + CAUGHT_BOX_MARGIN_BOTTOM,
-        ), GLOBAL_BACKGROUND_COLOR
+        ),
+        GLOBAL_BACKGROUND_COLOR,
     )
 
     image.paste(sub, (CAUGHT_BOX_MARGIN_LEFT, CAUGHT_BOX_MARGIN_TOP))
