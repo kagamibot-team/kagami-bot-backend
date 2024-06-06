@@ -197,9 +197,7 @@ class CatchHelp(Command):
     def __init__(self):
         super().__init__(f"^{KEYWORD_BASE_COMMAND}? ?(help|帮助)", "( admin)?")
 
-    def syncHandleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
         return help(result.group(3) != None)
 
 
