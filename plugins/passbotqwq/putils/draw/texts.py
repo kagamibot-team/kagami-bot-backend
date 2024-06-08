@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import enum
 import os
+from typing import Literal
 
 import PIL
 import PIL.ImageDraw
@@ -11,6 +12,22 @@ from ..threading import make_async
 from .typing import PillowColorLikeWeak, PILImage, PillowColorLikeStrong
 
 
+class HorizontalAnchor(enum.Enum):
+    left = 'l'
+    middle = 'm'
+    right = 'r'
+    baseline = 's'
+
+
+class VerticalAnchor(enum.Enum):
+    ascender = 'a'
+    top = 't'
+    middle = 'm'
+    baseline = 's'
+    bottom = 'b'
+    descender = 'd'
+
+
 @dataclass
 class TextBox:
     left: int
@@ -19,7 +36,7 @@ class TextBox:
     bottom: int
 
 
-FONT_BASE = os.path.join(".", 'res', 'catch', 'fonts')
+FONT_BASE = os.path.join(".", "res", "catch", "fonts")
 
 
 def _res(fn: str):
@@ -50,9 +67,19 @@ def drawText(
     color: PillowColorLikeStrong,
     font=DEFAULT_FONT,
     strokeColor: PillowColorLikeStrong = 0,
-    strokeWidth: int = 0
+    strokeWidth: int = 0,
+    horizontalAlign: HorizontalAnchor = HorizontalAnchor.left,
+    verticalAlign: VerticalAnchor = VerticalAnchor.top
 ):
-    draw.text((x, y), text, fill=color, font=font, stroke_fill=strokeColor, stroke_width=strokeWidth)
+    draw.text(
+        (x, y),
+        text,
+        fill=color,
+        font=font,
+        stroke_fill=strokeColor,
+        stroke_width=strokeWidth,
+        anchor=horizontalAlign.value + verticalAlign.value
+    )
 
 
 def textBox(text: str, font: PIL.ImageFont.FreeTypeFont = DEFAULT_FONT):

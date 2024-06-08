@@ -5,6 +5,7 @@ import time
 import PIL
 import PIL.ImageDraw
 
+import nonebot
 from sqlalchemy import select
 from nonebot.log import logger
 from nonebot_plugin_orm import async_scoped_session, get_session
@@ -23,7 +24,7 @@ from ...putils.draw.images import (
     toOpenCVImage,
     resize,
 )
-from ...putils.draw.texts import drawText, textBox, textFont, Fonts
+from ...putils.draw.texts import HorizontalAnchor, drawText, textBox, textFont, Fonts
 from ...putils.draw.typing import PILImage, PillowColorLike
 from ...putils.draw import newImage
 
@@ -59,7 +60,7 @@ AWARD_BOX_COUNT_DX = 4
 AWARD_BOX_COUNT_DY = -4
 
 AWARD_BOX_NAME_TOP = 8
-AWARD_BOX_NAME_LEFT = 4
+AWARD_BOX_NAME_LEFT = 0
 AWARD_BOX_NAME_LINE_HEIGHT = 40
 AWARD_BOX_NAME_FONT = textFont(Fonts.FONT_HARMONYOS_SANS, 16)
 AWARD_BOX_NAME_COLOR = STORAGE_TITLE_TEXT_COLOR
@@ -68,10 +69,10 @@ AWARD_BOX_NAME_STROKE_WIDTH = 0
 AWARD_BOX_NAME_STROKE_COLOR_SPECIFIED: dict[int, str] = {}
 AWARD_BOX_NAME_STROKE_WIDTH_SPECIFIED: dict[int, int] = {}
 
-STATUS_MARGIN_LEFT = 0
-STATUS_MARGIN_RIGHT = 0
-STATUS_MARGIN_TOP = 0
-STATUS_MARGIN_BOTTOM = 0
+STATUS_MARGIN_LEFT = 40
+STATUS_MARGIN_RIGHT = 40
+STATUS_MARGIN_TOP = 80
+STATUS_MARGIN_BOTTOM = 40
 
 STATUS_MAX_ROW_COUNT = 6
 
@@ -162,10 +163,11 @@ async def drawAwardBox(
     await drawText(
         draw,
         award.name,
-        AWARD_BOX_NAME_LEFT + IMAGE_RAW_WIDTH * scale / 2 - tbox.right / 2,
+        AWARD_BOX_NAME_LEFT + IMAGE_RAW_WIDTH * scale / 2,
         IMAGE_RAW_HEIGHT * scale + AWARD_BOX_NAME_TOP,
         color,
         AWARD_BOX_NAME_FONT,
+        horizontalAlign=HorizontalAnchor.middle,
     )
 
     return base
@@ -183,7 +185,6 @@ async def drawStorage(
     paddingY: int = AWARD_BOX_PADDING_Y,
     backgroundColor: PillowColorLike = GLOBAL_BACKGROUND_COLOR,
 ):
-    beginTime = time.time()
     lines: list[int] = []
 
     session = get_session()
@@ -259,18 +260,18 @@ async def drawStorage(
                 boxHeight + paddingY
             )
 
-    return image, time.time() - beginTime
+    return image
 
 
 async def drawAwardBoxImageHidden():
-    return await drawAwardBoxImage(os.path.join(".", "res", "catch", "blank_placeholder.png"))
+    return await drawAwardBoxImage(
+        os.path.join(".", "res", "catch", "blank_placeholder.png")
+    )
 
 
 async def drawStatus(
     session: async_scoped_session, user: UserData | None, scale: float = AWARD_BOX_SCALE
 ):
-    begin = time.time()
-
     awards = list(
         (
             await session.execute(
@@ -325,11 +326,16 @@ async def drawStatus(
 
         await fastPaste(_image, await toOpenCVImage(subImage), x, y)
 
-    return await fromOpenCVImage(_image), time.time() - begin
+    return await fromOpenCVImage(_image)
 
 
 async def drawCaughtBox(pick: Pick):
-    sub = await drawAwardBox(pick.award, f"{pick.fromNumber}→{pick.toNumber}")
+    bg = AWARD_BOX_BACKGROUND_COLOR
+
+    if pick.award.level_id in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
+        bg = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[pick.award.level_id]  # type: ignore
+
+    sub = await drawAwardBox(pick.award, f"{pick.fromNumber}→{pick.toNumber}", bg)
 
     image = await newImage(
         (
@@ -349,6 +355,9 @@ driver = get_driver()
 
 @driver.on_startup
 async def preDrawEverything():
+    if nonebot.get_driver().config.predraw_images == 0:
+        logger.info("在开发环境中，跳过了预先绘制图像文件")
+    
     session = get_session()
     awards = (await session.execute(select(Award))).scalars()
 
@@ -360,11 +369,16 @@ async def preDrawEverything():
 
         await drawAwardBoxImage(award.img_path, bg)
 
-    logger.info("Predraw finished")
+    logger.info("已经完成了预先绘制图像文件")
 
 
 def getImageTarget(award: Award):
-    safename = base64.b64encode(award.name.encode()).decode().replace('/', '_').replace('+', '-')
+    safename = (
+        base64.b64encode(award.name.encode())
+        .decode()
+        .replace("/", "_")
+        .replace("+", "-")
+    )
 
     uIndex: int = 0
 

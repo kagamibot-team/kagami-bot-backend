@@ -38,4 +38,4 @@ async def ping(bot: Bot, event: GroupMessageEvent):
         if event.sender.user_id == 1467858478:
             await eventMatcher.finish("贪吃小哥" + match)
 
-        await eventMatcher.finish("在")
+        await eventMatcher.finish("在" + match)

@@ -148,7 +148,7 @@ async def allAwards(session: async_scoped_session):
 
     result = "\n\n".join(_result)
 
-    image, _ = await drawStatus(session, None)
+    image = await drawStatus(session, None)
 
     return Message(
         [
@@ -199,5 +199,9 @@ updateHistory = {
     "0.2.0": [
         "将数据使用数据库储存",
         "修复间隔为 0 时报错的问题",
+    ],
+    "0.2.1": [
+        "修复了一些界面文字没有中心对齐的问题",
+        "修复了抓小哥时没有字体颜色的问题"
     ]
 }

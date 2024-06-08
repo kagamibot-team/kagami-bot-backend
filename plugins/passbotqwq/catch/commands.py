@@ -209,13 +209,13 @@ class CatchStorage(Command):
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        image, tm = await drawStorage(await env.getSender())
+        image = await drawStorage(await env.getSender())
         storageImage = imageToBytes(image)
 
         return Message(
             [
                 at(env.sender),
-                text(f" 的小哥库存 (Render time: {round(tm, 2)})："),
+                text(f" 的小哥库存："),
                 MessageSegment.image(storageImage),
             ]
         )
@@ -384,12 +384,12 @@ class CatchProgress(Command):
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
 
-        image, tm = await drawStatus(env.session, await env.getSender())
+        image = await drawStatus(env.session, await env.getSender())
 
         return Message(
             [
                 MessageSegment.at(env.sender),
-                MessageSegment.text(f" 的小哥收集进度 (Render time: {round(tm, 2)})："),
+                MessageSegment.text(f" 的小哥收集进度："),
                 MessageSegment.image(imageToBytes(image)),
             ]
         )
