@@ -1,6 +1,6 @@
 from typing import TypeVar, Sequence
 from sqlalchemy import Row, select
-from nonebot_plugin_orm import async_scoped_session, get_session
+from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
 
 from .Basics import AwardSkin, Level, Award, AwardCountStorage, SkinRecord, UserData
 
@@ -62,7 +62,10 @@ def isUserHaveAward(user: UserData, award: Award):
     return False
 
 
-async def getImageOfOneUser(session: async_scoped_session, user: UserData, award: Award) -> str:
+async def getAwardImageOfOneUser(session: async_scoped_session | AsyncSession | None, user: UserData, award: Award) -> str:
+    if session is None:
+        session = get_session()
+
     record = (await session.execute(select(
         SkinRecord
     ).filter(
@@ -77,3 +80,38 @@ async def getImageOfOneUser(session: async_scoped_session, user: UserData, award
         return award.img_path
     
     return record.skin.image
+
+
+async def getAwardDescriptionOfOneUser(session: async_scoped_session | AsyncSession | None, user: UserData, award: Award) -> str:
+    if session is None:
+        session = get_session()
+
+    record = (await session.execute(select(
+        SkinRecord
+    ).filter(
+        SkinRecord.user == user
+    ).filter(
+        SkinRecord.skin.has(
+            AwardSkin.applied_award == award
+        )
+    ))).scalar_one_or_none()
+
+    if record == None or record.skin.extra_description == '':
+        return award.description
+    
+    return record.skin.extra_description
+
+
+async def getUserUsingSkin(session: async_scoped_session | AsyncSession | None, user: UserData, award: Award):
+    if session is None:
+        session = get_session()
+
+    return (await session.execute(select(
+        SkinRecord
+    ).filter(
+        SkinRecord.user == user
+    ).filter(
+        SkinRecord.skin.has(
+            AwardSkin.applied_award == award
+        )
+    ))).scalar_one_or_none()

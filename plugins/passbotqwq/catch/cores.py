@@ -17,6 +17,7 @@ class Pick:
     award: Award
     fromNumber: int
     toNumber: int
+    picks: "PicksResult"
 
     def isNew(self):
         return self.fromNumber == 0
@@ -29,6 +30,7 @@ class Pick:
 class PicksResult:
     picks: list[Pick]
     uid: int
+    user: UserData
     restCount: int
     max_pick: int
     time_delta: float
@@ -88,7 +90,7 @@ async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int 
     else:
         count = count
 
-    pickResult = PicksResult([], uid, user.pick_count_remain - count, user.pick_max_cache, user.pick_time_delta, user.pick_count_last_calculated)
+    pickResult = PicksResult([], uid, user, user.pick_count_remain - count, user.pick_max_cache, user.pick_time_delta, user.pick_count_last_calculated)
 
     awards = list(itertools.chain(*[await pick(session, user) for _ in range(count)]))
     awardsDelta: dict[Award, int] = {}
@@ -104,6 +106,6 @@ async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int 
     for award in awardsDelta:
         oldValue = await addAward(session, user, award, awardsDelta[award]) - awardsDelta[award]
 
-        pickResult.picks.append(Pick(award, oldValue, oldValue + awardsDelta[award]))
+        pickResult.picks.append(Pick(award, oldValue, oldValue + awardsDelta[award], pickResult))
 
     return pickResult

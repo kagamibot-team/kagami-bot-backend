@@ -60,6 +60,7 @@ class UserData(Model, BaseMixin):
     pick_max_cache: Mapped[int] = mapped_column(default=6)
 
     used_skins: Mapped[list['SkinRecord']] = relationship(back_populates='user', lazy='subquery')
+    owned_skins: Mapped[list['SkinOwnRecord']] = relationship(back_populates='user', lazy='subquery')
 
 
 class SkinRecord(Model, BaseMixin):
@@ -72,12 +73,24 @@ class SkinRecord(Model, BaseMixin):
     skin: Mapped['AwardSkin'] = relationship(back_populates='binded_records', lazy='subquery')
 
 
+class SkinOwnRecord(Model, BaseMixin):
+    __tablename__ = 'catch_skin_own_record'
+
+    user_id = Column(Integer, ForeignKey('catch_user_data.data_id'))
+    skin_id = Column(Integer, ForeignKey('catch_skin.data_id'))
+
+    user: Mapped[UserData] = relationship(back_populates='owned_skins', lazy='subquery')
+    skin: Mapped['AwardSkin'] = relationship(back_populates='own_records', lazy='subquery')
+
+
 class AwardSkin(Model, BaseMixin):
     __tablename__ = 'catch_skin'
 
-    applied_award_id = Column(Integer, ForeignKey('catch_award.data_id'))
-
+    name: Mapped[str] = mapped_column(default='')
     extra_description: Mapped[str] = mapped_column(default='')
     image: Mapped[str] = mapped_column(default=DEFAULT_IMG)
+
+    applied_award_id = Column(Integer, ForeignKey('catch_award.data_id'))
     applied_award: Mapped[Award] = relationship(back_populates='binded_skins', lazy='subquery')
     binded_records: Mapped[list[SkinRecord]] = relationship(back_populates='skin', lazy='subquery')
+    own_records: Mapped[list[SkinOwnRecord]] = relationship(back_populates='skin', lazy='subquery')

@@ -8,6 +8,7 @@ from nonebot.adapters.onebot.v11 import Message
 from ..putils.command import (
     CheckEnvironment,
     at,
+    localImage,
     text,
     image,
     Command,
@@ -16,11 +17,11 @@ from ..putils.command import (
     WaitForMoreInformationException,
 )
 from ..putils.download import download, writeData
-from ..putils.text_format_check import not_negative, A_SIMPLE_RULE
+from ..putils.text_format_check import not_negative
 
 from .models import *
 from .models.crud import getOrCreateUser
-from .models.data import addAward, setEveryoneInterval
+from .models.data import addAward, deleteSkinOwnership, hangupSkin, obtainSkin, setEveryoneInterval
 
 from .cores import handlePick
 
@@ -36,6 +37,7 @@ from .messages import (
     drawStatus,
     drawStorage,
     getImageTarget,
+    getSkinTarget,
 )
 
 
@@ -48,6 +50,7 @@ KEYWORD_PROGRESS = "(进度|成就|进展|jd)"
 KEYWORD_INTERVAL = "(时间|周期|间隔)"
 KEYWORD_AWARDS = "(物品|小哥)"
 KEYWORD_LEVEL = "(等级|级别)"
+KEYWORD_SKIN = "(皮肤)"
 
 KEYWORD_CRAZY = "(连|l|狂|k)"
 KEYWORD_DISPLAY = "(展示|display|查看)"
@@ -55,6 +58,9 @@ KEYWORD_STORAGE = "(库存|kc)"
 
 KEYWORD_REMOVE = "(删除|删掉)"
 KEYWORD_CREATE = "(创建|新建|添加)"
+
+KEYWORD_OBTAIN = "(获得|得到|给予)"
+KEYWORD_REMOVE_OBTAIN = "(除去|拿走|剥夺)"
 
 
 CommandBaseSelf = TypeVar("CommandBaseSelf", bound="CommandBase")
@@ -168,7 +174,7 @@ class Give(Command):
     def __init__(self):
         super().__init__(
             "^/give",
-            " (\\d+) (\\S+)( \\d+)$",
+            " (\\d+) (\\S+)( \\d+)?$",
         )
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
@@ -520,7 +526,7 @@ class CatchDisplay(Command):
             if ac is None or ac.award_count <= 0:
                 return Message([at(env.sender), text(f" 你没有名字叫 {name} 的小哥")])
 
-        return displayAward(award)
+        return await displayAward(award, await getSender(env))
 
 
 @dataclass
@@ -588,6 +594,253 @@ class CatchCreateLevel(Command):
         return Message([at(env.sender), text("ok")])
 
 
+@dataclass
+class CatchAddSkin(Command):
+    commandPattern: str = f"^:: ?{KEYWORD_CREATE} ?{KEYWORD_SKIN}"
+    argsPattern: str = " (\\S+) (\\S+)$"
+
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return Message([at(env.sender), text("MSG_CREATE_SKIN_WRONG_FORMAT")])
+    
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        award = (await env.session.execute(select(Award).filter(
+            Award.name == result.group(3)
+        ))).scalar_one_or_none()
+
+        if award is None:
+            return self.notExists(env, result.group(3))
+        
+        skin = (await env.session.execute(select(AwardSkin).filter(
+            AwardSkin.name == result.group(4)
+        ).filter(
+            AwardSkin.applied_award == award
+        ))).scalar_one_or_none()
+
+        if skin is not None:
+            return Message([at(env.sender), text("MSG_SKIN_ALREADY_EXISTS")])
+        
+        skin = AwardSkin(
+            name=result.group(4),
+            applied_award=award
+        )
+
+        env.session.add(skin)
+        await env.session.commit()
+
+        return Message([at(env.sender), text("MSG_SKIN_ADDED_SUCCESSFUL")])
+
+
+@dataclass
+class CatchModifySkinCallback(CallbackBase):
+    skin_id: int
+    param: str
+
+    async def callback(self, env: CheckEnvironment) -> Message | None:
+        skin = (await env.session.get(AwardSkin, self.skin_id))
+        assert skin is not None
+
+        if self.param == '名字' or self.param == '名称':
+            if not re.match('^\\S+$', env.text):
+                raise WaitForMoreInformationException(self, Message([
+                    at(env.sender), text('MSG_INPUT_NAME_WRONG_FORMAT')
+                ]))
+            
+            skin.name = env.text
+            await env.session.commit()
+            return modifyOk()
+        
+        if self.param == '描述':
+            skin.extra_description = env.text
+            await env.session.commit()
+            return modifyOk()
+
+        if len(images := env.message.include("image")) != 1:
+            raise WaitForMoreInformationException(
+                self, Message([
+                    at(env.sender), text('MSG_IMAGE_WRONG_FORMAT')
+                ]))
+
+        image = images[0]
+
+        fp = getSkinTarget(skin)
+        await writeData(await download(image.data["url"]), fp)
+        skin.image = fp
+        await env.session.commit()
+        return modifyOk()
+
+
+@dataclass
+class CatchModifySkin(Command):
+    commandPattern: str = f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_SKIN} ?(名字|名称|描述|图像|图片)"
+    argsPattern: str = " (\\S+) (\\S+)$"
+
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return Message([at(env.sender), text("MSG_MODIFY_SKIN_WRONG_FORMAT")])
+    
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        award = (await env.session.execute(select(Award).filter(
+            Award.name == result.group(4)
+        ))).scalar_one_or_none()
+
+        if award is None:
+            return self.notExists(env, result.group(4))
+        
+        skin = (await env.session.execute(select(AwardSkin).filter(
+            AwardSkin.name == result.group(5)
+        ).filter(
+            AwardSkin.applied_award == award
+        ))).scalar_one_or_none()
+
+        if skin is None:
+            return self.notExists(env, result.group(5))
+        
+        callback = CatchModifySkinCallback(skin.data_id, result.group(3)) # type: ignore
+        raise WaitForMoreInformationException(callback, Message([
+            at(env.sender), text('MSG_PLEASE_INPUT')
+        ]))
+
+
+@dataclass
+class CatchAdminDisplay(Command):
+    commandPattern: str = f"^:: ?{KEYWORD_DISPLAY}"
+    argsPattern: str = " (\\S+)( \\S+)?$"
+
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return Message([at(env.sender), text('MSG_DISPLAY_ADMIN_WRONG_FORMAT')])
+    
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        award = (await env.session.execute(select(Award).filter(
+            Award.name == result.group(2)
+        ))).scalar_one_or_none()
+
+        if award is None:
+            return self.notExists(env, result.group(2))
+        
+        imgUrl = award.img_path
+        desc = award.description
+
+        if result.group(3) is not None:
+            skin = (await env.session.execute(select(AwardSkin).filter(
+                AwardSkin.name == result.group(3)[1:]
+            ).filter(
+                AwardSkin.applied_award == award
+            ))).scalar_one_or_none()
+
+            if skin is None:
+                return self.notExists(env, result.group(3)[1:])
+        
+            imgUrl = skin.image
+            
+            if len(skin.extra_description) > 0:
+                desc = skin.extra_description
+        
+        return Message([at(env.sender), text('MSG_ADMIN_DISPLAY'), await localImage(imgUrl), text(f'\n\n{desc}')])
+
+
+@dataclass
+class CatchAdminObtainSkin(Command):
+    commandPattern: str = f":: ?{KEYWORD_OBTAIN} ?{KEYWORD_SKIN}"
+    argsPattern: str = " (\\S+) (\\S+)$"
+
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return Message([at(env.sender), text("MSG_MODIFY_SKIN_WRONG_FORMAT")])
+    
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        award = (await env.session.execute(select(Award).filter(
+            Award.name == result.group(3)
+        ))).scalar_one_or_none()
+
+        if award is None:
+            return self.notExists(env, result.group(3))
+        
+        skin = (await env.session.execute(select(AwardSkin).filter(
+            AwardSkin.name == result.group(4)
+        ).filter(
+            AwardSkin.applied_award == award
+        ))).scalar_one_or_none()
+
+        if skin is None:
+            return self.notExists(env, result.group(4))
+        
+        await obtainSkin(env.session, await getSender(env), skin)
+        await env.session.commit()
+
+        return modifyOk()
+
+
+@dataclass
+class CatchAdminDeleteSkinOwnership(Command):
+    commandPattern: str = f":: ?{KEYWORD_REMOVE_OBTAIN} ?{KEYWORD_SKIN}"
+    argsPattern: str = " (\\S+) (\\S+)$"
+
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return Message([at(env.sender), text("MSG_MODIFY_SKIN_WRONG_FORMAT")])
+    
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        award = (await env.session.execute(select(Award).filter(
+            Award.name == result.group(3)
+        ))).scalar_one_or_none()
+
+        if award is None:
+            return self.notExists(env, result.group(3))
+        
+        skin = (await env.session.execute(select(AwardSkin).filter(
+            AwardSkin.name == result.group(4)
+        ).filter(
+            AwardSkin.applied_award == award
+        ))).scalar_one_or_none()
+
+        if skin is None:
+            return self.notExists(env, result.group(4))
+        
+        await deleteSkinOwnership(env.session, await getSender(env), skin)
+        await env.session.commit()
+
+        return modifyOk()
+
+
+@dataclass
+class CatchHangUpSkin(Command):
+    commandPattern: str = f"{KEYWORD_CHANGE} ?{KEYWORD_SKIN}"
+    argsPattern: str = " (\\S+)( \\S+)?$"
+
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return Message([at(env.sender), text(" 格式不对，格式是 设置皮肤 小哥名字 皮肤名字")])
+    
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        award = (await env.session.execute(select(Award).filter(
+            Award.name == result.group(3)
+        ))).scalar_one_or_none()
+
+        if award is None:
+            return self.notExists(env, result.group(3))
+        
+        if result.group(4) is not None:
+            skin = (await env.session.execute(select(AwardSkin).filter(
+                AwardSkin.name == result.group(4)[1:]
+            ).filter(
+                AwardSkin.applied_award == award
+            ))).scalar_one_or_none()
+
+            if skin is None:
+                return self.notExists(env, result.group(4)[1:])
+            
+            res = await hangupSkin(env.session, await getSender(env), skin)
+
+            if not res:
+                return Message([
+                    at(env.sender),
+                    text(' 你没有这个皮肤哦')
+                ])
+            
+            await env.session.commit()
+            return Message([at(env.sender), text(' 皮肤换好了')])
+        
+        await hangupSkin(env.session, await getSender(env), None)
+        await env.session.commit()
+        return Message([at(env.sender), text(' 皮肤改回默认了')])
+
+
 enabledCommand: list[CommandBase] = [
     Catch(),
     CrazyCatch(),
@@ -606,4 +859,10 @@ enabledCommand: list[CommandBase] = [
     CatchCreateLevel(),
     Give(),
     Clear(),
+    CatchAddSkin(),
+    CatchModifySkin(),
+    CatchAdminDisplay(),
+    CatchAdminObtainSkin(),
+    CatchAdminDeleteSkinOwnership(),
+    CatchHangUpSkin(),
 ]

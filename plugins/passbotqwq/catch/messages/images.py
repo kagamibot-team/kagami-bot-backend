@@ -5,6 +5,7 @@ import time
 import PIL
 import PIL.ImageDraw
 
+import PIL.ImageFont
 import nonebot
 from sqlalchemy import select
 from nonebot.log import logger
@@ -13,8 +14,8 @@ from nonebot import get_driver
 
 from ..cores import Pick
 
-from ..models.crud import getAllAwards, isUserHaveAward, selectAllLevelUserObtained
-from ..models.Basics import Award, AwardCountStorage, Level, UserData
+from ..models.crud import getAllAwards, getAwardImageOfOneUser, isUserHaveAward, selectAllLevelUserObtained
+from ..models.Basics import Award, AwardCountStorage, AwardSkin, Level, UserData
 
 from ...putils.draw.images import (
     addUponPaste,
@@ -24,8 +25,8 @@ from ...putils.draw.images import (
     toOpenCVImage,
     resize,
 )
-from ...putils.draw.texts import HorizontalAnchor, drawText, textBox, textFont, Fonts
-from ...putils.draw.typing import PILImage, PillowColorLike
+from ...putils.draw.texts import HorizontalAnchor, VerticalAnchor, drawText, textBox, textFont, Fonts
+from ...putils.draw.typing import PILImage, PillowColorLike, PillowColorLikeStrong
 from ...putils.draw import newImage
 
 
@@ -131,42 +132,56 @@ async def drawAwardBox(
     count: str = "",
     bgColor: str = AWARD_BOX_BACKGROUND_COLOR,
     scale: float = AWARD_BOX_SCALE,
+    textLineHeight: float = AWARD_BOX_NAME_LINE_HEIGHT,
+    countFont: PIL.ImageFont.FreeTypeFont = AWARD_BOX_COUNT_FONT,
+    countX: float = AWARD_BOX_COUNT_DX,
+    countY: float = AWARD_BOX_COUNT_DY,
+    countColor: PillowColorLikeStrong = AWARD_BOX_COUNT_COLOR,
+    countStrokeColor: PillowColorLikeStrong = AWARD_BOX_COUNT_STROKE_COLOR,
+    countStrokeWidth: int = AWARD_BOX_COUNT_STROKE_WIDTH,
+    nameFont: PIL.ImageFont.FreeTypeFont = AWARD_BOX_NAME_FONT,
+    nameX: float = AWARD_BOX_NAME_LEFT,
+    nameY: float = AWARD_BOX_NAME_TOP,
+    user: UserData | None = None
 ):
     base = await newImage(
         (
             int(IMAGE_RAW_WIDTH * scale),
-            int(IMAGE_RAW_HEIGHT * scale + AWARD_BOX_NAME_LINE_HEIGHT),
+            int(IMAGE_RAW_HEIGHT * scale + textLineHeight),
         ),
         GLOBAL_BACKGROUND_COLOR,
     )
 
-    await addUponPaste(base, await drawAwardBoxImage(award.img_path, bgColor), 0, 0)
+    imgUrl = award.img_path
+
+    if user is not None:
+        imgUrl = await getAwardImageOfOneUser(None, user, award)
+
+    await addUponPaste(base, await drawAwardBoxImage(imgUrl, bgColor), 0, 0)
 
     draw = PIL.ImageDraw.Draw(base)
-    tbox = textBox(count, AWARD_BOX_COUNT_FONT)
 
     await drawText(
         draw,
         count,
-        AWARD_BOX_COUNT_DX,
-        IMAGE_RAW_HEIGHT * scale - tbox.bottom + AWARD_BOX_COUNT_DY,
-        AWARD_BOX_COUNT_COLOR,
-        AWARD_BOX_COUNT_FONT,
-        AWARD_BOX_COUNT_STROKE_COLOR,
-        AWARD_BOX_COUNT_STROKE_WIDTH,
+        countX,
+        IMAGE_RAW_HEIGHT * scale + countY,
+        countColor,
+        countFont,
+        countStrokeColor,
+        countStrokeWidth,
+        verticalAlign=VerticalAnchor.bottom
     )
-
-    tbox = textBox(award.name, AWARD_BOX_NAME_FONT)
 
     color = bgColor
 
     await drawText(
         draw,
         award.name,
-        AWARD_BOX_NAME_LEFT + IMAGE_RAW_WIDTH * scale / 2,
-        IMAGE_RAW_HEIGHT * scale + AWARD_BOX_NAME_TOP,
+        nameX + IMAGE_RAW_WIDTH * scale / 2,
+        IMAGE_RAW_HEIGHT * scale + nameY,
         color,
-        AWARD_BOX_NAME_FONT,
+        nameFont,
         horizontalAlign=HorizontalAnchor.middle,
     )
 
@@ -240,7 +255,7 @@ async def drawStorage(
                 award = awardStorage.target_award
 
                 box = await drawAwardBox(
-                    award, str(awardStorage.award_count), bgc, scale
+                    award, str(awardStorage.award_count), bgc, scale, user=user
                 )
 
                 await addUponPaste(
@@ -310,8 +325,12 @@ async def drawStatus(
         )
 
         bg = award.level.level_color_code
+        imageUrl = award.img_path
 
-        subImage = await drawAwardBoxImage(award.img_path, bg)
+        if user is not None:
+            imageUrl = await getAwardImageOfOneUser(session, user, award)
+
+        subImage = await drawAwardBoxImage(imageUrl, bg)
 
         if user is not None and not isUserHaveAward(user, award):
             subImage = await drawAwardBoxImageHidden()
@@ -324,7 +343,7 @@ async def drawStatus(
 async def drawCaughtBox(pick: Pick):
     bg = pick.award.level.level_color_code
 
-    sub = await drawAwardBox(pick.award, f"{pick.fromNumber}→{pick.toNumber}", bg)
+    sub = await drawAwardBox(pick.award, f"{pick.fromNumber}→{pick.toNumber}", bg, user=pick.picks.user)
 
     image = await newImage(
         (
@@ -360,6 +379,25 @@ async def preDrawEverything():
 def getImageTarget(award: Award):
     safename = (
         base64.b64encode(award.name.encode())
+        .decode()
+        .replace("/", "_")
+        .replace("+", "-")
+    )
+
+    uIndex: int = 0
+
+    def _path():
+        return os.path.join(".", "data", "catch", "awards", f"{safename}_{uIndex}.png")
+
+    while os.path.exists(_path()):
+        uIndex += 1
+
+    return _path()
+
+
+def getSkinTarget(skin: AwardSkin):
+    safename = (
+        base64.b64encode((skin.applied_award.name + skin.name).encode())
         .decode()
         .replace("/", "_")
         .replace("+", "-")

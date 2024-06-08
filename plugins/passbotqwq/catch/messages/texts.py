@@ -1,10 +1,9 @@
 import math
 import time
 
-
-from ..models.crud import getAllLevels
+from ..models.crud import getAllLevels, getAwardDescriptionOfOneUser, getAwardImageOfOneUser, getUserUsingSkin
 from ..models.data import getPosibilities
-from ..models import Award
+from ..models import Award, UserData
 from ..cores import PicksResult
 
 from .images import drawCaughtBox, drawStatus
@@ -16,12 +15,18 @@ from nonebot_plugin_orm import async_scoped_session
 import pathlib
 
 
-def displayAward(award: Award):
+async def displayAward(award: Award, user: UserData):
+    name = award.name
+    skin = await getUserUsingSkin(None, user, award)
+
+    if skin is not None:
+        name = name + f"[{skin.skin.name}]"
+
     return Message(
         [
-            MessageSegment.text("展示 " + award.name + f"【{award.level.name}】"),
-            MessageSegment.image(pathlib.Path(award.img_path)),
-            MessageSegment.text(f"\n\n{award.description}"),
+            MessageSegment.text("展示 " + name + f"【{award.level.name}】"),
+            MessageSegment.image(pathlib.Path(await getAwardImageOfOneUser(None, user, award))),
+            MessageSegment.text(f"\n\n{await getAwardDescriptionOfOneUser(None, user, award)}"),
         ]
     )
 
@@ -60,13 +65,20 @@ async def caughtMessage(picksResult: PicksResult):
     )
 
     for pick in picksResult.picks:
+        name = award.name
+        skin = await getUserUsingSkin(None, pick.picks.user, award)
+
+        if skin is not None:
+            name = name + f"[{skin.skin.name}]"
+
         award = pick.award
         level = award.level
 
         image = await drawCaughtBox(pick)
+        desc = await getAwardDescriptionOfOneUser(None, pick.picks.user, award)
         ms.append(MessageSegment.image(imageToBytes(image)))
 
-        textBuild = f"【{level.name}】{award.name}\n{award.description}"
+        textBuild = f"【{level.name}】{name}\n{desc}"
 
         if pick.isNew():
             textBuild = "【新!】" + textBuild
@@ -173,17 +185,23 @@ def help(isAdmin=False):
         "狂抓小哥(kz)：一次抓完所有可用次数",
         "库存(kc)：展示个人仓库中的存量",
         "抓小哥进度(zhuajd)：展示目前收集的进度",
+        "设置皮肤 小哥名字 皮肤名字：设置一个小哥的皮肤"
     ]
 
     admin = [
         "::创建小哥 名字 等级",
         "::删除小哥 名字",
-        # "::创建等级 名字 权重 价值",
+        "::创建等级 名字",
         "::所有等级",
         "::所有小哥",
         "::设置周期 秒数",
-        "::更改等级 名称/权重 等级的名字",
+        "::更改等级 名称/权重/颜色 等级的名字",
         "::更改小哥 名称/等级/图片/描述 小哥的名字",
+        "::创建皮肤 小哥名字 皮肤名字",
+        "::更改皮肤 名字/图片/描述 小哥名字 皮肤名字",
+        "::获得皮肤 小哥名字 皮肤名字",
+        "::剥夺皮肤 小哥名字 皮肤名字",
+        "::展示 小哥名字 皮肤名字",
     ]
 
     res = normal + admin if isAdmin else normal
@@ -203,5 +221,8 @@ updateHistory = {
     "0.2.1": [
         "修复了一些界面文字没有中心对齐的问题",
         "修复了抓小哥时没有字体颜色的问题"
+    ],
+    "0.3.0": [
+        "正式添加皮肤系统"
     ]
 }

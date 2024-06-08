@@ -1,3 +1,4 @@
+import pathlib
 import re
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
 from plugins.passbotqwq.putils.draw.typing import PILImage
@@ -16,6 +17,10 @@ def text(text: str):
 
 async def image(image: PILImage):
     return MessageSegment.image(imageToBytes(image))
+
+
+async def localImage(image: str):
+    return MessageSegment.image(pathlib.Path(image))
 
 
 @dataclass
