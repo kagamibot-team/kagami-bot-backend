@@ -119,7 +119,7 @@ async def allLevels(session: async_scoped_session):
     levelObjs = await getAllLevels(session)
 
     levels = [
-        f"\n- 【{l.name}】权重 {l.weight} 爆率 {await getPosibilities(session, l)} %"
+        f"\n- 【{l.name}】权重 {l.weight} 爆率 {round((await getPosibilities(session, l)) * 100, 2)} %"
         for l in levelObjs
         if l.name != "名称已丢失"
     ]

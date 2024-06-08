@@ -94,7 +94,7 @@ async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int 
     awardsDelta: dict[Award, int] = {}
 
     for award in awards:
-        if award.data_id in awardsDelta.keys():
+        if award in awardsDelta.keys():
             awardsDelta[award] += 1
         else:
             awardsDelta[award] = 1

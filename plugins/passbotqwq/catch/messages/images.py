@@ -234,10 +234,7 @@ async def drawStorage(
         for awardStorages in awardBoxes:
             targetLevel = awardStorages[0].target_award.level
 
-            bgc = AWARD_BOX_BACKGROUND_COLOR
-
-            if targetLevel.data_id in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
-                bgc = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[targetLevel.data_id]  # type: ignore
+            bgc = targetLevel.level_color_code
 
             for i, awardStorage in enumerate(awardStorages):
                 award = awardStorage.target_award
@@ -312,12 +309,7 @@ async def drawStatus(
             STATUS_MARGIN_TOP + py * (IMAGE_RAW_HEIGHT * scale + AWARD_BOX_PADDING_Y)
         )
 
-        bg = AWARD_BOX_BACKGROUND_COLOR
-
-        level = award.level
-
-        if level.data_id in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
-            bg = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[level.data_id]  # type: ignore
+        bg = award.level.level_color_code
 
         subImage = await drawAwardBoxImage(award.img_path, bg)
 
@@ -330,10 +322,7 @@ async def drawStatus(
 
 
 async def drawCaughtBox(pick: Pick):
-    bg = AWARD_BOX_BACKGROUND_COLOR
-
-    if pick.award.level_id in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
-        bg = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[pick.award.level_id]  # type: ignore
+    bg = pick.award.level.level_color_code
 
     sub = await drawAwardBox(pick.award, f"{pick.fromNumber}→{pick.toNumber}", bg)
 
@@ -362,11 +351,7 @@ async def preDrawEverything():
     awards = (await session.execute(select(Award))).scalars()
 
     for award in awards:
-        bg = AWARD_BOX_BACKGROUND_COLOR
-
-        if award.level_id in AWARD_BOX_BACKGROUND_COLOR_SPECIFIED.keys():
-            bg = AWARD_BOX_BACKGROUND_COLOR_SPECIFIED[award.level_id]  # type: ignore
-
+        bg = award.level.level_color_code
         await drawAwardBoxImage(award.img_path, bg)
 
     logger.info("已经完成了预先绘制图像文件")

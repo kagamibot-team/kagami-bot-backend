@@ -10,7 +10,6 @@ from ..putils.command import (
     at,
     text,
     image,
-    imageToBytes,
     Command,
     CommandBase,
     CallbackBase,
@@ -169,7 +168,7 @@ class Give(Command):
     def __init__(self):
         super().__init__(
             "^/give",
-            " (\\d+) (\\S+)$",
+            " (\\d+) (\\S+)( \\d+)$",
         )
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
@@ -191,12 +190,17 @@ class Give(Command):
 
         if award is None:
             return self.notExists(env, result.group(2))
+        
+        count = 1
+
+        if result.group(3):
+            count = int(result.group(3)[1:])
 
         await addAward(
             env.session,
             await getOrCreateUser(env.session, int(result.group(1))),
             award,
-            1,
+            count,
         )
 
         message = Message(
@@ -412,77 +416,52 @@ class CatchModify(Command):
         raise WaitForMoreInformationException(callback, callback.callbackMessage(env))
 
 
+def isValidColorCode(raw: str):
+    if len(raw) != 7 and len(raw) != 4:
+        return False
+    if raw[0] != "#":
+        return False
+    for i in raw[1:]:
+        if i not in '0123456789abcdefABCDEF':
+            return False
+    return True
+
+
 @dataclass
-class CatchLevelModifyCallback(CallbackBase):
-    modifyType: str
-    modifyObject: Callable[[async_scoped_session], Coroutine[Any, Any, Level | None]]
-
-    def callbackMessage(self, env: CheckEnvironment, reason: str = ""):
-        info: str = f" {reason}，请再次输入它的 " if reason else " 请输入它的 "
-        info = info + self.modifyType
-
-        return Message([at(env.sender), text(info)])
-
-    async def callback(self, env: CheckEnvironment):
-        modifyObject = await self.modifyObject(env.session)
-        assert modifyObject is not None
-
-        if self.modifyType == "名称":
-            if " " in env.text:
-                raise WaitForMoreInformationException(
-                    self, self.callbackMessage(env, "名称中不能包含空格")
-                )
-
-            modifyObject.name = env.text
-            await env.session.commit()
-            return modifyOk()
-
-        if not not_negative()(env.text):
-            raise WaitForMoreInformationException(
-                self, self.callbackMessage(env, "请输入一个不小于零的数")
-            )
-
-        modifyObject.weight = float(env.text)
-        await env.session.commit()
-        return modifyOk()
-
-
 class CatchLevelModify(Command):
-    def __init__(self):
-        super().__init__(
-            f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_LEVEL} ?(名称|权重)",
-            " (\\S+)",
-        )
+    commandPattern: str = f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_LEVEL} ?(名称|名字|权重|色值|色号|颜色)"
+    argsPattern: str = " ?(\\S+) (.+)$"
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message(
-            [
-                at(env.sender),
-                text(
-                    " 格式错误，允许的格式有：\n"
-                    "::更改等级 名称 <等级的名字>\n"
-                    "::更改等级 权重 <等级的名字>"
-                ),
-            ]
-        )
+        return Message([at(env.sender), text('MSG_MODIFY_LEVEL_WRONG_FORMAT')])
 
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        modifyType = result.group(3)
-        modifyObject = result.group(4)
-
-        level = (
-            await env.session.execute(select(Level).filter(Level.name == modifyObject))
-        ).scalar_one_or_none()
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        level = (await env.session.execute(select(Level).filter(
+            Level.name == result.group(4)
+        ))).scalar_one_or_none()
 
         if level is None:
-            return self.notExists(env, modifyObject)
+            return self.notExists(env, result.group(4))
+        
+        modifyElement = result.group(3)
+        data = result.group(5)
 
-        callback = CatchLevelModifyCallback(
-            modifyType, lambda s: s.get(Level, level.data_id)
-        )
-        raise WaitForMoreInformationException(callback, callback.callbackMessage(env))
+        if modifyElement == "名称" or modifyElement == "名称":
+            level.name = data
+        elif modifyElement == "权重":
+            if not not_negative()(data):
+                return Message([at(env.sender), text("MSG_WEIGHT_INVALID")])
+            
+            level.weight = float(data)
+        else:
+            if not isValidColorCode(data):
+                return Message([at(env.sender), text('MSG_COLOR_CODE_INVALID')])
+            
+            level.level_color_code = data
+        
+        await env.session.commit()
+
+        return modifyOk()
 
 
 class CatchFilterNoDescription(Command):
@@ -512,16 +491,11 @@ class CatchFilterNoDescription(Command):
 
 @dataclass
 class CatchDisplay(Command):
-    commandPattern: str = f"^{KEYWORD_DISPLAY} ?{KEYWORD_AWARDS}?"
-    argsPattern: str = " ?(\\S+)( admin)?$"
+    commandPattern: str = f"^{KEYWORD_DISPLAY} ?{KEYWORD_AWARDS}? "
+    argsPattern: str = "(\\S+)( admin)?$"
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message(
-            [
-                at(env.sender),
-                text(" 你的格式有问题，应该是 展示小哥 小哥名字"),
-            ]
-        )
+        return None
 
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
@@ -586,6 +560,34 @@ class CatchCreateAward(Command):
         return Message([at(env.sender), text(" 添加成功！")])
 
 
+@dataclass
+class CatchCreateLevel(Command):
+    commandPattern: str = f"^:: ?{KEYWORD_CREATE} ?{KEYWORD_LEVEL}"
+    argsPattern: str = " (\\S+)$"
+
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        levelName = result.group(3)
+
+        existLevel = (await env.session.execute(select(
+            Level
+        ).filter(
+            Level.name == levelName
+        ))).scalar_one_or_none()
+
+        if existLevel is not None:
+            return Message([
+                at(env.sender),
+                text("MSG_LEVEL_ALREADY_EXISTS")
+            ])
+        
+        level = Level(name=levelName, weight=0)
+
+        env.session.add(level)
+        await env.session.commit()
+
+        return Message([at(env.sender), text("ok")])
+
+
 enabledCommand: list[CommandBase] = [
     Catch(),
     CrazyCatch(),
@@ -601,6 +603,7 @@ enabledCommand: list[CommandBase] = [
     CatchRemoveAward(),
     CatchDisplay(),
     CatchCreateAward(),
+    CatchCreateLevel(),
     Give(),
     Clear(),
 ]

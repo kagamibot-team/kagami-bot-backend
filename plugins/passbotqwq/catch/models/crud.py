@@ -2,7 +2,7 @@ from typing import TypeVar, Sequence
 from sqlalchemy import Row, select
 from nonebot_plugin_orm import async_scoped_session, get_session
 
-from .Basics import Level, Award, AwardCountStorage, UserData
+from .Basics import AwardSkin, Level, Award, AwardCountStorage, SkinRecord, UserData
 
 
 def selectAllLevelUserObtained(user: UserData):
@@ -60,3 +60,20 @@ def isUserHaveAward(user: UserData, award: Award):
             return True
 
     return False
+
+
+async def getImageOfOneUser(session: async_scoped_session, user: UserData, award: Award) -> str:
+    record = (await session.execute(select(
+        SkinRecord
+    ).filter(
+        SkinRecord.user == user
+    ).filter(
+        SkinRecord.skin.has(
+            AwardSkin.applied_award == award
+        )
+    ))).scalar_one_or_none()
+
+    if record == None:
+        return award.img_path
+    
+    return record.skin.image
