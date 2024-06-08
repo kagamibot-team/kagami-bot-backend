@@ -2,18 +2,29 @@ from dataclasses import dataclass
 import re
 from typing import Any, Callable, Coroutine, TypeVar
 from sqlalchemy import delete, select
-from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
+from nonebot_plugin_orm import async_scoped_session
+from nonebot.adapters.onebot.v11 import Message
 
-from plugins.passbotqwq.catch.messages.texts import displayAward
-from plugins.passbotqwq.putils.draw.typing import PILImage
+from ..putils.command import (
+    CheckEnvironment,
+    at,
+    text,
+    image,
+    imageToBytes,
+    Command,
+    CommandBase,
+    CallbackBase,
+    WaitForMoreInformationException,
+)
+from ..putils.download import download, writeData
+from ..putils.text_format_check import not_negative, A_SIMPLE_RULE
 
+from .models import *
 from .models.crud import getOrCreateUser
 from .models.data import addAward, setEveryoneInterval
 
 from .cores import handlePick
 
-from ..putils.download import download, writeData
-from ..putils.draw import imageToBytes
 from .messages import (
     allAwards,
     allLevels,
@@ -22,14 +33,12 @@ from .messages import (
     modifyOk,
     setIntervalWrongFormat,
     settingOk,
+    displayAward,
+    drawStatus,
+    drawStorage,
+    getImageTarget,
 )
 
-from .models import *
-
-from .messages.images import drawStatus, drawStorage, getImageTarget
-from ..putils.text_format_check import not_negative, A_SIMPLE_RULE
-
-from nonebot_plugin_orm import async_scoped_session
 
 KEYWORD_BASE_COMMAND = "(抓小哥|zhua|ZHUA)"
 
@@ -49,121 +58,21 @@ KEYWORD_REMOVE = "(删除|删掉)"
 KEYWORD_CREATE = "(创建|新建|添加)"
 
 
-def at(sender: int):
-    return MessageSegment.at(sender)
-
-
-def text(text: str):
-    return MessageSegment.text(text)
-
-
-async def image(image: PILImage):
-    return MessageSegment.image(imageToBytes(image))
-
-
-@dataclass
-class CheckEnvironment:
-    sender: int
-    text: str
-    message_id: int
-    message: Message
-    session: async_scoped_session
-    bot: Bot
-
-    async def getSender(self):
-        return await getOrCreateUser(self.session, self.sender)
-
-
-class CommandBase:
-    async def check(self, env: CheckEnvironment) -> Message | None:
-        return None
-
-
-class CallbackBase(CommandBase):
-    async def check(self, env: CheckEnvironment) -> Message | None:
-        if env.text.lower() == "::cancel":
-            return Message(
-                [MessageSegment.at(env.sender), MessageSegment.text(" 已取消")]
-            )
-
-        return await self.callback(env)
-
-    async def callback(self, env: CheckEnvironment) -> Message | None:
-        return None
-
-
-class WaitForMoreInformationException(Exception):
-    def __init__(self, callback: CallbackBase, message: Message | None) -> None:
-        self.callback = callback
-        self.message = message
-
-
-@dataclass
-class Command(CommandBase):
-    commandPattern: str
-    argsPattern: str
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return None
-
-    def notExists(self, env: CheckEnvironment, item: str):
-        return Message(
-            [
-                MessageSegment.at(env.sender),
-                MessageSegment.text(f" 你输入的 {item} 不存在"),
-            ]
-        )
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        return None
-
-    async def check(self, env: CheckEnvironment) -> Message | None:
-        if len(env.message.exclude("text")) > 0:
-            return None
-
-        if not re.match(self.commandPattern, env.text):
-            return None
-
-        matchRes = re.match(self.commandPattern + self.argsPattern, env.text)
-
-        if not matchRes:
-            return self.errorMessage(env)
-
-        return await self.handleCommand(env, matchRes)
-
-
 CommandBaseSelf = TypeVar("CommandBaseSelf", bound="CommandBase")
 
 
-def match(rule: A_SIMPLE_RULE):
-    def _decorator(
-        func: Callable[
-            [CommandBaseSelf, CheckEnvironment], Coroutine[Any, Any, Message | None]
-        ]
-    ):
-        async def clsFunc(self: CommandBaseSelf, env: CheckEnvironment):
-            if not rule(env.text):
-                return
-
-            return await func(self, env)
-
-        return clsFunc
-
-    return _decorator
+async def getSender(env: CheckEnvironment):
+    return await getOrCreateUser(env.session, env.sender)
 
 
 class Catch(Command):
     def __init__(self):
         super().__init__(f"^{KEYWORD_BASE_COMMAND} ?(\\d+)?", "$")
 
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+    def errorMessage(self, env: CheckEnvironment):
         return None
 
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         maxCount = 1
 
         if result.group(2) is not None and result.group(2).isdigit():
@@ -180,12 +89,10 @@ class CrazyCatch(Command):
     def __init__(self):
         super().__init__(f"^({KEYWORD_CRAZY}{KEYWORD_BASE_COMMAND}|kz)", "$")
 
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+    def errorMessage(self, env: CheckEnvironment):
         return None
 
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         picksResult = await handlePick(env.session, env.sender, -1)
         message = await caughtMessage(picksResult)
 
@@ -197,7 +104,7 @@ class CatchHelp(Command):
     def __init__(self):
         super().__init__(f"^{KEYWORD_BASE_COMMAND}? ?(help|帮助)", "( admin)?")
 
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         return help(result.group(3) != None)
 
 
@@ -206,17 +113,14 @@ class CatchStorage(Command):
     commandPattern: str = f"^{KEYWORD_BASE_COMMAND}?{KEYWORD_STORAGE}"
     argsPattern: str = "$"
 
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        image = await drawStorage(await env.getSender())
-        storageImage = imageToBytes(image)
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
+        storageImage = await drawStorage(await getSender(env))
 
         return Message(
             [
                 at(env.sender),
                 text(f" 的小哥库存："),
-                MessageSegment.image(storageImage),
+                await image(storageImage),
             ]
         )
 
@@ -271,10 +175,8 @@ class Give(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return Message(
             [
-                MessageSegment.at(env.sender),
-                MessageSegment.text(
-                    " Invalid format, expected /give <uid> <awardName>"
-                ),
+                at(env.sender),
+                text(" Invalid format, expected /give <uid> <awardName>"),
             ]
         )
 
@@ -290,7 +192,12 @@ class Give(Command):
         if award is None:
             return self.notExists(env, result.group(2))
 
-        await addAward(env.session, await getOrCreateUser(env.session, int(result.group(1))), award, 1)
+        await addAward(
+            env.session,
+            await getOrCreateUser(env.session, int(result.group(1))),
+            award,
+            1,
+        )
 
         message = Message(
             [at(env.sender), text(f" : 已将 {award.name} 给予用户 {result.group(1)}")]
@@ -311,8 +218,8 @@ class Clear(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return Message(
             [
-                MessageSegment.at(env.sender),
-                MessageSegment.text(" Invalid format."),
+                at(env.sender),
+                text(" Invalid format."),
             ]
         )
 
@@ -322,15 +229,13 @@ class Clear(Command):
         if result.group(2) == None:
             await env.session.execute(
                 delete(AwardCountStorage).where(
-                    AwardCountStorage.target_user == await env.getSender()
+                    AwardCountStorage.target_user == await getSender(env)
                 )
             )
 
             await env.session.commit()
 
-            return Message(
-                [MessageSegment.at(env.sender), MessageSegment.text(f" 清空了你的背包")]
-            )
+            return Message([at(env.sender), text(f" 清空了你的背包")])
 
         user = (
             await env.session.execute(
@@ -350,8 +255,8 @@ class Clear(Command):
 
             return Message(
                 [
-                    MessageSegment.at(env.sender),
-                    MessageSegment.text(f" 清空了 {result.group(2)} 的背包"),
+                    at(env.sender),
+                    text(f" 清空了 {result.group(2)} 的背包"),
                 ]
             )
 
@@ -365,10 +270,8 @@ class Clear(Command):
 
         return Message(
             [
-                MessageSegment.at(env.sender),
-                MessageSegment.text(
-                    f" 清空了 {result.group(2)} 背包里的所有 {result.group(4)}"
-                ),
+                at(env.sender),
+                text(f" 清空了 {result.group(2)} 背包里的所有 {result.group(4)}"),
             ]
         )
 
@@ -383,14 +286,13 @@ class CatchProgress(Command):
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-
-        image = await drawStatus(env.session, await env.getSender())
+        img = await drawStatus(env.session, await getSender(env))
 
         return Message(
             [
-                MessageSegment.at(env.sender),
-                MessageSegment.text(f" 的小哥收集进度："),
-                MessageSegment.image(imageToBytes(image)),
+                at(env.sender),
+                text(f" 的小哥收集进度："),
+                await image(img),
             ]
         )
 
@@ -416,13 +318,11 @@ class CatchModifyCallback(CallbackBase):
     modifyType: str
     modifyObject: Callable[[async_scoped_session], Coroutine[Any, Any, Award | None]]
 
-
     def callbackMessage(self, env: CheckEnvironment, reason: str = ""):
         info: str = f" {reason}，请再次输入它的 " if reason else " 请输入它的 "
         info = info + self.modifyType
 
-        return Message([MessageSegment.at(env.sender), MessageSegment.text(info)])
-
+        return Message([at(env.sender), text(info)])
 
     async def callback(self, env: CheckEnvironment):
         modifyObject = await self.modifyObject(env.session)
@@ -440,7 +340,9 @@ class CatchModifyCallback(CallbackBase):
             return modifyOk()
 
         if self.modifyType == "等级":
-            level = (await env.session.execute(select(Level).filter(Level.name == env.text))).scalar_one_or_none()
+            level = (
+                await env.session.execute(select(Level).filter(Level.name == env.text))
+            ).scalar_one_or_none()
 
             if level is None:
                 raise WaitForMoreInformationException(
@@ -480,8 +382,8 @@ class CatchModify(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return Message(
             [
-                MessageSegment.at(env.sender),
-                MessageSegment.text(
+                at(env.sender),
+                text(
                     " 格式错误，允许的格式有：\n"
                     "::更改小哥 名称 <小哥的名字>\n"
                     "::更改小哥 图片 <小哥的名字>\n"
@@ -504,7 +406,9 @@ class CatchModify(Command):
         if award is None:
             return self.notExists(env, modifyObject)
 
-        callback = CatchModifyCallback(modifyType, lambda s: s.get(Award, award.data_id))
+        callback = CatchModifyCallback(
+            modifyType, lambda s: s.get(Award, award.data_id)
+        )
         raise WaitForMoreInformationException(callback, callback.callbackMessage(env))
 
 
@@ -517,7 +421,7 @@ class CatchLevelModifyCallback(CallbackBase):
         info: str = f" {reason}，请再次输入它的 " if reason else " 请输入它的 "
         info = info + self.modifyType
 
-        return Message([MessageSegment.at(env.sender), MessageSegment.text(info)])
+        return Message([at(env.sender), text(info)])
 
     async def callback(self, env: CheckEnvironment):
         modifyObject = await self.modifyObject(env.session)
@@ -553,8 +457,8 @@ class CatchLevelModify(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return Message(
             [
-                MessageSegment.at(env.sender),
-                MessageSegment.text(
+                at(env.sender),
+                text(
                     " 格式错误，允许的格式有：\n"
                     "::更改等级 名称 <等级的名字>\n"
                     "::更改等级 权重 <等级的名字>"
@@ -562,16 +466,22 @@ class CatchLevelModify(Command):
             ]
         )
 
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+    async def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
         modifyType = result.group(3)
         modifyObject = result.group(4)
 
-        level = (await env.session.execute(select(Level).filter(Level.name == modifyObject))).scalar_one_or_none()
+        level = (
+            await env.session.execute(select(Level).filter(Level.name == modifyObject))
+        ).scalar_one_or_none()
 
         if level is None:
             return self.notExists(env, modifyObject)
 
-        callback = CatchLevelModifyCallback(modifyType, lambda s: s.get(Level, level.data_id))
+        callback = CatchLevelModifyCallback(
+            modifyType, lambda s: s.get(Level, level.data_id)
+        )
         raise WaitForMoreInformationException(callback, callback.callbackMessage(env))
 
 
@@ -596,7 +506,7 @@ class CatchFilterNoDescription(Command):
         lacks = [a.name for a in lacks]
 
         return Message(
-            [MessageSegment.at(env.sender), MessageSegment.text(" " + ", ".join(lacks))]
+            [at(env.sender), text(" " + ", ".join(lacks))]
         )
 
 
@@ -608,8 +518,8 @@ class CatchDisplay(Command):
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return Message(
             [
-                MessageSegment.at(env.sender),
-                MessageSegment.text(" 你的格式有问题，应该是 展示小哥 小哥名字"),
+                at(env.sender),
+                text(" 你的格式有问题，应该是 展示小哥 小哥名字"),
             ]
         )
 
@@ -625,17 +535,16 @@ class CatchDisplay(Command):
             return Message([at(env.sender), text(f" 你没有名字叫 {name} 的小哥")])
 
         if not result.group(4):
-            ac = (await env.session.execute(select(AwardCountStorage).filter(
-                AwardCountStorage.target_award == award
-            ).filter(
-                AwardCountStorage.target_user == await env.getSender()
-            ))).scalar_one_or_none()
+            ac = (
+                await env.session.execute(
+                    select(AwardCountStorage)
+                    .filter(AwardCountStorage.target_award == award)
+                    .filter(AwardCountStorage.target_user == await getSender(env))
+                )
+            ).scalar_one_or_none()
 
             if ac is None or ac.award_count <= 0:
-                return Message([
-                    at(env.sender),
-                    text(f' 你没有名字叫 {name} 的小哥')
-                ])
+                return Message([at(env.sender), text(f" 你没有名字叫 {name} 的小哥")])
 
         return displayAward(award)
 
@@ -646,40 +555,35 @@ class CatchCreateAward(Command):
     argsPattern: str = " (\\S+) (\\S+)$"
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message([
-            at(env.sender),
-            text(' 格式 ::创建小哥 名字 等级')
-        ])
-    
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
-        _sameName = (await env.session.execute(select(Award).filter(Award.name == result.group(3)))).scalar_one_or_none()
-        
+        return Message([at(env.sender), text(" 格式 ::创建小哥 名字 等级")])
+
+    async def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
+        _sameName = (
+            await env.session.execute(
+                select(Award).filter(Award.name == result.group(3))
+            )
+        ).scalar_one_or_none()
+
         if _sameName is not None:
-            return Message([
-                at(env.sender),
-                text(' 存在重名小哥，请检查一下吧')
-            ])
-        
-        level = (await env.session.execute(select(Level).filter(Level.name == result.group(4)))).scalar_one_or_none()
+            return Message([at(env.sender), text(" 存在重名小哥，请检查一下吧")])
+
+        level = (
+            await env.session.execute(
+                select(Level).filter(Level.name == result.group(4))
+            )
+        ).scalar_one_or_none()
 
         if level is None:
-            return Message([
-                at(env.sender),
-                text(' 等级名字不存在')
-            ])
-        
-        award = Award(
-            name=result.group(3),
-            level=level
-        )
+            return Message([at(env.sender), text(" 等级名字不存在")])
+
+        award = Award(name=result.group(3), level=level)
 
         env.session.add(award)
         await env.session.commit()
 
-        return Message([
-            at(env.sender),
-            text(' 添加成功！')
-        ])
+        return Message([at(env.sender), text(" 添加成功！")])
 
 
 enabledCommand: list[CommandBase] = [
