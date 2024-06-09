@@ -9,6 +9,12 @@ from .BaseMixin import BaseMixin
 DEFAULT_IMG = os.path.join(".", "res", "catch", "default.png")
 
 
+class Global(Model, BaseMixin):
+    __tablename__ = 'catch_global'
+
+    catch_interval: Mapped[float] = mapped_column(default=3600)
+
+
 class Level(Model, BaseMixin):
     __tablename__ = 'catch_level'
 
