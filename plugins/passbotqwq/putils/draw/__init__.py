@@ -18,5 +18,5 @@ FONT_HARMONYOS_SANS_BLACK = r'C:\Windows\Fonts\HarmonyOS_Sans_SC_Black.ttf'
 
 def imageToBytes(img: PILImage):
     buffer = io.BytesIO()
-    img.save(buffer, format='JPEG')
+    img.save(buffer, format='PNG')
     return buffer.getvalue()

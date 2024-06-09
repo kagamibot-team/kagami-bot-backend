@@ -11,7 +11,6 @@ import PIL.ImageFont
 from ..threading import make_async
 
 from .images import addUponPaste, newImage
-from .typing import PillowColorLikeWeak, PILImage, PillowColorLikeStrong
 
 
 class HorizontalAnchor(enum.Enum):
@@ -48,9 +47,11 @@ def _res(fn: str):
 class Fonts(enum.Enum):
     FONT_HARMONYOS_SANS = _res("HarmonyOS_Sans_SC_Regular.ttf")
     FONT_HARMONYOS_SANS_BLACK = _res("HarmonyOS_Sans_SC_Black.ttf")
+    FONT_HARMONYOS_SANS_THIN = _res("HARMONYOS_SANS_SC_THIN.TTF")
     ALIMAMA_SHU_HEI = _res("AlimamaShuHeiTi-Bold.ttf")
     JINGNAN_BOBO_HEI = _res("荆南波波黑-Bold.ttf")
     JIANGCHENG_YUANTI = _res("江城圆体 500W.ttf")
+    SUPERMERCADO = _res("SupermercadoOne-Regular.ttf")
 
 
 def textFont(fontEnum: Fonts, fontSize: int):
@@ -134,6 +135,8 @@ async def drawSingleLine(
     expandBottom: int = 0,
     expandLeft: int = 0,
     expandRight: int = 0,
+    strokeWidth: int = 0,
+    strokeColor: str = "#000000",
 ):
     boxes = [getBoxOfText(t, font) for t in text]
 
@@ -159,7 +162,14 @@ async def drawSingleLine(
     for i, t in enumerate(text):
         box = boxes[i]
         await drawText(
-            draw, t, box.left + leftPointer, box.top + expandTop, color, font
+            draw,
+            t,
+            box.left + leftPointer,
+            box.top + expandTop,
+            color,
+            font,
+            strokeColor,
+            strokeWidth,
         )
 
         if align == "expand":
@@ -177,7 +187,8 @@ async def drawLimitedBoxOfText(
     alignLastLine: Literal["left", "right", "center", "expand"],
     lineHeight: int,
     color: str = "#000000",
-    font: PIL.ImageFont.FreeTypeFont = DEFAULT_FONT,
+    font: Fonts = Fonts.FONT_HARMONYOS_SANS,
+    fontSize: int = 16,
     expandTop: int = 0,
     expandBottom: int = 0,
     expandLeft: int = 0,
@@ -186,13 +197,20 @@ async def drawLimitedBoxOfText(
     expandInnerBottom: int = 0,
     expandInnerLeft: int = 0,
     expandInnerRight: int = 0,
+    strokeWidth: int = 0,
+    strokeColor: str = "#000000",
 ):
     lines: list[str] = []
     lWidth = 0
     lCache = ""
 
     for t in text:
-        box = getBoxOfText(t, font)
+        if t == '\n':
+            lines.append(lCache)
+            lCache = ""
+            continue
+
+        box = getBoxOfText(t, textFont(font, fontSize))
         if box.right + lWidth > maxWidth:
             lWidth = box.right
             lines.append(lCache)
@@ -200,6 +218,9 @@ async def drawLimitedBoxOfText(
         else:
             lCache += t
             lWidth += box.right
+    
+    if lCache:
+        lines.append(lCache)
 
     base = PIL.Image.new(
         "RGBA",
@@ -213,40 +234,74 @@ async def drawLimitedBoxOfText(
     leftPointer = expandLeft
     topPointer = expandTop
 
-    for line in lines:
+    for ind, line in enumerate(lines):
         await addUponPaste(
             base,
             await drawSingleLine(
                 line,
                 maxWidth,
                 color,
-                align,
-                font,
+                align if ind + 1 != len(lines) else alignLastLine,
+                textFont(font, fontSize),
                 expandInnerTop,
                 expandInnerBottom,
                 expandInnerLeft,
                 expandInnerRight,
+                strokeWidth,
+                strokeColor,
             ),
             -expandInnerLeft + leftPointer,
             -expandInnerTop + topPointer,
         )
         topPointer += lineHeight
-    
-    await addUponPaste(
-            base,
-            await drawSingleLine(
-                lCache,
-                maxWidth,
-                color,
-                alignLastLine,
-                font,
-                expandInnerTop,
-                expandInnerBottom,
-                expandInnerLeft,
-                expandInnerRight,
-            ),
-            -expandInnerLeft + leftPointer,
-            -expandInnerTop + topPointer,
-        )
-
     return base
+
+
+async def drawLimitedBoxOfTextWithScalar(
+    text: str,
+    maxWidth: int,
+    align: Literal["left", "right", "center", "expand"],
+    alignLastLine: Literal["left", "right", "center", "expand"],
+    lineHeight: int,
+    color: str = "#000000",
+    font: Fonts = Fonts.FONT_HARMONYOS_SANS,
+    fontSize: int = 16,
+    expandTop: int = 0,
+    expandBottom: int = 0,
+    expandLeft: int = 0,
+    expandRight: int = 0,
+    expandInnerTop: int = 0,
+    expandInnerBottom: int = 0,
+    expandInnerLeft: int = 0,
+    expandInnerRight: int = 0,
+    strokeWidth: int = 0,
+    strokeColor: str = "#000000",
+    scalar: int = 3,
+):
+    res = await drawLimitedBoxOfText(
+        text,
+        maxWidth * scalar,
+        align,
+        alignLastLine,
+        lineHeight * scalar,
+        color,
+        font,
+        fontSize * scalar,
+        expandTop * scalar,
+        expandBottom * scalar,
+        expandLeft * scalar,
+        expandRight * scalar,
+        expandInnerTop * scalar,
+        expandInnerBottom * scalar,
+        expandInnerLeft * scalar,
+        expandInnerRight * scalar,
+        strokeWidth * scalar,
+        strokeColor,
+    )
+
+    towardsSize = (
+        res.width // scalar,
+        res.height // scalar,
+    )
+
+    return res.resize(towardsSize, resample=PIL.Image.Resampling.LANCZOS)
