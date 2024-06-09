@@ -2,7 +2,7 @@ from typing import TypeVar, Sequence
 from sqlalchemy import Row, select
 from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
 
-from .Basics import AwardSkin, Level, Award, AwardCountStorage, SkinRecord, UserData
+from .Basics import AwardSkin, Global, Level, Award, AwardCountStorage, SkinRecord, UserData
 
 
 def selectAllLevelUserObtained(user: UserData):
@@ -115,3 +115,13 @@ async def getUserUsingSkin(session: async_scoped_session | AsyncSession | None, 
             AwardSkin.applied_award == award
         )
     ))).scalar_one_or_none()
+
+
+async def getGlobal(session: async_scoped_session):
+    glob = (await session.execute(select(Global))).scalar_one_or_none()
+
+    if glob is None:
+        glob = Global()
+        session.add(glob)
+    
+    return glob

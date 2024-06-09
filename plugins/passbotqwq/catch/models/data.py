@@ -1,12 +1,14 @@
 from nonebot_plugin_orm import async_scoped_session
 from sqlalchemy import select, update
 
-from .crud import getAllLevels
-from .Basics import Award, AwardCountStorage, AwardSkin, Level, SkinOwnRecord, SkinRecord, UserData
+from .crud import getAllLevels, getGlobal
+from .Basics import Award, AwardCountStorage, AwardSkin, Global, Level, SkinOwnRecord, SkinRecord, UserData
 
 
 async def setEveryoneInterval(session: async_scoped_session, interval: float):
     await session.execute(update(UserData).values(pick_time_delta=interval))
+    glob = await getGlobal(session)
+    glob.catch_interval = interval
 
 
 async def addAward(session: async_scoped_session, user: UserData, award: Award, delta: int):

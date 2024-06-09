@@ -6,7 +6,7 @@ import time
 from sqlalchemy import select
 
 from .models.data import addAward
-from .models.crud import getAllAvailableLevels, getOrCreateUser
+from .models.crud import getAllAvailableLevels, getGlobal, getOrCreateUser
 from .models.Basics import Award, AwardCountStorage, UserData
 
 from nonebot_plugin_orm import async_scoped_session
@@ -49,9 +49,11 @@ async def pick(session: async_scoped_session, user: UserData) -> list[Award]:
     return [random.choice([a for a in awardsResult.scalars()])]
 
 
-def recalcPickTime(user: UserData):
+async def recalcPickTime(session: async_scoped_session, user: UserData):
+    glob = await getGlobal(session)
+
     maxPick = user.pick_max_cache
-    timeDelta = user.pick_time_delta
+    timeDelta = glob.catch_interval
     nowTime = time.time()
 
     if timeDelta == 0:
@@ -75,15 +77,15 @@ def recalcPickTime(user: UserData):
     return user.pick_count_remain - nowTime
 
 
-def canPickCount(user: UserData):
-    recalcPickTime(user)
+async def canPickCount(session: async_scoped_session, user: UserData):
+    await recalcPickTime(session, user)
     return user.pick_count_remain
 
 
 async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int = 1) -> PicksResult:
     user = await getOrCreateUser(session, uid)
 
-    count = canPickCount(user)
+    count = await canPickCount(session, user)
 
     if maxPickCount > 0:
         count = min(maxPickCount, count)
