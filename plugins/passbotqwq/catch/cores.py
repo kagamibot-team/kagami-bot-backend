@@ -14,7 +14,7 @@ from nonebot_plugin_orm import async_scoped_session
 
 @dataclass
 class Pick:
-    award: Award
+    award: int
     fromNumber: int
     toNumber: int
     picks: "PicksResult"
@@ -30,7 +30,7 @@ class Pick:
 class PicksResult:
     picks: list[Pick]
     uid: int
-    user: UserData
+    udid: int
     restCount: int
     max_pick: int
     time_delta: float
@@ -90,7 +90,7 @@ async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int 
     else:
         count = count
 
-    pickResult = PicksResult([], uid, user, user.pick_count_remain - count, user.pick_max_cache, user.pick_time_delta, user.pick_count_last_calculated)
+    pickResult = PicksResult([], uid, user.data_id, user.pick_count_remain - count, user.pick_max_cache, user.pick_time_delta, user.pick_count_last_calculated) # type: ignore
 
     awards = list(itertools.chain(*[await pick(session, user) for _ in range(count)]))
     awardsDelta: dict[Award, int] = {}
@@ -106,6 +106,6 @@ async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int 
     for award in awardsDelta:
         oldValue = await addAward(session, user, award, awardsDelta[award]) - awardsDelta[award]
 
-        pickResult.picks.append(Pick(award, oldValue, oldValue + awardsDelta[award], pickResult))
+        pickResult.picks.append(Pick(award.data_id, oldValue, oldValue + awardsDelta[award], pickResult)) # type: ignore
 
     return pickResult

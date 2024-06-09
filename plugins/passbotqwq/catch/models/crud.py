@@ -62,7 +62,7 @@ def isUserHaveAward(user: UserData, award: Award):
     return False
 
 
-async def getAwardImageOfOneUser(session: async_scoped_session | AsyncSession | None, user: UserData, award: Award) -> str:
+async def getAwardImageOfOneUser(session: async_scoped_session | AsyncSession, user: UserData, award: Award) -> str:
     if session is None:
         session = get_session()
 
@@ -82,7 +82,7 @@ async def getAwardImageOfOneUser(session: async_scoped_session | AsyncSession | 
     return record.skin.image
 
 
-async def getAwardDescriptionOfOneUser(session: async_scoped_session | AsyncSession | None, user: UserData, award: Award) -> str:
+async def getAwardDescriptionOfOneUser(session: async_scoped_session | AsyncSession, user: UserData, award: Award) -> str:
     if session is None:
         session = get_session()
 

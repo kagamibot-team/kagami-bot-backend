@@ -1,4 +1,5 @@
 import enum
+from typing import Literal
 import PIL
 import PIL.Image
 import PIL.ImageTransform
@@ -9,7 +10,13 @@ import cv2.typing
 
 from ..threading import make_async
 
-from .typing import Cv2Image, PILImage
+from .typing import Cv2Image, PILImage, PillowColorLike
+
+
+@make_async
+def newImage(size: tuple[int, int] = (500, 500), color: str = "white"):
+    img = PIL.Image.new("RGB", size, color)
+    return img
 
 
 @make_async
@@ -35,7 +42,7 @@ def fromOpenCVImage(raw: Cv2Image):
 
 @make_async
 def fastPaste(raw: Cv2Image, src: Cv2Image, x: int, y: int):
-    raw[y: y + src.shape[0], x: x + src.shape[1]] = src
+    raw[y : y + src.shape[0], x : x + src.shape[1]] = src
 
 
 @make_async
@@ -49,18 +56,20 @@ def addUpon(
     scaleX: float = 1,
     scaleY: float = 1,
 ):
-    transform = PIL.ImageTransform.AffineTransform((
-        1 / scaleX,
-        0,
-        (anchorX * src.size[0] - x) / scaleX,
-        0,
-        1 / scaleY,
-        (anchorY * src.size[1] - y) / scaleY,
-    ))
+    transform = PIL.ImageTransform.AffineTransform(
+        (
+            1 / scaleX,
+            0,
+            (anchorX * src.size[0] - x) / scaleX,
+            0,
+            1 / scaleY,
+            (anchorY * src.size[1] - y) / scaleY,
+        )
+    )
 
-    src = src.convert('RGBA')
+    src = src.convert("RGBA")
 
-    _src = src.convert('RGB').transform(
+    _src = src.convert("RGB").transform(
         raw.size, transform.method, transform.data, PIL.Image.Resampling.BILINEAR, 0
     )
 
@@ -74,3 +83,107 @@ def addUpon(
 @make_async
 def resize(img: PILImage, width: int, height: int):
     return img.resize((width, height))
+
+
+async def horizontalPile(
+    images: list[PILImage],
+    paddingX: int,
+    align: Literal["top", "bottom", "center"],
+    background: str,
+    marginTop: int = 0,
+    marginLeft: int = 0,
+    marginRight: int = 0,
+    marginBottom: int = 0,
+) -> PILImage:
+    maxHeight = max([i.height for i in images])
+    width = sum([i.width for i in images]) + paddingX * len(images)
+
+    base = await newImage(
+        (width + marginLeft + marginRight, maxHeight + marginTop + marginBottom),
+        background,
+    )
+    leftPointer = 0
+
+    for image in images:
+        if align == "top":
+            top = 0
+        elif align == "bottom":
+            top = maxHeight - image.height
+        else:
+            top = (maxHeight - image.height) // 2
+
+        await addUponPaste(base, image, leftPointer + marginLeft, top + marginTop)
+        leftPointer += image.width + paddingX
+
+    return base
+
+
+async def verticalPile(
+    images: list[PILImage],
+    paddingY: int,
+    align: Literal["left", "center", "right"],
+    background: str,
+    marginTop: int = 0,
+    marginLeft: int = 0,
+    marginRight: int = 0,
+    marginBottom: int = 0,
+) -> PILImage:
+    maxWidth = max([i.width for i in images])
+    height = sum([i.height for i in images]) + paddingY * len(images)
+
+    base = await newImage(
+        (maxWidth + marginLeft + marginRight, height + marginTop + marginBottom),
+        background,
+    )
+    topPointer = 0
+
+    for image in images:
+        if align == "left":
+            left = 0
+        elif align == "right":
+            left = maxWidth - image.width
+        else:
+            left = (maxWidth - image.width) // 2
+
+        await addUponPaste(base, image, left + marginLeft, topPointer + marginTop)
+        topPointer += image.height + paddingY
+
+    return base
+
+
+async def combineABunchOfImage(
+    paddingX: int,
+    paddingY: int,
+    images: list[PILImage],
+    rowMaxNumber: int,
+    background: str,
+    horizontalAlign: Literal["top", "center", "bottom"],
+    verticalAlign: Literal["left", "center", "right"],
+    marginLeft: int = 0,
+    marginRight: int = 0,
+    marginTop: int = 0,
+    marginBottom: int = 0,
+):
+    piles: list[PILImage] = []
+
+    i = 0
+
+    while images[i : i + rowMaxNumber]:
+        piles.append(
+            await horizontalPile(
+                images[i : i + rowMaxNumber],
+                paddingX,
+                horizontalAlign,
+                background,
+                0,
+                marginLeft,
+                marginRight,
+                0,
+            )
+        )
+
+        i += rowMaxNumber
+
+    return await verticalPile(
+        piles, paddingY, verticalAlign, background, marginTop, 0, 0, marginBottom
+    )

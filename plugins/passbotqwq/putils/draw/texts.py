@@ -4,28 +4,30 @@ import os
 from typing import Literal
 
 import PIL
+import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
 
 from ..threading import make_async
 
+from .images import addUponPaste, newImage
 from .typing import PillowColorLikeWeak, PILImage, PillowColorLikeStrong
 
 
 class HorizontalAnchor(enum.Enum):
-    left = 'l'
-    middle = 'm'
-    right = 'r'
-    baseline = 's'
+    left = "l"
+    middle = "m"
+    right = "r"
+    baseline = "s"
 
 
 class VerticalAnchor(enum.Enum):
-    ascender = 'a'
-    top = 't'
-    middle = 'm'
-    baseline = 's'
-    bottom = 'b'
-    descender = 'd'
+    ascender = "a"
+    top = "t"
+    middle = "m"
+    baseline = "s"
+    bottom = "b"
+    descender = "d"
 
 
 @dataclass
@@ -64,12 +66,12 @@ def drawText(
     text: str,
     x: float,
     y: float,
-    color: PillowColorLikeStrong,
+    color: str,
     font=DEFAULT_FONT,
-    strokeColor: PillowColorLikeStrong = 0,
+    strokeColor: str = "#000000",
     strokeWidth: int = 0,
     horizontalAlign: HorizontalAnchor = HorizontalAnchor.left,
-    verticalAlign: VerticalAnchor = VerticalAnchor.top
+    verticalAlign: VerticalAnchor = VerticalAnchor.top,
 ):
     draw.text(
         (x, y),
@@ -78,11 +80,173 @@ def drawText(
         font=font,
         stroke_fill=strokeColor,
         stroke_width=strokeWidth,
-        anchor=horizontalAlign.value + verticalAlign.value
+        anchor=horizontalAlign.value + verticalAlign.value,
     )
 
 
-def textBox(text: str, font: PIL.ImageFont.FreeTypeFont = DEFAULT_FONT):
+def getBoxOfText(text: str, font: PIL.ImageFont.FreeTypeFont = DEFAULT_FONT):
     left, top, right, bottom = font.getbbox(text)
 
     return TextBox(left, top, right, bottom)
+
+
+async def drawABoxOfText(
+    text: str,
+    color: str,
+    font=DEFAULT_FONT,
+    strokeColor: str = "#000000",
+    strokeWidth: int = 0,
+    background: str = "#FFFFFF",
+    marginLeft: int = 0,
+    marginRight: int = 0,
+    marginTop: int = 0,
+    marginBottom: int = 0,
+):
+    box = getBoxOfText(text, font)
+    image = await newImage(
+        (
+            box.right + marginLeft + marginRight,
+            box.bottom + marginTop + marginBottom,
+        ),
+        background,
+    )
+    await drawText(
+        PIL.ImageDraw.Draw(image),
+        text,
+        box.left + marginLeft,
+        box.top + marginTop,
+        color,
+        font,
+        strokeColor,
+        strokeWidth,
+    )
+
+    return image
+
+
+async def drawSingleLine(
+    text: str,
+    maxWidth: int,
+    color: str,
+    align: Literal["left", "right", "center", "expand"],
+    font=DEFAULT_FONT,
+    expandTop: int = 0,
+    expandBottom: int = 0,
+    expandLeft: int = 0,
+    expandRight: int = 0,
+):
+    boxes = [getBoxOfText(t, font) for t in text]
+
+    base = PIL.Image.new(
+        "RGBA",
+        (
+            expandLeft + expandRight + maxWidth,
+            expandTop + expandBottom + max([e.bottom for e in boxes]),
+        ),
+        "#00000000",
+    )
+    draw = PIL.ImageDraw.Draw(base)
+
+    space = maxWidth - sum([e.right for e in boxes])
+
+    if align == "left" or align == "expand":
+        leftPointer = expandLeft
+    elif align == "right":
+        leftPointer = space + expandLeft
+    elif align == "center":
+        leftPointer = space / 2 + expandLeft
+
+    for i, t in enumerate(text):
+        box = boxes[i]
+        await drawText(
+            draw, t, box.left + leftPointer, box.top + expandTop, color, font
+        )
+
+        if align == "expand":
+            leftPointer += space / (len(text) - 1)
+
+        leftPointer += box.right
+
+    return base
+
+
+async def drawLimitedBoxOfText(
+    text: str,
+    maxWidth: int,
+    align: Literal["left", "right", "center", "expand"],
+    alignLastLine: Literal["left", "right", "center", "expand"],
+    lineHeight: int,
+    color: str = "#000000",
+    font: PIL.ImageFont.FreeTypeFont = DEFAULT_FONT,
+    expandTop: int = 0,
+    expandBottom: int = 0,
+    expandLeft: int = 0,
+    expandRight: int = 0,
+    expandInnerTop: int = 0,
+    expandInnerBottom: int = 0,
+    expandInnerLeft: int = 0,
+    expandInnerRight: int = 0,
+):
+    lines: list[str] = []
+    lWidth = 0
+    lCache = ""
+
+    for t in text:
+        box = getBoxOfText(t, font)
+        if box.right + lWidth > maxWidth:
+            lWidth = box.right
+            lines.append(lCache)
+            lCache = t
+        else:
+            lCache += t
+            lWidth += box.right
+
+    base = PIL.Image.new(
+        "RGBA",
+        (
+            expandLeft + expandRight + maxWidth,
+            expandTop + expandBottom + (len(lines) + 1) * lineHeight,
+        ),
+        "#00000000",
+    )
+
+    leftPointer = expandLeft
+    topPointer = expandTop
+
+    for line in lines:
+        await addUponPaste(
+            base,
+            await drawSingleLine(
+                line,
+                maxWidth,
+                color,
+                align,
+                font,
+                expandInnerTop,
+                expandInnerBottom,
+                expandInnerLeft,
+                expandInnerRight,
+            ),
+            -expandInnerLeft + leftPointer,
+            -expandInnerTop + topPointer,
+        )
+        topPointer += lineHeight
+    
+    await addUponPaste(
+            base,
+            await drawSingleLine(
+                lCache,
+                maxWidth,
+                color,
+                alignLastLine,
+                font,
+                expandInnerTop,
+                expandInnerBottom,
+                expandInnerLeft,
+                expandInnerRight,
+            ),
+            -expandInnerLeft + leftPointer,
+            -expandInnerTop + topPointer,
+        )
+
+    return base

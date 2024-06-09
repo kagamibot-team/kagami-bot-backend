@@ -15,7 +15,7 @@ from nonebot_plugin_orm import async_scoped_session
 import pathlib
 
 
-async def displayAward(award: Award, user: UserData):
+async def displayAward(session: async_scoped_session, award: Award, user: UserData):
     name = award.name
     skin = await getUserUsingSkin(None, user, award)
 
@@ -25,13 +25,13 @@ async def displayAward(award: Award, user: UserData):
     return Message(
         [
             MessageSegment.text("展示 " + name + f"【{award.level.name}】"),
-            MessageSegment.image(pathlib.Path(await getAwardImageOfOneUser(None, user, award))),
-            MessageSegment.text(f"\n\n{await getAwardDescriptionOfOneUser(None, user, award)}"),
+            MessageSegment.image(pathlib.Path(await getAwardImageOfOneUser(session, user, award))),
+            MessageSegment.text(f"\n\n{await getAwardDescriptionOfOneUser(session, user, award)}"),
         ]
     )
 
 
-async def caughtMessage(picksResult: PicksResult):
+async def caughtMessage(session: async_scoped_session, picksResult: PicksResult):
     ms = [MessageSegment.at(picksResult.uid)]
     maxPick = picksResult.max_pick
     delta = picksResult.time_delta
@@ -65,17 +65,22 @@ async def caughtMessage(picksResult: PicksResult):
     )
 
     for pick in picksResult.picks:
+        award = (await session.get(Award, pick.award))
+        assert award is not None
+
+        user = (await session.get(UserData, picksResult.udid))
+        assert user is not None
+
         name = award.name
-        skin = await getUserUsingSkin(None, pick.picks.user, award)
+        skin = await getUserUsingSkin(session, user, award)
 
         if skin is not None:
             name = name + f"[{skin.skin.name}]"
 
-        award = pick.award
         level = award.level
 
-        image = await drawCaughtBox(pick)
-        desc = await getAwardDescriptionOfOneUser(None, pick.picks.user, award)
+        image = await drawCaughtBox(session, pick)
+        desc = await getAwardDescriptionOfOneUser(session, user, award)
         ms.append(MessageSegment.image(imageToBytes(image)))
 
         textBuild = f"【{level.name}】{name}\n{desc}"

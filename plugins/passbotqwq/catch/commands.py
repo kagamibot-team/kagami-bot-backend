@@ -84,7 +84,7 @@ class Catch(Command):
             maxCount = int(result.group(2))
 
         picksResult = await handlePick(env.session, env.sender, maxCount)
-        message = await caughtMessage(picksResult)
+        message = await caughtMessage(env.session, picksResult)
 
         await env.session.commit()
         return message
@@ -99,7 +99,7 @@ class CrazyCatch(Command):
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         picksResult = await handlePick(env.session, env.sender, -1)
-        message = await caughtMessage(picksResult)
+        message = await caughtMessage(env.session, picksResult)
 
         await env.session.commit()
         return message
@@ -119,7 +119,7 @@ class CatchStorage(Command):
     argsPattern: str = "$"
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
-        storageImage = await drawStorage(await getSender(env))
+        storageImage = await drawStorage(env.session, await getSender(env))
 
         return Message(
             [
@@ -526,7 +526,7 @@ class CatchDisplay(Command):
             if ac is None or ac.award_count <= 0:
                 return Message([at(env.sender), text(f" 你没有名字叫 {name} 的小哥")])
 
-        return await displayAward(award, await getSender(env))
+        return await displayAward(env.session, award, await getSender(env))
 
 
 @dataclass

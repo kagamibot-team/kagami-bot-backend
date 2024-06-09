@@ -1,7 +1,5 @@
 import base64
-import math
 import os
-import time
 import PIL
 import PIL.ImageDraw
 
@@ -14,348 +12,218 @@ from nonebot import get_driver
 
 from ..cores import Pick
 
-from ..models.crud import getAllAwards, getAwardImageOfOneUser, isUserHaveAward, selectAllLevelUserObtained
+from ..models.crud import (
+    getAwardImageOfOneUser,
+)
 from ..models.Basics import Award, AwardCountStorage, AwardSkin, Level, UserData
 
 from ...putils.draw.images import (
     addUponPaste,
-    fastPaste,
-    fromOpenCVImage,
     loadImage,
-    toOpenCVImage,
     resize,
+    horizontalPile,
+    verticalPile,
+    combineABunchOfImage,
 )
-from ...putils.draw.texts import HorizontalAnchor, VerticalAnchor, drawText, textBox, textFont, Fonts
-from ...putils.draw.typing import PILImage, PillowColorLike, PillowColorLikeStrong
+from ...putils.draw.texts import (
+    HorizontalAnchor,
+    VerticalAnchor,
+    drawABoxOfText,
+    drawLimitedBoxOfText,
+    drawText,
+    textFont,
+    Fonts,
+)
+from ...putils.draw.typing import PILImage
 from ...putils.draw import newImage
 
 
-GLOBAL_BACKGROUND_COLOR = "#696361"
-
-IMAGE_RAW_WIDTH = 2000
-IMAGE_RAW_HEIGHT = 1600
-
-STORAGE_MARGIN_LEFT = 30
-STORAGE_MARGIN_RIGHT = 30
-STORAGE_MARGIN_TOP = 30
-STORAGE_MARGIN_BOTTOM = 30
-
-STORAGE_AWARD_BOX_XCOUNT_MAX = 4
-
-STORAGE_TITLE_TEXT_COLOR = "#FFFFFF"
-STORAGE_TITLE_TEXT_FONT = textFont(Fonts.JINGNAN_BOBO_HEI, 48)
-
-AWARD_BOX_PADDING_X = 10
-AWARD_BOX_PADDING_Y = 10
-
-AWARD_BOX_SCALE = 0.06
-
-AWARD_BOX_BACKGROUND_COLOR = "#9e9d95"
-
-AWARD_BOX_COUNT_FONT = textFont(Fonts.FONT_HARMONYOS_SANS_BLACK, 27)
-AWARD_BOX_COUNT_COLOR = STORAGE_TITLE_TEXT_COLOR
-AWARD_BOX_COUNT_STROKE_COLOR = "#000000"
-AWARD_BOX_COUNT_STROKE_WIDTH = 2
-
-AWARD_BOX_COUNT_DX = 4
-AWARD_BOX_COUNT_DY = -4
-
-AWARD_BOX_NAME_TOP = 8
-AWARD_BOX_NAME_LEFT = 0
-AWARD_BOX_NAME_LINE_HEIGHT = 40
-AWARD_BOX_NAME_FONT = textFont(Fonts.FONT_HARMONYOS_SANS, 16)
-AWARD_BOX_NAME_COLOR = STORAGE_TITLE_TEXT_COLOR
-AWARD_BOX_NAME_STROKE_COLOR = "#000000"
-AWARD_BOX_NAME_STROKE_WIDTH = 0
-AWARD_BOX_NAME_STROKE_COLOR_SPECIFIED: dict[int, str] = {}
-AWARD_BOX_NAME_STROKE_WIDTH_SPECIFIED: dict[int, int] = {}
-
-STATUS_MARGIN_LEFT = 40
-STATUS_MARGIN_RIGHT = 40
-STATUS_MARGIN_TOP = 80
-STATUS_MARGIN_BOTTOM = 40
-
-STATUS_MAX_ROW_COUNT = 6
-
-STATUS_PADDING_X = 10
-STATUS_PADDING_Y = 10
-
-AWARD_BOX_BACKGROUND_COLOR_SPECIFIED = {
-    1: "#d1cccb",
-    2: "#cdebc3",
-    3: "#c5dceb",
-    4: "#ecdff5",
-    5: "#fae9bb",
-}
-
-CAUGHT_BOX_MARGIN_LEFT = 0
-CAUGHT_BOX_MARGIN_RIGHT = 0
-CAUGHT_BOX_MARGIN_TOP = 0
-CAUGHT_BOX_MARGIN_BOTTOM = 0
+GLOBAL_SCALAR = 1.5
 
 
-__cached_box_image: dict[tuple[str, PillowColorLike, float], PILImage] = {}
+__cached_box_image: dict[tuple[str, str], PILImage] = {}
 
 
-async def drawAwardBoxImage(
-    awardURL: str,
-    background: PillowColorLike = AWARD_BOX_BACKGROUND_COLOR,
-    scale: float = AWARD_BOX_SCALE,
-):
-    _key = (awardURL, background, scale)
+async def drawAwardBoxImage(awardURL: str, background: str = "#9e9d95"):
+    _key = (awardURL, background)
 
     if _key in __cached_box_image:
         return __cached_box_image[_key]
 
-    base = await newImage(
-        (int(IMAGE_RAW_WIDTH * scale), int(IMAGE_RAW_HEIGHT * scale)),
-        background,
-    )
-
-    await addUponPaste(
-        base,
-        await resize(
-            await loadImage(awardURL),
-            int(IMAGE_RAW_WIDTH * scale),
-            int(IMAGE_RAW_HEIGHT * scale),
-        ),
-        0,
-        0,
-    )
+    base = await newImage((int(120 * GLOBAL_SCALAR), int(96 * GLOBAL_SCALAR)), background)
+    await addUponPaste(base, await resize(await loadImage(awardURL), int(120 * GLOBAL_SCALAR), int(96 * GLOBAL_SCALAR)), 0, 0)
 
     __cached_box_image[_key] = base
     return base
 
 
 async def drawAwardBox(
-    award: Award,
-    count: str = "",
-    bgColor: str = AWARD_BOX_BACKGROUND_COLOR,
-    scale: float = AWARD_BOX_SCALE,
-    textLineHeight: float = AWARD_BOX_NAME_LINE_HEIGHT,
-    countFont: PIL.ImageFont.FreeTypeFont = AWARD_BOX_COUNT_FONT,
-    countX: float = AWARD_BOX_COUNT_DX,
-    countY: float = AWARD_BOX_COUNT_DY,
-    countColor: PillowColorLikeStrong = AWARD_BOX_COUNT_COLOR,
-    countStrokeColor: PillowColorLikeStrong = AWARD_BOX_COUNT_STROKE_COLOR,
-    countStrokeWidth: int = AWARD_BOX_COUNT_STROKE_WIDTH,
-    nameFont: PIL.ImageFont.FreeTypeFont = AWARD_BOX_NAME_FONT,
-    nameX: float = AWARD_BOX_NAME_LEFT,
-    nameY: float = AWARD_BOX_NAME_TOP,
-    user: UserData | None = None
+    awardURL: str, awardName: str, count: str, background: str = "#9e9d95"
 ):
-    base = await newImage(
-        (
-            int(IMAGE_RAW_WIDTH * scale),
-            int(IMAGE_RAW_HEIGHT * scale + textLineHeight),
-        ),
-        GLOBAL_BACKGROUND_COLOR,
+    base = await verticalPile(
+        [
+            await drawAwardBoxImage(awardURL, background),
+            await drawLimitedBoxOfText(
+                awardName,
+                int(120 * GLOBAL_SCALAR),
+                "center",
+                "center",
+                int(18 * GLOBAL_SCALAR),
+                background,
+                textFont(Fonts.FONT_HARMONYOS_SANS, int(14 * GLOBAL_SCALAR)),
+            ),
+        ],
+        int(3 * GLOBAL_SCALAR),
+        "center",
+        "#696361",
     )
-
-    imgUrl = award.img_path
-
-    if user is not None:
-        imgUrl = await getAwardImageOfOneUser(None, user, award)
-
-    await addUponPaste(base, await drawAwardBoxImage(imgUrl, bgColor), 0, 0)
 
     draw = PIL.ImageDraw.Draw(base)
 
     await drawText(
         draw,
         count,
-        countX,
-        IMAGE_RAW_HEIGHT * scale + countY,
-        countColor,
-        countFont,
-        countStrokeColor,
-        countStrokeWidth,
-        verticalAlign=VerticalAnchor.bottom
-    )
-
-    color = bgColor
-
-    await drawText(
-        draw,
-        award.name,
-        nameX + IMAGE_RAW_WIDTH * scale / 2,
-        IMAGE_RAW_HEIGHT * scale + nameY,
-        color,
-        nameFont,
-        horizontalAlign=HorizontalAnchor.middle,
+        int(4 * GLOBAL_SCALAR),
+        int(92 * GLOBAL_SCALAR),
+        "#FFFFFF",
+        textFont(Fonts.FONT_HARMONYOS_SANS_BLACK, int(27 * GLOBAL_SCALAR)),
+        strokeColor="#000000",
+        strokeWidth=int(2 * GLOBAL_SCALAR),
+        verticalAlign=VerticalAnchor.bottom,
     )
 
     return base
 
 
-async def drawStorage(
-    user: UserData,
-    scale: float = AWARD_BOX_SCALE,
-    maxRowCount: int = STORAGE_AWARD_BOX_XCOUNT_MAX,
-    marginLeft: int = STORAGE_MARGIN_LEFT,
-    marginRight: int = STORAGE_MARGIN_RIGHT,
-    marginTop: int = STORAGE_MARGIN_TOP,
-    marginBottom: int = STORAGE_MARGIN_BOTTOM,
-    paddingX: int = AWARD_BOX_PADDING_X,
-    paddingY: int = AWARD_BOX_PADDING_Y,
-    backgroundColor: PillowColorLike = GLOBAL_BACKGROUND_COLOR,
-):
-    lines: list[int] = []
+async def drawStorage(session: async_scoped_session, user: UserData):
+    awards: list[PILImage] = []
 
-    session = get_session()
-
-    boxHeight = IMAGE_RAW_HEIGHT * scale + AWARD_BOX_NAME_LINE_HEIGHT
-    awardBoxes: list[list[AwardCountStorage]] = []
-
-    level_select = selectAllLevelUserObtained(user).order_by(Level.weight)
-
-    async with session.begin():
-        levels = (await session.execute(level_select)).scalars()
-
-        for level in levels:
-            award_counter_select = (
-                select(AwardCountStorage)
-                .filter(AwardCountStorage.target_user == user)
-                .filter(AwardCountStorage.target_award.has(Award.level == level))
-                .order_by(-AwardCountStorage.award_count)
+    acs = (
+        await session.execute(
+            select(AwardCountStorage)
+            .filter(AwardCountStorage.target_user == user)
+            .filter(AwardCountStorage.award_count > 0)
+            .join(Award, AwardCountStorage.target_award)
+            .join(Level, Award.level)
+            .order_by(
+                -Level.weight,
+                -AwardCountStorage.award_count,
+                Award.data_id,
             )
+        )
+    ).scalars()
 
-            award_counters = (await session.execute(award_counter_select)).all()
+    for ac in acs:
+        award = ac.target_award
+        count = ac.award_count
 
-            lines.append(math.ceil(len(award_counters) / maxRowCount))
-            awardBoxes.append([ac.tuple()[0] for ac in award_counters])
-
-        image = await newImage(
-            (
-                int(
-                    marginLeft
-                    + marginRight
-                    + IMAGE_RAW_WIDTH * scale * maxRowCount
-                    + paddingX * (maxRowCount - 1)
-                ),
-                int(
-                    marginTop
-                    + marginBottom
-                    + boxHeight * sum(lines)
-                    + paddingY * (sum(lines) - 1)
-                ),
-            ),
-            backgroundColor,
+        awards.append(
+            await drawAwardBox(
+                await getAwardImageOfOneUser(session, user, award),
+                award.name,
+                str(count),
+                award.level.level_color_code,
+            )
         )
 
-        drawTop: float = marginTop
-        drawLeft: float = marginLeft
-
-        for awardStorages in awardBoxes:
-            targetLevel = awardStorages[0].target_award.level
-
-            bgc = targetLevel.level_color_code
-
-            for i, awardStorage in enumerate(awardStorages):
-                award = awardStorage.target_award
-
-                box = await drawAwardBox(
-                    award, str(awardStorage.award_count), bgc, scale, user=user
-                )
-
-                await addUponPaste(
-                    image,
-                    box,
-                    int(
-                        drawLeft
-                        + (i % maxRowCount) * (IMAGE_RAW_WIDTH * scale + paddingX)
-                    ),
-                    int(drawTop + (i // maxRowCount) * (boxHeight + paddingY)),
-                )
-
-            drawTop += math.ceil(len(awardStorages) / maxRowCount) * (
-                boxHeight + paddingY
-            )
-
-    return image
+    return await combineABunchOfImage(
+        int(10 * GLOBAL_SCALAR), int(10 * GLOBAL_SCALAR), awards, 6, "#696361", "top", "left", int(30 * GLOBAL_SCALAR), int(30 * GLOBAL_SCALAR), int(60 * GLOBAL_SCALAR), int(30 * GLOBAL_SCALAR)
+    )
 
 
 async def drawAwardBoxImageHidden():
-    return await drawAwardBoxImage(
-        os.path.join(".", "res", "catch", "blank_placeholder.png")
-    )
+    return await drawAwardBoxImage("./res/catch/blank_placeholder.png")
 
 
-async def drawStatus(
-    session: async_scoped_session, user: UserData | None, scale: float = AWARD_BOX_SCALE
-):
-    awards = list(
+async def drawStatus(session: async_scoped_session, user: UserData | None):
+    boxes: list[PILImage] = []
+    levels = (
         (
             await session.execute(
-                select(Award).order_by(-Award.level_id, Award.data_id)
+                select(Level).filter(Level.awards.any()).order_by(-Level.weight)
             )
-        ).scalars()
-    )
-    lines = math.ceil(len(awards) / STATUS_MAX_ROW_COUNT)
-
-    image = await newImage(
-        (
-            int(
-                STATUS_MARGIN_LEFT
-                + STATUS_MARGIN_RIGHT
-                + IMAGE_RAW_WIDTH * scale * STATUS_MAX_ROW_COUNT
-                + AWARD_BOX_PADDING_X * (STATUS_MAX_ROW_COUNT - 1)
-            ),
-            int(
-                STATUS_MARGIN_TOP
-                + STATUS_MARGIN_BOTTOM
-                + IMAGE_RAW_HEIGHT * scale * lines
-                + STATUS_PADDING_Y * (lines - 1)
-            ),
-        ),
-        GLOBAL_BACKGROUND_COLOR,
-    )
-
-    _image = await toOpenCVImage(image)
-
-    for i, award in enumerate(awards):
-        px = i % STATUS_MAX_ROW_COUNT
-        py = i // STATUS_MAX_ROW_COUNT
-
-        x = int(
-            STATUS_MARGIN_LEFT + px * (IMAGE_RAW_WIDTH * scale + AWARD_BOX_PADDING_X)
         )
-        y = int(
-            STATUS_MARGIN_TOP + py * (IMAGE_RAW_HEIGHT * scale + AWARD_BOX_PADDING_Y)
+        .scalars()
+        .all()
+    )
+
+    for level in levels:
+        allAwards = (
+            (
+                await session.execute(
+                    select(Award).filter(Award.level == level).order_by(Award.data_id)
+                )
+            )
+            .scalars()
+            .all()
         )
 
-        bg = award.level.level_color_code
-        imageUrl = award.img_path
+        if user:
+            _query = (
+                select(AwardCountStorage.target_award_id)
+                .filter(AwardCountStorage.target_user == user)
+                .join(Award, AwardCountStorage.target_award)
+                .filter(Award.level == level)
+            )
+            userCollected = list((await session.execute(_query)).scalars())
+            title = f"{level.name}：{len(userCollected)} / {len(allAwards)}"
+        else:
+            userCollected = []
+            title = level.name
 
-        if user is not None:
-            imageUrl = await getAwardImageOfOneUser(session, user, award)
+        boxes.append(
+            await drawABoxOfText(
+                title,
+                level.level_color_code,
+                textFont(Fonts.JINGNAN_BOBO_HEI, int(48 * GLOBAL_SCALAR)),
+                background="#696361",
+                marginTop=int(30 * GLOBAL_SCALAR),
+                marginLeft=0,
+                marginRight=0,
+                marginBottom=int(20 * GLOBAL_SCALAR),
+            )
+        )
 
-        subImage = await drawAwardBoxImage(imageUrl, bg)
+        awards: list[PILImage] = []
 
-        if user is not None and not isUserHaveAward(user, award):
-            subImage = await drawAwardBoxImageHidden()
+        for award in allAwards:
+            if user and award.data_id not in userCollected:
+                awards.append(await drawAwardBoxImageHidden())
+            elif user:
+                awards.append(
+                    await drawAwardBox(
+                        await getAwardImageOfOneUser(session, user, award),
+                        award.name,
+                        "",
+                        level.level_color_code,
+                    )
+                )
+            else:
+                awards.append(
+                    await drawAwardBox(
+                        award.img_path, award.name, "", level.level_color_code
+                    )
+                )
 
-        await fastPaste(_image, await toOpenCVImage(subImage), x, y)
+        boxes.append(
+            await combineABunchOfImage(
+                int(10 * GLOBAL_SCALAR), int(10 * GLOBAL_SCALAR), awards, 6, "#696361", "top", "left"
+            )
+        )
 
-    return await fromOpenCVImage(_image)
+    return await verticalPile(boxes, int(10 * GLOBAL_SCALAR), "left", "#696361", int(80 * GLOBAL_SCALAR), int(40 * GLOBAL_SCALAR), int(40 * GLOBAL_SCALAR), int(40 * GLOBAL_SCALAR))
 
 
-async def drawCaughtBox(pick: Pick):
-    bg = pick.award.level.level_color_code
+async def drawCaughtBox(session: async_scoped_session, pick: Pick):
+    award = await session.get_one(Award, pick.award)
+    user = await session.get_one(UserData, pick.picks.udid)
 
-    sub = await drawAwardBox(pick.award, f"{pick.fromNumber}→{pick.toNumber}", bg, user=pick.picks.user)
+    bg = award.level.level_color_code
+    imgUrl = await getAwardImageOfOneUser(session, user, award)
 
-    image = await newImage(
-        (
-            sub.size[0] + CAUGHT_BOX_MARGIN_LEFT + CAUGHT_BOX_MARGIN_RIGHT,
-            sub.size[1] + CAUGHT_BOX_MARGIN_TOP + CAUGHT_BOX_MARGIN_BOTTOM,
-        ),
-        GLOBAL_BACKGROUND_COLOR,
+    return await drawAwardBox(
+        imgUrl, award.name, f"{pick.fromNumber}→{pick.toNumber}", bg
     )
-
-    image.paste(sub, (CAUGHT_BOX_MARGIN_LEFT, CAUGHT_BOX_MARGIN_TOP))
-
-    return image
 
 
 driver = get_driver()
@@ -366,7 +234,7 @@ async def preDrawEverything():
     if nonebot.get_driver().config.predraw_images == 0:
         logger.info("在开发环境中，跳过了预先绘制图像文件")
         return
-    
+
     session = get_session()
     awards = (await session.execute(select(Award))).scalars()
 
