@@ -365,6 +365,7 @@ driver = get_driver()
 async def preDrawEverything():
     if nonebot.get_driver().config.predraw_images == 0:
         logger.info("在开发环境中，跳过了预先绘制图像文件")
+        return
     
     session = get_session()
     awards = (await session.execute(select(Award))).scalars()
