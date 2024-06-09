@@ -6,7 +6,7 @@ from ..models.data import getPosibilities
 from ..models import Award, UserData
 from ..cores import PicksResult
 
-from .images import drawCaughtBox, drawStatus
+from .images import drawCaughtBox, drawCaughtBoxes, drawStatus
 from ...putils.draw import imageToBytes
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -24,7 +24,7 @@ async def displayAward(session: async_scoped_session, award: Award, user: UserDa
 
     return Message(
         [
-            MessageSegment.text("展示 " + name + f"【{award.level.name}】"),
+            MessageSegment.text(name + f"【{award.level.name}】"),
             MessageSegment.image(pathlib.Path(await getAwardImageOfOneUser(session, user, award))),
             MessageSegment.text(f"\n\n{await getAwardDescriptionOfOneUser(session, user, award)}"),
         ]
@@ -64,31 +64,8 @@ async def caughtMessage(session: async_scoped_session, picksResult: PicksResult)
         )
     )
 
-    for pick in picksResult.picks:
-        award = (await session.get(Award, pick.award))
-        assert award is not None
-
-        user = (await session.get(UserData, picksResult.udid))
-        assert user is not None
-
-        name = award.name
-        skin = await getUserUsingSkin(session, user, award)
-
-        if skin is not None:
-            name = name + f"[{skin.skin.name}]"
-
-        level = award.level
-
-        image = await drawCaughtBox(session, pick)
-        desc = await getAwardDescriptionOfOneUser(session, user, award)
-        ms.append(MessageSegment.image(imageToBytes(image)))
-
-        textBuild = f"【{level.name}】{name}\n{desc}"
-
-        if pick.isNew():
-            textBuild = "【新!】" + textBuild
-
-        ms.append(MessageSegment.text(textBuild))
+    image = await drawCaughtBoxes(session, picksResult)
+    ms.append(MessageSegment.image(imageToBytes(image)))
 
     return Message(ms)
 

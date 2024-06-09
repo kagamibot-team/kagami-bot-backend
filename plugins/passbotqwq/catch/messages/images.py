@@ -10,9 +10,10 @@ from nonebot.log import logger
 from nonebot_plugin_orm import async_scoped_session, get_session
 from nonebot import get_driver
 
-from ..cores import Pick
+from ..cores import Pick, PicksResult
 
 from ..models.crud import (
+    getAwardDescriptionOfOneUser,
     getAwardImageOfOneUser,
 )
 from ..models.Basics import Award, AwardCountStorage, AwardSkin, Level, UserData
@@ -30,6 +31,7 @@ from ...putils.draw.texts import (
     VerticalAnchor,
     drawABoxOfText,
     drawLimitedBoxOfText,
+    drawSingleLine,
     drawText,
     textFont,
     Fonts,
@@ -50,33 +52,45 @@ async def drawAwardBoxImage(awardURL: str, background: str = "#9e9d95"):
     if _key in __cached_box_image:
         return __cached_box_image[_key]
 
-    base = await newImage((int(120 * GLOBAL_SCALAR), int(96 * GLOBAL_SCALAR)), background)
-    await addUponPaste(base, await resize(await loadImage(awardURL), int(120 * GLOBAL_SCALAR), int(96 * GLOBAL_SCALAR)), 0, 0)
+    base = await newImage(
+        (int(120 * GLOBAL_SCALAR), int(96 * GLOBAL_SCALAR)), background
+    )
+    await addUponPaste(
+        base,
+        await resize(
+            await loadImage(awardURL), int(120 * GLOBAL_SCALAR), int(96 * GLOBAL_SCALAR)
+        ),
+        0,
+        0,
+    )
 
     __cached_box_image[_key] = base
     return base
 
 
 async def drawAwardBox(
-    awardURL: str, awardName: str, count: str, background: str = "#9e9d95"
+    awardURL: str, awardName: str | None, count: str, background: str = "#9e9d95"
 ):
-    base = await verticalPile(
-        [
-            await drawAwardBoxImage(awardURL, background),
-            await drawLimitedBoxOfText(
-                awardName,
-                int(120 * GLOBAL_SCALAR),
-                "center",
-                "center",
-                int(18 * GLOBAL_SCALAR),
-                background,
-                textFont(Fonts.FONT_HARMONYOS_SANS, int(14 * GLOBAL_SCALAR)),
-            ),
-        ],
-        int(3 * GLOBAL_SCALAR),
-        "center",
-        "#696361",
-    )
+    if awardName:
+        base = await verticalPile(
+            [
+                await drawAwardBoxImage(awardURL, background),
+                await drawLimitedBoxOfText(
+                    awardName,
+                    int(120 * GLOBAL_SCALAR),
+                    "center",
+                    "center",
+                    int(18 * GLOBAL_SCALAR),
+                    background,
+                    textFont(Fonts.FONT_HARMONYOS_SANS, int(14 * GLOBAL_SCALAR)),
+                ),
+            ],
+            int(3 * GLOBAL_SCALAR),
+            "center",
+            "#696361",
+        )
+    else:
+        base = await drawAwardBoxImage(awardURL, background)
 
     draw = PIL.ImageDraw.Draw(base)
 
@@ -127,7 +141,17 @@ async def drawStorage(session: async_scoped_session, user: UserData):
         )
 
     return await combineABunchOfImage(
-        int(10 * GLOBAL_SCALAR), int(10 * GLOBAL_SCALAR), awards, 6, "#696361", "top", "left", int(30 * GLOBAL_SCALAR), int(30 * GLOBAL_SCALAR), int(60 * GLOBAL_SCALAR), int(30 * GLOBAL_SCALAR)
+        int(10 * GLOBAL_SCALAR),
+        int(10 * GLOBAL_SCALAR),
+        awards,
+        6,
+        "#696361",
+        "top",
+        "left",
+        int(30 * GLOBAL_SCALAR),
+        int(30 * GLOBAL_SCALAR),
+        int(60 * GLOBAL_SCALAR),
+        int(30 * GLOBAL_SCALAR),
     )
 
 
@@ -188,7 +212,11 @@ async def drawStatus(session: async_scoped_session, user: UserData | None):
 
         for award in allAwards:
             if user and award.data_id not in userCollected:
-                awards.append(await drawAwardBoxImageHidden())
+                awards.append(
+                    await drawAwardBox(
+                        "./res/catch/blank_placeholder.png", "???", ""
+                    )
+                )
             elif user:
                 awards.append(
                     await drawAwardBox(
@@ -207,22 +235,104 @@ async def drawStatus(session: async_scoped_session, user: UserData | None):
 
         boxes.append(
             await combineABunchOfImage(
-                int(10 * GLOBAL_SCALAR), int(10 * GLOBAL_SCALAR), awards, 6, "#696361", "top", "left"
+                int(10 * GLOBAL_SCALAR),
+                int(10 * GLOBAL_SCALAR),
+                awards,
+                6,
+                "#696361",
+                "top",
+                "left",
             )
         )
 
-    return await verticalPile(boxes, int(10 * GLOBAL_SCALAR), "left", "#696361", int(80 * GLOBAL_SCALAR), int(40 * GLOBAL_SCALAR), int(40 * GLOBAL_SCALAR), int(40 * GLOBAL_SCALAR))
+    return await verticalPile(
+        boxes,
+        int(10 * GLOBAL_SCALAR),
+        "left",
+        "#696361",
+        int(80 * GLOBAL_SCALAR),
+        int(40 * GLOBAL_SCALAR),
+        int(40 * GLOBAL_SCALAR),
+        int(40 * GLOBAL_SCALAR),
+    )
 
 
 async def drawCaughtBox(session: async_scoped_session, pick: Pick):
     award = await session.get_one(Award, pick.award)
     user = await session.get_one(UserData, pick.picks.udid)
+    level = award.level
 
     bg = award.level.level_color_code
     imgUrl = await getAwardImageOfOneUser(session, user, award)
 
-    return await drawAwardBox(
-        imgUrl, award.name, f"{pick.fromNumber}→{pick.toNumber}", bg
+    left = await drawAwardBox(imgUrl, award.name, f"+{pick.delta()}", bg)
+
+    titles: list[PILImage] = []
+
+    titles.append(
+        await drawABoxOfText(
+            text=award.name,
+            color=bg,
+            font=textFont(Fonts.FONT_HARMONYOS_SANS_BLACK, int(24 * GLOBAL_SCALAR)),
+            background="#696361",
+            marginRight=int(20 * GLOBAL_SCALAR),
+        )
+    )
+
+    if pick.isNew():
+        titles.append(
+            await drawABoxOfText(
+                text="[新!]",
+                color="#ed8d6f",
+                font=textFont(Fonts.FONT_HARMONYOS_SANS_BLACK, int(18 * GLOBAL_SCALAR)),
+                background="#696361",
+                marginRight=int(5 * GLOBAL_SCALAR),
+            )
+        )
+
+    titles.append(
+        await drawABoxOfText(
+            text=level.name,
+            color="#FFFFFF",
+            font=textFont(Fonts.FONT_HARMONYOS_SANS_BLACK, int(18 * GLOBAL_SCALAR)),
+            background="#696361",
+            marginRight=int(5 * GLOBAL_SCALAR),
+        )
+    )
+
+    title = await horizontalPile(titles, 0, "bottom", "#696361")
+
+    description = await drawLimitedBoxOfText(
+        await getAwardDescriptionOfOneUser(session, user, award),
+        int(320 * GLOBAL_SCALAR),
+        "expand",
+        "left",
+        int(20 * GLOBAL_SCALAR),
+        color="#FFFFFF",
+        font=textFont(Fonts.FONT_HARMONYOS_SANS, int(18 * GLOBAL_SCALAR)),
+    )
+
+    right = await verticalPile(
+        [title, description], int(10 * GLOBAL_SCALAR), "left", "#696361"
+    )
+
+    return await horizontalPile(
+        [left, right], int(20 * GLOBAL_SCALAR), "top", "#696361"
+    )
+
+
+async def drawCaughtBoxes(session: async_scoped_session, picks: PicksResult):
+    boxes = [await drawCaughtBox(session, pick) for pick in picks.picks]
+
+    return await verticalPile(
+        boxes,
+        int(20 * GLOBAL_SCALAR),
+        "left",
+        "#696361",
+        int(50 * GLOBAL_SCALAR),
+        int(20 * GLOBAL_SCALAR),
+        int(20 * GLOBAL_SCALAR),
+        int(10 * GLOBAL_SCALAR),
     )
 
 
