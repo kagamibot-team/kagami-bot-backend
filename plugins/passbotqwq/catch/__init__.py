@@ -8,12 +8,13 @@ from typing import NoReturn
 from . import dataTransfer
 
 
-from .commands import (
+from ..putils.command import (
     CallbackBase,
     CheckEnvironment,
     WaitForMoreInformationException,
-    enabledCommand,
 )
+
+from .commands import enabledCommand
 
 from nonebot_plugin_orm import async_scoped_session
 
@@ -45,7 +46,7 @@ async def _(session: async_scoped_session, bot: Bot, event: GroupMessageEvent):
 
     text = event.get_plaintext()
 
-    env = CheckEnvironment(sender, text, event.message_id, event.message, session, bot)
+    env = CheckEnvironment(sender, text, event.message_id, event.message, session, bot, event.group_id)
 
     callback = getCallbacks(sender)
     if callback != None:

@@ -31,6 +31,7 @@ class CheckEnvironment:
     message: Message
     session: async_scoped_session
     bot: Bot
+    group_id: int
 
 
 class CommandBase:

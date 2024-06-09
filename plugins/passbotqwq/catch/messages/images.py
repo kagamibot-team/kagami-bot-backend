@@ -385,7 +385,7 @@ def getSkinTarget(skin: AwardSkin):
     uIndex: int = 0
 
     def _path():
-        return os.path.join(".", "data", "catch", "awards", f"{safename}_{uIndex}.png")
+        return os.path.join(".", "data", "catch", "skins", f"{safename}_{uIndex}.png")
 
     while os.path.exists(_path()):
         uIndex += 1

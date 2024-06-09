@@ -1,13 +1,15 @@
 import math
 import time
 
+from ...putils.command import text
+from ...putils.draw import imageToBytes
+
 from ..models.crud import getAllLevels, getAwardDescriptionOfOneUser, getAwardImageOfOneUser, getUserUsingSkin
 from ..models.data import getPosibilities
 from ..models import Award, UserData
 from ..cores import PicksResult
 
-from .images import drawCaughtBox, drawCaughtBoxes, drawStatus
-from ...putils.draw import imageToBytes
+from .images import drawCaughtBoxes, drawStatus
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot_plugin_orm import async_scoped_session
@@ -170,29 +172,38 @@ def help(isAdmin=False):
         "设置皮肤 小哥名字 皮肤名字：设置一个小哥的皮肤"
     ]
 
-    admin = [
-        "::创建小哥 名字 等级",
-        "::删除小哥 名字",
-        "::创建等级 名字",
-        "::所有等级",
-        "::所有小哥",
-        "::设置周期 秒数",
-        "::更改等级 名称/权重/颜色 等级的名字",
-        "::更改小哥 名称/等级/图片/描述 小哥的名字",
-        "::创建皮肤 小哥名字 皮肤名字",
-        "::更改皮肤 名字/图片/描述 小哥名字 皮肤名字",
-        "::获得皮肤 小哥名字 皮肤名字",
-        "::剥夺皮肤 小哥名字 皮肤名字",
-        "::展示 小哥名字 皮肤名字",
-    ]
+    # admin = [
+    #     "::创建小哥 名字 等级",
+    #     "::删除小哥 名字",
+    #     "::创建等级 名字",
+    #     "::所有等级",
+    #     "::所有小哥",
+    #     "::设置周期 秒数",
+    #     "::更改等级 名称/权重/颜色 等级的名字",
+    #     "::更改小哥 名称/等级/图片/描述 小哥的名字",
+    #     "::创建皮肤 小哥名字 皮肤名字",
+    #     "::更改皮肤 名字/图片/描述 小哥名字 皮肤名字",
+    #     "::获得皮肤 小哥名字 皮肤名字",
+    #     "::剥夺皮肤 小哥名字 皮肤名字",
+    #     "::展示 小哥名字 皮肤名字",
+    # ]
 
-    res = normal + admin if isAdmin else normal
+    res = normal
 
     return Message(
         [
             MessageSegment.text(("===== 命令清单 =====\n" + "\n".join(res))),
         ]
     )
+
+
+def update():
+    result: list[str] = []
+
+    for version in updateHistory.keys():
+        result.append(f"== 版本 {version} 更新 ==" + "".join(map(lambda x: "\n- " + x, updateHistory[version])))
+    
+    return Message(text("\n\n".join(result)))
 
 
 updateHistory = {
@@ -202,9 +213,12 @@ updateHistory = {
     ],
     "0.2.1": [
         "修复了一些界面文字没有中心对齐的问题",
-        "修复了抓小哥时没有字体颜色的问题"
+        "修复了抓小哥时没有字体颜色的问题",
     ],
     "0.3.0": [
-        "正式添加皮肤系统"
+        "正式添加皮肤系统",
+        "限制了管理员指令只能在一些群执行",
+        "修复了新玩家的周期被设置为 3600 的问题",
+        "重新架构了关于图片生成的代码",
     ]
 }
