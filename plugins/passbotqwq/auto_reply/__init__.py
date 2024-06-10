@@ -1,11 +1,17 @@
+from nonebot import on_type
 from nonebot.plugin import on
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
+    PrivateMessageEvent,
+    Message,
+    MessageSegment,
 )
 
+import socket
 
-eventMatcher = on()
+
+eventMatcher = on_type(types=GroupMessageEvent)
 
 
 def matchKagami(text: str):
@@ -39,3 +45,18 @@ async def ping(bot: Bot, event: GroupMessageEvent):
             await eventMatcher.finish("贪吃小哥" + match)
 
         await eventMatcher.finish("在" + match)
+
+
+tellMeIp = on_type(types=PrivateMessageEvent)
+
+
+@tellMeIp.handle()
+async def ping2(event: PrivateMessageEvent):
+    if event.get_plaintext() == "::getip":
+        if event.sender.user_id != 514827965:
+            return
+
+        localhost_name = socket.gethostname()
+        ips = socket.gethostbyname_ex(localhost_name)[2]
+
+        await tellMeIp.finish(Message(MessageSegment.text("\n".join(ips))))

@@ -1,3 +1,4 @@
+from nonebot import on_type
 from nonebot.plugin import on
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message
 from nonebot.exception import FinishedException
@@ -19,7 +20,7 @@ from .commands import enabledCommand
 from nonebot_plugin_orm import async_scoped_session
 
 
-eventMatcher = on()
+eventMatcher = on_type(types=GroupMessageEvent)
 
 
 async def finish(message: Message) -> NoReturn:
