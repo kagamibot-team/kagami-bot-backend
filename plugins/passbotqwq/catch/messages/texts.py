@@ -249,7 +249,7 @@ def helpAdmin():
 def update():
     result: list[str] = []
 
-    for version in updateHistory.keys():
+    for version in list(updateHistory.keys())[::-1][:5]:
         result.append(
             f"== 版本 {version} 更新 =="
             + "".join(map(lambda x: "\n- " + x, updateHistory[version]))
@@ -328,7 +328,7 @@ async def KagamiShop(session: async_scoped_session, sender: int, senderUser: Use
     return Message([at(sender), text(textBuilder)])
 
 
-updateHistory = {
+updateHistory: dict[str, list[str]] = {
     "0.2.0": [
         "将数据使用数据库储存",
         "修复间隔为 0 时报错的问题",
@@ -345,5 +345,8 @@ updateHistory = {
     ],
     "0.4.0": [
         "添加了商店系统",
-    ]
+    ],
+    "0.4.1": [
+        "将版本更新信息倒序而非正序显示",
+    ],
 }
