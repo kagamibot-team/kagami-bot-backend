@@ -7,7 +7,7 @@ from nonebot.adapters.onebot.v11 import Message
 
 from plugins.passbotqwq.catch.models.Basics import SkinOwnRecord
 
-from ...putils.command import CheckEnvironment, at, text, image, Command
+from ...putils.command import CheckEnvironment, at, text, image, Command, 科目三
 
 from ..models import *
 from ..models.data import hangupSkin, switchSkin
@@ -83,6 +83,7 @@ class CatchStorage(Command):
         await env.bot.send_group_msg(group_id=env.group_id, message=Message([
             at(env.sender),
             text(" 稍候，正在查询你的小哥库存..."),
+            await 科目三(),
         ]))
 
         storageImage = await drawStorage(env.session, await getSender(env))
@@ -109,6 +110,7 @@ class CatchProgress(Command):
         await env.bot.send_group_msg(group_id=env.group_id, message=Message([
             at(env.sender),
             text(" 稍候，正在查询你的小哥收集进度..."),
+            await 科目三(),
         ]))
 
         img = await drawStatus(env.session, await getSender(env))

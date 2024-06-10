@@ -23,6 +23,10 @@ async def localImage(image: str):
     return MessageSegment.image(pathlib.Path(image))
 
 
+async def 科目三():
+    return MessageSegment.image(pathlib.Path("./res/catch/科目三.gif"))
+
+
 @dataclass
 class CheckEnvironment:
     sender: int
