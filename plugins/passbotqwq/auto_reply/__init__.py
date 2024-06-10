@@ -43,6 +43,10 @@ async def ping(bot: Bot, event: GroupMessageEvent):
             await eventMatcher.finish("赤蛮奇" + match)
         if event.sender.user_id == 1467858478:
             await eventMatcher.finish("贪吃小哥" + match)
+        if event.sender.user_id == 602528231:
+            await eventMatcher.finish("小槽" + match)
+        if event.sender.user_id == 3043069014:
+            await eventMatcher.finish("小阿" + match)
 
         await eventMatcher.finish("在" + match)
 
