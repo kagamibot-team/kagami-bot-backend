@@ -1,4 +1,4 @@
-from nonebot import on_message
+from nonebot import get_driver, on_message
 from nonebot.rule import fullmatch
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
@@ -13,7 +13,7 @@ dataTransferHandler = on_message(fullmatch("::admin-migrate-database"), priority
 
 @dataTransferHandler.handle()
 async def _(session: async_scoped_session, event: GroupMessageEvent):
-    if event.sender.user_id != 514827965:
+    if event.sender.user_id != get_driver().config.admin_id:
         return
 
     levels = sorted(pydanticGetAllLevels(), key=lambda l: -l.weight)
