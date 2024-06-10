@@ -278,20 +278,20 @@ async def preDrawEverything():
         return
 
     session = get_session()
-    awards = (await session.execute(select(Award))).scalars()
+    awards = (await session.execute(select(Award))).scalars().all()
     begin = time.time()
 
-    for award in awards:
+    for ind, award in enumerate(awards):
         bg = award.level.level_color_code
         await display_box(bg, award.img_path)
-        logger.info(f"预渲染完成了 {award.name}")
+        logger.info(f"{ind + 1}/{len(awards)} 预渲染完成了 {award.name}")
 
-    skins = (await session.execute(select(AwardSkin))).scalars()
+    skins = (await session.execute(select(AwardSkin))).scalars().all()
 
-    for skin in skins:
+    for ind, skin in enumerate(skins):
         bg = skin.applied_award.level.level_color_code
         await display_box(bg, skin.image)
-        logger.info(f"预渲染完成了 {skin.name}")
+        logger.info(f"{ind + 1}/{len(skins)} 预渲染完成了 {skin.name}")
 
     logger.info(f"已经完成了预先绘制图像文件，耗时 {time.time() - begin}")
 

@@ -35,7 +35,7 @@ async def getAllAvailableLevels(session: async_scoped_session):
 async def createAUser(session: async_scoped_session, uid: int):
     ud = UserData(qq_id=uid)
     session.add(ud)
-    await session.commit()
+    await session.flush()
 
     return ud
 
@@ -122,5 +122,6 @@ async def getGlobal(session: async_scoped_session):
     if glob is None:
         glob = Global()
         session.add(glob)
+        await session.flush()
     
     return glob

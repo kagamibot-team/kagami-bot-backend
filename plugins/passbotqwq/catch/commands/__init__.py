@@ -32,6 +32,7 @@ from .admin import (
     CatchAdminDeleteSkinOwnership,
     CatchResetEveryoneCacheCount,
     CatchAdminHelp,
+    CatchGiveMoney,
 )
 
 
@@ -64,4 +65,5 @@ enabledCommand: list[CommandBase] = [
     CatchCheckMoney(),
     CatchShowUpdate(),
     CatchAdminHelp(),
+    CatchGiveMoney(),
 ]

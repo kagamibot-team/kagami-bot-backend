@@ -21,7 +21,13 @@ from ...putils.text_format_check import isFloat, not_negative
 
 from ..models import *
 from ..models.crud import getOrCreateUser
-from ..models.data import addAward, deleteSkinOwnership, obtainSkin, resetCacheCount, setEveryoneInterval
+from ..models.data import (
+    addAward,
+    deleteSkinOwnership,
+    obtainSkin,
+    resetCacheCount,
+    setEveryoneInterval,
+)
 
 from ..messages import (
     allAwards,
@@ -231,7 +237,7 @@ class CatchModifyCallback(CallbackBase):
         modifyObject = await self.modifyObject(env.session)
         assert modifyObject is not None
 
-        if self.modifyType == "名称" or self.modifyType == '名字':
+        if self.modifyType == "名称" or self.modifyType == "名字":
             if not re.match("^\\S+$", env.text):
                 raise WaitForMoreInformationException(
                     self, self.callbackMessage(env, "名称中不能包含空格")
@@ -718,5 +724,28 @@ class CatchAdminHelp(Command):
     commandPattern: str = f":: ?help"
     argsPattern: str = "$"
 
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+    async def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
         return helpAdmin()
+
+
+@requireAdmin
+@dataclass
+class CatchGiveMoney(Command):
+    commandPattern: str = ":: ?给钱"
+    argsPattern: str = " (\\d+) (\\d+)"
+
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return Message([at(env.sender), text("MSG_GIVE_MONEY_WRONG_FORMAT")])
+
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
+        money = int(result.group(2))
+        if money < 1:
+            return self.errorMessage(env)
+
+        user = await getOrCreateUser(env.session, int(result.group(1)))
+        user.money += money
+        await env.session.commit()
+
+        return Message([at(env.sender), text("MSG_GIVE_MONEY_OK")])

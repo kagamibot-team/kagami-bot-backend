@@ -293,7 +293,7 @@ class CatchShop(Command):
 
 @dataclass
 class CatchCheckMoney(Command):
-    commandPattern: str = f"^我有多少薯片"
+    commandPattern: str = f"^(我有多少薯片|mysp)"
     argsPattern: str = "$"
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):

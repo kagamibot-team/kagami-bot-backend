@@ -38,6 +38,7 @@ async def addAward(
             award_count=delta,
         )
         session.add(aws)
+        await session.flush()
         return None
 
     aws.award_count += delta
@@ -69,6 +70,7 @@ async def obtainSkin(session: async_scoped_session, user: UserData, skin: AwardS
     )
 
     session.add(record)
+    await session.flush()
     return True
 
 
@@ -129,6 +131,7 @@ async def hangupSkin(
             skin=skin,
         )
         session.add(usingRecord)
+        await session.flush()
 
         return True
 
@@ -152,6 +155,7 @@ async def switchSkin(
             skin=skins[0],
         )
         session.add(usingRecord)
+        await session.flush()
         return skins[0]
     
     # 在 skins 中寻找与 usingRecord.skin 相同的项的索引
@@ -206,6 +210,7 @@ async def reduceAward(
     if stats is None:
         stats = AwardUsedStats(target_user=user, target_award=award, award_count=count)
         session.add(stats)
+        await session.flush()
 
         return True
 

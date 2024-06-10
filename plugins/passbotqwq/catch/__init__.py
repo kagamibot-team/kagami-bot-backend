@@ -5,10 +5,6 @@ from nonebot.exception import FinishedException
 from typing import NoReturn
 
 
-# 暂时为了数据迁移而保留
-from . import dataTransfer
-
-
 from ..putils.command import (
     CallbackBase,
     CheckEnvironment,

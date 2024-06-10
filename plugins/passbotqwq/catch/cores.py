@@ -79,11 +79,14 @@ async def recalcPickTime(session: async_scoped_session, user: UserData):
         user.pick_count_last_calculated = nowTime
         return -1
 
-    return user.pick_count_remain - nowTime
+    return nowTime - user.pick_count_last_calculated
 
 
 async def canPickCount(session: async_scoped_session, user: UserData):
-    await recalcPickTime(session, user)
+    dt = await recalcPickTime(session, user)
+    if dt < 0:
+        dt = -1
+
     return user.pick_count_remain
 
 
@@ -106,7 +109,7 @@ async def handlePick(
         udid,
         user.pick_count_remain - count,
         user.pick_max_cache,
-        user.pick_time_delta,
+        (await getGlobal(session)).catch_interval,
         user.pick_count_last_calculated,
         user.money,
     )
