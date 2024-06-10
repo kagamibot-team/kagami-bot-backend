@@ -1,3 +1,4 @@
+import cProfile
 from dataclasses import dataclass
 import re
 from typing import Coroutine
@@ -58,6 +59,7 @@ class CrazyCatch(Command):
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         picksResult = await handlePick(env.session, env.sender, -1)
+
         message = await caughtMessage(env.session, picksResult)
 
         await env.session.commit()

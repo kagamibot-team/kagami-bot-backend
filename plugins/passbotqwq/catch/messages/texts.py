@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from plugins.passbotqwq.catch.models.Basics import AwardSkin, SkinOwnRecord
 
-from ...putils.command import at, text
+from ...putils.command import at, image, text
 from ...putils.draw import imageToBytes
 
 from ..models.crud import (
@@ -18,6 +18,7 @@ from ..models.crud import (
 from ..models.data import getPosibilities
 from ..models import Award, UserData
 from ..cores import PicksResult
+from ..images import display_box
 
 from .images import drawCaughtBoxes, drawStatus
 
@@ -83,8 +84,27 @@ async def caughtMessage(session: async_scoped_session, picksResult: PicksResult)
         )
     )
 
+    ## 新版界面
     image = await drawCaughtBoxes(session, picksResult)
     ms.append(MessageSegment.image(imageToBytes(image)))
+
+    ## 旧版界面
+    # user = await session.get_one(UserData, picksResult.udid)
+
+    # for p in picksResult.picks:
+    #     award = await session.get_one(Award, p.award)
+    #     level = award.level
+
+    #     ms.append(await image(await display_box(
+    #         level.level_color_code,
+    #         await getAwardImageOfOneUser(session, user, award),
+    #         p.isNew()
+    #     )))
+
+    #     ms.append(text(
+    #         f"【{level.name}】{award.name}\n"
+    #         f"{await getAwardDescriptionOfOneUser(session, user, award)}\n"
+    #     ))
 
     return Message(ms)
 
