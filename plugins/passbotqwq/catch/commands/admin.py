@@ -749,3 +749,27 @@ class CatchGiveMoney(Command):
         await env.session.commit()
 
         return Message([at(env.sender), text("MSG_GIVE_MONEY_OK")])
+
+
+@requireAdmin
+class CatchFilterNoDescription(Command):
+    def __init__(self):
+        super().__init__(
+            f"^:: ?{KEYWORD_EVERY}?缺描述",
+            " *$",
+        )
+
+    async def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
+        lacks = (
+            await env.session.execute(
+                select(Award).filter(
+                    Award.description
+                    == "这只小哥还没有描述，它只是静静地躺在这里，等待着别人给他下定义。"
+                )
+            )
+        ).scalars()
+        lacks = [a.name for a in lacks]
+
+        return Message([at(env.sender), text(" " + ", ".join(lacks))])

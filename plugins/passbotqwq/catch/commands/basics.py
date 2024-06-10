@@ -80,6 +80,11 @@ class CatchStorage(Command):
     argsPattern: str = "$"
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
+        await env.bot.send_group_msg(group_id=env.group_id, message=Message([
+            at(env.sender),
+            text(" 稍候，正在查询你的小哥库存..."),
+        ]))
+
         storageImage = await drawStorage(env.session, await getSender(env))
 
         return Message(
@@ -101,6 +106,11 @@ class CatchProgress(Command):
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
+        await env.bot.send_group_msg(group_id=env.group_id, message=Message([
+            at(env.sender),
+            text(" 稍候，正在查询你的小哥收集进度..."),
+        ]))
+
         img = await drawStatus(env.session, await getSender(env))
 
         return Message(
@@ -110,29 +120,6 @@ class CatchProgress(Command):
                 await image(img),
             ]
         )
-
-
-class CatchFilterNoDescription(Command):
-    def __init__(self):
-        super().__init__(
-            f"^:: ?{KEYWORD_EVERY}?缺描述",
-            " *$",
-        )
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        lacks = (
-            await env.session.execute(
-                select(Award).filter(
-                    Award.description
-                    == "这只小哥还没有描述，它只是静静地躺在这里，等待着别人给他下定义。"
-                )
-            )
-        ).scalars()
-        lacks = [a.name for a in lacks]
-
-        return Message([at(env.sender), text(" " + ", ".join(lacks))])
 
 
 @dataclass

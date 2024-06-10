@@ -7,7 +7,6 @@ from .basics import (
     CatchStorage,
     CatchHangUpSkin,
     CatchDisplay,
-    CatchFilterNoDescription,
     CatchProgress,
     CatchShop,
     CatchCheckMoney,
@@ -33,6 +32,7 @@ from .admin import (
     CatchResetEveryoneCacheCount,
     CatchAdminHelp,
     CatchGiveMoney,
+    CatchFilterNoDescription,
 )
 
 

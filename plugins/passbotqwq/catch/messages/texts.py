@@ -71,7 +71,7 @@ async def caughtMessage(session: async_scoped_session, picksResult: PicksResult)
         return Message(
             [
                 MessageSegment.at(picksResult.uid),
-                MessageSegment.text(f"小哥还没长成，请再等{timeStr}吧！"),
+                MessageSegment.text(f" 小哥还没长成，请再等{timeStr}吧！"),
             ]
         )
 
