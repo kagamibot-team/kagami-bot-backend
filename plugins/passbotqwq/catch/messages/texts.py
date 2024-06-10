@@ -29,7 +29,7 @@ import pathlib
 
 async def displayAward(session: async_scoped_session, award: Award, user: UserData):
     name = award.name
-    skin = await getUserUsingSkin(None, user, award)
+    skin = await getUserUsingSkin(session, user, award)
 
     if skin is not None:
         name = name + f"[{skin.skin.name}]"
@@ -179,33 +179,45 @@ def modifyOk():
     return Message(MessageSegment.text("更改好了"))
 
 
-def help(isAdmin=False):
+def help():
     normal = [
         "抓小哥帮助(zhuahelp)：显示这条帮助信息",
         "抓小哥(zhua)：进行一次抓",
         "狂抓小哥(kz)：一次抓完所有可用次数",
         "库存(kc)：展示个人仓库中的存量",
         "抓小哥进度(zhuajd)：展示目前收集的进度",
-        "设置皮肤 小哥名字 皮肤名字：设置一个小哥的皮肤",
+        "切换皮肤 小哥名字：切换一个小哥的皮肤",
+        "小镜的shop(xjshop)：进入小镜的商店",
     ]
 
-    # admin = [
-    #     "::创建小哥 名字 等级",
-    #     "::删除小哥 名字",
-    #     "::创建等级 名字",
-    #     "::所有等级",
-    #     "::所有小哥",
-    #     "::设置周期 秒数",
-    #     "::更改等级 名称/权重/颜色 等级的名字",
-    #     "::更改小哥 名称/等级/图片/描述 小哥的名字",
-    #     "::创建皮肤 小哥名字 皮肤名字",
-    #     "::更改皮肤 名字/图片/描述 小哥名字 皮肤名字",
-    #     "::获得皮肤 小哥名字 皮肤名字",
-    #     "::剥夺皮肤 小哥名字 皮肤名字",
-    #     "::展示 小哥名字 皮肤名字",
-    # ]
-
     res = normal
+
+    return Message(
+        [
+            MessageSegment.text(("===== 命令清单 =====\n" + "\n".join(res))),
+        ]
+    )
+
+
+def helpAdmin():
+    res = [
+        "::所有小哥",
+        "::所有等级",
+        "::设置周期 秒数",
+        "::设置小哥 名称/图片/等级/描述 小哥的名字",
+        "::设置等级 名称/权重/颜色/金钱 等级的名字 值",
+        "::删除小哥 小哥的名字",
+        "::创建小哥 名字 等级",
+        "::创建等级 名字",
+        "/give qqid 小哥的名字 (数量)",
+        "/clear (qqid (小哥的名字))",
+        "::创建皮肤 小哥名字 皮肤名字",
+        "::更改皮肤 名字/图片/描述/价格 小哥名字 皮肤名字",
+        "::获得皮肤 小哥名字 皮肤名字",
+        "::剥夺皮肤 小哥名字 皮肤名字",
+        "::展示 小哥名字 (皮肤名字)",
+        "::重置抓小哥上限（注意这个是对所有人生效的）"
+    ]
 
     return Message(
         [

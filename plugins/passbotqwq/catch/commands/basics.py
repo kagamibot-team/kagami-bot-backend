@@ -4,10 +4,12 @@ from typing import Coroutine
 from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
+from plugins.passbotqwq.catch.models.Basics import SkinOwnRecord
+
 from ...putils.command import CheckEnvironment, at, text, image, Command
 
 from ..models import *
-from ..models.data import hangupSkin
+from ..models.data import hangupSkin, switchSkin
 
 from ..cores import buy, handlePick
 
@@ -18,7 +20,8 @@ from ..messages import (
     drawStatus,
     drawStorage,
     KagamiShop,
-    getGoodsList
+    getGoodsList,
+    update,
 )
 
 
@@ -63,10 +66,10 @@ class CrazyCatch(Command):
 
 class CatchHelp(Command):
     def __init__(self):
-        super().__init__(f"^{KEYWORD_BASE_COMMAND}? ?(help|帮助)", "( admin)?")
+        super().__init__(f"^{KEYWORD_BASE_COMMAND}? ?(help|帮助)", "$")
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
-        return help(result.group(3) != None)
+        return help()
 
 
 @dataclass
@@ -165,13 +168,11 @@ class CatchDisplay(Command):
 
 @dataclass
 class CatchHangUpSkin(Command):
-    commandPattern: str = f"{KEYWORD_CHANGE} ?{KEYWORD_SKIN}"
-    argsPattern: str = " (\\S+)( \\S+)?$"
+    commandPattern: str = f"{KEYWORD_SWITCH} ?{KEYWORD_SKIN}"
+    argsPattern: str = " (\\S+)$"
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message(
-            [at(env.sender), text(" 格式不对，格式是 设置皮肤 小哥名字 皮肤名字")]
-        )
+        return Message([at(env.sender), text(" 格式不对，格式是 切换皮肤 小哥名字")])
 
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
@@ -185,29 +186,25 @@ class CatchHangUpSkin(Command):
         if award is None:
             return self.notExists(env, result.group(3))
 
-        if result.group(4) is not None:
-            skin = (
-                await env.session.execute(
-                    select(AwardSkin)
-                    .filter(AwardSkin.name == result.group(4)[1:])
-                    .filter(AwardSkin.applied_award == award)
-                )
-            ).scalar_one_or_none()
+        skins = list((await env.session.execute(
+            select(SkinOwnRecord)
+            .join(AwardSkin, SkinOwnRecord.skin)
+            .filter(AwardSkin.applied_award == award)
+            .filter(SkinOwnRecord.user == await getSender(env))
+        )).scalars())
 
-            if skin is None:
-                return self.notExists(env, result.group(4)[1:])
+        if len(skins) == 0:
+            return Message([at(env.sender), text(" 你没有这个小哥的皮肤")])
 
-            res = await hangupSkin(env.session, await getSender(env), skin)
+        skin = await switchSkin(env.session, await getSender(env), [s.skin for s in skins])
 
-            if not res:
-                return Message([at(env.sender), text(" 你没有这个皮肤哦")])
+        if skin is not None:
+            message = Message([at(env.sender), text(f" 已经将 {result.group(3)} 的皮肤切换为 {skin.name} 了")])
+        else:
+            message = Message([at(env.sender), text(f" 已经将 {result.group(3)} 的皮肤切换为默认了")])
 
-            await env.session.commit()
-            return Message([at(env.sender), text(" 皮肤换好了")])
-
-        await hangupSkin(env.session, await getSender(env), None)
         await env.session.commit()
-        return Message([at(env.sender), text(" 皮肤改回默认了")])
+        return message
 
 
 @dataclass
@@ -218,7 +215,7 @@ class CatchShowUpdate(Command):
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        return await super().handleCommand(env, result)
+        return update()
 
 
 @dataclass
@@ -232,11 +229,14 @@ class CatchShop(Command):
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return Message(
-            [at(env.sender), text(
-                " \n小镜的 shop 指令：\n" 
-                "- 小镜的shop: 查看商品\n"
-                "- 小镜的shop 购买 商品码: 购买商品"
-            )]
+            [
+                at(env.sender),
+                text(
+                    " \n小镜的 shop 指令：\n"
+                    "- 小镜的shop: 查看商品\n"
+                    "- 小镜的shop 购买 商品码: 购买商品"
+                ),
+            ]
         )
 
     async def handleCommand(
@@ -254,23 +254,37 @@ class CatchShop(Command):
 
                 if code not in [g.code for g in goods]:
                     return self.notExists(env, code)
-                
+
                 good = [g for g in goods if g.code == code][0]
 
                 if good.soldout:
-                    return Message([at(env.sender), text(f" 商品 {good.name} 已经卖完了哦")])
-                
+                    return Message(
+                        [at(env.sender), text(f" 商品 {good.name} 已经卖完了哦")]
+                    )
+
                 user = await getSender(env)
 
                 if good.price > user.money:
-                    return Message([at(env.sender), text(f" 你的薯片不够了，商品 {good.name} 需要 {good.price} 薯片")])
-                
+                    return Message(
+                        [
+                            at(env.sender),
+                            text(
+                                f" 你的薯片不够了，商品 {good.name} 需要 {good.price} 薯片"
+                            ),
+                        ]
+                    )
+
                 await buy(env.session, user, code, good.price)
 
                 moneyLeft = user.money
 
                 await env.session.commit()
-                return Message([at(env.sender), text(f" 购买 {good.name} 成功！你还剩下 {moneyLeft} 薯片")])
+                return Message(
+                    [
+                        at(env.sender),
+                        text(f" 购买 {good.name} 成功！你还剩下 {moneyLeft} 薯片"),
+                    ]
+                )
 
         return self.errorMessage(env)
 

@@ -11,6 +11,7 @@ from .texts import (
     settingOk,
     KagamiShop,
     getGoodsList,
+    update,
 )
 from .images import (
     drawAwardBox,

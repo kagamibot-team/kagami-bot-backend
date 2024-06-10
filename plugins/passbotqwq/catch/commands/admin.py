@@ -5,6 +5,8 @@ from sqlalchemy import delete, select
 from nonebot_plugin_orm import async_scoped_session
 from nonebot.adapters.onebot.v11 import Message
 
+from plugins.passbotqwq.catch.messages.texts import helpAdmin
+
 from ...putils.command import (
     CheckEnvironment,
     at,
@@ -229,7 +231,7 @@ class CatchModifyCallback(CallbackBase):
         modifyObject = await self.modifyObject(env.session)
         assert modifyObject is not None
 
-        if self.modifyType == "名称":
+        if self.modifyType == "名称" or self.modifyType == '名字':
             if not re.match("^\\S+$", env.text):
                 raise WaitForMoreInformationException(
                     self, self.callbackMessage(env, "名称中不能包含空格")
@@ -277,7 +279,7 @@ class CatchModifyCallback(CallbackBase):
 class CatchModify(Command):
     def __init__(self):
         super().__init__(
-            f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_AWARDS} ?(名称|图片|等级|描述)",
+            f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_AWARDS} ?(名字|名称|图片|等级|描述)",
             " (\\S+)",
         )
 
@@ -708,3 +710,13 @@ class CatchResetEveryoneCacheCount(Command):
 
         await env.session.commit()
         await resetCacheCount(env.session, count)
+
+
+@requireAdmin
+@dataclass
+class CatchAdminHelp(Command):
+    commandPattern: str = f":: ?help"
+    argsPattern: str = "$"
+
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        return helpAdmin()
