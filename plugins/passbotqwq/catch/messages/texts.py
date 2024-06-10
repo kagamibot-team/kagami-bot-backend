@@ -311,7 +311,7 @@ async def getGoodsList(session: async_scoped_session, user: UserData):
 
 
 async def KagamiShop(session: async_scoped_session, sender: int, senderUser: UserData):
-    textBuilder = f"\n===== 小镜的shop =====\n现在你手上有 {senderUser.money} 薯片\n\n"
+    textBuilder = f"\n===== 小镜的shop =====\n现在你手上有 {senderUser.money} 薯片\n输入 小镜的shop 购买 商品码 就可以买了哦\n\n"
 
     goodTexts: list[str] = []
 

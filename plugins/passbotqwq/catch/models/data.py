@@ -1,3 +1,4 @@
+from nonebot import logger
 from nonebot_plugin_orm import async_scoped_session
 from sqlalchemy import select, update
 
@@ -149,7 +150,6 @@ async def switchSkin(
     ).scalar_one_or_none()
 
     if usingRecord is None:
-        # 添加一条皮肤记录，使用的是 skins 的第一项
         usingRecord = SkinRecord(
             user=user,
             skin=skins[0],
@@ -157,25 +157,20 @@ async def switchSkin(
         session.add(usingRecord)
         await session.flush()
         return skins[0]
-    
-    # 在 skins 中寻找与 usingRecord.skin 相同的项的索引
-    index = skins.index(usingRecord.skin)
-    # 如果索引为 -1，说明 skins 中没有与 usingRecord.skin 相同的项，那么把现有的这个记录指向的皮肤更改为第一个皮肤
-    if index == -1:
+
+
+    if usingRecord.skin not in skins:
         usingRecord.skin = skins[0]
 
-        # 向控制台报告
         print(f"[WARNING] 用户 {user.data_id} 切换了皮肤，但是没有找到对应的皮肤，已切换为第一个皮肤")
         return skins[0]
     
-    # 如果索引不为 -1，说明 skins 中找到了与 usingRecord.skin 相同的项
-    # 如果它是最后一项，那么就把皮肤恢复默认，即删除这一项
+    index = skins.index(usingRecord.skin)
+    
     if index == len(skins) - 1:
-        # 在数据库中删除 usingRecord
         await session.delete(usingRecord)
         return None
     
-    # 如果索引不为 -1，并且它不是最后一项，那么就把皮肤更改为下一项
     usingRecord.skin = skins[index + 1]
     return skins[index + 1]
 

@@ -102,7 +102,7 @@ async def catch(
     rightDescription = await drawLimitedBoxOfTextWithScalar(
         description,
         567,
-        "expand",
+        "left",
         "left",
         19,
         "#ffffff",
@@ -112,7 +112,7 @@ async def catch(
     rightTitle = await drawLimitedBoxOfTextWithScalar(
         title,
         400,
-        "expand",
+        "left",
         "left",
         43,
         "#ffffff",
@@ -143,7 +143,7 @@ async def catch(
         expandBottom=5,
     )
 
-    block = PIL.Image.new("RGB", (800, 180), "#9B9690")
+    block = PIL.Image.new("RGB", (800, max(180, rightDescription.height + 89)), "#9B9690")
     block.paste(left_display, (18, 18), left_display)
     block.paste(rightTitle, (212, 18), rightTitle)
     block.paste(rightDescription, (212, 69), rightDescription)

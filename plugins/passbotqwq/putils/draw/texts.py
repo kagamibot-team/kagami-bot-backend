@@ -144,7 +144,7 @@ async def drawSingleLine(
         "RGBA",
         (
             expandLeft + expandRight + maxWidth,
-            expandTop + expandBottom + max([e.bottom for e in boxes]),
+            expandTop + expandBottom + max([e.bottom for e in boxes] + [1]),
         ),
         "#00000000",
     )
