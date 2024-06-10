@@ -7,7 +7,7 @@ from nonebot.adapters.onebot.v11 import Message
 
 from plugins.passbotqwq.catch.models.Basics import SkinOwnRecord
 
-from ...putils.command import CheckEnvironment, at, text, image, Command, 科目三
+from ...putils.command import CheckEnvironment, at, decorateWithLoadingMessage, text, image, Command, 科目三
 
 from ..models import *
 from ..models.data import hangupSkin, switchSkin
@@ -30,6 +30,7 @@ from .keywords import *
 from .tools import getSender
 
 
+@decorateWithLoadingMessage(" 稍候，正在捕捉小哥...")
 class Catch(Command):
     def __init__(self):
         super().__init__(f"^{KEYWORD_BASE_COMMAND} ?(\\d+)?", "$")
@@ -50,6 +51,7 @@ class Catch(Command):
         return message
 
 
+@decorateWithLoadingMessage(" 稍候，正在捕捉小哥...")
 class CrazyCatch(Command):
     def __init__(self):
         super().__init__(f"^({KEYWORD_CRAZY}{KEYWORD_BASE_COMMAND}|kz)", "$")
@@ -74,18 +76,13 @@ class CatchHelp(Command):
         return help()
 
 
+@decorateWithLoadingMessage(" 稍候，正在查询你的小哥库存...")
 @dataclass
 class CatchStorage(Command):
     commandPattern: str = f"^{KEYWORD_BASE_COMMAND}?{KEYWORD_STORAGE}"
     argsPattern: str = "$"
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
-        await env.bot.send_group_msg(group_id=env.group_id, message=Message([
-            at(env.sender),
-            text(" 稍候，正在查询你的小哥库存..."),
-            await 科目三(),
-        ]))
-
         storageImage = await drawStorage(env.session, await getSender(env))
 
         return Message(
@@ -97,6 +94,7 @@ class CatchStorage(Command):
         )
 
 
+@decorateWithLoadingMessage(' 稍候，正在查询你的小哥收集进度...')
 class CatchProgress(Command):
     def __init__(self):
         super().__init__(f"^{KEYWORD_BASE_COMMAND}{KEYWORD_PROGRESS}", "$")
@@ -107,12 +105,6 @@ class CatchProgress(Command):
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        await env.bot.send_group_msg(group_id=env.group_id, message=Message([
-            at(env.sender),
-            text(" 稍候，正在查询你的小哥收集进度..."),
-            await 科目三(),
-        ]))
-
         img = await drawStatus(env.session, await getSender(env))
 
         return Message(

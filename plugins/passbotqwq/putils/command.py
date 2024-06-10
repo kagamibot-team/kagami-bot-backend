@@ -1,5 +1,6 @@
 import pathlib
 import re
+from typing import Type
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
 from plugins.passbotqwq.putils.draw.typing import PILImage
 from ..putils.draw import imageToBytes
@@ -25,6 +26,23 @@ async def localImage(image: str):
 
 async def 科目三():
     return MessageSegment.image(pathlib.Path("./res/catch/科目三.gif"))
+
+
+def decorateWithLoadingMessage(_text: str = " 稍候，正在查询你的小哥收集进度..."):
+    def _decorator(cls: Type[Command]):
+        class _Command(cls):
+            async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+                msg = await env.bot.send_group_msg(group_id=env.group_id, message=Message([
+                    at(env.sender),
+                    text(_text),
+                    await 科目三(),
+                ]))
+                res = await super().handleCommand(env, result)
+                await env.bot.delete_msg(message_id=msg['message_id'])
+                return res
+        
+        return _Command
+    return _decorator
 
 
 @dataclass
@@ -64,8 +82,8 @@ class WaitForMoreInformationException(Exception):
 
 @dataclass
 class Command(CommandBase):
-    commandPattern: str
-    argsPattern: str
+    commandPattern: str = '^$'
+    argsPattern: str = '$'
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return None
