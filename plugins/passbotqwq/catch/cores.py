@@ -5,9 +5,9 @@ import time
 
 from sqlalchemy import select
 
-from .models.data import addAward
+from .models.data import addAward, obtainSkin
 from .models.crud import getAllAvailableLevels, getGlobal, getOrCreateUser
-from .models.Basics import Award, AwardCountStorage, UserData
+from .models.Basics import Award, AwardCountStorage, AwardSkin, UserData
 
 from nonebot_plugin_orm import async_scoped_session
 
@@ -15,15 +15,13 @@ from nonebot_plugin_orm import async_scoped_session
 @dataclass
 class Pick:
     award: int
-    fromNumber: int
-    toNumber: int
+    fromNumber: int | None
+    delta: int
     picks: "PicksResult"
+    prize: float
 
     def isNew(self):
-        return self.fromNumber == 0
-
-    def delta(self):
-        return self.toNumber - self.fromNumber
+        return self.fromNumber is None
 
 
 @dataclass
@@ -35,9 +33,16 @@ class PicksResult:
     max_pick: int
     time_delta: float
     pick_calc_time: float
+    money_from: float
 
     def counts(self):
-        return sum([p.delta() for p in self.picks])
+        return sum([p.delta for p in self.picks])
+
+    def prizes(self):
+        return sum([p.prize for p in self.picks])
+    
+    def moneyTo(self):
+        return self.money_from + self.prizes()
 
 
 async def pick(session: async_scoped_session, user: UserData) -> list[Award]:
@@ -82,17 +87,29 @@ async def canPickCount(session: async_scoped_session, user: UserData):
     return user.pick_count_remain
 
 
-async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int = 1) -> PicksResult:
+async def handlePick(
+    session: async_scoped_session, uid: int, maxPickCount: int = 1
+) -> PicksResult:
     user = await getOrCreateUser(session, uid)
-
     count = await canPickCount(session, user)
+
+    udid = int(user.data_id)  # type: ignore
 
     if maxPickCount > 0:
         count = min(maxPickCount, count)
     else:
         count = count
 
-    pickResult = PicksResult([], uid, user.data_id, user.pick_count_remain - count, user.pick_max_cache, user.pick_time_delta, user.pick_count_last_calculated) # type: ignore
+    pickResult = PicksResult(
+        [],
+        uid,
+        udid,
+        user.pick_count_remain - count,
+        user.pick_max_cache,
+        user.pick_time_delta,
+        user.pick_count_last_calculated,
+        user.money,
+    )
 
     awards = list(itertools.chain(*[await pick(session, user) for _ in range(count)]))
     awardsDelta: dict[Award, int] = {}
@@ -106,8 +123,36 @@ async def handlePick(session: async_scoped_session, uid: int, maxPickCount: int 
     user.pick_count_remain -= count
 
     for award in awardsDelta:
-        oldValue = await addAward(session, user, award, awardsDelta[award]) - awardsDelta[award]
+        aid = int(award.data_id)  # type: ignore
+        oldValue = await addAward(session, user, award, awardsDelta[award])
+        user.money += award.level.price * awardsDelta[award]
 
-        pickResult.picks.append(Pick(award.data_id, oldValue, oldValue + awardsDelta[award], pickResult)) # type: ignore
+        pickResult.picks.append(
+            Pick(
+                aid,
+                oldValue,
+                awardsDelta[award],
+                pickResult,
+                award.level.price * awardsDelta[award],
+            )
+        )
 
     return pickResult
+
+
+async def buy(session: async_scoped_session, user: UserData, code: str, price: float):
+    user.money -= price
+
+    if code == "加上限":
+        user.pick_max_cache += 1
+        return
+
+    if len(code) > 2 and code[:2] == "皮肤":
+        skinName = code[2:]
+        skin = (
+            await session.execute(select(AwardSkin).where(AwardSkin.name == skinName))
+        ).scalar_one()
+        assert skin is not None
+
+        await obtainSkin(session, user, skin)
+        return

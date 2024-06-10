@@ -2,7 +2,7 @@ from nonebot_plugin_orm import async_scoped_session
 from sqlalchemy import select, update
 
 from .crud import getAllLevels, getGlobal
-from .Basics import Award, AwardCountStorage, AwardSkin, Global, Level, SkinOwnRecord, SkinRecord, UserData
+from .Basics import Award, AwardCountStorage, AwardSkin, AwardUsedStats, Global, Level, SkinOwnRecord, SkinRecord, UserData
 
 
 async def setEveryoneInterval(session: async_scoped_session, interval: float):
@@ -11,7 +11,7 @@ async def setEveryoneInterval(session: async_scoped_session, interval: float):
     glob.catch_interval = interval
 
 
-async def addAward(session: async_scoped_session, user: UserData, award: Award, delta: int):
+async def addAward(session: async_scoped_session, user: UserData, award: Award, delta: int) -> int | None:
     aws = (await session.execute(select(AwardCountStorage).filter(
         AwardCountStorage.target_award == award
     ).filter(
@@ -22,13 +22,13 @@ async def addAward(session: async_scoped_session, user: UserData, award: Award, 
         aws = AwardCountStorage(
             target_user=user,
             target_award=award,
-            award_count=0,
+            award_count=delta,
         )
         session.add(aws)
+        return None
 
     aws.award_count += delta
-
-    return aws.award_count
+    return aws.award_count - delta
 
 
 async def getPosibilities(session: async_scoped_session, level: Level):
@@ -111,3 +111,43 @@ async def hangupSkin(session: async_scoped_session, user: UserData, skin: AwardS
         await session.delete(usingRecord)
     
     return True
+
+
+async def reduceAward(session: async_scoped_session, user: UserData, award: Award, count: int) -> bool:
+    record = (await session.execute(select(AwardCountStorage).filter(
+        AwardCountStorage.target_user == user
+    ).filter(
+        AwardCountStorage.award_count == award
+    ))).scalar_one_or_none()
+
+    if record is None:
+        return False
+    
+    if record.award_count < count:
+        return False
+    
+    record.award_count -= count
+
+    stats = (await session.execute(select(AwardUsedStats).filter(
+        AwardUsedStats.target_user == user
+    ).filter(
+        AwardUsedStats.target_award == award
+    ))).scalar_one_or_none()
+
+    if stats is None:
+        stats = AwardUsedStats(
+            target_user=user,
+            target_award=award,
+            award_count=count
+        )
+        session.add(stats)
+        
+        return True
+    
+    stats.award_count += count
+
+    return True
+
+
+async def resetCacheCount(session: async_scoped_session, count: int):
+    await session.execute(update(UserData).values(pick_max_cache=count))

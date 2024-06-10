@@ -20,3 +20,8 @@ KEYWORD_OBTAIN = "(获得|得到|给予)"
 KEYWORD_REMOVE_OBTAIN = "(除去|拿走|剥夺)"
 
 KEYWORD_UPDATE = "(更新|新内容)"
+KEYWORD_KAGAMIS = "(小镜的|xj)"
+KEYWORD_SHOP = "(商店|shop)"
+
+KEYWORD_RESET = "(重置)"
+KEYWORD_CACHE_COUNT = "(抓小哥数量|抓小哥上限)"

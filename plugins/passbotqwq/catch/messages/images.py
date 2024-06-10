@@ -259,7 +259,7 @@ async def drawCaughtBoxes(session: async_scoped_session, picks: PicksResult):
             level.name,
             level.level_color_code,
             pick.isNew(),
-            f"+{pick.delta()}",
+            f"+{pick.delta}",
         )
 
         boxes.append(image)

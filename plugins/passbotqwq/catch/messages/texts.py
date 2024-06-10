@@ -1,10 +1,20 @@
+from dataclasses import dataclass
 import math
 import time
 
-from ...putils.command import text
+from sqlalchemy import select
+
+from plugins.passbotqwq.catch.models.Basics import AwardSkin, SkinOwnRecord
+
+from ...putils.command import at, text
 from ...putils.draw import imageToBytes
 
-from ..models.crud import getAllLevels, getAwardDescriptionOfOneUser, getAwardImageOfOneUser, getUserUsingSkin
+from ..models.crud import (
+    getAllLevels,
+    getAwardDescriptionOfOneUser,
+    getAwardImageOfOneUser,
+    getUserUsingSkin,
+)
 from ..models.data import getPosibilities
 from ..models import Award, UserData
 from ..cores import PicksResult
@@ -27,8 +37,12 @@ async def displayAward(session: async_scoped_session, award: Award, user: UserDa
     return Message(
         [
             MessageSegment.text(name + f"【{award.level.name}】"),
-            MessageSegment.image(pathlib.Path(await getAwardImageOfOneUser(session, user, award))),
-            MessageSegment.text(f"\n\n{await getAwardDescriptionOfOneUser(session, user, award)}"),
+            MessageSegment.image(
+                pathlib.Path(await getAwardImageOfOneUser(session, user, award))
+            ),
+            MessageSegment.text(
+                f"\n\n{await getAwardDescriptionOfOneUser(session, user, award)}"
+            ),
         ]
     )
 
@@ -62,7 +76,10 @@ async def caughtMessage(session: async_scoped_session, picksResult: PicksResult)
 
     ms.append(
         MessageSegment.text(
-            f"\n剩余抓小哥次数：{picksResult.restCount}/{maxPick}\n下次次数恢复还需{timeStr}\n你刚刚一共抓了 {picksResult.counts()} 只小哥：\n"
+            f"\n剩余抓小哥次数：{picksResult.restCount}/{maxPick}\n"
+            f"下次次数恢复还需{timeStr}\n"
+            f"你刚刚一共抓了 {picksResult.counts()} 只小哥，得到了 {picksResult.prizes()} 薯片\n"
+            f"现在你一共有 {picksResult.moneyTo()} 薯片"
         )
     )
 
@@ -169,7 +186,7 @@ def help(isAdmin=False):
         "狂抓小哥(kz)：一次抓完所有可用次数",
         "库存(kc)：展示个人仓库中的存量",
         "抓小哥进度(zhuajd)：展示目前收集的进度",
-        "设置皮肤 小哥名字 皮肤名字：设置一个小哥的皮肤"
+        "设置皮肤 小哥名字 皮肤名字：设置一个小哥的皮肤",
     ]
 
     # admin = [
@@ -201,9 +218,82 @@ def update():
     result: list[str] = []
 
     for version in updateHistory.keys():
-        result.append(f"== 版本 {version} 更新 ==" + "".join(map(lambda x: "\n- " + x, updateHistory[version])))
-    
+        result.append(
+            f"== 版本 {version} 更新 =="
+            + "".join(map(lambda x: "\n- " + x, updateHistory[version]))
+        )
+
     return Message(text("\n\n".join(result)))
+
+
+@dataclass
+class Goods:
+    code: str
+    name: str
+    description: str
+    price: float
+    soldout: bool = False
+
+
+async def getGoodsList(session: async_scoped_session, user: UserData):
+    goods: list[Goods] = []
+
+    cacheDelta = user.pick_max_cache + 1
+    goods.append(
+        Goods(
+            "加上限",
+            f"增加卡槽至 {cacheDelta}",
+            f"将囤积可以抓的小哥的数量上限增加至 {cacheDelta}",
+            25 * (2 ** (cacheDelta - 1)),
+        )
+    )
+
+    skins = (
+        (await session.execute(select(AwardSkin).filter(AwardSkin.price >= 0)))
+        .scalars()
+        .all()
+    )
+
+    for skin in skins:
+        isOwned = (
+            await session.execute(
+                select(SkinOwnRecord)
+                .filter(SkinOwnRecord.user == user)
+                .filter(SkinOwnRecord.skin == skin)
+            )
+        ).scalar_one_or_none()
+
+        goods.append(
+            Goods(
+                "皮肤" + skin.name,
+                "购买皮肤 " + skin.name,
+                f"小哥 {skin.applied_award.name} 的皮肤 {skin.name}",
+                skin.price,
+                isOwned is not None,
+            )
+        )
+
+    return goods
+
+
+async def KagamiShop(session: async_scoped_session, sender: int, senderUser: UserData):
+    textBuilder = f"\n===== 小镜的shop =====\n现在你手上有 {senderUser.money} 薯片\n\n"
+
+    goodTexts: list[str] = []
+
+    for good in await getGoodsList(session, senderUser):
+        soldoutMessage = "[售罄] " if good.soldout else ""
+
+        goodTexts.append(
+            f"{soldoutMessage}{good.name}\n"
+            f"- {good.description}\n"
+            f"- 商品码：{good.code}\n"
+            f"- 价格：{good.price} 薯片\n"
+        )
+
+    textBuilder += "\n".join(goodTexts)
+
+    return Message([at(sender), text(textBuilder)])
 
 
 updateHistory = {
@@ -220,5 +310,8 @@ updateHistory = {
         "限制了管理员指令只能在一些群执行",
         "修复了新玩家的周期被设置为 3600 的问题",
         "重新架构了关于图片生成的代码",
+    ],
+    "0.4.0": [
+        "添加了商店系统",
     ]
 }

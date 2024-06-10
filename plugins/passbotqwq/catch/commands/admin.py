@@ -15,11 +15,11 @@ from ...putils.command import (
     WaitForMoreInformationException,
 )
 from ...putils.download import download, writeData
-from ...putils.text_format_check import not_negative
+from ...putils.text_format_check import isFloat, not_negative
 
 from ..models import *
 from ..models.crud import getOrCreateUser
-from ..models.data import addAward, deleteSkinOwnership, obtainSkin, setEveryoneInterval
+from ..models.data import addAward, deleteSkinOwnership, obtainSkin, resetCacheCount, setEveryoneInterval
 
 from ..messages import (
     allAwards,
@@ -318,7 +318,7 @@ class CatchModify(Command):
 @dataclass
 class CatchLevelModify(Command):
     commandPattern: str = (
-        f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_LEVEL} ?(名称|名字|权重|色值|色号|颜色)"
+        f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_LEVEL} ?(名称|名字|权重|色值|色号|颜色|奖励|金钱|获得)"
     )
     argsPattern: str = " ?(\\S+) (.+)$"
 
@@ -347,6 +347,15 @@ class CatchLevelModify(Command):
                 return Message([at(env.sender), text("MSG_WEIGHT_INVALID")])
 
             level.weight = float(data)
+        elif (
+            modifyElement == "金钱"
+            or modifyElement == "获得"
+            or modifyElement == "奖励"
+        ):
+            if not not_negative()(data):
+                return Message([at(env.sender), text("MSG_MONEY_INVALID")])
+
+            level.price = int(data)
         else:
             if not isValidColorCode(data):
                 return Message([at(env.sender), text("MSG_COLOR_CODE_INVALID")])
@@ -445,9 +454,7 @@ class CatchAddSkin(Command):
 
         skin = (
             await env.session.execute(
-                select(AwardSkin)
-                .filter(AwardSkin.name == result.group(4))
-                .filter(AwardSkin.applied_award == award)
+                select(AwardSkin).filter(AwardSkin.name == result.group(4))
             )
         ).scalar_one_or_none()
 
@@ -486,6 +493,17 @@ class CatchModifySkinCallback(CallbackBase):
             await env.session.commit()
             return modifyOk()
 
+        if self.param == "价钱" or self.param == "价格":
+            if not isFloat()(env.text):
+                raise WaitForMoreInformationException(
+                    self,
+                    Message([at(env.sender), text("MSG_INPUT_PRICE_WRONG_FORMAT")]),
+                )
+
+            skin.price = float(env.text)
+            await env.session.commit()
+            return modifyOk()
+
         if len(images := env.message.include("image")) != 1:
             raise WaitForMoreInformationException(
                 self, Message([at(env.sender), text("MSG_IMAGE_WRONG_FORMAT")])
@@ -504,7 +522,7 @@ class CatchModifySkinCallback(CallbackBase):
 @dataclass
 class CatchModifySkin(Command):
     commandPattern: str = (
-        f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_SKIN} ?(名字|名称|描述|图像|图片)"
+        f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_SKIN} ?(名字|名称|描述|图像|图片|价钱|价格)"
     )
     argsPattern: str = " (\\S+) (\\S+)$"
 
@@ -665,3 +683,28 @@ class CatchAdminDeleteSkinOwnership(Command):
         await env.session.commit()
 
         return modifyOk()
+
+
+@requireAdmin
+@dataclass
+class CatchResetEveryoneCacheCount(Command):
+    commandPattern: str = f":: ?{KEYWORD_RESET} ?{KEYWORD_CACHE_COUNT}"
+    argsPattern: str = "( (\\d+))?$"
+
+    def errorMessage(self, env: CheckEnvironment) -> Message | None:
+        return Message([at(env.sender), text("MSG_RESET_CACHE_WRONG_FORMAT")])
+
+    async def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
+        if result.group(4) is None:
+            await resetCacheCount(env.session, 1)
+            await env.session.commit()
+            return Message([at(env.sender), text("MSG_RESET_CACHE_OK")])
+
+        count = int(result.group(4))
+        if count < 1:
+            return self.errorMessage(env)
+
+        await env.session.commit()
+        await resetCacheCount(env.session, count)

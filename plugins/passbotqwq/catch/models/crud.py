@@ -1,5 +1,4 @@
-from typing import TypeVar, Sequence
-from sqlalchemy import Row, select
+from sqlalchemy import select
 from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
 
 from .Basics import AwardSkin, Global, Level, Award, AwardCountStorage, SkinRecord, UserData

@@ -24,6 +24,7 @@ class Level(Model, BaseMixin):
     level_color_code: Mapped[str] = mapped_column(default="#9e9d95")
 
     awards: Mapped[set["Award"]] = relationship(back_populates="level", lazy="subquery")
+    price: Mapped[float] = mapped_column(default=0)
 
 
 class Award(Model, BaseMixin):
@@ -37,6 +38,7 @@ class Award(Model, BaseMixin):
     level: Mapped[Level] = relationship(back_populates="awards", lazy="subquery")
 
     binded_counters: Mapped[list["AwardCountStorage"]] = relationship(back_populates="target_award", lazy="subquery")
+    binded_stats: Mapped[list["AwardUsedStats"]] = relationship(back_populates="target_award", lazy="subquery")
     binded_skins: Mapped[list["AwardSkin"]] = relationship(back_populates='applied_award', lazy='subquery')
 
 
@@ -52,18 +54,31 @@ class AwardCountStorage(Model, BaseMixin):
     award_count: Mapped[int] = mapped_column(default=0)
 
 
+class AwardUsedStats(Model, BaseMixin):
+    __tablename__ = 'catch_award_stats'
+
+    target_user_id = Column(Integer, ForeignKey('catch_user_data.data_id'))
+    target_award_id = Column(Integer, ForeignKey('catch_award.data_id'))
+
+    target_user: Mapped["UserData"] = relationship(back_populates="award_stats", lazy="subquery")
+    target_award: Mapped[Award] = relationship(back_populates="binded_stats", lazy="subquery")
+    
+    award_count: Mapped[int] = mapped_column(default=0)
+
+
 class UserData(Model, BaseMixin):
     __tablename__ = 'catch_user_data'
 
     qq_id: Mapped[int] = mapped_column(unique=True)
 
     award_counters: Mapped[list[AwardCountStorage]] = relationship(back_populates='target_user', lazy="subquery")
+    award_stats: Mapped[list[AwardUsedStats]] = relationship(back_populates='target_user', lazy="subquery")
     money: Mapped[float] = mapped_column(default=0.0)
 
     pick_count_remain: Mapped[int] = mapped_column(default=0)
     pick_count_last_calculated: Mapped[float] = mapped_column(default=0)
-    pick_time_delta: Mapped[float] = mapped_column(default=3600)
-    pick_max_cache: Mapped[int] = mapped_column(default=6)
+    pick_time_delta: Mapped[float] = mapped_column(default=7200)
+    pick_max_cache: Mapped[int] = mapped_column(default=1)
 
     used_skins: Mapped[list['SkinRecord']] = relationship(back_populates='user', lazy='subquery')
     owned_skins: Mapped[list['SkinOwnRecord']] = relationship(back_populates='user', lazy='subquery')
@@ -95,6 +110,7 @@ class AwardSkin(Model, BaseMixin):
     name: Mapped[str] = mapped_column(default='')
     extra_description: Mapped[str] = mapped_column(default='')
     image: Mapped[str] = mapped_column(default=DEFAULT_IMG)
+    price: Mapped[float] = mapped_column(default=-1.0)
 
     applied_award_id = Column(Integer, ForeignKey('catch_award.data_id'))
     applied_award: Mapped[Award] = relationship(back_populates='binded_skins', lazy='subquery')
