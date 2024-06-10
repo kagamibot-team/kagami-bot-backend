@@ -1,5 +1,6 @@
 import base64
 import os
+import time
 from typing_extensions import deprecated
 import PIL
 import PIL.ImageDraw
@@ -118,7 +119,7 @@ async def drawStorage(session: async_scoped_session, user: UserData):
             .join(Award, AwardCountStorage.target_award)
             .join(Level, Award.level)
             .order_by(
-                -Level.weight,
+                Level.weight,
                 -AwardCountStorage.award_count,
                 Award.data_id,
             )
@@ -153,7 +154,7 @@ async def drawStatus(session: async_scoped_session, user: UserData | None):
     levels = (
         (
             await session.execute(
-                select(Level).filter(Level.awards.any()).order_by(-Level.weight)
+                select(Level).filter(Level.awards.any()).order_by(Level.weight)
             )
         )
         .scalars()
@@ -278,12 +279,21 @@ async def preDrawEverything():
 
     session = get_session()
     awards = (await session.execute(select(Award))).scalars()
+    begin = time.time()
 
     for award in awards:
         bg = award.level.level_color_code
-        await drawAwardBoxImage(award.img_path, bg)
+        await display_box(bg, award.img_path)
+        logger.info(f"预渲染完成了 {award.name}")
 
-    logger.info("已经完成了预先绘制图像文件")
+    skins = (await session.execute(select(AwardSkin))).scalars()
+
+    for skin in skins:
+        bg = skin.applied_award.level.level_color_code
+        await display_box(bg, skin.image)
+        logger.info(f"预渲染完成了 {skin.name}")
+
+    logger.info(f"已经完成了预先绘制图像文件，耗时 {time.time() - begin}")
 
 
 def getImageTarget(award: Award):

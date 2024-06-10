@@ -40,7 +40,7 @@ class PicksResult:
 
     def prizes(self):
         return sum([p.prize for p in self.picks])
-    
+
     def moneyTo(self):
         return self.money_from + self.prizes()
 
@@ -125,17 +125,14 @@ async def handlePick(
     for award in awardsDelta:
         aid = int(award.data_id)  # type: ignore
         oldValue = await addAward(session, user, award, awardsDelta[award])
-        user.money += award.level.price * awardsDelta[award]
+        dt = award.level.price * awardsDelta[award]
 
-        pickResult.picks.append(
-            Pick(
-                aid,
-                oldValue,
-                awardsDelta[award],
-                pickResult,
-                award.level.price * awardsDelta[award],
-            )
-        )
+        if oldValue is None:
+            dt += 20
+
+        user.money += dt
+
+        pickResult.picks.append(Pick(aid, oldValue, awardsDelta[award], pickResult, dt))
 
     return pickResult
 
