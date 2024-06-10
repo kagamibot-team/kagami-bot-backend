@@ -276,7 +276,7 @@ async def drawLimitedBoxOfTextWithScalar(
     expandInnerRight: int = 0,
     strokeWidth: int = 0,
     strokeColor: str = "#000000",
-    scalar: int = 3,
+    scalar: int = 2,
 ):
     res = await drawLimitedBoxOfText(
         text,

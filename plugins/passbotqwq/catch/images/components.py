@@ -18,7 +18,7 @@ from .tools import hex_to_rgb, rgb_to_hex, mix_color
 
 @make_async
 def roundedRectangleMask(
-    width: int, height: int, radius: int, scalar: int = 3
+    width: int, height: int, radius: int, scalar: int = 2
 ) -> PIL.Image.Image:
     mask = PIL.Image.new("L", (width * scalar, height * scalar), 0)
     draw = PIL.ImageDraw.Draw(mask)
@@ -29,7 +29,7 @@ def roundedRectangleMask(
 
 
 async def drawRoundedRectangleWithScalar(
-    width: int, height: int, radius: int, color: str, scalar: int = 3
+    width: int, height: int, radius: int, color: str, scalar: int = 2
 ):
     empty = PIL.Image.new("RGBA", (width, height), (255, 255, 255, 0))
     colored = PIL.Image.new("RGBA", (width, height), color)
@@ -161,11 +161,10 @@ async def refBookBox(title: str, notation: str, color: str, imgUrl: str):
         180,
         "center",
         "center",
-        18,
+        24,
         "#FFFFFF",
         Fonts.FONT_HARMONYOS_SANS_BLACK,
-        32,
-        expandTop=5
+        20
     )
 
     bottomNotation = await drawLimitedBoxOfTextWithScalar(
@@ -186,7 +185,7 @@ async def refBookBox(title: str, notation: str, color: str, imgUrl: str):
 
     block = PIL.Image.new("RGB", (216, 210), "#9B9690")
     block.paste(box, (18, 18), box)
-    block.paste(bottomTitle, (18, 162), bottomTitle)
+    block.paste(bottomTitle, (18, 170), bottomTitle)
     block.paste(bottomNotation, (23, 105), bottomNotation)
     
     return block
