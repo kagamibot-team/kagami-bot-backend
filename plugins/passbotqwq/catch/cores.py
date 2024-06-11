@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from .models.data import addAward, obtainSkin
 from .models.crud import getAllAvailableLevels, getGlobal, getOrCreateUser
-from .models.Basics import Award, AwardCountStorage, AwardSkin, UserData
+from .models.Basics import Award, StorageStats, Skin, User
 
 from nonebot_plugin_orm import async_scoped_session
 
@@ -45,7 +45,7 @@ class PicksResult:
         return self.money_from + self.prizes()
 
 
-async def pick(session: async_scoped_session, user: UserData) -> list[Award]:
+async def pick(session: async_scoped_session, user: User) -> list[Award]:
     allAvailableLevels = await getAllAvailableLevels(session)
     level = random.choices(allAvailableLevels, [l.weight for l in allAvailableLevels])[
         0
@@ -54,7 +54,7 @@ async def pick(session: async_scoped_session, user: UserData) -> list[Award]:
     return [random.choice([a for a in awardsResult.scalars()])]
 
 
-async def recalcPickTime(session: async_scoped_session, user: UserData):
+async def recalcPickTime(session: async_scoped_session, user: User):
     glob = await getGlobal(session)
 
     maxPick = user.pick_max_cache
@@ -82,7 +82,7 @@ async def recalcPickTime(session: async_scoped_session, user: UserData):
     return nowTime - user.pick_count_last_calculated
 
 
-async def canPickCount(session: async_scoped_session, user: UserData):
+async def canPickCount(session: async_scoped_session, user: User):
     dt = await recalcPickTime(session, user)
     if dt < 0:
         dt = -1
@@ -140,7 +140,7 @@ async def handlePick(
     return pickResult
 
 
-async def buy(session: async_scoped_session, user: UserData, code: str, price: float):
+async def buy(session: async_scoped_session, user: User, code: str, price: float):
     user.money -= price
 
     if code == "加上限":
@@ -150,7 +150,7 @@ async def buy(session: async_scoped_session, user: UserData, code: str, price: f
     if len(code) > 2 and code[:2] == "皮肤":
         skinName = code[2:]
         skin = (
-            await session.execute(select(AwardSkin).where(AwardSkin.name == skinName))
+            await session.execute(select(Skin).where(Skin.name == skinName))
         ).scalar_one()
         assert skin is not None
 

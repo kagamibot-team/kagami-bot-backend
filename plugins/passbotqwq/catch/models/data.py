@@ -5,45 +5,45 @@ from sqlalchemy import select, update
 from .crud import getAllLevels, getGlobal
 from .Basics import (
     Award,
-    AwardCountStorage,
-    AwardSkin,
-    AwardUsedStats,
+    StorageStats,
+    Skin,
+    UsedStats,
     Level,
-    SkinOwnRecord,
-    SkinRecord,
-    UserData,
+    OwnedSkin,
+    UsedSkin,
+    User,
 )
 
 
 async def setEveryoneInterval(session: async_scoped_session, interval: float):
-    await session.execute(update(UserData).values(pick_time_delta=interval))
+    await session.execute(update(User).values(pick_time_delta=interval))
     glob = await getGlobal(session)
     glob.catch_interval = interval
 
 
 async def addAward(
-    session: async_scoped_session, user: UserData, award: Award, delta: int
+    session: async_scoped_session, user: User, award: Award, delta: int
 ) -> int | None:
     aws = (
         await session.execute(
-            select(AwardCountStorage)
-            .filter(AwardCountStorage.target_award == award)
-            .filter(AwardCountStorage.target_user == user)
+            select(StorageStats)
+            .filter(StorageStats.award == award)
+            .filter(StorageStats.user == user)
         )
     ).scalar_one_or_none()
 
     if aws is None:
-        aws = AwardCountStorage(
-            target_user=user,
-            target_award=award,
-            award_count=delta,
+        aws = StorageStats(
+            user=user,
+            award=award,
+            count=delta,
         )
         session.add(aws)
         await session.flush()
         return None
 
-    aws.award_count += delta
-    return aws.award_count - delta
+    aws.count += delta
+    return aws.count - delta
 
 
 async def getPosibilities(session: async_scoped_session, level: Level):
@@ -53,19 +53,19 @@ async def getPosibilities(session: async_scoped_session, level: Level):
     return level.weight / weightSum
 
 
-async def obtainSkin(session: async_scoped_session, user: UserData, skin: AwardSkin):
+async def obtainSkin(session: async_scoped_session, user: User, skin: Skin):
     record = (
         await session.execute(
-            select(SkinOwnRecord)
-            .filter(SkinOwnRecord.user == user)
-            .filter(SkinOwnRecord.skin == skin)
+            select(OwnedSkin)
+            .filter(OwnedSkin.user == user)
+            .filter(OwnedSkin.skin == skin)
         )
     ).scalar_one_or_none()
 
     if record is not None:
         return False
 
-    record = SkinOwnRecord(
+    record = OwnedSkin(
         user=user,
         skin=skin,
     )
@@ -75,14 +75,12 @@ async def obtainSkin(session: async_scoped_session, user: UserData, skin: AwardS
     return True
 
 
-async def deleteSkinOwnership(
-    session: async_scoped_session, user: UserData, skin: AwardSkin
-):
+async def deleteSkinOwnership(session: async_scoped_session, user: User, skin: Skin):
     record = (
         await session.execute(
-            select(SkinOwnRecord)
-            .filter(SkinOwnRecord.user == user)
-            .filter(SkinOwnRecord.skin == skin)
+            select(OwnedSkin)
+            .filter(OwnedSkin.user == user)
+            .filter(OwnedSkin.skin == skin)
         )
     ).scalar_one_or_none()
 
@@ -93,9 +91,7 @@ async def deleteSkinOwnership(
 
     usingRecord = (
         await session.execute(
-            select(SkinRecord)
-            .filter(SkinRecord.user == user)
-            .filter(SkinRecord.skin == skin)
+            select(UsedSkin).filter(UsedSkin.user == user).filter(UsedSkin.skin == skin)
         )
     ).scalar_one_or_none()
 
@@ -105,19 +101,17 @@ async def deleteSkinOwnership(
     return True
 
 
-async def hangupSkin(
-    session: async_scoped_session, user: UserData, skin: AwardSkin | None
-):
+async def hangupSkin(session: async_scoped_session, user: User, skin: Skin | None):
     usingRecord = (
-        await session.execute(select(SkinRecord).filter(SkinRecord.user == user))
+        await session.execute(select(UsedSkin).filter(UsedSkin.user == user))
     ).scalar_one_or_none()
 
     if skin is not None:
         record = (
             await session.execute(
-                select(SkinOwnRecord)
-                .filter(SkinOwnRecord.user == user)
-                .filter(SkinOwnRecord.skin == skin)
+                select(OwnedSkin)
+                .filter(OwnedSkin.user == user)
+                .filter(OwnedSkin.skin == skin)
             )
         ).scalar_one_or_none()
 
@@ -127,7 +121,7 @@ async def hangupSkin(
         if usingRecord is not None:
             await session.delete(usingRecord)
 
-        usingRecord = SkinRecord(
+        usingRecord = UsedSkin(
             user=user,
             skin=skin,
         )
@@ -143,14 +137,19 @@ async def hangupSkin(
 
 
 async def switchSkin(
-    session: async_scoped_session, user: UserData, skins: list[AwardSkin]
-) -> AwardSkin | None:
+    session: async_scoped_session, user: User, skins: list[Skin], award: Award
+) -> Skin | None:
     usingRecord = (
-        await session.execute(select(SkinRecord).filter(SkinRecord.user == user))
+        await session.execute(
+            select(UsedSkin)
+            .filter(UsedSkin.user == user)
+            .join(Skin, UsedSkin.skin)
+            .filter(Skin.award == award)
+        )
     ).scalar_one_or_none()
 
     if usingRecord is None:
-        usingRecord = SkinRecord(
+        usingRecord = UsedSkin(
             user=user,
             skin=skins[0],
         )
@@ -158,61 +157,62 @@ async def switchSkin(
         await session.flush()
         return skins[0]
 
-
     if usingRecord.skin not in skins:
         usingRecord.skin = skins[0]
 
-        print(f"[WARNING] 用户 {user.data_id} 切换了皮肤，但是没有找到对应的皮肤，已切换为第一个皮肤")
+        print(
+            f"[WARNING] 用户 {user.data_id} 切换了皮肤，但是没有找到对应的皮肤，已切换为第一个皮肤"
+        )
         return skins[0]
-    
+
     index = skins.index(usingRecord.skin)
-    
+
     if index == len(skins) - 1:
         await session.delete(usingRecord)
         return None
-    
+
     usingRecord.skin = skins[index + 1]
     return skins[index + 1]
 
 
 async def reduceAward(
-    session: async_scoped_session, user: UserData, award: Award, count: int
+    session: async_scoped_session, user: User, award: Award, count: int
 ) -> bool:
     record = (
         await session.execute(
-            select(AwardCountStorage)
-            .filter(AwardCountStorage.target_user == user)
-            .filter(AwardCountStorage.award_count == award)
+            select(StorageStats)
+            .filter(StorageStats.user == user)
+            .filter(StorageStats.count == award)
         )
     ).scalar_one_or_none()
 
     if record is None:
         return False
 
-    if record.award_count < count:
+    if record.count < count:
         return False
 
-    record.award_count -= count
+    record.count -= count
 
     stats = (
         await session.execute(
-            select(AwardUsedStats)
-            .filter(AwardUsedStats.target_user == user)
-            .filter(AwardUsedStats.target_award == award)
+            select(UsedStats)
+            .filter(UsedStats.user == user)
+            .filter(UsedStats.award == award)
         )
     ).scalar_one_or_none()
 
     if stats is None:
-        stats = AwardUsedStats(target_user=user, target_award=award, award_count=count)
+        stats = UsedStats(user=user, award=award, count=count)
         session.add(stats)
         await session.flush()
 
         return True
 
-    stats.award_count += count
+    stats.count += count
 
     return True
 
 
 async def resetCacheCount(session: async_scoped_session, count: int):
-    await session.execute(update(UserData).values(pick_max_cache=count))
+    await session.execute(update(User).values(pick_max_cache=count))

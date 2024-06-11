@@ -1,14 +1,14 @@
 from sqlalchemy import select
 from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
 
-from .Basics import AwardSkin, Global, Level, Award, AwardCountStorage, SkinRecord, UserData
+from .Basics import Skin, Global, Level, Award, StorageStats, UsedSkin, User
 
 
-def selectAllLevelUserObtained(user: UserData):
+def selectAllLevelUserObtained(user: User):
     return select(Level).filter(
         Level.awards.any(
-            Award.binded_counters.any(
-                AwardCountStorage.target_user == user
+            Award.storage_stats.any(
+                StorageStats.user == user
             )
         )
     )
@@ -33,7 +33,7 @@ async def getAllAvailableLevels(session: async_scoped_session):
 
 
 async def createAUser(session: async_scoped_session, uid: int):
-    ud = UserData(qq_id=uid)
+    ud = User(qq_id=uid)
     session.add(ud)
     await session.flush()
 
@@ -41,8 +41,8 @@ async def createAUser(session: async_scoped_session, uid: int):
 
 
 async def getOrCreateUser(session: async_scoped_session, uid: int):
-    userResult = await session.execute(select(UserData).filter(
-        UserData.qq_id == uid
+    userResult = await session.execute(select(User).filter(
+        User.qq_id == uid
     ))
 
     user = userResult.scalar_one_or_none()
@@ -53,25 +53,25 @@ async def getOrCreateUser(session: async_scoped_session, uid: int):
     return user
 
 
-def isUserHaveAward(user: UserData, award: Award):
-    for ac in user.award_counters:
-        if ac.target_award == award:
+def isUserHaveAward(user: User, award: Award):
+    for ac in user.storage_stats:
+        if ac.award == award:
             return True
 
     return False
 
 
-async def getAwardImageOfOneUser(session: async_scoped_session | AsyncSession, user: UserData, award: Award) -> str:
+async def getAwardImageOfOneUser(session: async_scoped_session | AsyncSession, user: User, award: Award) -> str:
     if session is None:
         session = get_session()
 
     record = (await session.execute(select(
-        SkinRecord
+        UsedSkin
     ).filter(
-        SkinRecord.user == user
+        UsedSkin.user == user
     ).filter(
-        SkinRecord.skin.has(
-            AwardSkin.applied_award == award
+        UsedSkin.skin.has(
+            Skin.award == award
         )
     ))).scalar_one_or_none()
 
@@ -81,17 +81,17 @@ async def getAwardImageOfOneUser(session: async_scoped_session | AsyncSession, u
     return record.skin.image
 
 
-async def getAwardDescriptionOfOneUser(session: async_scoped_session | AsyncSession, user: UserData, award: Award) -> str:
+async def getAwardDescriptionOfOneUser(session: async_scoped_session | AsyncSession, user: User, award: Award) -> str:
     if session is None:
         session = get_session()
 
     record = (await session.execute(select(
-        SkinRecord
+        UsedSkin
     ).filter(
-        SkinRecord.user == user
+        UsedSkin.user == user
     ).filter(
-        SkinRecord.skin.has(
-            AwardSkin.applied_award == award
+        UsedSkin.skin.has(
+            Skin.award == award
         )
     ))).scalar_one_or_none()
 
@@ -101,17 +101,17 @@ async def getAwardDescriptionOfOneUser(session: async_scoped_session | AsyncSess
     return record.skin.extra_description
 
 
-async def getUserUsingSkin(session: async_scoped_session | AsyncSession | None, user: UserData, award: Award):
+async def getUserUsingSkin(session: async_scoped_session | AsyncSession | None, user: User, award: Award):
     if session is None:
         session = get_session()
 
     return (await session.execute(select(
-        SkinRecord
+        UsedSkin
     ).filter(
-        SkinRecord.user == user
+        UsedSkin.user == user
     ).filter(
-        SkinRecord.skin.has(
-            AwardSkin.applied_award == award
+        UsedSkin.skin.has(
+            Skin.award == award
         )
     ))).scalar_one_or_none()
 

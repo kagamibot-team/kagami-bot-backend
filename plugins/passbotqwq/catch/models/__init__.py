@@ -1,2 +1,2 @@
 from .BaseMixin import BaseMixin
-from .Basics import Award, AwardCountStorage, Level, UserData, SkinRecord, AwardSkin
+from .Basics import Award, StorageStats, Level, User, UsedSkin, Skin

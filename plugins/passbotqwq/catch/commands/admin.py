@@ -157,8 +157,8 @@ class Clear(Command):
     ) -> Message | None:
         if result.group(2) == None:
             await env.session.execute(
-                delete(AwardCountStorage).where(
-                    AwardCountStorage.target_user == await getSender(env)
+                delete(StorageStats).where(
+                    StorageStats.user == await getSender(env)
                 )
             )
 
@@ -168,7 +168,7 @@ class Clear(Command):
 
         user = (
             await env.session.execute(
-                select(UserData).filter(UserData.qq_id == int(result.group(2)))
+                select(User).filter(User.qq_id == int(result.group(2)))
             )
         ).scalar_one_or_none()
 
@@ -177,7 +177,7 @@ class Clear(Command):
 
         if result.group(4) == None:
             await env.session.execute(
-                delete(AwardCountStorage).where(AwardCountStorage.target_user == user)
+                delete(StorageStats).where(StorageStats.user == user)
             )
 
             await env.session.commit()
@@ -190,9 +190,9 @@ class Clear(Command):
             )
 
         await env.session.execute(
-            delete(AwardCountStorage)
-            .where(AwardCountStorage.target_user == user)
-            .where(AwardCountStorage.target_award.has(Award.name == result.group(4)))
+            delete(StorageStats)
+            .where(StorageStats.user == user)
+            .where(StorageStats.award.has(Award.name == result.group(4)))
         )
 
         await env.session.commit()
@@ -368,7 +368,7 @@ class CatchLevelModify(Command):
             if not isValidColorCode(data):
                 return Message([at(env.sender), text("MSG_COLOR_CODE_INVALID")])
 
-            level.level_color_code = data
+            level.color_code = data
 
         await env.session.commit()
 
@@ -462,14 +462,14 @@ class CatchAddSkin(Command):
 
         skin = (
             await env.session.execute(
-                select(AwardSkin).filter(AwardSkin.name == result.group(4))
+                select(Skin).filter(Skin.name == result.group(4))
             )
         ).scalar_one_or_none()
 
         if skin is not None:
             return Message([at(env.sender), text("MSG_SKIN_ALREADY_EXISTS")])
 
-        skin = AwardSkin(name=result.group(4), applied_award=award)
+        skin = Skin(name=result.group(4), award=award)
 
         env.session.add(skin)
         await env.session.commit()
@@ -483,7 +483,7 @@ class CatchModifySkinCallback(CallbackBase):
     param: str
 
     async def callback(self, env: CheckEnvironment) -> Message | None:
-        skin = await env.session.get(AwardSkin, self.skin_id)
+        skin = await env.session.get(Skin, self.skin_id)
         assert skin is not None
 
         if self.param == "名字" or self.param == "名称":
@@ -551,9 +551,9 @@ class CatchModifySkin(Command):
 
         skin = (
             await env.session.execute(
-                select(AwardSkin)
-                .filter(AwardSkin.name == result.group(5))
-                .filter(AwardSkin.applied_award == award)
+                select(Skin)
+                .filter(Skin.name == result.group(5))
+                .filter(Skin.award == award)
             )
         ).scalar_one_or_none()
 
@@ -593,9 +593,9 @@ class CatchAdminDisplay(Command):
         if result.group(3) is not None:
             skin = (
                 await env.session.execute(
-                    select(AwardSkin)
-                    .filter(AwardSkin.name == result.group(3)[1:])
-                    .filter(AwardSkin.applied_award == award)
+                    select(Skin)
+                    .filter(Skin.name == result.group(3)[1:])
+                    .filter(Skin.award == award)
                 )
             ).scalar_one_or_none()
 
@@ -640,9 +640,9 @@ class CatchAdminObtainSkin(Command):
 
         skin = (
             await env.session.execute(
-                select(AwardSkin)
-                .filter(AwardSkin.name == result.group(4))
-                .filter(AwardSkin.applied_award == award)
+                select(Skin)
+                .filter(Skin.name == result.group(4))
+                .filter(Skin.award == award)
             )
         ).scalar_one_or_none()
 
@@ -678,9 +678,9 @@ class CatchAdminDeleteSkinOwnership(Command):
 
         skin = (
             await env.session.execute(
-                select(AwardSkin)
-                .filter(AwardSkin.name == result.group(4))
-                .filter(AwardSkin.applied_award == award)
+                select(Skin)
+                .filter(Skin.name == result.group(4))
+                .filter(Skin.award == award)
             )
         ).scalar_one_or_none()
 

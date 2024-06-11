@@ -5,7 +5,7 @@ from typing import Coroutine
 from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
-from plugins.passbotqwq.catch.models.Basics import SkinOwnRecord
+from plugins.passbotqwq.catch.models.Basics import OwnedSkin
 
 from ...putils.command import CheckEnvironment, at, decorateWithLoadingMessage, text, image, Command, 科目三
 
@@ -137,13 +137,13 @@ class CatchDisplay(Command):
 
         ac = (
             await env.session.execute(
-                select(AwardCountStorage)
-                .filter(AwardCountStorage.target_award == award)
-                .filter(AwardCountStorage.target_user == await getSender(env))
+                select(StorageStats)
+                .filter(StorageStats.award == award)
+                .filter(StorageStats.user == await getSender(env))
             )
         ).scalar_one_or_none()
 
-        if ac is None or ac.award_count <= 0:
+        if ac is None or ac.count <= 0:
             return Message([at(env.sender), text(f" 你没有名字叫 {name} 的小哥")])
 
         return await displayAward(env.session, award, await getSender(env))
@@ -170,16 +170,16 @@ class CatchHangUpSkin(Command):
             return self.notExists(env, result.group(3))
 
         skins = list((await env.session.execute(
-            select(SkinOwnRecord)
-            .join(AwardSkin, SkinOwnRecord.skin)
-            .filter(AwardSkin.applied_award == award)
-            .filter(SkinOwnRecord.user == await getSender(env))
+            select(OwnedSkin)
+            .join(Skin, OwnedSkin.skin)
+            .filter(Skin.award == award)
+            .filter(OwnedSkin.user == await getSender(env))
         )).scalars())
 
         if len(skins) == 0:
             return Message([at(env.sender), text(" 你没有这个小哥的皮肤")])
 
-        skin = await switchSkin(env.session, await getSender(env), [s.skin for s in skins])
+        skin = await switchSkin(env.session, await getSender(env), [s.skin for s in skins], award)
 
         if skin is not None:
             message = Message([at(env.sender), text(f" 已经将 {result.group(3)} 的皮肤切换为 {skin.name} 了")])

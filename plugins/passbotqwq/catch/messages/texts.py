@@ -4,7 +4,7 @@ import time
 
 from sqlalchemy import select
 
-from plugins.passbotqwq.catch.models.Basics import AwardSkin, SkinOwnRecord
+from plugins.passbotqwq.catch.models.Basics import Skin, OwnedSkin
 
 from ...putils.command import at, image, text
 from ...putils.draw import imageToBytes
@@ -16,7 +16,7 @@ from ..models.crud import (
     getUserUsingSkin,
 )
 from ..models.data import getPosibilities
-from ..models import Award, UserData
+from ..models import Award, User
 from ..cores import PicksResult
 from ..images import display_box
 
@@ -28,7 +28,7 @@ from nonebot_plugin_orm import async_scoped_session
 import pathlib
 
 
-async def displayAward(session: async_scoped_session, award: Award, user: UserData):
+async def displayAward(session: async_scoped_session, award: Award, user: User):
     name = award.name
     skin = await getUserUsingSkin(session, user, award)
 
@@ -269,7 +269,7 @@ class Goods:
     soldout: bool = False
 
 
-async def getGoodsList(session: async_scoped_session, user: UserData):
+async def getGoodsList(session: async_scoped_session, user: User):
     goods: list[Goods] = []
 
     cacheDelta = user.pick_max_cache + 1
@@ -283,7 +283,7 @@ async def getGoodsList(session: async_scoped_session, user: UserData):
     )
 
     skins = (
-        (await session.execute(select(AwardSkin).filter(AwardSkin.price >= 0)))
+        (await session.execute(select(Skin).filter(Skin.price >= 0)))
         .scalars()
         .all()
     )
@@ -291,9 +291,9 @@ async def getGoodsList(session: async_scoped_session, user: UserData):
     for skin in skins:
         isOwned = (
             await session.execute(
-                select(SkinOwnRecord)
-                .filter(SkinOwnRecord.user == user)
-                .filter(SkinOwnRecord.skin == skin)
+                select(OwnedSkin)
+                .filter(OwnedSkin.user == user)
+                .filter(OwnedSkin.skin == skin)
             )
         ).scalar_one_or_none()
 
@@ -301,7 +301,7 @@ async def getGoodsList(session: async_scoped_session, user: UserData):
             Goods(
                 "皮肤" + skin.name,
                 "购买皮肤 " + skin.name,
-                f"小哥 {skin.applied_award.name} 的皮肤 {skin.name}",
+                f"小哥 {skin.award.name} 的皮肤 {skin.name}",
                 skin.price,
                 isOwned is not None,
             )
@@ -310,7 +310,7 @@ async def getGoodsList(session: async_scoped_session, user: UserData):
     return goods
 
 
-async def KagamiShop(session: async_scoped_session, sender: int, senderUser: UserData):
+async def KagamiShop(session: async_scoped_session, sender: int, senderUser: User):
     textBuilder = f"\n===== 小镜的shop =====\n现在你手上有 {senderUser.money} 薯片\n输入 小镜的shop 购买 商品码 就可以买了哦\n\n"
 
     goodTexts: list[str] = []
