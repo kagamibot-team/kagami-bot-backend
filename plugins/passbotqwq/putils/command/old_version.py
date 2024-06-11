@@ -3,7 +3,7 @@ import re
 from typing import Type
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
 from plugins.passbotqwq.putils.draw.typing import PILImage
-from ..putils.draw import imageToBytes
+from ...putils.draw import imageToBytes
 from dataclasses import dataclass
 from nonebot_plugin_orm import async_scoped_session
 
@@ -31,17 +31,25 @@ async def 科目三():
 def decorateWithLoadingMessage(_text: str = " 稍候，正在查询你的小哥收集进度..."):
     def _decorator(cls: Type[Command]):
         class _Command(cls):
-            async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
-                msg = await env.bot.send_group_msg(group_id=env.group_id, message=Message([
-                    at(env.sender),
-                    text(_text),
-                    await 科目三(),
-                ]))
+            async def handleCommand(
+                self, env: CheckEnvironment, result: re.Match[str]
+            ) -> Message | None:
+                msg = await env.bot.send_group_msg(
+                    group_id=env.group_id,
+                    message=Message(
+                        [
+                            at(env.sender),
+                            text(_text),
+                            await 科目三(),
+                        ]
+                    ),
+                )
                 res = await super().handleCommand(env, result)
-                await env.bot.delete_msg(message_id=msg['message_id'])
+                await env.bot.delete_msg(message_id=msg["message_id"])
                 return res
-        
+
         return _Command
+
     return _decorator
 
 
@@ -82,8 +90,8 @@ class WaitForMoreInformationException(Exception):
 
 @dataclass
 class Command(CommandBase):
-    commandPattern: str = '^$'
-    argsPattern: str = '$'
+    commandPattern: str = "^$"
+    argsPattern: str = "$"
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return None
@@ -114,3 +122,17 @@ class Command(CommandBase):
             return self.errorMessage(env)
 
         return await self.handleCommand(env, matchRes)
+
+
+__all__ = [
+    "at",
+    "text",
+    "image",
+    "localImage",
+    "decorateWithLoadingMessage",
+    "CheckEnvironment",
+    "CommandBase",
+    "CallbackBase",
+    "WaitForMoreInformationException",
+    "Command",
+]
