@@ -3,7 +3,7 @@ from typing import Type
 from nonebot import get_driver
 from nonebot.adapters.onebot.v11 import Message
 from ...putils.command import CheckEnvironment, CommandBase
-from ..models.crud import getUser
+from ..models import *
 
 
 async def getSender(env: CheckEnvironment):
@@ -26,6 +26,7 @@ def requireAdmin(cls: Type[CommandBase]):
         async def check(self, env: CheckEnvironment) -> Message | None:
             if env.group_id not in get_driver().config.admin_groups:
                 return None
-            
+
             return await super().check(env)
+
     return _cls

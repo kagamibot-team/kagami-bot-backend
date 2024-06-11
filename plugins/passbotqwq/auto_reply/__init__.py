@@ -1,6 +1,5 @@
 import re
 from nonebot import get_driver, on_type
-from nonebot.plugin import on
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,

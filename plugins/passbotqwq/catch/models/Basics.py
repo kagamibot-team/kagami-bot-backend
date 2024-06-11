@@ -3,13 +3,17 @@ from nonebot_plugin_orm import Model
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .BaseMixin import BaseMixin
+from .BaseMixin import *
 
 
 DEFAULT_IMG = os.path.join(".", "res", "catch", "default.png")
 
 
 class Global(Model, BaseMixin):
+    """
+    全局变量表
+    """
+
     __tablename__ = "catch_global"
 
     def __init__(self, catch_interval: float = 3600):
@@ -19,6 +23,10 @@ class Global(Model, BaseMixin):
 
 
 class Level(Model, BaseMixin):
+    """
+    小哥等级表
+    """
+
     __tablename__ = "catch_level"
 
     def __init__(
@@ -227,3 +235,16 @@ class Skin(Model, BaseMixin):
     owned_skins: Mapped[list[OwnedSkin]] = relationship(
         back_populates="skin", lazy="subquery"
     )
+
+
+__all__ = [
+    "Global",
+    "Level",
+    "Award",
+    "StorageStats",
+    "UsedStats",
+    "User",
+    "UsedSkin",
+    "OwnedSkin",
+    "Skin",
+]

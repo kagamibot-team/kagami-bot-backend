@@ -3,12 +3,9 @@ import re
 from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
-from plugins.passbotqwq.catch.models.Basics import OwnedSkin
-
 from ...putils.command import CheckEnvironment, at, decorateWithLoadingMessage, text, image, Command
 
 from ..models import *
-from ..models.data import switchSkin
 
 from ..cores import buy, handlePick
 
