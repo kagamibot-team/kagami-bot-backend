@@ -47,7 +47,7 @@ class Catch(Command):
             maxCount = int(result.group(2))
         
         picksResult = await handlePick(env.session, env.sender, maxCount)
-        message = await caughtMessage(env.session, picksResult)
+        message = await caughtMessage(env.session, await getSender(env), picksResult)
 
         return message
 
@@ -63,7 +63,7 @@ class CrazyCatch(Command):
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         picksResult = await handlePick(env.session, env.sender, -1)
 
-        message = await caughtMessage(env.session, picksResult)
+        message = await caughtMessage(env.session, await getSender(env), picksResult)
 
         return message
 

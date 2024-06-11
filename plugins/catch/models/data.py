@@ -4,6 +4,7 @@
 未来需要实现，将该模块中所有对数据库的操作全部转移至 `curd` 中。
 """
 
+from typing import cast
 from nonebot import logger
 from nonebot_plugin_orm import AsyncSession, async_scoped_session
 from sqlalchemy import select, update
@@ -174,9 +175,10 @@ class Pick:
 
     def isNew(self):
         return self.fromNumber is None
-    
+
     async def dbAward(self, session: async_scoped_session):
         return await getAwardById(session, self.award)
+
 
 @dataclass
 class PicksResult:
@@ -189,6 +191,10 @@ class PicksResult:
     pick_calc_time: float
     money_from: float
 
+    # 专门为了百变小哥添加的字段
+    baibianxiaogeOccured: bool = False
+    baibianxiaogeSkin: int | None = None
+
     def counts(self):
         return sum([p.delta for p in self.picks])
 
@@ -197,7 +203,7 @@ class PicksResult:
 
     def moneyTo(self):
         return self.money_from + self.prizes()
-    
+
     async def dbUser(self, session: async_scoped_session):
         return await getUserById(session, self.udid)
 
@@ -251,7 +257,7 @@ async def handlePick(
     user = await getUser(session, uid)
     count = await canPickCount(session, user)
 
-    udid = int(user.data_id)  # type: ignore
+    udid = cast(int, user.data_id)
 
     if maxPickCount > 0:
         count = min(maxPickCount, count)
@@ -281,7 +287,7 @@ async def handlePick(
     user.pick_count_remain -= count
 
     for award in awardsDelta:
-        aid = int(award.data_id)  # type: ignore
+        aid = cast(int, award.data_id)
         oldValue = await giveAward(session, user, award, awardsDelta[award])
         dt = award.level.price * awardsDelta[award]
 
@@ -291,6 +297,43 @@ async def handlePick(
         user.money += dt
 
         pickResult.picks.append(Pick(aid, oldValue, awardsDelta[award], pickResult, dt))
+
+        # 这里是专门为了百变小哥加的代码
+        # 你要知道，我平时不喜欢把和实际数据有关的判断直接写到代码里面
+        # 而是尽可能地抽象代码的架构，确保数据和代码之间没有太大的联系
+        # 但是，百变小哥需要做特殊的判断，并根据相关的标签给予玩家一定
+        # 的皮肤奖励
+
+        if award.name == "百变小哥":
+            # allAvailableSkins = (await session.execute(select(SkinTagRelation).filter(
+            #     SkinTagRelation.tag == await getTag(session, "皮肤奖励", "百变小哥")
+            # ).join(
+            #     Skin, SkinTagRelation.skin
+            # ).join(
+            #     OwnedSkin, Skin.owned_skins
+            # ).filter(
+            #     OwnedSkin.user == user
+            # ))).scalars().all()
+
+            allAvailableSkins = (
+                (await session.execute(select(Skin).filter(Skin.award == award)))
+                .scalars()
+                .all()
+            )
+
+            allAvailableSkins = [
+                s
+                for s in allAvailableSkins
+                if len([o for o in s.owned_skins if o.user == user]) == 0
+            ]
+
+            pickResult.baibianxiaogeOccured = True
+
+            if len(allAvailableSkins) > 0:
+                pickedSkin = random.choice(allAvailableSkins)
+                pickResult.baibianxiaogeSkin = cast(int, pickedSkin.data_id)
+
+                await obtainSkin(session, user, pickedSkin)
 
     return pickResult
 
@@ -327,5 +370,5 @@ __all__ = [
     "recalcPickTime",
     "canPickCount",
     "handlePick",
-    "buy"
+    "buy",
 ]

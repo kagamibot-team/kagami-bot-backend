@@ -53,6 +53,8 @@ async def _(session: async_scoped_session, bot: Bot, event: GroupMessageEvent):
             if e.message is not None:
                 await finish(e.message)
             raise FinishedException()
+        finally:
+            await session.commit()
 
         callbacks[sender] = None
 

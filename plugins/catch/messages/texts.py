@@ -37,7 +37,7 @@ async def displayAward(session: async_scoped_session, award: Award, user: User):
     )
 
 
-async def caughtMessage(session: async_scoped_session, picksResult: PicksResult):
+async def caughtMessage(session: async_scoped_session, user: User, picksResult: PicksResult):
     ms = [MessageSegment.at(picksResult.uid)]
     maxPick = picksResult.max_pick
     delta = picksResult.time_delta
@@ -64,14 +64,25 @@ async def caughtMessage(session: async_scoped_session, picksResult: PicksResult)
             ]
         )
 
-    ms.append(
-        MessageSegment.text(
-            f"\n剩余抓小哥次数：{picksResult.restCount}/{maxPick}\n"
-            f"下次次数恢复还需{timeStr}\n"
-            f"你刚刚一共抓了 {picksResult.counts()} 只小哥，得到了 {picksResult.prizes()} 薯片\n"
-            f"现在你一共有 {picksResult.moneyTo()} 薯片"
-        )
+    tx = (
+        f"\n剩余抓小哥次数：{picksResult.restCount}/{maxPick}\n"
+        f"下次次数恢复还需{timeStr}\n"
+        f"你刚刚一共抓了 {picksResult.counts()} 只小哥，得到了 {picksResult.prizes()} 薯片\n"
+        f"现在你一共有 {picksResult.moneyTo()} 薯片\n"
     )
+
+    if picksResult.baibianxiaogeOccured:
+        skinId = picksResult.baibianxiaogeSkin
+
+        if skinId is not None:
+            skin = await getSkinById(session, skinId)
+            await setSkin(session, user, skin)
+
+            tx += f"\n在这些小哥之中，你抓到了一只 {skin.name}！\n"
+        else:
+            tx += f"\n在这些小哥之中，你抓到了一只百变小哥，但是它已经没辙了，只会在你面前装嫩了。\n"
+
+    ms.append(MessageSegment.text(tx))
 
     ## 新版界面
     image = await drawCaughtBoxes(session, picksResult)
@@ -345,5 +356,6 @@ updateHistory: dict[str, list[str]] = {
     "0.4.4": [
         "调整了抓小哥进度中等级显示的顺序",
         "修复了可以靠刷屏多次抓小哥的 BUG",
-    ]
+        "还有一点，等你抽到了百变小哥就知道了～",
+    ],
 }

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import re
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, cast
 from sqlalchemy import delete, select
 from nonebot_plugin_orm import async_scoped_session
 from nonebot.adapters.onebot.v11 import Message
@@ -489,7 +489,7 @@ class CatchModifySkin(Command):
         if skin is None:
             return self.notExists(env, result.group(4))
 
-        callback = CatchModifySkinCallback(skin.data_id, result.group(3))  # type: ignore
+        callback = CatchModifySkinCallback(cast(int, skin.data_id), result.group(3))
         raise WaitForMoreInformationException(
             callback, Message([at(env.sender), text("MSG_PLEASE_INPUT")])
         )
