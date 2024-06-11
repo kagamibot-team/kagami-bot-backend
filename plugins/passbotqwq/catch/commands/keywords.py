@@ -26,3 +26,4 @@ KEYWORD_SHOP = "(商店|shop)"
 
 KEYWORD_RESET = "(重置)"
 KEYWORD_CACHE_COUNT = "(抓小哥数量|抓小哥上限)"
+KEYWORD_HELP = "(help|帮助)"

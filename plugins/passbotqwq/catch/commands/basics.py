@@ -1,16 +1,14 @@
-import cProfile
 from dataclasses import dataclass
 import re
-from typing import Coroutine
 from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
 from plugins.passbotqwq.catch.models.Basics import OwnedSkin
 
-from ...putils.command import CheckEnvironment, at, decorateWithLoadingMessage, text, image, Command, 科目三
+from ...putils.command import CheckEnvironment, at, decorateWithLoadingMessage, text, image, Command
 
 from ..models import *
-from ..models.data import hangupSkin, switchSkin
+from ..models.data import switchSkin
 
 from ..cores import buy, handlePick
 
@@ -24,19 +22,17 @@ from ..messages import (
     getGoodsList,
     update,
 )
-
+from ..messages.lang import *
 
 from .keywords import *
 from .tools import getSender
 
 
-@decorateWithLoadingMessage(" 稍候，正在捕捉小哥...")
+@decorateWithLoadingMessage(MSG_CATCH_LOADING)
+@dataclass
 class Catch(Command):
-    def __init__(self):
-        super().__init__(f"^{KEYWORD_BASE_COMMAND} ?(\\d+)?", "$")
-
-    def errorMessage(self, env: CheckEnvironment):
-        return None
+    commandPattern: str = f"^{KEYWORD_BASE_COMMAND} ?(\\d+)?"
+    argsPattern: str = "$"
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         maxCount = 1
@@ -51,13 +47,11 @@ class Catch(Command):
         return message
 
 
-@decorateWithLoadingMessage(" 稍候，正在捕捉小哥...")
+@decorateWithLoadingMessage(MSG_CATCH_LOADING)
+@dataclass
 class CrazyCatch(Command):
-    def __init__(self):
-        super().__init__(f"^({KEYWORD_CRAZY}{KEYWORD_BASE_COMMAND}|kz)", "$")
-
-    def errorMessage(self, env: CheckEnvironment):
-        return None
+    commandPattern: str = f"^({KEYWORD_CRAZY}{KEYWORD_BASE_COMMAND}|kz)"
+    argsPattern: str = "$"
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         picksResult = await handlePick(env.session, env.sender, -1)
@@ -68,15 +62,16 @@ class CrazyCatch(Command):
         return message
 
 
+@dataclass
 class CatchHelp(Command):
-    def __init__(self):
-        super().__init__(f"^{KEYWORD_BASE_COMMAND}? ?(help|帮助)", "$")
+    commandPattern: str = f"^{KEYWORD_BASE_COMMAND}? ?{KEYWORD_HELP}"
+    argsPattern: str = "$"
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         return help()
 
 
-@decorateWithLoadingMessage(" 稍候，正在查询你的小哥库存...")
+@decorateWithLoadingMessage(MSG_STORAGE_LOADING)
 @dataclass
 class CatchStorage(Command):
     commandPattern: str = f"^{KEYWORD_BASE_COMMAND}?{KEYWORD_STORAGE}"
@@ -88,19 +83,16 @@ class CatchStorage(Command):
         return Message(
             [
                 at(env.sender),
-                text(f" 的小哥库存："),
+                text(MSG_STORAGE),
                 await image(storageImage),
             ]
         )
 
 
-@decorateWithLoadingMessage(' 稍候，正在查询你的小哥收集进度...')
+@decorateWithLoadingMessage(MSG_STATUS_LOADING)
 class CatchProgress(Command):
-    def __init__(self):
-        super().__init__(f"^{KEYWORD_BASE_COMMAND}{KEYWORD_PROGRESS}", "$")
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return None
+    commandPattern: str = f"^{KEYWORD_BASE_COMMAND}{KEYWORD_PROGRESS}"
+    argsPattern: str = "$"
 
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
@@ -120,9 +112,6 @@ class CatchProgress(Command):
 class CatchDisplay(Command):
     commandPattern: str = f"^{KEYWORD_DISPLAY} ?{KEYWORD_AWARDS}? "
     argsPattern: str = "(\\S+)$"
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return None
 
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
@@ -203,10 +192,6 @@ class CatchShowUpdate(Command):
 
 @dataclass
 class CatchShop(Command):
-    """
-    小镜的shop
-    """
-
     commandPattern: str = f"^{KEYWORD_KAGAMIS} ?{KEYWORD_SHOP}"
     argsPattern: str = "(.*)$"
 
