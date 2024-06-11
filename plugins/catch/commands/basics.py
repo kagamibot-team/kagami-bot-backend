@@ -3,7 +3,14 @@ import re
 from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
-from ..putils.command import CheckEnvironment, at, decorateWithLoadingMessage, text, image, Command
+from ..putils.command import (
+    CheckEnvironment,
+    at,
+    decorateWithLoadingMessage,
+    text,
+    image,
+    Command,
+)
 
 from ..models import *
 
@@ -114,22 +121,14 @@ class CatchDisplay(Command):
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         name = result.group(3)
-        award = (
-            await env.session.execute(select(Award).filter(Award.name == name))
-        ).scalar_one_or_none()
+        award = await getAwardByName(env.session, name)
 
         if award is None:
             return Message([at(env.sender), text(f" 你没有名字叫 {name} 的小哥")])
 
-        ac = (
-            await env.session.execute(
-                select(StorageStats)
-                .filter(StorageStats.award == award)
-                .filter(StorageStats.user == await getSender(env))
-            )
-        ).scalar_one_or_none()
+        ac = await getStorage(env.session, await getSender(env), award)
 
-        if ac is None or ac.count <= 0:
+        if ac.count <= 0:
             return Message([at(env.sender), text(f" 你没有名字叫 {name} 的小哥")])
 
         return await displayAward(env.session, award, await getSender(env))
@@ -146,31 +145,31 @@ class CatchHangUpSkin(Command):
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        award = (
-            await env.session.execute(
-                select(Award).filter(Award.name == result.group(3))
-            )
-        ).scalar_one_or_none()
+        award = await getAwardByName(env.session, result.group(3))
 
         if award is None:
             return self.notExists(env, result.group(3))
 
-        skins = list((await env.session.execute(
-            select(OwnedSkin)
-            .join(Skin, OwnedSkin.skin)
-            .filter(Skin.award == award)
-            .filter(OwnedSkin.user == await getSender(env))
-        )).scalars())
+        skins = await getAllOwnedSkin(env.session, await getSender(env), award)
 
         if len(skins) == 0:
             return Message([at(env.sender), text(" 你没有这个小哥的皮肤")])
 
-        skin = await switchSkin(env.session, await getSender(env), [s.skin for s in skins], award)
+        skin = await switchSkin(
+            env.session, await getSender(env), [s.skin for s in skins], award
+        )
 
         if skin is not None:
-            message = Message([at(env.sender), text(f" 已经将 {result.group(3)} 的皮肤切换为 {skin.name} 了")])
+            message = Message(
+                [
+                    at(env.sender),
+                    text(f" 已经将 {result.group(3)} 的皮肤切换为 {skin.name} 了"),
+                ]
+            )
         else:
-            message = Message([at(env.sender), text(f" 已经将 {result.group(3)} 的皮肤切换为默认了")])
+            message = Message(
+                [at(env.sender), text(f" 已经将 {result.group(3)} 的皮肤切换为默认了")]
+            )
 
         return message
 

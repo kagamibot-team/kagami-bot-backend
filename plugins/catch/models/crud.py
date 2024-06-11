@@ -2,7 +2,7 @@
 `curd` 模块主要用于数据库的增、删、查、改。任何逻辑都不应该在这里实现。
 """
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from nonebot_plugin_orm import AsyncSession, async_scoped_session
 
 from .models import *
@@ -23,6 +23,16 @@ async def getGlobal(session: Session):
         await session.flush()
 
     return glob
+
+
+async def deleteObj(session: Session, obj: object):
+    "删除对象"
+
+    if obj is None:
+        return
+
+    await session.delete(obj)
+    await session.flush()
 
 
 ### LEVEL ###
@@ -221,6 +231,27 @@ async def getUsed(session: Session, user: User, award: Award):
     return stats
 
 
+async def clearUserStorage(session: Session, user: User, award: Award | None = None):
+    "清空用户的小哥库存"
+
+    if award is None:
+        await session.execute(delete(StorageStats).where(StorageStats.user == user))
+        await session.execute(delete(UsedStats).where(UsedStats.user == user))
+    else:
+        await session.execute(
+            delete(StorageStats).where(
+                (StorageStats.user == user) & (StorageStats.award == award)
+            )
+        )
+        await session.execute(
+            delete(UsedStats).where(
+                (UsedStats.user == user) & (UsedStats.award == award)
+            )
+        )
+
+    await session.flush()
+
+
 ### SKIN ###
 async def getAllSkins(session: Session):
     "返回所有皮肤"
@@ -249,6 +280,12 @@ async def getSkinByName(session: Session, name: str):
             skin = skinAlt.skin
 
     return skin
+
+
+async def getSkinById(session: Session, id: int):
+    "根据 ID 返回皮肤，如果不存在则报错"
+
+    return await session.get_one(Skin, id)
 
 
 async def createSkinAltName(session: Session, skin: Skin, name: str):
@@ -335,6 +372,22 @@ async def getOwnedSkin(session: Session, user: User, skin: Skin) -> OwnedSkin | 
     ).scalar_one_or_none()
 
 
+async def getAllOwnedSkin(session: Session, user: User, award: Award):
+    "返回用户拥有皮肤的记录"
+
+    return (
+        (
+            await session.execute(
+                select(OwnedSkin)
+                .filter(OwnedSkin.user == user)
+                .filter(OwnedSkin.skin.has(award=award))
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+
 __all__ = [
     "getGlobal",
     "getAllLevels",
@@ -361,4 +414,8 @@ __all__ = [
     "getLevelAltNameObject",
     "getAwardAltNameObject",
     "getSkinAltNameObject",
+    "getAllOwnedSkin",
+    "clearUserStorage",
+    "deleteObj",
+    "getSkinById",
 ]

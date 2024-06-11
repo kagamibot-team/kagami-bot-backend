@@ -32,7 +32,6 @@ from .admin import (
     CatchResetEveryoneCacheCount,
     CatchAdminHelp,
     CatchGiveMoney,
-    CatchFilterNoDescription,
     AddAltName,
     RemoveAltName,
 )
@@ -44,7 +43,6 @@ enabledCommand: list[CommandBase] = [
     CatchHelp(),
     CatchStorage(),
     CatchProgress(),
-    CatchFilterNoDescription(),
     CatchDisplay(),
     CatchHangUpSkin(),
     CatchAllAwards(),
