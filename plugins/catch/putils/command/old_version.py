@@ -1,3 +1,4 @@
+import asyncio
 import pathlib
 import re
 from typing import Type
@@ -50,6 +51,38 @@ def decorateWithLoadingMessage(_text: str = " 稍候，正在查询你的小哥�
 
         return _Command
 
+    return _decorator
+
+
+def asyncLock():
+    locks: dict[int, asyncio.Lock] = {}
+
+    def getLock(sender: int):
+        if sender not in locks:
+            locks[sender] = asyncio.Lock()
+        return locks[sender]
+
+    def _decorator(cls: Type[Command]):
+        class _Command(cls):
+            async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+                async with getLock(env.sender):
+                    msg = await super().handleCommand(env, result)
+
+                return msg
+        
+        return _Command
+    return _decorator
+
+
+def databaseIO():
+    def _decorator(cls: Type[Command]):
+        class _Command(cls):
+            async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+                msg = await super().handleCommand(env, result)
+                await env.session.commit()
+                return msg
+        
+        return _Command
     return _decorator
 
 
@@ -135,4 +168,6 @@ __all__ = [
     "CallbackBase",
     "WaitForMoreInformationException",
     "Command",
+    "asyncLock",
+    "databaseIO"
 ]

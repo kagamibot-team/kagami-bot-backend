@@ -10,6 +10,8 @@ from ..putils.command import (
     text,
     image,
     Command,
+    asyncLock,
+    databaseIO,
 )
 
 from ..models import *
@@ -31,6 +33,8 @@ from .tools import getSender
 
 
 @decorateWithLoadingMessage(MSG_CATCH_LOADING)
+@asyncLock()
+@databaseIO()
 @dataclass
 class Catch(Command):
     commandPattern: str = f"^{KEYWORD_BASE_COMMAND} ?(\\d+)?"
@@ -41,7 +45,7 @@ class Catch(Command):
 
         if result.group(2) is not None and result.group(2).isdigit():
             maxCount = int(result.group(2))
-
+        
         picksResult = await handlePick(env.session, env.sender, maxCount)
         message = await caughtMessage(env.session, picksResult)
 
@@ -49,6 +53,8 @@ class Catch(Command):
 
 
 @decorateWithLoadingMessage(MSG_CATCH_LOADING)
+@asyncLock()
+@databaseIO()
 @dataclass
 class CrazyCatch(Command):
     commandPattern: str = f"^({KEYWORD_CRAZY}{KEYWORD_BASE_COMMAND}|kz)"
@@ -134,6 +140,8 @@ class CatchDisplay(Command):
         return await displayAward(env.session, award, await getSender(env))
 
 
+@asyncLock()
+@databaseIO()
 @dataclass
 class CatchHangUpSkin(Command):
     commandPattern: str = f"{KEYWORD_SWITCH} ?{KEYWORD_SKIN}"
@@ -185,6 +193,8 @@ class CatchShowUpdate(Command):
         return update()
 
 
+@asyncLock()
+@databaseIO()
 @dataclass
 class CatchShop(Command):
     commandPattern: str = f"^{KEYWORD_KAGAMIS} ?{KEYWORD_SHOP}"

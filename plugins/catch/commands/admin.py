@@ -15,6 +15,7 @@ from ..putils.command import (
     Command,
     CallbackBase,
     WaitForMoreInformationException,
+    databaseIO
 )
 from ..putils.download import download, writeData
 from ..putils.text_format_check import isFloat, not_negative
@@ -61,6 +62,7 @@ class CatchAllAwards(Command):
 
 
 @requireAdmin
+@databaseIO()
 class CatchSetInterval(Command):
     def __init__(self):
         super().__init__(f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_INTERVAL}", " ?(-?[0-9]+)$")
@@ -79,6 +81,7 @@ class CatchSetInterval(Command):
 
 
 @requireAdmin
+@databaseIO()
 class Give(Command):
     def __init__(self):
         super().__init__(
@@ -122,6 +125,7 @@ class Give(Command):
 
 
 @requireAdmin
+@databaseIO()
 class Clear(Command):
     def __init__(self):
         super().__init__(
@@ -173,6 +177,7 @@ class Clear(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchRemoveAward(Command):
     commandPattern: str = f"^:: ?{KEYWORD_REMOVE} ?{KEYWORD_AWARDS} "
@@ -242,6 +247,7 @@ class CatchModifyCallback(CallbackBase):
 
 
 @requireAdmin
+@databaseIO()
 class CatchModify(Command):
     def __init__(self):
         super().__init__(
@@ -281,6 +287,7 @@ class CatchModify(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchLevelModify(Command):
     commandPattern: str = (
@@ -335,6 +342,7 @@ class CatchLevelModify(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchCreateAward(Command):
     commandPattern: str = f"^:: ?{KEYWORD_CREATE} ?{KEYWORD_AWARDS} "
@@ -364,6 +372,7 @@ class CatchCreateAward(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchCreateLevel(Command):
     commandPattern: str = f"^:: ?{KEYWORD_CREATE} ?{KEYWORD_LEVEL} "
@@ -387,6 +396,7 @@ class CatchCreateLevel(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchAddSkin(Command):
     commandPattern: str = f"^:: ?{KEYWORD_CREATE} ?{KEYWORD_SKIN} "
@@ -460,6 +470,7 @@ class CatchModifySkinCallback(CallbackBase):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchModifySkin(Command):
     commandPattern: str = (
@@ -526,6 +537,7 @@ class CatchAdminDisplay(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchAdminObtainSkin(Command):
     commandPattern: str = f":: ?{KEYWORD_OBTAIN} ?{KEYWORD_SKIN}"
@@ -548,6 +560,7 @@ class CatchAdminObtainSkin(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchAdminDeleteSkinOwnership(Command):
     commandPattern: str = f":: ?{KEYWORD_REMOVE_OBTAIN} ?{KEYWORD_SKIN}"
@@ -569,6 +582,7 @@ class CatchAdminDeleteSkinOwnership(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchResetEveryoneCacheCount(Command):
     commandPattern: str = f":: ?{KEYWORD_RESET} ?{KEYWORD_CACHE_COUNT}"
@@ -603,6 +617,7 @@ class CatchAdminHelp(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class CatchGiveMoney(Command):
     commandPattern: str = ":: ?给钱"
@@ -621,6 +636,7 @@ class CatchGiveMoney(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class AddAltName(Command):
     commandPattern: str = (
@@ -666,6 +682,7 @@ class AddAltName(Command):
 
 
 @requireAdmin
+@databaseIO()
 @dataclass
 class RemoveAltName(Command):
     commandPattern: str = (
@@ -693,3 +710,87 @@ class RemoveAltName(Command):
 
         await deleteObj(env.session, obj)
         return Message([at(env.sender), text("MSG_REMOVE_ALTNAME_OK")])
+
+
+@requireAdmin
+@databaseIO()
+@dataclass
+class AddTags(Command):
+    commandPattern: str = f"^:: ?{KEYWORD_CREATE}({KEYWORD_AWARDS}|{KEYWORD_LEVEL}|{KEYWORD_SKIN}){KEYWORD_TAG} (\\S+) (\\S+) (\\S+)"
+    argsPattern: str = "$"
+
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        ty = result.group(2)
+        name = result.group(7)
+        tag_name = result.group(8)
+        tag_args = result.group(9)
+
+        tag = await getTag(env.session, tag_name, tag_args)
+
+        if re.match(KEYWORD_AWARDS, ty):
+            award = await getAwardByName(env.session, name)
+            if award is None:
+                return self.notExists(env, name)
+            
+            await addAwardTag(env.session, award, tag)
+            return Message([at(env.sender), text("MSG_ADD_TAG_OK")])
+
+        if re.match(KEYWORD_LEVEL, ty):
+            level = await getLevelByName(env.session, name)
+            if level is None:
+                return self.notExists(env, name)
+            
+            await addLevelTag(env.session, level, tag)
+            return Message([at(env.sender), text("MSG_ADD_TAG_OK")])
+
+        if re.match(KEYWORD_SKIN, ty):
+            skin = await getSkinByName(env.session, name)
+            if skin is None:
+                return self.notExists(env, name)
+            
+            await addSkinTag(env.session, skin, tag)
+            return Message([at(env.sender), text("MSG_ADD_TAG_OK")])
+        
+        return Message([at(env.sender), text("MSG_ADD_TAG_WRONG_TYPE")])
+
+
+@requireAdmin
+@databaseIO()
+@dataclass
+class RemoveTags(Command):
+    commandPattern: str = f"^:: ?{KEYWORD_REMOVE}({KEYWORD_AWARDS}|{KEYWORD_LEVEL}|{KEYWORD_SKIN}){KEYWORD_TAG} (\\S+) (\\S+) (\\S+)"
+    argsPattern: str = "$"
+
+    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+        ty = result.group(2)
+        name = result.group(7)
+        tag_name = result.group(8)
+        tag_args = result.group(9)
+        
+        tag = await getTag(env.session, tag_name, tag_args)
+
+        if re.match(KEYWORD_AWARDS, ty):
+            award = await getAwardByName(env.session, name)
+            if award is None:
+                return self.notExists(env, name)
+            
+            await removeAwardTag(env.session, award, tag)
+            return Message([at(env.sender), text("MSG_REMOVE_TAG_OK")])
+
+        if re.match(KEYWORD_LEVEL, ty):
+            level = await getLevelByName(env.session, name)
+            if level is None:
+                return self.notExists(env, name)
+            
+            await removeLevelTag(env.session, level, tag)
+            return Message([at(env.sender), text("MSG_REMOVE_TAG_OK")])
+        
+        if re.match(KEYWORD_SKIN, ty):
+            skin = await getSkinByName(env.session, name)
+            if skin is None:
+                return self.notExists(env, name)
+            
+            await removeSkinTag(env.session, skin, tag)
+            return Message([at(env.sender), text("MSG_REMOVE_TAG_OK")])
+        
+        return Message([at(env.sender), text("MSG_REMOVE_TAG_WRONG_TYPE")])

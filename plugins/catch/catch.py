@@ -32,18 +32,7 @@ def getCallbacks(uid: int):
     return callbacks[uid]
 
 
-def save_on_finish(fn: Callable[[async_scoped_session, Bot, GroupMessageEvent], Coroutine[None, None, None]]):
-    async def wrapper(session: async_scoped_session, bot: Bot, event: GroupMessageEvent):
-        try:
-            await fn(session, bot, event)
-        finally:
-            await session.commit()
-
-    return wrapper
-
-
 @eventMatcher.handle()
-@save_on_finish
 async def _(session: async_scoped_session, bot: Bot, event: GroupMessageEvent):
     sender = event.sender.user_id
 

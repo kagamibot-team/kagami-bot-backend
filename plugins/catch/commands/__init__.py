@@ -34,6 +34,8 @@ from .admin import (
     CatchGiveMoney,
     AddAltName,
     RemoveAltName,
+    AddTags,
+    RemoveTags,
 )
 
 
@@ -68,4 +70,6 @@ enabledCommand: list[CommandBase] = [
     CatchGiveMoney(),
     AddAltName(),
     RemoveAltName(),
+    AddTags(),
+    RemoveTags(),
 ]

@@ -22,7 +22,7 @@ class Global(Model, BaseMixin):
     catch_interval: Mapped[float] = mapped_column(default=3600)
 
 
-class Level(Model, BaseMixin, TagsMixin):
+class Level(Model, BaseMixin):
     """
     小哥等级表
     """
@@ -50,7 +50,13 @@ class Level(Model, BaseMixin, TagsMixin):
     awards: Mapped[set["Award"]] = relationship(back_populates="level", lazy="subquery")
     price: Mapped[float] = mapped_column(default=0)
 
-    alt_names: Mapped[list['LevelAltName']] = relationship(back_populates='level', lazy='subquery')
+    alt_names: Mapped[list["LevelAltName"]] = relationship(
+        back_populates="level", lazy="subquery"
+    )
+
+    tags: Mapped[list["LevelTagRelation"]] = relationship(
+        back_populates="level", lazy="subquery"
+    )
 
 
 class LevelAltName(Model, BaseMixin, AltNameMixin):
@@ -70,7 +76,54 @@ class LevelAltName(Model, BaseMixin, AltNameMixin):
     level: Mapped[Level] = relationship(back_populates="alt_names", lazy="subquery")
 
 
-class Award(Model, BaseMixin, TagsMixin):
+class Tag(Model, BaseMixin):
+    """
+    标签表
+    """
+
+    __tablename__ = "catch_tag"
+
+    def __init__(self, tag_name: str = "", tag_args: str = ""):
+        super().__init__(
+            tag_name=tag_name,
+            tag_args=tag_args,
+        )
+
+    tag_name: Mapped[str] = mapped_column(default="")
+    tag_args: Mapped[str] = mapped_column(default="")
+
+    levels: Mapped[list["LevelTagRelation"]] = relationship(
+        back_populates="tag", lazy="subquery"
+    )
+    awards: Mapped[list["AwardTagRelation"]] = relationship(
+        back_populates="tag", lazy="subquery"
+    )
+    skins: Mapped[list["SkinTagRelation"]] = relationship(
+        back_populates="tag", lazy="subquery"
+    )
+
+
+class LevelTagRelation(Model, BaseMixin):
+    """
+    等级标签关联表
+    """
+
+    __tablename__ = "catch_level_tag_relation"
+
+    def __init__(self, level: Level, tag: Tag):
+        super().__init__(
+            level=level,
+            tag=tag,
+        )
+
+    level_id = Column(Integer, ForeignKey("catch_level.data_id"))
+    level: Mapped[Level] = relationship(back_populates="tags", lazy="subquery")
+
+    tag_id = Column(Integer, ForeignKey("catch_tag.data_id"))
+    tag: Mapped[Tag] = relationship(back_populates="levels", lazy="subquery")
+
+
+class Award(Model, BaseMixin):
     __tablename__ = "catch_award"
 
     def __init__(
@@ -103,7 +156,11 @@ class Award(Model, BaseMixin, TagsMixin):
     )
     skins: Mapped[list["Skin"]] = relationship(back_populates="award", lazy="subquery")
 
-    alt_names: Mapped[list['AwardAltName']] = relationship(back_populates='award', lazy='subquery')
+    alt_names: Mapped[list["AwardAltName"]] = relationship(
+        back_populates="award", lazy="subquery"
+    )
+
+    tags: Mapped[list["AwardTagRelation"]] = relationship(back_populates="award", lazy="subquery")
 
 
 class AwardAltName(Model, BaseMixin, AltNameMixin):
@@ -121,6 +178,26 @@ class AwardAltName(Model, BaseMixin, AltNameMixin):
 
     award_id = Column(Integer, ForeignKey("catch_award.data_id"))
     award: Mapped[Award] = relationship(back_populates="alt_names", lazy="subquery")
+
+
+class AwardTagRelation(Model, BaseMixin):
+    """
+    一个承载所有小哥的标签关联表
+    """
+
+    __tablename__ = "catch_award_tag_relation"
+
+    def __init__(self, award: Award, tag: Tag):
+        super().__init__(
+            award=award,
+            tag=tag,
+        )
+
+    award_id = Column(Integer, ForeignKey("catch_award.data_id"))
+    award: Mapped[Award] = relationship(back_populates="tags", lazy="subquery")
+
+    tag_id = Column(Integer, ForeignKey("catch_tag.data_id"))
+    tag: Mapped[Tag] = relationship(back_populates="awards", lazy="subquery")
 
 
 class StorageStats(Model, BaseMixin):
@@ -243,7 +320,7 @@ class OwnedSkin(Model, BaseMixin):
     skin: Mapped["Skin"] = relationship(back_populates="owned_skins", lazy="subquery")
 
 
-class Skin(Model, BaseMixin, TagsMixin):
+class Skin(Model, BaseMixin):
     __tablename__ = "catch_skin"
 
     def __init__(
@@ -276,7 +353,32 @@ class Skin(Model, BaseMixin, TagsMixin):
         back_populates="skin", lazy="subquery"
     )
 
-    alt_names: Mapped[list['SkinAltName']] = relationship(back_populates='skin', lazy='subquery')
+    alt_names: Mapped[list["SkinAltName"]] = relationship(
+        back_populates="skin", lazy="subquery"
+    )
+
+    tags: Mapped[list["SkinTagRelation"]] = relationship(
+        back_populates="skin", lazy="subquery"
+    )
+
+
+class SkinTagRelation(Model, BaseMixin):
+    __tablename__ = "catch_skin_tag_relation"
+
+    def __init__(
+        self,
+        skin: "Skin",
+        tag: "Tag",
+    ):
+        super().__init__(
+            skin=skin,
+            tag=tag,
+        )
+
+    skin_id = Column(Integer, ForeignKey("catch_skin.data_id"))
+    tag_id = Column(Integer, ForeignKey("catch_tag.data_id"))
+    skin: Mapped[Skin] = relationship(back_populates="tags", lazy="subquery")
+    tag: Mapped[Tag] = relationship(back_populates="skins", lazy="subquery")
 
 
 class SkinAltName(Model, BaseMixin, AltNameMixin):
@@ -309,4 +411,8 @@ __all__ = [
     "OwnedSkin",
     "Skin",
     "SkinAltName",
+    "Tag",
+    "SkinTagRelation",
+    "LevelTagRelation",
+    "AwardTagRelation",
 ]

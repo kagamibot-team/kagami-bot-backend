@@ -2,6 +2,7 @@
 `curd` 模块主要用于数据库的增、删、查、改。任何逻辑都不应该在这里实现。
 """
 
+from re import L
 from sqlalchemy import delete, select
 from nonebot_plugin_orm import AsyncSession, async_scoped_session
 
@@ -33,6 +34,26 @@ async def deleteObj(session: Session, obj: object):
 
     await session.delete(obj)
     await session.flush()
+
+
+### TAG ###
+
+
+async def getTag(session: Session, tag_name: str, tag_args: str):
+    "根据名字和属性返回标签，如果不存在则立即创建"
+
+    tag = (
+        await session.execute(
+            select(Tag).filter(Tag.tag_name == tag_name, Tag.tag_args == tag_args)
+        )
+    ).scalar_one_or_none()
+
+    if tag is None:
+        tag = Tag(tag_name, tag_args)
+        session.add(tag)
+        await session.flush()
+
+    return tag
 
 
 ### LEVEL ###
@@ -92,6 +113,46 @@ async def getLevelAltNameObject(session: Session, name: str):
     return (
         await session.execute(select(LevelAltName).filter(LevelAltName.name == name))
     ).scalar_one_or_none()
+
+
+async def getLevelTags(session: Session, level: Level):
+    "返回等级的所有标签"
+
+    relations = await session.execute(
+        select(LevelTagRelation.tag).filter(LevelTagRelation.level == level)
+    )
+
+    return relations.scalars().all()
+
+
+async def getLevelTag(session: Session, level: Level, tag: Tag):
+    "判断等级是否拥有标签"
+
+    return (
+        await session.execute(
+            select(LevelTagRelation).filter(
+                LevelTagRelation.level == level, LevelTagRelation.tag == tag
+            )
+        )
+    ).scalar_one_or_none()
+
+
+async def addLevelTag(session: Session, level: Level, tag: Tag):
+    "为等级添加标签"
+
+    if await getLevelTag(session, level, tag) is None:
+        relation = LevelTagRelation(level, tag)
+        session.add(relation)
+        await session.flush()
+
+
+async def removeLevelTag(session: Session, level: Level, tag: Tag):
+    "为等级移除标签"
+
+    relation = await getLevelTag(session, level, tag)
+    if relation is not None:
+        await session.delete(relation)
+        await session.flush()
 
 
 ### AWARD ###
@@ -169,6 +230,46 @@ async def getAwardAltNameObject(session: Session, name: str):
     return (
         await session.execute(select(AwardAltName).filter(AwardAltName.name == name))
     ).scalar_one_or_none()
+
+
+async def getAwardTags(session: Session, award: Award):
+    "返回小哥的所有标签"
+
+    relations = await session.execute(
+        select(AwardTagRelation.tag).filter(AwardTagRelation.award == award)
+    )
+
+    return relations.scalars().all()
+
+
+async def getAwardTag(session: Session, award: Award, tag: Tag):
+    "判断小哥是否拥有标签"
+
+    return (
+        await session.execute(
+            select(AwardTagRelation).filter(
+                AwardTagRelation.award == award, AwardTagRelation.tag == tag
+            )
+        )
+    ).scalar_one_or_none()
+
+
+async def addAwardTag(session: Session, award: Award, tag: Tag):
+    "为小哥添加标签"
+
+    if await getAwardTag(session, award, tag) is None:
+        relation = AwardTagRelation(award, tag)
+        session.add(relation)
+        await session.flush()
+
+
+async def removeAwardTag(session: Session, award: Award, tag: Tag):
+    "为小哥移除标签"
+
+    relation = await getAwardTag(session, award, tag)
+    if relation is not None:
+        await session.delete(relation)
+        await session.flush()
 
 
 ### USER ###
@@ -388,6 +489,42 @@ async def getAllOwnedSkin(session: Session, user: User, award: Award):
     )
 
 
+async def getSkinTags(session: Session, skin: Skin):
+    "返回皮肤的标签"
+
+    return await session.execute(
+        select(SkinTagRelation.tag).filter(SkinTagRelation.skin == skin)
+    )
+
+
+async def getSkinTag(session: Session, skin: Skin, tag: Tag):
+    "返回皮肤的一个标签关系，如果不存在则为 `None`"
+
+    return (
+        await session.execute(
+            select(SkinTagRelation)
+            .filter(SkinTagRelation.skin == skin)
+            .filter(SkinTagRelation.tag == tag)
+        )
+    ).scalar_one_or_none()
+
+
+async def addSkinTag(session: Session, skin: Skin, tag: Tag):
+    "添加一个皮肤标签关系"
+
+    if await getSkinTag(session, skin, tag) == None:
+        session.add(SkinTagRelation(skin, tag))
+        await session.flush()
+
+
+async def removeSkinTag(session: Session, skin: Skin, tag: Tag):
+    "删除一个皮肤标签关系"
+
+    if (rel := await getSkinTag(session, skin, tag)) != None:
+        await session.delete(rel)
+        await session.flush()
+
+
 __all__ = [
     "getGlobal",
     "getAllLevels",
@@ -418,4 +555,17 @@ __all__ = [
     "clearUserStorage",
     "deleteObj",
     "getSkinById",
+    "getTag",
+    "getLevelTags",
+    "getLevelTag",
+    "addLevelTag",
+    "removeLevelTag",
+    "getAwardTags",
+    "getAwardTag",
+    "addAwardTag",
+    "removeAwardTag",
+    "getSkinTags",
+    "getSkinTag",
+    "addSkinTag",
+    "removeSkinTag",
 ]
