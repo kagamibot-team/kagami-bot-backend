@@ -8,7 +8,7 @@ from .putils.config import Config
 
 
 __plugin_meta__ = PluginMetadata(
-    name="passbotqwq",
+    name="catch",
     description="",
     usage="",
     config=Config,

@@ -14,13 +14,13 @@ from nonebot import get_driver
 
 from ..models import *
 
-from ...putils.draw.images import (
+from ..putils.draw.images import (
     addUponPaste,
     horizontalPile,
     verticalPile,
     combineABunchOfImage,
 )
-from ...putils.draw.texts import (
+from ..putils.draw.texts import (
     VerticalAnchor,
     drawABoxOfText,
     drawLimitedBoxOfText,
@@ -28,9 +28,9 @@ from ...putils.draw.texts import (
     textFont,
     Fonts,
 )
-from ...putils.draw.typing import PILImage
-from ...putils.draw.images import newImage
-from ...putils.config import config
+from ..putils.draw.typing import PILImage
+from ..putils.draw.images import newImage
+from ..putils.config import config
 
 from ..images import display_box, catch, refBookBox
 

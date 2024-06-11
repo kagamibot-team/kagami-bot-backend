@@ -2,7 +2,7 @@ import pathlib
 import re
 from typing import Type
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
-from plugins.passbotqwq.putils.draw.typing import PILImage
+from ..draw.typing import PILImage
 from ...putils.draw import imageToBytes
 from dataclasses import dataclass
 from nonebot_plugin_orm import async_scoped_session

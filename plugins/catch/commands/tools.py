@@ -2,8 +2,8 @@ from typing import Type
 
 from nonebot import get_driver
 from nonebot.adapters.onebot.v11 import Message
-from ...putils.command import CheckEnvironment, CommandBase
-from ...putils.config import config
+from ..putils.command import CheckEnvironment, CommandBase
+from ..putils.config import config
 from ..models import *
 
 

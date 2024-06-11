@@ -38,7 +38,7 @@ def upgrade(name: str = "") -> None:
         ),
         sa.PrimaryKeyConstraint("data_id", name=op.f("pk_catch_level_alt_name")),
         sa.UniqueConstraint("name"),
-        info={"bind_key": "passbotqwq"},
+        info={"bind_key": "catch"},
     )
     with op.batch_alter_table("catch_level_alt_name", schema=None) as batch_op:
         batch_op.create_index(
@@ -61,7 +61,7 @@ def upgrade(name: str = "") -> None:
         ),
         sa.PrimaryKeyConstraint("data_id", name=op.f("pk_catch_award_alt_name")),
         sa.UniqueConstraint("name"),
-        info={"bind_key": "passbotqwq"},
+        info={"bind_key": "catch"},
     )
     with op.batch_alter_table("catch_award_alt_name", schema=None) as batch_op:
         batch_op.create_index(
@@ -84,7 +84,7 @@ def upgrade(name: str = "") -> None:
         ),
         sa.PrimaryKeyConstraint("data_id", name=op.f("pk_catch_skin_alt_name")),
         sa.UniqueConstraint("name"),
-        info={"bind_key": "passbotqwq"},
+        info={"bind_key": "catch"},
     )
     with op.batch_alter_table("catch_skin_alt_name", schema=None) as batch_op:
         batch_op.create_index(

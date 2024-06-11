@@ -3,8 +3,8 @@ import math
 import time
 
 
-from ...putils.command import at, image, text
-from ...putils.draw import imageToBytes
+from ..putils.command import at, image, text
+from ..putils.draw import imageToBytes
 
 from ..models import *
 from ..images import *

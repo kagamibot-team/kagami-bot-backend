@@ -10,7 +10,7 @@ from nonebot.adapters.onebot.v11 import (
 
 import socket
 
-from ..putils.config import config
+from .putils.config import config
 
 
 eventMatcher = on_type(types=GroupMessageEvent)

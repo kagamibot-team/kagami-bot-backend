@@ -7,8 +7,8 @@ import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageChops
 
-from ...putils.threading import make_async
-from ...putils.draw.texts import Fonts, drawLimitedBoxOfTextWithScalar
+from ..putils.threading import make_async
+from ..putils.draw.texts import Fonts, drawLimitedBoxOfTextWithScalar
 
 from .tools import *
 

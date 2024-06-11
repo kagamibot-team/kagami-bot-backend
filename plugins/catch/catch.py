@@ -4,7 +4,7 @@ from nonebot.exception import FinishedException
 from typing import NoReturn
 
 
-from ..putils.command import (
+from .putils.command import (
     CallbackBase,
     CheckEnvironment,
     WaitForMoreInformationException,

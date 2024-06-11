@@ -29,7 +29,7 @@ def upgrade(name: str = "") -> None:
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('data_id', name=op.f('pk_catch_global')),
-    info={'bind_key': 'passbotqwq'}
+    info={'bind_key': 'catch'}
     )
     with op.batch_alter_table('catch_global', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_catch_global_updated_at'), ['updated_at'], unique=False)

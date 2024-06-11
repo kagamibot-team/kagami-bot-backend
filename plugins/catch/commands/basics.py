@@ -3,7 +3,7 @@ import re
 from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
-from ...putils.command import CheckEnvironment, at, decorateWithLoadingMessage, text, image, Command
+from ..putils.command import CheckEnvironment, at, decorateWithLoadingMessage, text, image, Command
 
 from ..models import *
 

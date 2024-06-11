@@ -5,7 +5,7 @@
 from sqlalchemy import select
 from nonebot_plugin_orm import AsyncSession, async_scoped_session
 
-from .Basics import *
+from .models import *
 
 
 Session = async_scoped_session | AsyncSession

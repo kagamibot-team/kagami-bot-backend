@@ -3,7 +3,7 @@ from nonebot_plugin_orm import Model
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .Mixins import *
+from .mixins import *
 
 
 DEFAULT_IMG = os.path.join(".", "res", "catch", "default.png")
@@ -97,7 +97,7 @@ class Award(Model, BaseMixin, TagsMixin):
     )
     skins: Mapped[list["Skin"]] = relationship(back_populates="award", lazy="subquery")
 
-    alt_names: Mapped[list['LevelAltName']] = relationship(back_populates='award', lazy='subquery')
+    alt_names: Mapped[list['AwardAltName']] = relationship(back_populates='award', lazy='subquery')
 
 
 class AwardAltName(Model, BaseMixin, AltNameMixin):
@@ -264,7 +264,7 @@ class Skin(Model, BaseMixin, TagsMixin):
         back_populates="skin", lazy="subquery"
     )
 
-    alt_names: Mapped[list['LevelAltName']] = relationship(back_populates='skin', lazy='subquery')
+    alt_names: Mapped[list['SkinAltName']] = relationship(back_populates='skin', lazy='subquery')
 
 
 class SkinAltName(Model, BaseMixin, AltNameMixin):

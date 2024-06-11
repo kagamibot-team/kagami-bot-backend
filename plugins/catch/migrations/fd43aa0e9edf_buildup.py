@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 revision: str = 'fd43aa0e9edf'
 down_revision: str | Sequence[str] | None = None
-branch_labels: str | Sequence[str] | None = ('passbotqwq',)
+branch_labels: str | Sequence[str] | None = ('catch',)
 depends_on: str | Sequence[str] | None = None
 
 
@@ -32,7 +32,7 @@ def upgrade(name: str = "") -> None:
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('data_id', name=op.f('pk_catch_level')),
     sa.UniqueConstraint('name'),
-    info={'bind_key': 'passbotqwq'}
+    info={'bind_key': 'catch'}
     )
     with op.batch_alter_table('catch_level', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_catch_level_updated_at'), ['updated_at'], unique=False)
@@ -49,7 +49,7 @@ def upgrade(name: str = "") -> None:
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('data_id', name=op.f('pk_catch_user_data')),
     sa.UniqueConstraint('qq_id'),
-    info={'bind_key': 'passbotqwq'}
+    info={'bind_key': 'catch'}
     )
     with op.batch_alter_table('catch_user_data', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_catch_user_data_updated_at'), ['updated_at'], unique=False)
@@ -65,7 +65,7 @@ def upgrade(name: str = "") -> None:
     sa.ForeignKeyConstraint(['level_id'], ['catch_level.data_id'], name=op.f('fk_catch_award_level_id_catch_level')),
     sa.PrimaryKeyConstraint('data_id', name=op.f('pk_catch_award')),
     sa.UniqueConstraint('name'),
-    info={'bind_key': 'passbotqwq'}
+    info={'bind_key': 'catch'}
     )
     with op.batch_alter_table('catch_award', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_catch_award_updated_at'), ['updated_at'], unique=False)
@@ -80,7 +80,7 @@ def upgrade(name: str = "") -> None:
     sa.ForeignKeyConstraint(['target_award_id'], ['catch_award.data_id'], name=op.f('fk_catch_award_counter_target_award_id_catch_award')),
     sa.ForeignKeyConstraint(['target_user_id'], ['catch_user_data.data_id'], name=op.f('fk_catch_award_counter_target_user_id_catch_user_data')),
     sa.PrimaryKeyConstraint('data_id', name=op.f('pk_catch_award_counter')),
-    info={'bind_key': 'passbotqwq'}
+    info={'bind_key': 'catch'}
     )
     with op.batch_alter_table('catch_award_counter', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_catch_award_counter_updated_at'), ['updated_at'], unique=False)

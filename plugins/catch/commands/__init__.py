@@ -1,4 +1,4 @@
-from ...putils.command import CommandBase
+from ..putils.command import CommandBase
 
 from .basics import (
     Catch,

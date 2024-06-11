@@ -14,7 +14,7 @@ import random
 import time
 
 from .crud import *
-from .Basics import *
+from .models import *
 
 
 Session = async_scoped_session | AsyncSession
