@@ -1,7 +1,7 @@
 from nonebot import on_type
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message
 from nonebot.exception import FinishedException
-from typing import NoReturn
+from typing import Callable, Coroutine, NoReturn
 
 
 from .putils.command import (
@@ -32,7 +32,18 @@ def getCallbacks(uid: int):
     return callbacks[uid]
 
 
+def save_on_finish(fn: Callable[[async_scoped_session, Bot, GroupMessageEvent], Coroutine[None, None, None]]):
+    async def wrapper(session: async_scoped_session, bot: Bot, event: GroupMessageEvent):
+        try:
+            await fn(session, bot, event)
+        finally:
+            await session.commit()
+
+    return wrapper
+
+
 @eventMatcher.handle()
+@save_on_finish
 async def _(session: async_scoped_session, bot: Bot, event: GroupMessageEvent):
     sender = event.sender.user_id
 
@@ -63,12 +74,12 @@ async def _(session: async_scoped_session, bot: Bot, event: GroupMessageEvent):
 
     for command in enabledCommand:
         try:
-            res = await command.check(env)
+            message = await command.check(env)
         except WaitForMoreInformationException as e:
             callbacks[sender] = e.callback
             if e.message is not None:
                 await finish(e.message)
             raise FinishedException()
 
-        if res:
-            await finish(res)
+        if message:
+            await finish(message)

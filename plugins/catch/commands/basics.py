@@ -38,7 +38,6 @@ class Catch(Command):
         picksResult = await handlePick(env.session, env.sender, maxCount)
         message = await caughtMessage(env.session, picksResult)
 
-        await env.session.commit()
         return message
 
 
@@ -53,7 +52,6 @@ class CrazyCatch(Command):
 
         message = await caughtMessage(env.session, picksResult)
 
-        await env.session.commit()
         return message
 
 
@@ -174,7 +172,6 @@ class CatchHangUpSkin(Command):
         else:
             message = Message([at(env.sender), text(f" 已经将 {result.group(3)} 的皮肤切换为默认了")])
 
-        await env.session.commit()
         return message
 
 
@@ -245,7 +242,6 @@ class CatchShop(Command):
 
                 moneyLeft = user.money
 
-                await env.session.commit()
                 return Message(
                     [
                         at(env.sender),

@@ -42,6 +42,48 @@ async def getAllLevels(session: Session):
     )
 
 
+async def getLevelByName(session: Session, name: str):
+    "根据名字返回等级，如果不存在则返回 None"
+
+    level = (
+        await session.execute(select(Level).filter(Level.name == name))
+    ).scalar_one_or_none()
+
+    if level is None:
+        levelAlt = (
+            await session.execute(
+                select(LevelAltName).filter(LevelAltName.name == name)
+            )
+        ).scalar_one_or_none()
+        if levelAlt is not None:
+            level = levelAlt.level
+
+    return level
+
+
+async def createLevelAltName(session: Session, level: Level, name: str):
+    "创建一个等级的别名，返回是否创建成功"
+
+    _l = await getLevelByName(session, name)
+
+    if _l is not None:
+        return False
+
+    alt = LevelAltName(level, name)
+    session.add(alt)
+    await session.flush()
+
+    return True
+
+
+async def getLevelAltNameObject(session: Session, name: str):
+    "根据名字返回等级的别名，如果不存在则返回 None"
+
+    return (
+        await session.execute(select(LevelAltName).filter(LevelAltName.name == name))
+    ).scalar_one_or_none()
+
+
 ### AWARD ###
 async def getAllAwards(session: Session):
     "返回所有有可能被抓到的小哥"
@@ -75,6 +117,48 @@ async def getAwardById(session: Session, id: int):
     "根据 ID 返回小哥，如果不存在会报错"
 
     return await session.get_one(Award, id)
+
+
+async def getAwardByName(session: Session, name: str):
+    "根据名字返回小哥，如果不存在则返回 None"
+
+    award = (
+        await session.execute(select(Award).filter(Award.name == name))
+    ).scalar_one_or_none()
+
+    if award is None:
+        awardAlt = (
+            await session.execute(
+                select(AwardAltName).filter(AwardAltName.name == name)
+            )
+        ).scalar_one_or_none()
+        if awardAlt is not None:
+            award = awardAlt.award
+
+    return award
+
+
+async def createAwardAltName(session: Session, award: Award, name: str):
+    "创建一个小哥的别名，返回是否创建成功"
+
+    _a = await getAwardByName(session, name)
+
+    if _a is not None:
+        return False
+
+    alt = AwardAltName(award, name)
+    session.add(alt)
+    await session.flush()
+
+    return True
+
+
+async def getAwardAltNameObject(session: Session, name: str):
+    "根据名字返回小哥的别名，如果不存在则返回 None"
+
+    return (
+        await session.execute(select(AwardAltName).filter(AwardAltName.name == name))
+    ).scalar_one_or_none()
 
 
 ### USER ###
@@ -151,10 +235,42 @@ async def getAllSkinsSelling(session: Session):
 
 
 async def getSkinByName(session: Session, name: str):
-    "根据名字返回皮肤"
+    "根据名字返回皮肤，如果没有则返回 None"
+
+    skin = (
+        await session.execute(select(Skin).filter(Skin.name == name))
+    ).scalar_one_or_none()
+
+    if skin is None:
+        skinAlt = (
+            await session.execute(select(SkinAltName).filter(SkinAltName.name == name))
+        ).scalar_one_or_none()
+        if skinAlt is not None:
+            skin = skinAlt.skin
+
+    return skin
+
+
+async def createSkinAltName(session: Session, skin: Skin, name: str):
+    "创建一个皮肤的别名，返回是否创建成功"
+
+    _s = await getSkinByName(session, name)
+
+    if _s is not None:
+        return False
+
+    alt = SkinAltName(skin, name)
+    session.add(alt)
+    await session.flush()
+
+    return True
+
+
+async def getSkinAltNameObject(session: Session, name: str):
+    "根据名字返回皮肤的别名，如果不存在则返回 None"
 
     return (
-        await session.execute(select(Skin).filter(Skin.name == name))
+        await session.execute(select(SkinAltName).filter(SkinAltName.name == name))
     ).scalar_one_or_none()
 
 
@@ -237,4 +353,12 @@ __all__ = [
     "getAwardImage",
     "getAwardDescription",
     "getOwnedSkin",
+    "createSkinAltName",
+    "createLevelAltName",
+    "createAwardAltName",
+    "getAwardByName",
+    "getLevelByName",
+    "getLevelAltNameObject",
+    "getAwardAltNameObject",
+    "getSkinAltNameObject",
 ]

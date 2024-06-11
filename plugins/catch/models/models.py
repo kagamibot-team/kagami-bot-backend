@@ -60,6 +60,12 @@ class LevelAltName(Model, BaseMixin, AltNameMixin):
 
     __tablename__ = "catch_level_alt_name"
 
+    def __init__(self, level: Level, name: str = ""):
+        super().__init__(
+            level=level,
+            name=name,
+        )
+
     level_id = Column(Integer, ForeignKey("catch_level.data_id"))
     level: Mapped[Level] = relationship(back_populates="alt_names", lazy="subquery")
 
@@ -106,6 +112,12 @@ class AwardAltName(Model, BaseMixin, AltNameMixin):
     """
 
     __tablename__ = "catch_award_alt_name"
+
+    def __init__(self, award: Award, name: str = ""):
+        super().__init__(
+            award=award,
+            name=name,
+        )
 
     award_id = Column(Integer, ForeignKey("catch_award.data_id"))
     award: Mapped[Award] = relationship(back_populates="alt_names", lazy="subquery")
@@ -273,6 +285,12 @@ class SkinAltName(Model, BaseMixin, AltNameMixin):
     """
 
     __tablename__ = "catch_skin_alt_name"
+
+    def __init__(self, skin: Skin, name: str = ""):
+        super().__init__(
+            skin=skin,
+            name=name,
+        )
 
     skin_id = Column(Integer, ForeignKey("catch_skin.data_id"))
     skin: Mapped[Skin] = relationship(back_populates="alt_names", lazy="subquery")

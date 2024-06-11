@@ -33,6 +33,8 @@ from .admin import (
     CatchAdminHelp,
     CatchGiveMoney,
     CatchFilterNoDescription,
+    AddAltName,
+    RemoveAltName,
 )
 
 
@@ -66,4 +68,6 @@ enabledCommand: list[CommandBase] = [
     CatchShowUpdate(),
     CatchAdminHelp(),
     CatchGiveMoney(),
+    AddAltName(),
+    RemoveAltName(),
 ]
