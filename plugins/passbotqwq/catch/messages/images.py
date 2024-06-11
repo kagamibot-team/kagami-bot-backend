@@ -30,6 +30,7 @@ from ...putils.draw.texts import (
 )
 from ...putils.draw.typing import PILImage
 from ...putils.draw.images import newImage
+from ...putils.config import config
 
 from ..images import display_box, catch, refBookBox
 
@@ -225,7 +226,7 @@ driver = get_driver()
 
 @driver.on_startup
 async def preDrawEverything():
-    if nonebot.get_driver().config.predraw_images == 0:
+    if config.predraw_images == 0:
         logger.info("在开发环境中，跳过了预先绘制图像文件")
         return
 

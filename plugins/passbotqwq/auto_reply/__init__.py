@@ -10,6 +10,8 @@ from nonebot.adapters.onebot.v11 import (
 
 import socket
 
+from ..putils.config import config
+
 
 eventMatcher = on_type(types=GroupMessageEvent)
 
@@ -19,7 +21,7 @@ def matchKagami(text: str):
         return
 
     # if set(text[2:]) <= set("!！?？。.,， 1;；：:'‘’\"“”"):
-    if re.match(get_driver().config.re_match_rule, text[2:]):
+    if re.match(config.re_match_rule, text[2:]):
         return text[2:]
 
 
@@ -30,7 +32,7 @@ async def ping(bot: Bot, event: GroupMessageEvent):
     match = matchKagami(message)
 
     if match != None:
-        cr = get_driver().config.custom_replies
+        cr = config.custom_replies
         us = str(event.sender.user_id)
 
         if us in cr.keys():
@@ -45,7 +47,7 @@ tellMeIp = on_type(types=PrivateMessageEvent)
 @tellMeIp.handle()
 async def ping2(event: PrivateMessageEvent):
     if event.get_plaintext() == "::getip":
-        if event.sender.user_id != get_driver().config.admin_id:
+        if event.sender.user_id != config.admin_id:
             return
 
         localhost_name = socket.gethostname()

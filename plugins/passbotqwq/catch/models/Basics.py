@@ -3,7 +3,7 @@ from nonebot_plugin_orm import Model
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .BaseMixin import *
+from .Mixins import *
 
 
 DEFAULT_IMG = os.path.join(".", "res", "catch", "default.png")
@@ -22,7 +22,7 @@ class Global(Model, BaseMixin):
     catch_interval: Mapped[float] = mapped_column(default=3600)
 
 
-class Level(Model, BaseMixin):
+class Level(Model, BaseMixin, TagsMixin):
     """
     小哥等级表
     """
@@ -44,13 +44,27 @@ class Level(Model, BaseMixin):
         )
 
     name: Mapped[str] = mapped_column(default="未命名等级", unique=True)
+    sortingPriority: Mapped[int] = mapped_column(default=0)
     weight: Mapped[float] = mapped_column(default=0)
     color_code: Mapped[str] = mapped_column(default="#9e9d95")
     awards: Mapped[set["Award"]] = relationship(back_populates="level", lazy="subquery")
     price: Mapped[float] = mapped_column(default=0)
 
+    alt_names: Mapped[list['LevelAltName']] = relationship(back_populates='level', lazy='subquery')
 
-class Award(Model, BaseMixin):
+
+class LevelAltName(Model, BaseMixin, AltNameMixin):
+    """
+    一个承载所有等级的别名的表
+    """
+
+    __tablename__ = "catch_level_alt_name"
+
+    level_id = Column(Integer, ForeignKey("catch_level.data_id"))
+    level: Mapped[Level] = relationship(back_populates="alt_names", lazy="subquery")
+
+
+class Award(Model, BaseMixin, TagsMixin):
     __tablename__ = "catch_award"
 
     def __init__(
@@ -70,6 +84,7 @@ class Award(Model, BaseMixin):
     img_path: Mapped[str] = mapped_column(default=DEFAULT_IMG)
     name: Mapped[str] = mapped_column(default="", unique=True)
     description: Mapped[str] = mapped_column(default="")
+    sortingPriority: Mapped[int] = mapped_column(default=0)
 
     level_id = Column(Integer, ForeignKey("catch_level.data_id"))
     level: Mapped[Level] = relationship(back_populates="awards", lazy="subquery")
@@ -81,6 +96,19 @@ class Award(Model, BaseMixin):
         back_populates="award", lazy="subquery"
     )
     skins: Mapped[list["Skin"]] = relationship(back_populates="award", lazy="subquery")
+
+    alt_names: Mapped[list['LevelAltName']] = relationship(back_populates='award', lazy='subquery')
+
+
+class AwardAltName(Model, BaseMixin, AltNameMixin):
+    """
+    一个承载所有小哥的别名的表
+    """
+
+    __tablename__ = "catch_award_alt_name"
+
+    award_id = Column(Integer, ForeignKey("catch_award.data_id"))
+    award: Mapped[Award] = relationship(back_populates="alt_names", lazy="subquery")
 
 
 class StorageStats(Model, BaseMixin):
@@ -203,7 +231,7 @@ class OwnedSkin(Model, BaseMixin):
     skin: Mapped["Skin"] = relationship(back_populates="owned_skins", lazy="subquery")
 
 
-class Skin(Model, BaseMixin):
+class Skin(Model, BaseMixin, TagsMixin):
     __tablename__ = "catch_skin"
 
     def __init__(
@@ -236,15 +264,31 @@ class Skin(Model, BaseMixin):
         back_populates="skin", lazy="subquery"
     )
 
+    alt_names: Mapped[list['LevelAltName']] = relationship(back_populates='skin', lazy='subquery')
+
+
+class SkinAltName(Model, BaseMixin, AltNameMixin):
+    """
+    一个承载所有皮肤的别名的表
+    """
+
+    __tablename__ = "catch_skin_alt_name"
+
+    skin_id = Column(Integer, ForeignKey("catch_skin.data_id"))
+    skin: Mapped[Skin] = relationship(back_populates="alt_names", lazy="subquery")
+
 
 __all__ = [
     "Global",
     "Level",
+    "LevelAltName",
     "Award",
+    "AwardAltName",
     "StorageStats",
     "UsedStats",
     "User",
     "UsedSkin",
     "OwnedSkin",
     "Skin",
+    "SkinAltName",
 ]
