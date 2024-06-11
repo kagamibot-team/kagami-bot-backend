@@ -1,19 +1,16 @@
+"""
+关于渲染图片时所有的元件，在 Figma 中同步有定义
+"""
+
 import PIL
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageChops
 
 from ...putils.threading import make_async
+from ...putils.draw.texts import Fonts, drawLimitedBoxOfTextWithScalar
 
-from ...putils.draw.shapes import roundedRectangle
-from ...putils.draw.texts import (
-    drawLimitedBoxOfText,
-    Fonts,
-    drawLimitedBoxOfTextWithScalar,
-    textFont,
-)
-
-from .tools import hex_to_rgb, rgb_to_hex, mix_color
+from .tools import *
 
 
 @make_async
@@ -143,7 +140,9 @@ async def catch(
         expandBottom=5,
     )
 
-    block = PIL.Image.new("RGB", (800, max(180, rightDescription.height + 89)), "#9B9690")
+    block = PIL.Image.new(
+        "RGB", (800, max(180, rightDescription.height + 89)), "#9B9690"
+    )
     block.paste(left_display, (18, 18), left_display)
     block.paste(rightTitle, (212, 18), rightTitle)
     block.paste(rightDescription, (212, 69), rightDescription)
@@ -164,7 +163,7 @@ async def refBookBox(title: str, notation: str, color: str, imgUrl: str):
         24,
         "#FFFFFF",
         Fonts.FONT_HARMONYOS_SANS_BLACK,
-        20
+        20,
     )
 
     bottomNotation = await drawLimitedBoxOfTextWithScalar(
@@ -187,5 +186,8 @@ async def refBookBox(title: str, notation: str, color: str, imgUrl: str):
     block.paste(box, (18, 18), box)
     block.paste(bottomTitle, (18, 170), bottomTitle)
     block.paste(bottomNotation, (23, 105), bottomNotation)
-    
+
     return block
+
+
+__all__ = ["display_box", "catch", "refBookBox"]

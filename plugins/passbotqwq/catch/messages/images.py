@@ -12,9 +12,6 @@ from nonebot.log import logger
 from nonebot_plugin_orm import async_scoped_session, get_session
 from nonebot import get_driver
 
-
-from ..cores import Pick, PicksResult
-
 from ..models import *
 
 from ...putils.draw.images import (

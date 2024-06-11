@@ -7,8 +7,7 @@ from ...putils.command import at, image, text
 from ...putils.draw import imageToBytes
 
 from ..models import *
-from ..cores import PicksResult
-from ..images import display_box
+from ..images import *
 
 from .images import drawCaughtBoxes, drawStatus
 

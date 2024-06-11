@@ -1,3 +1,7 @@
+"""
+该文件需要转移到 putils 中
+"""
+
 def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
     assert len(hex_color) == 7 or len(hex_color) == 4
 
@@ -19,3 +23,6 @@ def mix_color(
         int(rgb1[1] + (rgb2[1] - rgb1[1]) * ratio),
         int(rgb1[2] + (rgb2[2] - rgb1[2]) * ratio),
     )
+
+
+__all__ = ['hex_to_rgb', 'rgb_to_hex', 'mix_color']

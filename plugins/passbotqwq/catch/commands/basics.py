@@ -7,8 +7,6 @@ from ...putils.command import CheckEnvironment, at, decorateWithLoadingMessage, 
 
 from ..models import *
 
-from ..cores import buy, handlePick
-
 from ..messages import (
     caughtMessage,
     help,
