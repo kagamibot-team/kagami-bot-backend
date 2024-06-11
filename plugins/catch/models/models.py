@@ -44,7 +44,7 @@ class Level(Model, BaseMixin, TagsMixin):
         )
 
     name: Mapped[str] = mapped_column(default="未命名等级", unique=True)
-    sortingPriority: Mapped[int] = mapped_column(default=0)
+    sorting_priority: Mapped[int] = mapped_column(default=0)
     weight: Mapped[float] = mapped_column(default=0)
     color_code: Mapped[str] = mapped_column(default="#9e9d95")
     awards: Mapped[set["Award"]] = relationship(back_populates="level", lazy="subquery")
@@ -84,7 +84,7 @@ class Award(Model, BaseMixin, TagsMixin):
     img_path: Mapped[str] = mapped_column(default=DEFAULT_IMG)
     name: Mapped[str] = mapped_column(default="", unique=True)
     description: Mapped[str] = mapped_column(default="")
-    sortingPriority: Mapped[int] = mapped_column(default=0)
+    sorting_priority: Mapped[int] = mapped_column(default=0)
 
     level_id = Column(Integer, ForeignKey("catch_level.data_id"))
     level: Mapped[Level] = relationship(back_populates="awards", lazy="subquery")

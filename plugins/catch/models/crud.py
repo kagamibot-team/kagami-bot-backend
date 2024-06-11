@@ -32,7 +32,9 @@ async def getAllLevels(session: Session):
     return (
         (
             await session.execute(
-                select(Level).filter(Level.awards.any()).order_by(Level.weight)
+                select(Level)
+                .filter(Level.awards.any())
+                .order_by(-Level.sorting_priority, Level.weight)
             )
         )
         .scalars()

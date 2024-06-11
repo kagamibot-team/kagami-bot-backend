@@ -85,9 +85,13 @@ class CatchStorage(Command):
 
 
 @decorateWithLoadingMessage(MSG_STATUS_LOADING)
+@dataclass
 class CatchProgress(Command):
-    commandPattern: str = f"^{KEYWORD_BASE_COMMAND}{KEYWORD_PROGRESS}"
+    commandPattern: str = f"^{KEYWORD_BASE_COMMAND} ?{KEYWORD_PROGRESS} ?"
     argsPattern: str = "$"
+
+    async def check(self, env: CheckEnvironment) -> Message | None:
+        return await super().check(env)
 
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]

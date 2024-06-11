@@ -149,9 +149,7 @@ class Clear(Command):
     ) -> Message | None:
         if result.group(2) == None:
             await env.session.execute(
-                delete(StorageStats).where(
-                    StorageStats.user == await getSender(env)
-                )
+                delete(StorageStats).where(StorageStats.user == await getSender(env))
             )
 
             await env.session.commit()
@@ -318,7 +316,7 @@ class CatchModify(Command):
 @dataclass
 class CatchLevelModify(Command):
     commandPattern: str = (
-        f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_LEVEL} ?(名称|名字|权重|色值|色号|颜色|奖励|金钱|获得)"
+        f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_LEVEL} ?(名称|名字|权重|色值|色号|颜色|奖励|金钱|获得|优先级|优先度|优先)"
     )
     argsPattern: str = " ?(\\S+) (.+)$"
 
@@ -356,6 +354,13 @@ class CatchLevelModify(Command):
                 return Message([at(env.sender), text("MSG_MONEY_INVALID")])
 
             level.price = int(data)
+        elif (
+            modifyElement == "优先级"
+            or modifyElement == "优先度"
+            or modifyElement == "优先"
+        ):
+            if re.match("^-?\\d+$", data):
+                level.sorting_priority = int(data)
         else:
             if not isValidColorCode(data):
                 return Message([at(env.sender), text("MSG_COLOR_CODE_INVALID")])
@@ -453,9 +458,7 @@ class CatchAddSkin(Command):
             return self.notExists(env, result.group(3))
 
         skin = (
-            await env.session.execute(
-                select(Skin).filter(Skin.name == result.group(4))
-            )
+            await env.session.execute(select(Skin).filter(Skin.name == result.group(4)))
         ).scalar_one_or_none()
 
         if skin is not None:
