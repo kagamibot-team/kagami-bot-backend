@@ -3,11 +3,11 @@ from typing import Type
 from nonebot import get_driver
 from nonebot.adapters.onebot.v11 import Message
 from ...putils.command import CheckEnvironment, CommandBase
-from ..models.crud import getOrCreateUser
+from ..models.crud import getUser
 
 
 async def getSender(env: CheckEnvironment):
-    return await getOrCreateUser(env.session, env.sender)
+    return await getUser(env.session, env.sender)
 
 
 def isValidColorCode(raw: str):

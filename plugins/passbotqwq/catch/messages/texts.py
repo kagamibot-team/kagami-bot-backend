@@ -11,9 +11,11 @@ from ...putils.draw import imageToBytes
 
 from ..models.crud import (
     getAllLevels,
-    getAwardDescriptionOfOneUser,
-    getAwardImageOfOneUser,
-    getUserUsingSkin,
+    getAllSkinsSelling,
+    getAwardDescription,
+    getAwardImage,
+    getOwnedSkin,
+    getUsedSkin,
 )
 from ..models.data import getPosibilities
 from ..models import Award, User
@@ -30,7 +32,7 @@ import pathlib
 
 async def displayAward(session: async_scoped_session, award: Award, user: User):
     name = award.name
-    skin = await getUserUsingSkin(session, user, award)
+    skin = await getUsedSkin(session, user, award)
 
     if skin is not None:
         name = name + f"[{skin.skin.name}]"
@@ -39,10 +41,10 @@ async def displayAward(session: async_scoped_session, award: Award, user: User):
         [
             MessageSegment.text(name + f"【{award.level.name}】"),
             MessageSegment.image(
-                pathlib.Path(await getAwardImageOfOneUser(session, user, award))
+                pathlib.Path(await getAwardImage(session, user, award))
             ),
             MessageSegment.text(
-                f"\n\n{await getAwardDescriptionOfOneUser(session, user, award)}"
+                f"\n\n{await getAwardDescription(session, user, award)}"
             ),
         ]
     )
@@ -89,10 +91,10 @@ async def caughtMessage(session: async_scoped_session, picksResult: PicksResult)
     ms.append(MessageSegment.image(imageToBytes(image)))
 
     ## 旧版界面
-    # user = await session.get_one(UserData, picksResult.udid)
+    # user = ...
 
     # for p in picksResult.picks:
-    #     award = await session.get_one(Award, p.award)
+    #     award = ...
     #     level = award.level
 
     #     ms.append(await image(await display_box(
@@ -282,18 +284,10 @@ async def getGoodsList(session: async_scoped_session, user: User):
         )
     )
 
-    skins = (
-        (await session.execute(select(Skin).filter(Skin.price >= 0))).scalars().all()
-    )
+    skins = await getAllSkinsSelling(session)
 
     for skin in skins:
-        isOwned = (
-            await session.execute(
-                select(OwnedSkin)
-                .filter(OwnedSkin.user == user)
-                .filter(OwnedSkin.skin == skin)
-            )
-        ).scalar_one_or_none()
+        isOwned = await getOwnedSkin(session, user, skin)
 
         goods.append(
             Goods(

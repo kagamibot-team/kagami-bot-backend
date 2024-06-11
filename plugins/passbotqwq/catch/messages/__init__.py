@@ -16,7 +16,6 @@ from .texts import (
 from .images import (
     drawAwardBox,
     drawAwardBoxImage,
-    drawAwardBoxImageHidden,
     drawStatus,
     drawStorage,
     getImageTarget,

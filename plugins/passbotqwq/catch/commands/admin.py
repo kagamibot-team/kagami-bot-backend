@@ -20,13 +20,13 @@ from ...putils.download import download, writeData
 from ...putils.text_format_check import isFloat, not_negative
 
 from ..models import *
-from ..models.crud import getOrCreateUser
+from ..models.crud import getUser
 from ..models.data import (
-    addAward,
+    giveAward,
     deleteSkinOwnership,
     obtainSkin,
     resetCacheCount,
-    setEveryoneInterval,
+    setInterval,
 )
 
 from ..messages import (
@@ -80,7 +80,7 @@ class CatchSetInterval(Command):
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         interval = int(result.group(3))
-        await setEveryoneInterval(env.session, interval)
+        await setInterval(env.session, interval)
         message = settingOk()
 
         await env.session.commit()
@@ -120,9 +120,9 @@ class Give(Command):
         if result.group(3):
             count = int(result.group(3)[1:])
 
-        await addAward(
+        await giveAward(
             env.session,
-            await getOrCreateUser(env.session, int(result.group(1))),
+            await getUser(env.session, int(result.group(1))),
             award,
             count,
         )
@@ -742,7 +742,7 @@ class CatchGiveMoney(Command):
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         money = int(result.group(2))
 
-        user = await getOrCreateUser(env.session, int(result.group(1)))
+        user = await getUser(env.session, int(result.group(1)))
         user.money += money
         await env.session.commit()
 

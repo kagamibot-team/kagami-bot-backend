@@ -5,9 +5,9 @@ import time
 
 from sqlalchemy import select
 
-from .models.data import addAward, obtainSkin
-from .models.crud import getAllAvailableLevels, getGlobal, getOrCreateUser
-from .models.Basics import Award, StorageStats, Skin, User
+from .models.data import giveAward, obtainSkin
+from .models.crud import getAllAwardsInLevel, getAllLevels, getAwardById, getGlobal, getSkinByName, getUser, getUserById
+from .models.Basics import Award, Level, StorageStats, Skin, User
 
 from nonebot_plugin_orm import async_scoped_session
 
@@ -22,6 +22,9 @@ class Pick:
 
     def isNew(self):
         return self.fromNumber is None
+    
+    async def dbAward(self, session: async_scoped_session):
+        return await getAwardById(session, self.award)
 
 
 @dataclass
@@ -43,15 +46,16 @@ class PicksResult:
 
     def moneyTo(self):
         return self.money_from + self.prizes()
+    
+    async def dbUser(self, session: async_scoped_session):
+        return await getUserById(session, self.udid)
 
 
 async def pick(session: async_scoped_session, user: User) -> list[Award]:
-    allAvailableLevels = await getAllAvailableLevels(session)
-    level = random.choices(allAvailableLevels, [l.weight for l in allAvailableLevels])[
-        0
-    ]
-    awardsResult = await session.execute(select(Award).filter(Award.level == level))
-    return [random.choice([a for a in awardsResult.scalars()])]
+    levels = await getAllLevels(session)
+    level = random.choices(levels, [l.weight for l in levels])[0]
+    awardsResult = await getAllAwardsInLevel(session, level)
+    return [random.choice(awardsResult)]
 
 
 async def recalcPickTime(session: async_scoped_session, user: User):
@@ -93,7 +97,7 @@ async def canPickCount(session: async_scoped_session, user: User):
 async def handlePick(
     session: async_scoped_session, uid: int, maxPickCount: int = 1
 ) -> PicksResult:
-    user = await getOrCreateUser(session, uid)
+    user = await getUser(session, uid)
     count = await canPickCount(session, user)
 
     udid = int(user.data_id)  # type: ignore
@@ -127,10 +131,10 @@ async def handlePick(
 
     for award in awardsDelta:
         aid = int(award.data_id)  # type: ignore
-        oldValue = await addAward(session, user, award, awardsDelta[award])
+        oldValue = await giveAward(session, user, award, awardsDelta[award])
         dt = award.level.price * awardsDelta[award]
 
-        if oldValue is None:
+        if oldValue == 0:
             dt += 20
 
         user.money += dt
@@ -149,10 +153,7 @@ async def buy(session: async_scoped_session, user: User, code: str, price: float
 
     if len(code) > 2 and code[:2] == "皮肤":
         skinName = code[2:]
-        skin = (
-            await session.execute(select(Skin).where(Skin.name == skinName))
-        ).scalar_one()
+        skin = await getSkinByName(session, skinName)
         assert skin is not None
-
         await obtainSkin(session, user, skin)
         return

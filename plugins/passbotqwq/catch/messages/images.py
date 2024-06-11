@@ -12,12 +12,19 @@ from nonebot.log import logger
 from nonebot_plugin_orm import async_scoped_session, get_session
 from nonebot import get_driver
 
+
 from ..cores import Pick, PicksResult
 
 from ..models.crud import (
-    getAwardDescriptionOfOneUser,
-    getAwardImageOfOneUser,
+    getAllAwards,
+    getAllAwardsInLevel,
+    getAllLevels,
+    getAllSkins,
+    getAllSkinsSelling,
+    getAwardDescription,
+    getAwardImage,
 )
+from ..models.data import getUserStorages, getUserStoragesByLevel
 from ..models.Basics import Award, StorageStats, Skin, Level, User
 
 from ...putils.draw.images import (
@@ -111,20 +118,7 @@ async def drawAwardBox(
 async def drawStorage(session: async_scoped_session, user: User):
     awards: list[PILImage] = []
 
-    acs = (
-        await session.execute(
-            select(StorageStats)
-            .filter(StorageStats.user == user)
-            .filter(StorageStats.count > 0)
-            .join(Award, StorageStats.award)
-            .join(Level, Award.level)
-            .order_by(
-                Level.weight,
-                -StorageStats.count,
-                Award.data_id,
-            )
-        )
-    ).scalars()
+    acs = await getUserStorages(session, user)
 
     for ac in acs:
         award = ac.award
@@ -135,7 +129,7 @@ async def drawStorage(session: async_scoped_session, user: User):
                 award.name,
                 str(count),
                 award.level.color_code,
-                await getAwardImageOfOneUser(session, user, award),
+                await getAwardImage(session, user, award),
             )
         )
 
@@ -144,42 +138,15 @@ async def drawStorage(session: async_scoped_session, user: User):
     )
 
 
-@deprecated("Use images.components.display_box instead")
-async def drawAwardBoxImageHidden():
-    return await drawAwardBoxImage("./res/catch/blank_placeholder.png")
-
-
 async def drawStatus(session: async_scoped_session, user: User | None):
     boxes: list[PILImage] = []
-    levels = (
-        (
-            await session.execute(
-                select(Level).filter(Level.awards.any()).order_by(Level.weight)
-            )
-        )
-        .scalars()
-        .all()
-    )
+    levels = await getAllLevels(session)
 
     for level in levels:
-        allAwards = (
-            (
-                await session.execute(
-                    select(Award).filter(Award.level == level).order_by(Award.data_id)
-                )
-            )
-            .scalars()
-            .all()
-        )
+        allAwards = await getAllAwardsInLevel(session, level)
 
         if user:
-            _query = (
-                select(StorageStats.target_award_id)
-                .filter(StorageStats.user == user)
-                .join(Award, StorageStats.award)
-                .filter(Award.level == level)
-            )
-            userCollected = list((await session.execute(_query)).scalars())
+            userCollected = await getUserStoragesByLevel(session, user, level)
             title = f"{level.name}：{len(userCollected)} / {len(allAwards)}"
         else:
             userCollected = []
@@ -208,7 +175,7 @@ async def drawStatus(session: async_scoped_session, user: User | None):
             elif user:
                 awards.append(
                     await drawAwardBox(
-                        await getAwardImageOfOneUser(session, user, award),
+                        await getAwardImage(session, user, award),
                         award.name,
                         "",
                         level.color_code,
@@ -216,9 +183,7 @@ async def drawStatus(session: async_scoped_session, user: User | None):
                 )
             else:
                 awards.append(
-                    await drawAwardBox(
-                        award.img_path, award.name, "", level.color_code
-                    )
+                    await drawAwardBox(award.img_path, award.name, "", level.color_code)
                 )
 
         boxes.append(
@@ -247,16 +212,16 @@ async def drawStatus(session: async_scoped_session, user: User | None):
 
 async def drawCaughtBoxes(session: async_scoped_session, picks: PicksResult):
     boxes: list[PILImage] = []
+    user = await picks.dbUser(session)
 
     for pick in picks.picks:
-        award = await session.get_one(Award, pick.award)
-        user = await session.get_one(User, pick.picks.udid)
+        award = await pick.dbAward(session)
         level = award.level
 
         image = await catch(
             award.name,
-            await getAwardDescriptionOfOneUser(session, user, award),
-            await getAwardImageOfOneUser(session, user, award),
+            await getAwardDescription(session, user, award),
+            await getAwardImage(session, user, award),
             level.name,
             level.color_code,
             pick.isNew(),
@@ -278,7 +243,8 @@ async def preDrawEverything():
         return
 
     session = get_session()
-    awards = (await session.execute(select(Award))).scalars().all()
+
+    awards = await getAllAwards(session)
     begin = time.time()
 
     for ind, award in enumerate(awards):
@@ -286,7 +252,7 @@ async def preDrawEverything():
         await display_box(bg, award.img_path)
         logger.info(f"{ind + 1}/{len(awards)} 预渲染完成了 {award.name}")
 
-    skins = (await session.execute(select(Skin))).scalars().all()
+    skins = await getAllSkins(session)
 
     for ind, skin in enumerate(skins):
         bg = skin.award.level.color_code
