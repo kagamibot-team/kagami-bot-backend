@@ -734,15 +734,13 @@ class CatchAdminHelp(Command):
 @dataclass
 class CatchGiveMoney(Command):
     commandPattern: str = ":: ?给钱"
-    argsPattern: str = " (\\d+) (\\d+)"
+    argsPattern: str = " (\\d+) (-?\\d+)"
 
     def errorMessage(self, env: CheckEnvironment) -> Message | None:
         return Message([at(env.sender), text("MSG_GIVE_MONEY_WRONG_FORMAT")])
 
     async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
         money = int(result.group(2))
-        if money < 1:
-            return self.errorMessage(env)
 
         user = await getOrCreateUser(env.session, int(result.group(1)))
         user.money += money
