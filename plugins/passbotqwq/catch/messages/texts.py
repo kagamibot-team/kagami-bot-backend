@@ -208,7 +208,7 @@ def help():
         "抓小哥进度(zhuajd)：展示目前收集的进度",
         "切换皮肤 小哥名字：切换一个小哥的皮肤",
         "小镜的shop(xjshop)：进入小镜的商店",
-        "我有多少薯片(mysp)：告诉你你有多少薯片"
+        "我有多少薯片(mysp)：告诉你你有多少薯片",
     ]
 
     res = normal
@@ -283,9 +283,7 @@ async def getGoodsList(session: async_scoped_session, user: User):
     )
 
     skins = (
-        (await session.execute(select(Skin).filter(Skin.price >= 0)))
-        .scalars()
-        .all()
+        (await session.execute(select(Skin).filter(Skin.price >= 0))).scalars().all()
     )
 
     for skin in skins:
@@ -356,5 +354,9 @@ updateHistory: dict[str, list[str]] = {
     ],
     "0.4.2": [
         "热更新：修复了新用户有关的各种小问题",
-    ]
+    ],
+    "0.4.3": [
+        "修复了无法应用多个皮肤的问题",
+        "调整了图片编码器以加快图片的生成速度",
+    ],
 }

@@ -35,7 +35,7 @@ from ...putils.draw.texts import (
     Fonts,
 )
 from ...putils.draw.typing import PILImage
-from ...putils.draw import newImage
+from ...putils.draw.images import newImage
 
 from ..images import display_box, catch, refBookBox
 

@@ -1,22 +1,10 @@
-import base64
-import io
-from typing import Tuple
-import PIL
-import PIL.Image
-import PIL.ImageDraw
-import PIL.ImageFont
-from .images import newImage
+import cv2
+import numpy as np
 
-from ..threading import make_async
-
-from .typing import PILImage, PillowColorLike, PillowColorLikeWeak
-
-
-FONT_HARMONYOS_SANS = r'C:\Windows\Fonts\HarmonyOS_Sans_SC_Regular.ttf'
-FONT_HARMONYOS_SANS_BLACK = r'C:\Windows\Fonts\HarmonyOS_Sans_SC_Black.ttf'
+from .typing import PILImage
 
 
 def imageToBytes(img: PILImage):
-    buffer = io.BytesIO()
-    img.save(buffer, format='PNG')
-    return buffer.getvalue()
+    _, im = cv2.imencode('.png', cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR))
+
+    return im.tobytes()
