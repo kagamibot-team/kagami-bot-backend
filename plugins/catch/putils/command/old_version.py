@@ -45,9 +45,26 @@ def decorateWithLoadingMessage(_text: str = " 稍候，正在查询你的小哥�
                         ]
                     ),
                 )
-                res = await super().handleCommand(env, result)
-                await env.bot.delete_msg(message_id=msg["message_id"])
-                return res
+                try:
+                    res = await super().handleCommand(env, result)
+                    return res
+                except WaitForMoreInformationException as e:
+                    raise e
+                except Exception as e:
+                    await env.bot.send_group_msg(
+                        group_id=env.group_id,
+                        message=Message(
+                            [
+                                at(env.sender),
+                                text(
+                                    f" 程序遇到了错误：{e}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！"
+                                ),
+                            ]
+                        ),
+                    )
+                    raise e
+                finally:
+                    await env.bot.delete_msg(message_id=msg["message_id"])
 
         return _Command
 
@@ -64,25 +81,31 @@ def asyncLock():
 
     def _decorator(cls: Type[Command]):
         class _Command(cls):
-            async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+            async def handleCommand(
+                self, env: CheckEnvironment, result: re.Match[str]
+            ) -> Message | None:
                 async with getLock(env.sender):
                     msg = await super().handleCommand(env, result)
 
                 return msg
-        
+
         return _Command
+
     return _decorator
 
 
 def databaseIO():
     def _decorator(cls: Type[Command]):
         class _Command(cls):
-            async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+            async def handleCommand(
+                self, env: CheckEnvironment, result: re.Match[str]
+            ) -> Message | None:
                 msg = await super().handleCommand(env, result)
                 await env.session.commit()
                 return msg
-        
+
         return _Command
+
     return _decorator
 
 
@@ -169,5 +192,5 @@ __all__ = [
     "WaitForMoreInformationException",
     "Command",
     "asyncLock",
-    "databaseIO"
+    "databaseIO",
 ]

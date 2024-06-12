@@ -143,7 +143,7 @@ async def getUserStorages(session: Session, user: User):
                 .join(Award, StorageStats.award)
                 .join(Level, Award.level)
                 .order_by(
-                    Level.sorting_priority,
+                    -Level.sorting_priority,
                     Level.weight,
                     -StorageStats.count,
                     Award.data_id,

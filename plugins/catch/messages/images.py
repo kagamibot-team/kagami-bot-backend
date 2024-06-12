@@ -200,9 +200,6 @@ async def drawStatus(session: async_scoped_session, user: User | None):
 
 
 async def drawCaughtBoxes(session: async_scoped_session, picks: PicksResult):
-    profile = cProfile.Profile()
-    profile.enable()
-
     boxes: list[PILImage] = []
     user = await picks.dbUser(session)
 
@@ -221,9 +218,6 @@ async def drawCaughtBoxes(session: async_scoped_session, picks: PicksResult):
         )
 
         boxes.append(image)
-
-    profile.disable()
-    profile.print_stats(sort="cumtime")
 
     return await verticalPile(boxes, 33, "left", "#EEEBE3", 80, 80, 80, 80)
 
