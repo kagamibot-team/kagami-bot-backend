@@ -208,6 +208,7 @@ async def drawLimitedBoxOfText(
         if t == '\n':
             lines.append(lCache)
             lCache = ""
+            lWidth = 0
             continue
 
         box = getBoxOfText(t, textFont(font, fontSize))
