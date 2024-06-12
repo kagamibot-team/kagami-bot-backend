@@ -57,12 +57,12 @@ def decorateWithLoadingMessage(_text: str = " 稍候，正在查询你的小哥�
                             [
                                 at(env.sender),
                                 text(
-                                    f" 程序遇到了错误：{e}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！"
+                                    f" 程序遇到了错误：{repr(e)}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！"
                                 ),
                             ]
                         ),
                     )
-                    raise e
+                    raise e from e
                 finally:
                     await env.bot.delete_msg(message_id=msg["message_id"])
 
