@@ -272,6 +272,33 @@ async def removeAwardTag(session: Session, award: Award, tag: Tag):
         await session.flush()
 
 
+async def removeAward(session: Session, award: Award):
+    "移除一个小哥"
+
+    # 移除于它绑定的所有别名
+    await session.execute(
+        delete(AwardAltName).filter(AwardAltName.award == award)
+    )
+    # 移除于它绑定的所有标签
+    await session.execute(
+        delete(AwardTagRelation).filter(AwardTagRelation.award == award)
+    )
+    # 移除于它绑定的所有统计
+    await session.execute(
+        delete(StorageStats).filter(StorageStats.award == award)
+    )
+    await session.execute(
+        delete(UsedStats).filter(UsedStats.award == award)
+    )
+    # 删除与它有关的全部皮肤
+    await session.execute(
+        delete(Skin).filter(Skin.award == award)
+    )
+    # 移除它本身
+    await session.delete(award)
+    await session.flush()
+
+
 ### USER ###
 async def getUser(session: Session, qqid: int):
     "返回一个用户，如果该用户不存在，则立即创建"
@@ -568,4 +595,5 @@ __all__ = [
     "getSkinTag",
     "addSkinTag",
     "removeSkinTag",
+    "removeAward"
 ]

@@ -189,7 +189,10 @@ class CatchRemoveAward(Command):
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        await deleteObj(env.session, await getAwardByName(env.session, result.group(3)))
+        award = await getAwardByName(env.session, result.group(3))
+        if award is None:
+            return self.notExists(env, result.group(3))
+        await removeAward(env.session, award)
         return Message(text("已经删除了"))
 
 

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import enum
+from functools import cache
 import os
 from typing import Literal
 
@@ -45,20 +46,23 @@ def _res(fn: str):
 
 
 class Fonts(enum.Enum):
-    FONT_HARMONYOS_SANS = _res("HarmonyOS_Sans_SC_Regular.ttf")
-    FONT_HARMONYOS_SANS_BLACK = _res("HarmonyOS_Sans_SC_Black.ttf")
-    FONT_HARMONYOS_SANS_THIN = _res("HARMONYOS_SANS_SC_THIN.TTF")
+    HARMONYOS_SANS = _res("HarmonyOS_Sans_SC_Regular.ttf")
+    HARMONYOS_SANS_BLACK = _res("HarmonyOS_Sans_SC_Black.ttf")
     ALIMAMA_SHU_HEI = _res("AlimamaShuHeiTi-Bold.ttf")
     JINGNAN_BOBO_HEI = _res("荆南波波黑-Bold.ttf")
     JIANGCHENG_YUANTI = _res("江城圆体 500W.ttf")
     SUPERMERCADO = _res("SupermercadoOne-Regular.ttf")
+    VONWAON_BITMAP_12 = _res("VonwaonBitmap-12px.ttf")
+    VONWAON_BITMAP_16 = _res("VonwaonBitmap-16px.ttf")
+    MARU_MONICA = _res("莫妮卡像素圆体 x12y16pxMaruMonica.otf")
 
 
+@cache
 def textFont(fontEnum: Fonts, fontSize: int):
     return PIL.ImageFont.FreeTypeFont(fontEnum.value, fontSize)
 
 
-DEFAULT_FONT = textFont(Fonts.FONT_HARMONYOS_SANS, 12)
+DEFAULT_FONT = textFont(Fonts.HARMONYOS_SANS, 12)
 
 
 @make_async
@@ -85,10 +89,26 @@ def drawText(
     )
 
 
-def getBoxOfText(text: str, font: PIL.ImageFont.FreeTypeFont = DEFAULT_FONT):
+def _getBoxOfText(text: str, font: PIL.ImageFont.FreeTypeFont = DEFAULT_FONT):
     left, top, right, bottom = font.getbbox(text)
 
     return TextBox(left, top, right, bottom)
+
+
+def getBoxOfText(text: str, font: Fonts, fontSize: int):
+    if (
+        font == Fonts.VONWAON_BITMAP_16
+        or font == Fonts.VONWAON_BITMAP_12
+    ):
+        width = 0
+        for t in text:
+            if ord(t) <= 127:
+                width += fontSize / 2
+            else:
+                width += fontSize
+        return TextBox(0, 0, int(width), fontSize)
+    else:
+        return _getBoxOfText(text, textFont(font, fontSize))
 
 
 async def drawABoxOfText(
@@ -103,7 +123,7 @@ async def drawABoxOfText(
     marginTop: int = 0,
     marginBottom: int = 0,
 ):
-    box = getBoxOfText(text, font)
+    box = _getBoxOfText(text, font)
     image = await newImage(
         (
             box.right + marginLeft + marginRight,
@@ -130,7 +150,8 @@ async def drawSingleLine(
     maxWidth: int,
     color: str,
     align: Literal["left", "right", "center", "expand"],
-    font=DEFAULT_FONT,
+    font: Fonts = Fonts.HARMONYOS_SANS,
+    fontSize: int = 12,
     expandTop: int = 0,
     expandBottom: int = 0,
     expandLeft: int = 0,
@@ -138,7 +159,8 @@ async def drawSingleLine(
     strokeWidth: int = 0,
     strokeColor: str = "#000000",
 ):
-    boxes = [getBoxOfText(t, font) for t in text]
+    _font = textFont(font, fontSize)
+    boxes = [getBoxOfText(t, font, fontSize) for t in text]
 
     base = PIL.Image.new(
         "RGBA",
@@ -146,7 +168,7 @@ async def drawSingleLine(
             expandLeft + expandRight + maxWidth,
             expandTop + expandBottom + max([e.bottom for e in boxes] + [1]),
         ),
-        "#00000000",
+        "#FFFFFF00",
     )
     draw = PIL.ImageDraw.Draw(base)
 
@@ -167,7 +189,7 @@ async def drawSingleLine(
             box.left + leftPointer,
             box.top + expandTop,
             color,
-            font,
+            _font,
             strokeColor,
             strokeWidth,
         )
@@ -180,6 +202,114 @@ async def drawSingleLine(
     return base
 
 
+async def drawASingleLineClassic(
+    text: str,
+    color: str,
+    font: Fonts = Fonts.HARMONYOS_SANS,
+    fontSize: int = 12,
+    expandTop: int = 0,
+    expandBottom: int = 0,
+    expandLeft: int = 0,
+    expandRight: int = 0,
+    strokeWidth: int = 0,
+    strokeColor: str = "#000000",
+):
+    box = _getBoxOfText(text, textFont(font, fontSize))
+    image = PIL.Image.new(
+        "RGBA",
+        (
+            box.right + expandLeft + expandRight,
+            box.bottom + expandTop + expandBottom,
+        ),
+        "#00000000",
+    )
+    await drawText(
+        PIL.ImageDraw.Draw(image),
+        text,
+        box.left + expandLeft,
+        box.top + expandTop,
+        color,
+        textFont(font, fontSize),
+        strokeColor,
+        strokeWidth,
+    )
+
+    return image
+
+
+async def drawLimitedBoxOfTextClassic(
+    *,
+    text: str,
+    maxWidth: int,
+    font: Fonts = Fonts.HARMONYOS_SANS,
+    fontSize: int = 12,
+    color: str,
+    lineHeight: int,
+    expandTop: int = 0,
+    expandBottom: int = 0,
+    expandLeft: int = 0,
+    expandRight: int = 0,
+    expandInnerTop: int = 0,
+    expandInnerBottom: int = 0,
+    expandInnerLeft: int = 0,
+    expandInnerRight: int = 0,
+    strokeWidth: int = 0,
+    strokeColor: str = "#000000",
+):
+    lines: list[str] = []
+    lWidth = 0
+    lCache = ""
+
+    for t in text:
+        if t == "\n":
+            lines.append(lCache)
+            lCache = ""
+            lWidth = 0
+            continue
+
+        box = getBoxOfText(t, font, fontSize)
+        if box.right + lWidth > maxWidth:
+            lWidth = box.right
+            lines.append(lCache)
+            lCache = t
+        else:
+            lCache += t
+            lWidth += box.right
+
+    if lCache:
+        lines.append(lCache)
+
+    base = PIL.Image.new(
+        "RGBA",
+        (
+            expandLeft + expandRight + maxWidth,
+            expandTop + expandBottom + (len(lines) + 1) * lineHeight,
+        ),
+        "#00000000",
+    )
+
+    leftPointer = expandLeft
+    topPointer = expandTop
+
+    for line in lines:
+        dr = await drawASingleLineClassic(
+            text=line,
+            color=color,
+            font=font,
+            fontSize=fontSize,
+            expandTop=expandInnerTop,
+            expandBottom=expandInnerBottom,
+            expandLeft=expandInnerLeft,
+            expandRight=expandInnerRight,
+            strokeWidth=strokeWidth,
+            strokeColor=strokeColor,
+        )
+        base.paste(dr, (leftPointer - expandInnerLeft, topPointer - expandInnerTop))
+        topPointer += lineHeight
+
+    return base
+
+
 async def drawLimitedBoxOfText(
     text: str,
     maxWidth: int,
@@ -187,7 +317,7 @@ async def drawLimitedBoxOfText(
     alignLastLine: Literal["left", "right", "center", "expand"],
     lineHeight: int,
     color: str = "#000000",
-    font: Fonts = Fonts.FONT_HARMONYOS_SANS,
+    font: Fonts = Fonts.HARMONYOS_SANS,
     fontSize: int = 16,
     expandTop: int = 0,
     expandBottom: int = 0,
@@ -205,13 +335,13 @@ async def drawLimitedBoxOfText(
     lCache = ""
 
     for t in text:
-        if t == '\n':
+        if t == "\n":
             lines.append(lCache)
             lCache = ""
             lWidth = 0
             continue
 
-        box = getBoxOfText(t, textFont(font, fontSize))
+        box = getBoxOfText(t, font, fontSize)
         if box.right + lWidth > maxWidth:
             lWidth = box.right
             lines.append(lCache)
@@ -219,7 +349,7 @@ async def drawLimitedBoxOfText(
         else:
             lCache += t
             lWidth += box.right
-    
+
     if lCache:
         lines.append(lCache)
 
@@ -243,7 +373,8 @@ async def drawLimitedBoxOfText(
                 maxWidth,
                 color,
                 align if ind + 1 != len(lines) else alignLastLine,
-                textFont(font, fontSize),
+                font,
+                fontSize,
                 expandInnerTop,
                 expandInnerBottom,
                 expandInnerLeft,
@@ -265,7 +396,7 @@ async def drawLimitedBoxOfTextWithScalar(
     alignLastLine: Literal["left", "right", "center", "expand"],
     lineHeight: int,
     color: str = "#000000",
-    font: Fonts = Fonts.FONT_HARMONYOS_SANS,
+    font: Fonts = Fonts.HARMONYOS_SANS,
     fontSize: int = 16,
     expandTop: int = 0,
     expandBottom: int = 0,
@@ -277,7 +408,7 @@ async def drawLimitedBoxOfTextWithScalar(
     expandInnerRight: int = 0,
     strokeWidth: int = 0,
     strokeColor: str = "#000000",
-    scalar: int = 2,
+    scalar: int = 1,
 ):
     res = await drawLimitedBoxOfText(
         text,

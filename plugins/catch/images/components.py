@@ -8,7 +8,13 @@ import PIL.ImageDraw
 import PIL.ImageChops
 
 from ..putils.threading import make_async
-from ..putils.draw.texts import Fonts, drawLimitedBoxOfTextWithScalar
+from ..putils.draw.texts import (
+    Fonts,
+    drawASingleLineClassic,
+    drawLimitedBoxOfTextClassic,
+    drawLimitedBoxOfTextWithScalar,
+    drawSingleLine,
+)
 
 from .tools import *
 
@@ -96,25 +102,19 @@ async def catch(
     notation: str,
 ) -> PIL.Image.Image:
     left_display = await display_box(color, image, new)
-    rightDescription = await drawLimitedBoxOfTextWithScalar(
-        description,
-        567,
-        "left",
-        "left",
-        19,
-        "#ffffff",
-        Fonts.FONT_HARMONYOS_SANS,
-        16,
+    rightDescription = await drawLimitedBoxOfTextClassic(
+        text=description,
+        maxWidth=567,
+        lineHeight=19,
+        color="#ffffff",
+        font=Fonts.VONWAON_BITMAP_16,
+        fontSize=16,
     )
-    rightTitle = await drawLimitedBoxOfTextWithScalar(
-        title,
-        400,
-        "left",
-        "left",
-        43,
-        "#ffffff",
-        Fonts.FONT_HARMONYOS_SANS_BLACK,
-        36,
+    rightTitle = await drawASingleLineClassic(
+        text=title,
+        fontSize=43,
+        color="#ffffff",
+        font=Fonts.HARMONYOS_SANS_BLACK,
     )
     rightStar = await drawLimitedBoxOfTextWithScalar(
         stars,
@@ -123,21 +123,26 @@ async def catch(
         "right",
         43,
         color,
-        Fonts.FONT_HARMONYOS_SANS,
+        Fonts.HARMONYOS_SANS,
         28,
     )
-    leftNotation = await drawLimitedBoxOfTextWithScalar(
-        notation,
-        170,
-        "left",
-        "left",
-        57,
-        "white",
-        Fonts.SUPERMERCADO,
-        48,
-        strokeWidth=1,
-        expandInnerBottom=5,
+    leftNotation = await drawASingleLineClassic(
+        text=notation,
+        color="#FFFFFF",
+        font=Fonts.MARU_MONICA,
+        fontSize=48,
         expandBottom=5,
+        expandTop=0,
+        expandLeft=0,
+    )
+    leftNotationShadow = await drawASingleLineClassic(
+        text=notation,
+        color="#000000",
+        font=Fonts.MARU_MONICA,
+        fontSize=48,
+        expandBottom=5,
+        expandTop=3,
+        expandLeft=3,
     )
 
     block = PIL.Image.new(
@@ -145,9 +150,10 @@ async def catch(
     )
     block.paste(left_display, (18, 18), left_display)
     block.paste(rightTitle, (212, 18), rightTitle)
-    block.paste(rightDescription, (212, 69), rightDescription)
+    block.paste(rightDescription, (212, 75), rightDescription)
     block.paste(rightStar, (379, 18), rightStar)
-    block.paste(leftNotation, (28, 107), leftNotation)
+    block.paste(leftNotationShadow, (26, 107), leftNotationShadow)
+    block.paste(leftNotation, (26, 107), leftNotation)
 
     return block
 
@@ -162,7 +168,7 @@ async def refBookBox(title: str, notation: str, color: str, imgUrl: str):
         "center",
         24,
         "#FFFFFF",
-        Fonts.FONT_HARMONYOS_SANS_BLACK,
+        Fonts.HARMONYOS_SANS_BLACK,
         20,
     )
 

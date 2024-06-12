@@ -1,4 +1,5 @@
 import base64
+import cProfile
 import os
 import time
 from typing_extensions import deprecated
@@ -75,7 +76,7 @@ async def drawAwardBox(
                     "center",
                     int(18 * GLOBAL_SCALAR),
                     background,
-                    Fonts.FONT_HARMONYOS_SANS,
+                    Fonts.HARMONYOS_SANS,
                     int(14 * GLOBAL_SCALAR),
                 ),
             ],
@@ -94,7 +95,7 @@ async def drawAwardBox(
         int(4 * GLOBAL_SCALAR),
         int(92 * GLOBAL_SCALAR),
         "#FFFFFF",
-        textFont(Fonts.FONT_HARMONYOS_SANS_BLACK, int(27 * GLOBAL_SCALAR)),
+        textFont(Fonts.HARMONYOS_SANS_BLACK, int(27 * GLOBAL_SCALAR)),
         strokeColor="#000000",
         strokeWidth=int(2 * GLOBAL_SCALAR),
         verticalAlign=VerticalAnchor.bottom,
@@ -199,6 +200,9 @@ async def drawStatus(session: async_scoped_session, user: User | None):
 
 
 async def drawCaughtBoxes(session: async_scoped_session, picks: PicksResult):
+    profile = cProfile.Profile()
+    profile.enable()
+
     boxes: list[PILImage] = []
     user = await picks.dbUser(session)
 
@@ -217,6 +221,9 @@ async def drawCaughtBoxes(session: async_scoped_session, picks: PicksResult):
         )
 
         boxes.append(image)
+
+    profile.disable()
+    profile.print_stats(sort="cumtime")
 
     return await verticalPile(boxes, 33, "left", "#EEEBE3", 80, 80, 80, 80)
 
