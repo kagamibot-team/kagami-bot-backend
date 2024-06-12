@@ -168,13 +168,13 @@ async def getUserStoragesByLevel(session: Session, user: User, level: Level):
 @dataclass
 class Pick:
     award: int
-    fromNumber: int | None
+    fromNumber: int
     delta: int
     picks: "PicksResult"
     prize: float
 
     def isNew(self):
-        return self.fromNumber is None
+        return self.fromNumber == 0
 
     async def dbAward(self, session: async_scoped_session):
         return await getAwardById(session, self.award)
