@@ -3,7 +3,7 @@ import re
 from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
-from ..putils.command import (
+from ..classes import (
     CheckEnvironment,
     at,
     decorateWithLoadingMessage,
@@ -14,9 +14,9 @@ from ..putils.command import (
     databaseIO,
 )
 
-from ..models import *
+from ...models import *
 
-from ..messages import (
+from ...messages import (
     caughtMessage,
     help,
     displayAward,
@@ -26,7 +26,7 @@ from ..messages import (
     getGoodsList,
     update,
 )
-from ..messages.lang import *
+from ...messages.lang import *
 
 from .keywords import *
 from .tools import getSender

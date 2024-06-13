@@ -5,9 +5,9 @@ from sqlalchemy import delete, select
 from nonebot_plugin_orm import async_scoped_session
 from nonebot.adapters.onebot.v11 import Message
 
-from ..messages.texts import helpAdmin
+from ...messages.texts import helpAdmin
 
-from ..putils.command import (
+from ..classes import (
     CheckEnvironment,
     at,
     localImage,
@@ -17,12 +17,12 @@ from ..putils.command import (
     WaitForMoreInformationException,
     databaseIO
 )
-from ..putils.download import download, writeData
-from ..putils.text_format_check import isFloat, not_negative
+from ...putils.download import download, writeData
+from ...putils.text_format_check import isFloat, not_negative
 
-from ..models import *
+from ...models import *
 
-from ..messages import (
+from ...messages import (
     allAwards,
     allLevels,
     modifyOk,

@@ -4,13 +4,13 @@ from nonebot.exception import FinishedException
 from typing import Callable, Coroutine, NoReturn
 
 
-from .putils.command import (
+from .commands.classes import (
     CallbackBase,
     CheckEnvironment,
     WaitForMoreInformationException,
 )
 
-from .commands import enabledCommand
+from .commands.onebot import enabledCommand
 
 from nonebot_plugin_orm import async_scoped_session
 

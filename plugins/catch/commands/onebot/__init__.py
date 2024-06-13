@@ -1,4 +1,9 @@
-from ..putils.command import CommandBase
+"""
+所有在 Onebot V11 协议下的指令
+"""
+
+
+from ..classes import CommandBase
 
 from .basics import (
     Catch,
