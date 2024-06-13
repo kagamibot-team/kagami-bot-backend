@@ -106,6 +106,7 @@ async def _(e: CatchResultMessageEvent):
 
     if len(picks) == 0:
         await e.ctx.send(UniMessage().text(f"小哥还没长成，请再等{timeStr}吧！"))
+        return
 
     msg = (
         UniMessage()
