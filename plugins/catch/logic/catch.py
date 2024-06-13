@@ -140,8 +140,11 @@ async def _(session: Session, e: PickResult):
 
             if len(skins) > 0:
                 skin = random.choice(skins)
-                await obtainSkin(session, await getUserById(session, e.uid), skin)
+                user = await getUserById(session, e.uid)
+                await obtainSkin(session, user, skin)
+                await setSkin(session, user, skin)
                 e.extraMessages.append(f"在这些小哥之中，你抓到了一只 {skin.name}！")
+                await session.commit()
             else:
                 e.extraMessages.append("在这些小哥之中，你抓到了一只百变小哥，但是它已经没辙了，只会在你面前装嫩了。")
             
