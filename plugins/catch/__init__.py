@@ -1,10 +1,19 @@
 from nonebot.plugin import PluginMetadata
 
 
-# IMPORT ALL SUB MODULES
-from . import catch
-from . import auto_reply
 from .putils.config import Config
+
+# ACTIVATE ALL SUB MODULE
+from . import catch
+
+from .events import activateRoot, EventManager
+from .commands import commandEventManager
+
+
+root = EventManager({**commandEventManager})
+
+
+activateRoot(root)
 
 
 __plugin_meta__ = PluginMetadata(
