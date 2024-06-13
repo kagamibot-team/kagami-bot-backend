@@ -56,12 +56,12 @@ def matchRegex(rule: str):
 
 
 def matchLiteral(text: str):
-    def wrapper(func: Callable[[TC, str], Awaitable[T]]):
+    def wrapper(func: Callable[[TC], Awaitable[T]]):
         async def inner(ctx: TC):
             if text != ctx.getText():
                 return None
 
-            return await func(ctx, text)
+            return await func(ctx)
 
         return inner
 

@@ -1,0 +1,22 @@
+from nonebot import logger
+from ....models.data import obtainSkin
+from ....models.crud import getSkinByName, getUser, setSkin
+from ....putils.typing import Session
+from ....events.context import OnebotGroupMessageContext, OnebotPrivateMessageContext
+from ....events import root
+from ....events.decorator import listenOnebot, matchLiteral, withSessionLock
+
+
+@listenOnebot(root)
+@matchLiteral("给小哥不是给")
+@withSessionLock()
+async def _(ctx: OnebotGroupMessageContext | OnebotPrivateMessageContext, session: Session):
+    skin = await getSkinByName(session, "不是给")
+
+    if skin is None:
+        logger.warning("这个世界没有给小哥。")
+        return
+    
+    user = await getUser(session, ctx.getSenderId())
+    await obtainSkin(session, user, skin)
+    await setSkin(session, user, skin)
