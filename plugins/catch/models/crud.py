@@ -49,7 +49,7 @@ async def getTag(session: Session, tag_name: str, tag_args: str):
     ).scalar_one_or_none()
 
     if tag is None:
-        tag = Tag(tag_name, tag_args)
+        tag = Tag(tag_name=tag_name, tag_args=tag_args)
         session.add(tag)
         await session.flush()
 
@@ -100,7 +100,7 @@ async def createLevelAltName(session: Session, level: Level, name: str):
     if _l is not None:
         return False
 
-    alt = LevelAltName(level, name)
+    alt = LevelAltName(level=level, name=name)
     session.add(alt)
     await session.flush()
 
@@ -141,7 +141,7 @@ async def addLevelTag(session: Session, level: Level, tag: Tag):
     "为等级添加标签"
 
     if await getLevelTag(session, level, tag) is None:
-        relation = LevelTagRelation(level, tag)
+        relation = LevelTagRelation(level=level, tag=tag)
         session.add(relation)
         await session.flush()
 
@@ -217,7 +217,7 @@ async def createAwardAltName(session: Session, award: Award, name: str):
     if _a is not None:
         return False
 
-    alt = AwardAltName(award, name)
+    alt = AwardAltName(award=award, name=name)
     session.add(alt)
     await session.flush()
 
@@ -258,7 +258,7 @@ async def addAwardTag(session: Session, award: Award, tag: Tag):
     "为小哥添加标签"
 
     if await getAwardTag(session, award, tag) is None:
-        relation = AwardTagRelation(award, tag)
+        relation = AwardTagRelation(award=award, tag=tag)
         session.add(relation)
         await session.flush()
 
@@ -333,7 +333,7 @@ async def getStorage(session: Session, user: User, award: Award):
     ).scalar_one_or_none()
 
     if not stats:
-        stats = StorageStats(user, award, 0)
+        stats = StorageStats(user=user, award=award, count=0)
         session.add(stats)
 
     return stats
@@ -351,7 +351,7 @@ async def getUsed(session: Session, user: User, award: Award):
     ).scalar_one_or_none()
 
     if not stats:
-        stats = UsedStats(user, award, 0)
+        stats = UsedStats(user=user, award=award, count=0)
         session.add(stats)
         await session.flush()
 
@@ -423,7 +423,7 @@ async def createSkinAltName(session: Session, skin: Skin, name: str):
     if _s is not None:
         return False
 
-    alt = SkinAltName(skin, name)
+    alt = SkinAltName(skin=skin, name=name)
     session.add(alt)
     await session.flush()
 
@@ -459,7 +459,7 @@ async def setSkin(session: Session, user: User, skin: Skin):
     if us:
         us.skin = skin
     else:
-        session.add(UsedSkin(user, skin))
+        session.add(UsedSkin(user=user, skin=skin))
 
     await session.flush()
     return
@@ -539,7 +539,7 @@ async def addSkinTag(session: Session, skin: Skin, tag: Tag):
     "添加一个皮肤标签关系"
 
     if await getSkinTag(session, skin, tag) == None:
-        session.add(SkinTagRelation(skin, tag))
+        session.add(SkinTagRelation(skin=skin, tag=tag))
         await session.flush()
 
 
