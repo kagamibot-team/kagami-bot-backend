@@ -6,7 +6,7 @@ import os
 import pickle
 from typing import Any
 from nonebot_plugin_alconna import UniMessage
-from nonebot_plugin_orm import Model
+from nonebot_plugin_orm import Model, get_session
 from sqlalchemy import delete, select
 from ...events.context import ConsoleMessageContext
 from ...putils.typing import Session
@@ -60,20 +60,21 @@ async def _(session: Session, ctx: ConsoleMessageContext):
 
 @listenConsole(root)
 @matchLiteral("::load-pickle")
-@withFreeSession()
-async def _(session: Session, ctx: ConsoleMessageContext):
+async def _(ctx: ConsoleMessageContext):
     with open(os.path.join(os.getcwd(), "data/dumps.pickle"), "rb") as f:
         output: dict[str, list[dict[str, Any]]] = pickle.load(f)
     
     for cls in to_pickle_list:
-        # first, clear everything now
-        await session.execute(delete(cls))
+        session = get_session()
 
-        for obj in output[cls.__name__]:
-            session.add(cls(**obj))
-        
-        await session.flush()
+        async with session.begin():
+            await session.execute(delete(cls))
+            await session.commit()
 
-    await session.commit()
+        async with session.begin():
+            for obj in output[cls.__name__]:
+                session.add(cls(**obj))
+
+            await session.commit()
 
     await ctx.reply(UniMessage("ok"))
