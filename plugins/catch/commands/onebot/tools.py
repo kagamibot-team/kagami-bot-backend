@@ -3,7 +3,7 @@ from typing import Type
 from nonebot import get_driver
 from nonebot.adapters.onebot.v11 import Message
 from ..classes import CheckEnvironment, CommandBase
-from ...putils.config import config
+from ...config import config
 from ...models import *
 
 

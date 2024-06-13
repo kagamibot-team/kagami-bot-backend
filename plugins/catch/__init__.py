@@ -1,7 +1,7 @@
 from nonebot.plugin import PluginMetadata
 
 
-from .putils.config import Config
+from .config import Config
 
 # ACTIVATE ALL SUB MODULE
 from . import catch

@@ -5,3 +5,4 @@ data.json
 dev_*.py
 dev_*.bat
 .env*
+.vscode

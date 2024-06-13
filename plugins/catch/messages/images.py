@@ -31,7 +31,7 @@ from ..putils.draw.texts import (
 )
 from ..putils.draw.typing import PILImage
 from ..putils.draw.images import newImage
-from ..putils.config import config
+from ..config import config
 
 from ..images import display_box, catch, refBookBox
 
