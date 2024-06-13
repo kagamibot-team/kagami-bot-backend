@@ -71,6 +71,8 @@ async def _(ctx: ConsoleMessageContext):
             await session.execute(delete(cls))
             await session.commit()
 
+    for cls in to_pickle_list:
+        session = get_session()
         async with session.begin():
             for obj in output[cls.__name__]:
                 session.add(cls(**obj))
