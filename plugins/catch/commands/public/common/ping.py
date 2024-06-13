@@ -9,7 +9,7 @@ from nonebot_plugin_alconna import UniMessage
 from ....config import config
 from ....events import PublicContext, EventManager, OnebotMessageContext, ConsoleMessageContext
 
-from ...classes.decorator import matchRegex
+from ...basics.decorator import matchRegex
 
 
 manager = EventManager()

@@ -1,4 +1,4 @@
-from ..events.eventManager import EventManager
+from ..events.manager import EventManager
 from .public import publicCommandEventManager
 
 

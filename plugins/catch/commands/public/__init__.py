@@ -2,7 +2,7 @@
 在群聊和控制台中都可以使用的命令
 """
 
-from ...events.eventManager import EventManager
+from ...events.manager import EventManager
 from .common import *
 
 

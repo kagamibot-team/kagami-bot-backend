@@ -3,7 +3,7 @@
 """
 
 
-from ..classes import CommandBase
+from ..basics import CommandBase
 
 from .basics import (
     Catch,

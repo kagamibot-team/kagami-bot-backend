@@ -2,4 +2,4 @@
 所有仅在控制台中才能使用的指令
 """
 
-from ..classes import *
+from ..basics import *

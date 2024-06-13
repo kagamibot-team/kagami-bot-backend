@@ -3,7 +3,7 @@ import re
 from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
-from ..classes import (
+from ..basics import (
     CheckEnvironment,
     at,
     decorateWithLoadingMessage,

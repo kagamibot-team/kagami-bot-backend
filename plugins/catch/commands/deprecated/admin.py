@@ -7,7 +7,7 @@ from nonebot.adapters.onebot.v11 import Message
 
 from ...messages.texts import helpAdmin
 
-from ..classes import (
+from ..basics import (
     CheckEnvironment,
     at,
     localImage,

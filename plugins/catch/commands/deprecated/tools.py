@@ -2,7 +2,7 @@ from typing import Type
 
 from nonebot import get_driver
 from nonebot.adapters.onebot.v11 import Message
-from ..classes import CheckEnvironment, CommandBase
+from ..basics import CheckEnvironment, CommandBase
 from ...config import config
 from ...models import *
 
