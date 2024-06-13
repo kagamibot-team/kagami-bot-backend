@@ -7,7 +7,6 @@ from ..basics import CommandBase
 
 from .basics import (
     CatchStorage,
-    CatchHangUpSkin,
     CatchDisplay,
     CatchProgress,
     CatchShop,
@@ -41,7 +40,6 @@ enabledCommand: list[CommandBase] = [
     CatchStorage(),
     CatchProgress(),
     CatchDisplay(),
-    # CatchHangUpSkin(),
     CatchAllAwards(),
     CatchAllLevel(),
     CatchSetInterval(),

@@ -95,48 +95,6 @@ class CatchDisplay(Command):
 @asyncLock()
 @databaseIO()
 @dataclass
-class CatchHangUpSkin(Command):
-    commandPattern: str = f"{KEYWORD_SWITCH} ?{KEYWORD_SKIN}"
-    argsPattern: str = " (\\S+)$"
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message([at(env.sender), text(" 格式不对，格式是 切换皮肤 小哥名字")])
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        award = await getAwardByName(env.session, result.group(3))
-
-        if award is None:
-            return self.notExists(env, result.group(3))
-
-        skins = await getAllOwnedSkin(env.session, await getSender(env), award)
-
-        if len(skins) == 0:
-            return Message([at(env.sender), text(" 你没有这个小哥的皮肤")])
-
-        skin = await switchSkin(
-            env.session, await getSender(env), [s.skin for s in skins], award
-        )
-
-        if skin is not None:
-            message = Message(
-                [
-                    at(env.sender),
-                    text(f" 已经将 {result.group(3)} 的皮肤切换为 {skin.name} 了"),
-                ]
-            )
-        else:
-            message = Message(
-                [at(env.sender), text(f" 已经将 {result.group(3)} 的皮肤切换为默认了")]
-            )
-
-        return message
-
-
-@asyncLock()
-@databaseIO()
-@dataclass
 class CatchShop(Command):
     commandPattern: str = f"^{KEYWORD_KAGAMIS} ?{KEYWORD_SHOP}"
     argsPattern: str = "(.*)$"
