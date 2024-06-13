@@ -47,13 +47,16 @@ class UniContext(Generic[TE, TB, TS], Context[TE, UniMessage[TS]]):
             bot=self.bot,
         )
 
+    async def reply(self, message: UniMessage[Any]):
+        return await self.send(message)
+
 
 class OnebotGroupMessageContext(UniContext[_OneBotGroupMessageEvent, _OnebotBot, TS]):
     def getSenderId(self):
         return self.event.user_id
 
     async def reply(self, message: UniMessage[Any]):
-        return await self.send((UniMessage.at(str(self.getSenderId())) + message))
+        return await self.send((UniMessage.at(str(self.getSenderId())) + " " + message))
 
 
 class OnebotPrivateMessageContext(

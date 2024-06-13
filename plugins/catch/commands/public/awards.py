@@ -2,6 +2,7 @@
 对小哥进行的增删查改操作
 """
 
+from dataclasses import dataclass
 from arclet.alconna import Alconna, Arparma, Arg
 from nonebot_plugin_alconna import UniMessage
 from nonebot_plugin_orm import get_session
@@ -24,7 +25,7 @@ awardManager = EventManager()
     Arg("name", str),
     Arg("level", str),
 ))
-async def addAward(ctx: PublicContext, res: Arparma):
+async def _(ctx: PublicContext, res: Arparma):
     name = res.query[str]("name")
     levelName = res.query[str]("level")
 
@@ -51,3 +52,33 @@ async def addAward(ctx: PublicContext, res: Arparma):
         await session.commit()
         
         await ctx.reply(UniMessage(f"成功创建名字叫 {name} 的小哥。"))
+    
+    raise StopIteration
+
+
+@listenPublic(awardManager)
+@requireAdmin()
+@matchAlconna(Alconna(
+    "小哥",
+    ["::删除", "::移除"],
+    Arg("name", str),
+))
+async def _(ctx: PublicContext, res: Arparma):
+    name = res.query[str]("name")
+    
+    assert name is not None
+    
+    session = get_session()
+    
+    async with session.begin():
+        award = await getAwardByName(session, name)
+        
+        if award is None:
+            await ctx.reply(UniMessage(f"名字叫 {name} 的小哥不存在。"))
+            return
+        
+        await removeAward(session, award)
+        await session.commit()
+        await ctx.reply(UniMessage(f"成功删除名字叫 {name} 的小哥。"))
+    
+    raise StopIteration

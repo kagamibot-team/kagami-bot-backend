@@ -7,4 +7,6 @@ from .ping import pingManager
 from .awards import awardManager
 
 
-publicCommandEventManager = EventManager({**pingManager, **awardManager})
+publicCommandEventManager = EventManager()
+publicCommandEventManager.merge(pingManager)
+publicCommandEventManager.merge(awardManager)

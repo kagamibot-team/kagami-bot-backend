@@ -39,9 +39,9 @@ def matchAlconna(rule: Alconna[TDC]):
 def matchRegex(rule: str):
     def wrapper(func: Callable[[TC, re.Match[str]], Awaitable[T]]):
         async def inner(ctx: TC):
-            result = re.match(rule, ctx.getText())
+            result = re.fullmatch(rule, ctx.getText())
 
-            if not result:
+            if result is None:
                 return None
 
             return await func(ctx, result)

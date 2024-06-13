@@ -3,8 +3,11 @@
 """
 
 
+import asyncio
 import re
 from nonebot_plugin_alconna import UniMessage
+
+from plugins.catch.commands.basics.loading import withLoading
 
 from ...config import config
 from ...events import PublicContext, EventManager
@@ -28,6 +31,13 @@ async def ping(ctx: PublicContext, res: re.Match[str]):
     
     if (k := str(sender)) in custom_replies.keys():
         await ctx.send(UniMessage(custom_replies[k] + sgns))
+
+
+@listenPublic(pingManager)
+@matchRegex("^[小|柊]镜[， ,]?跳?科目三$")
+@withLoading()
+async def _(ctx: PublicContext, _: re.Match[str]):
+    await asyncio.sleep(5)
 
 
 __all__ = ["pingManager"]

@@ -9,7 +9,9 @@ from .commands import commandEventManager
 from . import catch
 
 
-root = EventManager({**commandEventManager})
+root = EventManager()
+root.merge(commandEventManager)
+
 activateRoot(root)
 
 

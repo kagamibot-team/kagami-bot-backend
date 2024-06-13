@@ -176,26 +176,6 @@ class Clear(Command):
         )
 
 
-@requireAdmin
-@databaseIO()
-@dataclass
-class CatchRemoveAward(Command):
-    commandPattern: str = f"^:: ?{KEYWORD_REMOVE} ?{KEYWORD_AWARDS} "
-    argsPattern: str = "(\\S+)$"
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message(text("你的格式有问题，应该是 ::删除小哥 小哥的名字"))
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        award = await getAwardByName(env.session, result.group(3))
-        if award is None:
-            return self.notExists(env, result.group(3))
-        await removeAward(env.session, award)
-        return Message(text("已经删除了"))
-
-
 @dataclass
 class CatchModifyCallback(CallbackBase):
     modifyType: str
@@ -342,36 +322,6 @@ class CatchLevelModify(Command):
             level.color_code = data
 
         return modifyOk()
-
-
-@requireAdmin
-@databaseIO()
-@dataclass
-class CatchCreateAward(Command):
-    commandPattern: str = f"^:: ?{KEYWORD_CREATE} ?{KEYWORD_AWARDS} "
-    argsPattern: str = "(\\S+) (\\S+)$"
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message([at(env.sender), text(" 格式 ::创建小哥 名字 等级")])
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        _sameName = await getAwardByName(env.session, result.group(3))
-
-        if _sameName is not None:
-            return Message([at(env.sender), text(" 存在重名小哥，请检查一下吧")])
-
-        level = await getLevelByName(env.session, result.group(4))
-
-        if level is None:
-            return Message([at(env.sender), text(" 等级名字不存在")])
-
-        award = Award(name=result.group(3), level=level)
-
-        env.session.add(award)
-
-        return Message([at(env.sender), text(" 添加成功！")])
 
 
 @requireAdmin
