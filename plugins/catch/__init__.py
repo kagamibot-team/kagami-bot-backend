@@ -2,15 +2,11 @@ from nonebot.plugin import PluginMetadata
 
 from .config import Config
 from .events import activateRoot, EventManager
-from .commands import commandEventManager
 
 
 # ACTIVATE ALL SUB MODULE
 from . import catch
-
-
-root = EventManager()
-root.merge(commandEventManager)
+from .events import root
 
 activateRoot(root)
 

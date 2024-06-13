@@ -1,6 +1,5 @@
 from typing import Type
 
-from nonebot import get_driver
 from nonebot.adapters.onebot.v11 import Message
 from ..basics import CheckEnvironment, CommandBase
 from ...config import config

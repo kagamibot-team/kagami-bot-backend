@@ -1,3 +1,4 @@
+import time
 from typing import Any, Awaitable, Callable, Generic, TypeVar
 
 from nonebot import logger
@@ -58,6 +59,7 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
         return decorator
 
     async def emit(self, evt: Any):
+        begin = time.time()
         for key in self.keys():
             if _isinstance(evt, key):
                 try:
@@ -65,6 +67,7 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
                         await l(evt)
                 except StopIteration:
                     pass
+        logger.debug(f"Event {repr(evt)} emitted in {time.time() - begin}s")
     
     def merge(self, other: "EventManager"):
         for key in other.keys():

@@ -1,12 +1,6 @@
-from ..events.manager import EventManager
-from .public import publicCommandEventManager
-from .onebot import onebotEventManager
+from . import public
+from . import onebot
+from . import console
 
 
-commandEventManager = EventManager()
-
-commandEventManager.merge(publicCommandEventManager)
-commandEventManager.merge(onebotEventManager)
-
-
-__all__ = ["commandEventManager"]
+__all__ = ["public", "onebot", "console"]

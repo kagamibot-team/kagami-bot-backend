@@ -30,3 +30,6 @@ def activateRoot(root: EventManager):
     @privateMessageHandler.handle()
     async def _(bot: Bot, event: PrivateMessageEvent):
         await root.emit(OnebotPrivateMessageContext(event, bot))
+
+
+root = EventManager()

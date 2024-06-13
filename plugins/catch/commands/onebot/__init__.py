@@ -1,12 +1,4 @@
-"""
-所有仅在 QQ 答复的命令
-"""
+from . import public
 
 
-from ...events.manager import EventManager
-
-from .public import publicEventManager
-
-
-onebotEventManager = EventManager()
-onebotEventManager.merge(publicEventManager)
+__all__ = ['public']

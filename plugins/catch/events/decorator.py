@@ -8,15 +8,15 @@ import re
 from nonebot_plugin_orm import AsyncSession, get_session
 
 
-from ...config import config
-from ...events.context import (
+from ..config import config
+from .context import (
     ConsoleMessageContext,
     Context,
     OnebotGroupMessageContext,
     OnebotPrivateMessageContext,
     PublicContext,
 )
-from ...events.manager import EventManager
+from .manager import EventManager
 
 
 T = TypeVar("T")
@@ -162,4 +162,16 @@ def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
 
         return inner
 
+    return wrapper
+
+
+def withFreeSession():
+    def wrapper(func: Callable[[AsyncSession, *TA], Awaitable[T]]):
+        async def inner(*args: *TA):
+            session = get_session()
+            async with session.begin():
+                return await func(session, *args)
+
+        return inner
+    
     return wrapper

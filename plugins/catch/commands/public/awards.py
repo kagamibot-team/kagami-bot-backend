@@ -7,17 +7,15 @@ from arclet.alconna import Alconna, Arparma, Arg
 from nonebot_plugin_alconna import UniMessage
 from nonebot_plugin_orm import get_session
 
+from ....catch.events import root
+
 from ...models import *
 
 from ...events.context import PublicContext
-from ...events import EventManager
-from ..basics.decorator import listenPublic, requireAdmin, matchAlconna
+from ...events.decorator import listenPublic, requireAdmin, matchAlconna
 
 
-awardManager = EventManager()
-
-
-@listenPublic(awardManager)
+@listenPublic(root)
 @requireAdmin()
 @matchAlconna(Alconna(
     "小哥",
@@ -56,7 +54,7 @@ async def _(ctx: PublicContext, res: Arparma):
     raise StopIteration
 
 
-@listenPublic(awardManager)
+@listenPublic(root)
 @requireAdmin()
 @matchAlconna(Alconna(
     "小哥",

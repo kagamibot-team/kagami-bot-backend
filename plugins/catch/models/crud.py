@@ -335,7 +335,6 @@ async def getStorage(session: Session, user: User, award: Award):
     if not stats:
         stats = StorageStats(user, award, 0)
         session.add(stats)
-        await session.flush()
 
     return stats
 

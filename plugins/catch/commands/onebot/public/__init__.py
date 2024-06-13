@@ -1,6 +1,6 @@
-from ....events.manager import EventManager
-from .catch import catchEventManager
+from . import catch
 
 
-publicEventManager = EventManager()
-publicEventManager.merge(catchEventManager)
+__all__ = [
+    "catch",
+]
