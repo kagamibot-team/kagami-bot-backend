@@ -26,10 +26,10 @@ to_pickle_list: set[type[Model]] = {
     AwardTagRelation,
     User,
     StorageStats,
+    Skin,
     UsedStats,
     UsedSkin,
     OwnedSkin,
-    Skin,
     SkinTagRelation,
     SkinAltName,
 }
