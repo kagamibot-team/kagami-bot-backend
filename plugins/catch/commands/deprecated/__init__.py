@@ -58,7 +58,7 @@ enabledCommand: list[CommandBase] = [
     CatchModify(),
     CatchLevelModify(),
     CatchRemoveAward(),
-    CatchCreateAward(),
+    # CatchCreateAward(),
     CatchCreateLevel(),
     Give(),
     Clear(),

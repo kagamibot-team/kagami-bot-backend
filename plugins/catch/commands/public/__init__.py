@@ -3,7 +3,8 @@
 """
 
 from ...events.manager import EventManager
-from .common import *
+from .ping import pingManager
+from .awards import awardManager
 
 
-publicCommandEventManager = EventManager({**pingManager})
+publicCommandEventManager = EventManager({**pingManager, **awardManager})

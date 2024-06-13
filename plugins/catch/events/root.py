@@ -8,7 +8,6 @@ from .context import (
     ConsoleMessageContext,
     OnebotGroupMessageContext,
     OnebotPrivateMessageContext,
-    OnebotMessageContext,
 )
 
 
@@ -26,10 +25,8 @@ def activateRoot(root: EventManager):
     @groupMessageHandler.handle()
     async def _(bot: Bot, event: GroupMessageEvent):
         await root.emit(OnebotGroupMessageContext(event, bot))
-        await root.emit(OnebotMessageContext(event, bot))
 
 
     @privateMessageHandler.handle()
     async def _(bot: Bot, event: PrivateMessageEvent):
         await root.emit(OnebotPrivateMessageContext(event, bot))
-        await root.emit(OnebotMessageContext(event, bot))

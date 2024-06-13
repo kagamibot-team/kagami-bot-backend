@@ -1,12 +1,11 @@
 import inspect
-from typing import Any, Awaitable, Protocol, Type, TypeVar, cast
+from typing import Any, Awaitable, Callable, Protocol, Type, TypeVar, cast
 
 
 T = TypeVar("T", contravariant=True)
 
 
-class Listener(Protocol[T]):
-    def __call__(self, ctx: T) -> Awaitable[Any]: ...
+Listener = Callable[[T], Awaitable[Any]]
 
 
 def _isinstance(obj: Any, typ: type):
