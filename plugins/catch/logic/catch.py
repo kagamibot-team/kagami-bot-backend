@@ -135,7 +135,7 @@ async def _(session: Session, e: PickResult):
             skins = [
                 skin
                 for skin in skins
-                if len([o for o in skin.owned_skins if cast(int, o.user_id) == e.uid])
+                if len([o for o in skin.owned_skins if cast(int, o.user_id) == e.uid]) == 0
             ]
 
             if len(skins) > 0:
