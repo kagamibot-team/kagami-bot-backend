@@ -71,6 +71,8 @@ async def _(session: Session, ctx: ConsoleMessageContext):
 
         for obj in output[cls.__name__]:
             session.add(cls(**obj))
+        
+        await session.flush()
 
     await session.commit()
 
