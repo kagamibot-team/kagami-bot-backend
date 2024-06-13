@@ -5,8 +5,6 @@ from sqlalchemy import delete, select
 from nonebot_plugin_orm import async_scoped_session
 from nonebot.adapters.onebot.v11 import Message
 
-from ...messages.texts import helpAdmin
-
 from ..basics import (
     CheckEnvironment,
     at,
@@ -555,18 +553,6 @@ class CatchResetEveryoneCacheCount(Command):
         if count < 1:
             return self.errorMessage(env)
         await resetCacheCount(env.session, count)
-
-
-@requireAdmin
-@dataclass
-class CatchAdminHelp(Command):
-    commandPattern: str = f":: ?help"
-    argsPattern: str = "$"
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        return helpAdmin()
 
 
 @requireAdmin

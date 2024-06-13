@@ -6,14 +6,12 @@
 from ..basics import CommandBase
 
 from .basics import (
-    CatchHelp,
     CatchStorage,
     CatchHangUpSkin,
     CatchDisplay,
     CatchProgress,
     CatchShop,
     CatchCheckMoney,
-    CatchShowUpdate,
 )
 
 from .admin import (
@@ -31,7 +29,6 @@ from .admin import (
     CatchAdminObtainSkin,
     CatchAdminDeleteSkinOwnership,
     CatchResetEveryoneCacheCount,
-    CatchAdminHelp,
     CatchGiveMoney,
     AddAltName,
     RemoveAltName,
@@ -41,7 +38,6 @@ from .admin import (
 
 
 enabledCommand: list[CommandBase] = [
-    CatchHelp(),
     CatchStorage(),
     CatchProgress(),
     CatchDisplay(),
@@ -62,8 +58,6 @@ enabledCommand: list[CommandBase] = [
     CatchShop(),
     CatchResetEveryoneCacheCount(),
     CatchCheckMoney(),
-    CatchShowUpdate(),
-    CatchAdminHelp(),
     CatchGiveMoney(),
     AddAltName(),
     RemoveAltName(),

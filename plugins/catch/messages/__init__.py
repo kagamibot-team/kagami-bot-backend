@@ -10,13 +10,11 @@ from .texts import (
     displayAward,
     cannotGetAward,
     caughtMessage,
-    help,
     modifyOk,
     setIntervalWrongFormat,
     settingOk,
     KagamiShop,
     getGoodsList,
-    update,
 )
 from .images import (
     drawAwardBox,

@@ -4,9 +4,11 @@
 
 from . import awards
 from . import ping
+from . import about
 
 
 __all__ = (
     "awards",
     "ping",
+    "about",
 )

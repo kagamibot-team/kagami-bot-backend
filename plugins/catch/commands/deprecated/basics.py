@@ -17,28 +17,16 @@ from ..basics import (
 from ...models import *
 
 from ...messages import (
-    caughtMessage,
-    help,
     displayAward,
     drawStatus,
     drawStorage,
     KagamiShop,
     getGoodsList,
-    update,
 )
 from ...messages.lang import *
 
 from .keywords import *
 from .tools import getSender
-
-
-@dataclass
-class CatchHelp(Command):
-    commandPattern: str = f"^{KEYWORD_BASE_COMMAND}? ?{KEYWORD_HELP}"
-    argsPattern: str = "$"
-
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
-        return help()
 
 
 @decorateWithLoadingMessage(MSG_STORAGE_LOADING)
@@ -144,17 +132,6 @@ class CatchHangUpSkin(Command):
             )
 
         return message
-
-
-@dataclass
-class CatchShowUpdate(Command):
-    commandPattern: str = f"^{KEYWORD_BASE_COMMAND} ?{KEYWORD_UPDATE}"
-    argsPattern: str = "$"
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        return update()
 
 
 @asyncLock()
