@@ -258,7 +258,7 @@ class User(Model, BaseMixin):
     #         pick_max_cache=pick_max_cache,
     #     )
 
-    qq_id: Mapped[int] = mapped_column(unique=True)
+    qq_id: Mapped[str] = mapped_column(unique=True)
 
     storage_stats: Mapped[list[StorageStats]] = relationship(
         back_populates="user", lazy="subquery"
