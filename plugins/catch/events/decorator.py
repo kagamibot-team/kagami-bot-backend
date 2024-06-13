@@ -1,5 +1,5 @@
 import asyncio
-from typing import Awaitable, Callable, TypeVar, TypeVarTuple
+from typing import Any, Callable, Coroutine, TypeVar, TypeVarTuple
 from arclet.alconna import Alconna, Arparma
 from arclet.alconna.typing import TDC
 
@@ -26,7 +26,7 @@ TA = TypeVarTuple("TA")
 
 
 def matchAlconna(rule: Alconna[TDC]):
-    def wrapper(func: Callable[[TC, Arparma[TDC]], Awaitable[T]]):
+    def wrapper(func: Callable[[TC, Arparma[TDC]], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
             result = rule.parse(ctx.getMessage())
 
@@ -41,7 +41,7 @@ def matchAlconna(rule: Alconna[TDC]):
 
 
 def matchRegex(rule: str):
-    def wrapper(func: Callable[[TC, re.Match[str]], Awaitable[T]]):
+    def wrapper(func: Callable[[TC, re.Match[str]], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
             result = re.fullmatch(rule, ctx.getText())
 
@@ -56,7 +56,7 @@ def matchRegex(rule: str):
 
 
 def matchLiteral(text: str):
-    def wrapper(func: Callable[[TC], Awaitable[T]]):
+    def wrapper(func: Callable[[TC], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
             if text != ctx.getText():
                 return None
@@ -69,7 +69,7 @@ def matchLiteral(text: str):
 
 
 def requireAdmin():
-    def wrapper(func: Callable[[TC, *TA], Awaitable[T]]):
+    def wrapper(func: Callable[[TC, *TA], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC, *args: *TA):
             if isinstance(ctx, ConsoleMessageContext):
                 return await func(ctx, *args)
@@ -90,28 +90,28 @@ def requireAdmin():
 
 
 def listenGroup(manager: EventManager):
-    def wrapper(func: Callable[[OnebotGroupMessageContext], Awaitable[T]]):
+    def wrapper(func: Callable[[OnebotGroupMessageContext], Coroutine[Any, Any, T]]):
         manager.listen(OnebotGroupMessageContext)(func)
 
     return wrapper
 
 
 def listenPrivate(manager: EventManager):
-    def wrapper(func: Callable[[OnebotPrivateMessageContext], Awaitable[T]]):
+    def wrapper(func: Callable[[OnebotPrivateMessageContext], Coroutine[Any, Any, T]]):
         manager.listen(OnebotPrivateMessageContext)(func)
 
     return wrapper
 
 
 def listenConsole(manager: EventManager):
-    def wrapper(func: Callable[[ConsoleMessageContext], Awaitable[T]]):
+    def wrapper(func: Callable[[ConsoleMessageContext], Coroutine[Any, Any, T]]):
         manager.listen(ConsoleMessageContext)(func)
 
     return wrapper
 
 
 def listenPublic(manager: EventManager):
-    def wrapper(func: Callable[[PublicContext], Awaitable[T]]):
+    def wrapper(func: Callable[[PublicContext], Coroutine[Any, Any, T]]):
         listenGroup(manager)(func)
         listenPrivate(manager)(func)
         listenConsole(manager)(func)
@@ -122,7 +122,7 @@ def listenPublic(manager: EventManager):
 def listenOnebot(manager: EventManager):
     def wrapper(
         func: Callable[
-            [OnebotGroupMessageContext | OnebotPrivateMessageContext], Awaitable[T]
+            [OnebotGroupMessageContext | OnebotPrivateMessageContext], Coroutine[Any, Any, T]
         ]
     ):
         listenGroup(manager)(func)
@@ -147,7 +147,7 @@ globalSessionLockManager = SessionLockManager()
 
 
 def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
-    def wrapper(func: Callable[[TCP, AsyncSession, *TA], Awaitable[T]]):
+    def wrapper(func: Callable[[TCP, AsyncSession, *TA], Coroutine[Any, Any, T]]):
         async def inner(ctx: TCP, *args: *TA):
             sender = ctx.getSenderId()
             if sender is None:
@@ -166,7 +166,7 @@ def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
 
 
 def withFreeSession():
-    def wrapper(func: Callable[[AsyncSession, *TA], Awaitable[T]]):
+    def wrapper(func: Callable[[AsyncSession, *TA], Coroutine[Any, Any, T]]):
         async def inner(*args: *TA):
             session = get_session()
             async with session.begin():

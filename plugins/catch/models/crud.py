@@ -276,24 +276,16 @@ async def removeAward(session: Session, award: Award):
     "移除一个小哥"
 
     # 移除于它绑定的所有别名
-    await session.execute(
-        delete(AwardAltName).filter(AwardAltName.award == award)
-    )
+    await session.execute(delete(AwardAltName).filter(AwardAltName.award == award))
     # 移除于它绑定的所有标签
     await session.execute(
         delete(AwardTagRelation).filter(AwardTagRelation.award == award)
     )
     # 移除于它绑定的所有统计
-    await session.execute(
-        delete(StorageStats).filter(StorageStats.award == award)
-    )
-    await session.execute(
-        delete(UsedStats).filter(UsedStats.award == award)
-    )
+    await session.execute(delete(StorageStats).filter(StorageStats.award == award))
+    await session.execute(delete(UsedStats).filter(UsedStats.award == award))
     # 删除与它有关的全部皮肤
-    await session.execute(
-        delete(Skin).filter(Skin.award == award)
-    )
+    await session.execute(delete(Skin).filter(Skin.award == award))
     # 移除它本身
     await session.delete(award)
     await session.flush()
@@ -451,6 +443,18 @@ async def getUsedSkin(session: Session, user: User, award: Award) -> UsedSkin | 
     ).scalar_one_or_none()
 
 
+async def getUsedSkinBySkin(
+    session: Session, user: User, skin: Skin
+) -> UsedSkin | None:
+    "返回皮肤使用记录"
+
+    return (
+        await session.execute(
+            select(UsedSkin).filter(UsedSkin.user == user).filter(UsedSkin.skin == skin)
+        )
+    ).scalar_one_or_none()
+
+
 async def setSkin(session: Session, user: User, skin: Skin):
     "设置用户的皮肤"
 
@@ -594,5 +598,6 @@ __all__ = [
     "getSkinTag",
     "addSkinTag",
     "removeSkinTag",
-    "removeAward"
+    "removeAward",
+    "getUsedSkinBySkin",
 ]

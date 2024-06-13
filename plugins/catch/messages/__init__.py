@@ -8,8 +8,6 @@ from .texts import (
     allLevels,
     noAwardNamed,
     displayAward,
-    cannotGetAward,
-    caughtMessage,
     modifyOk,
     setIntervalWrongFormat,
     settingOk,

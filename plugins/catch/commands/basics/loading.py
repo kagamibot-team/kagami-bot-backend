@@ -1,5 +1,6 @@
+import asyncio
 import pathlib
-from typing import Awaitable, Callable, TypeVar, TypeVarTuple
+from typing import Any, Callable, Coroutine, TypeVar, TypeVarTuple
 
 from nonebot_plugin_alconna import UniMessage
 
@@ -12,7 +13,7 @@ TA = TypeVarTuple("TA")
 
 
 def withLoading(text: str = "请稍候……"):
-    def wrapper(func: Callable[[TC, *TA], Awaitable[T]]):
+    def wrapper(func: Callable[[TC, *TA], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC, *args: *TA):
             receipt = await ctx.reply(
                 UniMessage()

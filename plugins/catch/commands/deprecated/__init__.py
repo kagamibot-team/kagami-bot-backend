@@ -41,7 +41,7 @@ enabledCommand: list[CommandBase] = [
     CatchStorage(),
     CatchProgress(),
     CatchDisplay(),
-    CatchHangUpSkin(),
+    # CatchHangUpSkin(),
     CatchAllAwards(),
     CatchAllLevel(),
     CatchSetInterval(),
