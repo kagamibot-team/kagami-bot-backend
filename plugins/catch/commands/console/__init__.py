@@ -15,7 +15,7 @@ from ...events.decorator import listenConsole, matchLiteral, withFreeSession
 from ...models.models import *
 
 
-to_pickle_list: set[type[Model]] = {
+to_pickle_list: list[type[Model]] = [
     Global,
     Level,
     LevelAltName,
@@ -32,7 +32,7 @@ to_pickle_list: set[type[Model]] = {
     OwnedSkin,
     SkinTagRelation,
     SkinAltName,
-}
+]
 
 
 @listenConsole(root)
@@ -78,5 +78,6 @@ async def _(ctx: ConsoleMessageContext):
                 session.add(cls(**obj))
 
             await session.commit()
+        await ctx.reply(UniMessage(f"{cls.__name__} ok"))
 
     await ctx.reply(UniMessage("ok"))
