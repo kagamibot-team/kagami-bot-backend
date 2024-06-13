@@ -1,7 +1,7 @@
 from nonebot import on_type
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message
 from nonebot.exception import FinishedException
-from typing import Callable, Coroutine, NoReturn
+from typing import NoReturn
 
 
 from .commands.basics import (

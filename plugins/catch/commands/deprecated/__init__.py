@@ -6,8 +6,6 @@
 from ..basics import CommandBase
 
 from .basics import (
-    Catch,
-    CrazyCatch,
     CatchHelp,
     CatchStorage,
     CatchHangUpSkin,
@@ -43,8 +41,6 @@ from .admin import (
 
 
 enabledCommand: list[CommandBase] = [
-    Catch(),
-    CrazyCatch(),
     CatchHelp(),
     CatchStorage(),
     CatchProgress(),

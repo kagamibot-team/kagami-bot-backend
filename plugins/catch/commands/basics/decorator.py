@@ -1,8 +1,11 @@
-from typing import Any, Awaitable, Callable, TypeVar, cast, TypeVarTuple
+import asyncio
+from typing import Awaitable, Callable, TypeVar, TypeVarTuple
 from arclet.alconna import Alconna, Arparma
 from arclet.alconna.typing import TDC
 
 import re
+
+from nonebot_plugin_orm import AsyncSession, get_session
 
 
 from ...config import config
@@ -18,6 +21,7 @@ from ...events.manager import EventManager
 
 T = TypeVar("T")
 TC = TypeVar("TC", bound=Context, covariant=True)
+TCP = TypeVar("TCP", bound=PublicContext, covariant=True)
 TA = TypeVarTuple("TA")
 
 
@@ -45,6 +49,19 @@ def matchRegex(rule: str):
                 return None
 
             return await func(ctx, result)
+
+        return inner
+
+    return wrapper
+
+
+def matchLiteral(text: str):
+    def wrapper(func: Callable[[TC, str], Awaitable[T]]):
+        async def inner(ctx: TC):
+            if text != ctx.getText():
+                return None
+
+            return await func(ctx, text)
 
         return inner
 
@@ -98,5 +115,51 @@ def listenPublic(manager: EventManager):
         listenGroup(manager)(func)
         listenPrivate(manager)(func)
         listenConsole(manager)(func)
+
+    return wrapper
+
+
+def listenOnebot(manager: EventManager):
+    def wrapper(
+        func: Callable[
+            [OnebotGroupMessageContext | OnebotPrivateMessageContext], Awaitable[T]
+        ]
+    ):
+        listenGroup(manager)(func)
+        listenPrivate(manager)(func)
+
+    return wrapper
+
+
+class SessionLockManager:
+    dc: dict[int, asyncio.Lock]
+
+    def __init__(self) -> None:
+        self.dc = {}
+
+    def __getitem__(self, key: int):
+        if key not in self.dc:
+            self.dc[key] = asyncio.Lock()
+        return self.dc[key]
+
+
+globalSessionLockManager = SessionLockManager()
+
+
+def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
+    def wrapper(func: Callable[[TCP, AsyncSession, *TA], Awaitable[T]]):
+        async def inner(ctx: TCP, *args: *TA):
+            sender = ctx.getSenderId()
+            if sender is None:
+                lock = manager[-1]
+            else:
+                lock = manager[sender]
+
+            async with lock:
+                session = get_session()
+                async with session.begin():
+                    return await func(ctx, session, *args)
+
+        return inner
 
     return wrapper

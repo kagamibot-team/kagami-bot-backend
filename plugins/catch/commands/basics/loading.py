@@ -19,9 +19,21 @@ def withLoading(text: str = "请稍候……"):
                 .text(text)
                 .image(path=pathlib.Path("./res/catch/科目三.gif"))
             )
-            msg = await func(ctx, *args)
-            await receipt.recall()
-            return msg
+            try:
+                msg = await func(ctx, *args)
+                return msg
+            except StopIteration as e:
+                raise e from e
+            except Exception as e:
+                await ctx.reply(
+                    UniMessage().text(
+                        f"程序遇到了错误：{repr(e)}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！"
+                    )
+                )
+
+                raise e from e
+            finally:
+                await receipt.recall()
 
         return inner
 

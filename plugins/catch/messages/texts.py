@@ -12,9 +12,12 @@ from ..images import *
 from .images import drawCaughtBoxes, drawStatus
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
-from nonebot_plugin_orm import async_scoped_session
+from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
 
 import pathlib
+
+
+Session = async_scoped_session | AsyncSession
 
 
 async def displayAward(session: async_scoped_session, award: Award, user: User):
@@ -37,7 +40,7 @@ async def displayAward(session: async_scoped_session, award: Award, user: User):
     )
 
 
-async def caughtMessage(session: async_scoped_session, user: User, picksResult: PicksResult):
+async def caughtMessage(picksResult: PicksResult):
     ms = [MessageSegment.at(picksResult.uid)]
     maxPick = picksResult.max_pick
     delta = picksResult.time_delta
@@ -71,40 +74,43 @@ async def caughtMessage(session: async_scoped_session, user: User, picksResult: 
         f"现在你一共有 {picksResult.moneyTo()} 薯片\n"
     )
 
-    if picksResult.baibianxiaogeOccured:
-        skinId = picksResult.baibianxiaogeSkin
+    session = get_session()
 
-        if skinId is not None:
-            skin = await getSkinById(session, skinId)
-            await setSkin(session, user, skin)
+    async with session.begin():
+        if picksResult.baibianxiaogeOccured:
+            skinId = picksResult.baibianxiaogeSkin
 
-            tx += f"\n在这些小哥之中，你抓到了一只 {skin.name}！\n"
-        else:
-            tx += f"\n在这些小哥之中，你抓到了一只百变小哥，但是它已经没辙了，只会在你面前装嫩了。\n"
+            if skinId is not None:
+                skin = await getSkinById(session, skinId)
+                await setSkin(session, await picksResult.dbUser(session), skin)
 
-    ms.append(MessageSegment.text(tx))
+                tx += f"\n在这些小哥之中，你抓到了一只 {skin.name}！\n"
+            else:
+                tx += f"\n在这些小哥之中，你抓到了一只百变小哥，但是它已经没辙了，只会在你面前装嫩了。\n"
 
-    ## 新版界面
-    image = await drawCaughtBoxes(session, picksResult)
-    ms.append(MessageSegment.image(imageToBytes(image)))
+        ms.append(MessageSegment.text(tx))
 
-    ## 旧版界面
-    # user = ...
+        ## 新版界面
+        image = await drawCaughtBoxes(session, picksResult)
+        ms.append(MessageSegment.image(imageToBytes(image)))
 
-    # for p in picksResult.picks:
-    #     award = ...
-    #     level = award.level
+        ## 旧版界面
+        # user = ...
 
-    #     ms.append(await image(await display_box(
-    #         level.level_color_code,
-    #         await getAwardImageOfOneUser(session, user, award),
-    #         p.isNew()
-    #     )))
+        # for p in picksResult.picks:
+        #     award = ...
+        #     level = award.level
 
-    #     ms.append(text(
-    #         f"【{level.name}】{award.name}\n"
-    #         f"{await getAwardDescriptionOfOneUser(session, user, award)}\n"
-    #     ))
+        #     ms.append(await image(await display_box(
+        #         level.level_color_code,
+        #         await getAwardImageOfOneUser(session, user, award),
+        #         p.isNew()
+        #     )))
+
+        #     ms.append(text(
+        #         f"【{level.name}】{award.name}\n"
+        #         f"{await getAwardDescriptionOfOneUser(session, user, award)}\n"
+        #     ))
 
     return Message(ms)
 

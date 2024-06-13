@@ -1,5 +1,6 @@
-from functools import singledispatchmethod
-from typing import Any, Awaitable, Callable, Generic, Protocol, Type, TypeVar, cast, overload
+from typing import Any, Awaitable, Callable, Generic, TypeVar
+
+from nonebot import logger
 
 
 T = TypeVar("T")

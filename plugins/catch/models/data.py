@@ -176,7 +176,7 @@ class Pick:
     def isNew(self):
         return self.fromNumber == 0
 
-    async def dbAward(self, session: async_scoped_session):
+    async def dbAward(self, session: Session):
         return await getAwardById(session, self.award)
 
 
@@ -204,18 +204,18 @@ class PicksResult:
     def moneyTo(self):
         return self.money_from + self.prizes()
 
-    async def dbUser(self, session: async_scoped_session):
+    async def dbUser(self, session: Session):
         return await getUserById(session, self.udid)
 
 
-async def pick(session: async_scoped_session, user: User) -> list[Award]:
+async def pick(session: Session, user: User) -> list[Award]:
     levels = await getAllLevels(session)
     level = random.choices(levels, [l.weight for l in levels])[0]
     awardsResult = await getAllAwardsInLevel(session, level)
     return [random.choice(awardsResult)]
 
 
-async def recalcPickTime(session: async_scoped_session, user: User):
+async def recalcPickTime(session: Session, user: User):
     glob = await getGlobal(session)
 
     maxPick = user.pick_max_cache
@@ -243,7 +243,7 @@ async def recalcPickTime(session: async_scoped_session, user: User):
     return nowTime - user.pick_count_last_calculated
 
 
-async def canPickCount(session: async_scoped_session, user: User):
+async def canPickCount(session: Session, user: User):
     dt = await recalcPickTime(session, user)
     if dt < 0:
         dt = -1
@@ -252,7 +252,7 @@ async def canPickCount(session: async_scoped_session, user: User):
 
 
 async def handlePick(
-    session: async_scoped_session, uid: int, maxPickCount: int = 1
+    session: Session, uid: int, maxPickCount: int = 1
 ) -> PicksResult:
     user = await getUser(session, uid)
     count = await canPickCount(session, user)

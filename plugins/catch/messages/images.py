@@ -10,7 +10,7 @@ import PIL.ImageFont
 import nonebot
 from sqlalchemy import select
 from nonebot.log import logger
-from nonebot_plugin_orm import async_scoped_session, get_session
+from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
 from nonebot import get_driver
 
 from ..models import *
@@ -37,6 +37,9 @@ from ..images import display_box, catch, refBookBox
 
 
 GLOBAL_SCALAR = 1.5
+
+
+Session = async_scoped_session | AsyncSession
 
 
 @deprecated("Use images.components.display_box instead")
@@ -199,7 +202,7 @@ async def drawStatus(session: async_scoped_session, user: User | None):
     )
 
 
-async def drawCaughtBoxes(session: async_scoped_session, picks: PicksResult):
+async def drawCaughtBoxes(session: Session, picks: PicksResult):
     boxes: list[PILImage] = []
     user = await picks.dbUser(session)
 

@@ -32,42 +32,6 @@ from .keywords import *
 from .tools import getSender
 
 
-@decorateWithLoadingMessage(MSG_CATCH_LOADING)
-@asyncLock()
-@databaseIO()
-@dataclass
-class Catch(Command):
-    commandPattern: str = f"^{KEYWORD_BASE_COMMAND} ?(\\d+)?"
-    argsPattern: str = "$"
-
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
-        maxCount = 1
-
-        if result.group(2) is not None and result.group(2).isdigit():
-            maxCount = int(result.group(2))
-        
-        picksResult = await handlePick(env.session, env.sender, maxCount)
-        message = await caughtMessage(env.session, await getSender(env), picksResult)
-
-        return message
-
-
-@decorateWithLoadingMessage(MSG_CATCH_LOADING)
-@asyncLock()
-@databaseIO()
-@dataclass
-class CrazyCatch(Command):
-    commandPattern: str = f"^({KEYWORD_CRAZY}{KEYWORD_BASE_COMMAND}|kz)"
-    argsPattern: str = "$"
-
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
-        picksResult = await handlePick(env.session, env.sender, -1)
-
-        message = await caughtMessage(env.session, await getSender(env), picksResult)
-
-        return message
-
-
 @dataclass
 class CatchHelp(Command):
     commandPattern: str = f"^{KEYWORD_BASE_COMMAND}? ?{KEYWORD_HELP}"
