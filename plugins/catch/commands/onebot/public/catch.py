@@ -1,11 +1,17 @@
 from dataclasses import dataclass
 import time
 from typing import Any, cast
+import PIL
+import PIL.Image
 from nonebot_plugin_alconna import Alconna, UniMessage
 from arclet.alconna import Arg, ArgFlag, Arparma
 from nonebot_plugin_orm import AsyncSession, get_session
 
-from ....images.components import display_box
+from ....putils.draw.images import verticalPile
+
+from ....messages.images import drawCaughtBoxes_
+
+from ....images.components import catch, display_box
 
 from ....putils.draw import imageToBytes
 
@@ -119,25 +125,24 @@ async def _(e: CatchResultMessageEvent):
         .text("\n".join(pickResult.extraMessages))
     )
 
-    for pick, awardInfo in picks:
-        msg += (
-            UniMessage()
-            .image(
-                raw=imageToBytes(
-                    await display_box(
-                        color=awardInfo.color,
-                        central_image=awardInfo.awardImg,
-                        new=pick.countBefore == 0,
-                    )
-                )
-            )
-            .text(
-                f"【{awardInfo.levelName}】{awardInfo.awardName} (x{pick.countDelta}) → {pick.countBefore + pick.countDelta}\n"
-                f"{awardInfo.awardDescription}\n\n"
-            )
+    boxes: list[PIL.Image.Image] = []
+
+    for pick, info in picks:
+        image = await catch(
+            title=info.awardName,
+            description=info.awardDescription,
+            image=info.awardImg,
+            stars=info.levelName,
+            color=info.color,
+            new=pick.countBefore == 0,
+            notation=f"x{pick.countDelta}"
         )
 
-    await e.ctx.send(msg)
+        boxes.append(image)
+
+    img = await verticalPile(boxes, 33, "left", "#EEEBE3", 80, 80, 80, 80)
+
+    await e.ctx.send(msg + UniMessage().image(raw=imageToBytes(img)))
 
 
 @listenOnebot(root)

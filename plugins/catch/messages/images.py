@@ -202,7 +202,7 @@ async def drawStatus(session: async_scoped_session, user: User | None):
     )
 
 
-async def drawCaughtBoxes(session: Session, picks: PicksResult):
+async def drawCaughtBoxes_(session: Session, picks: PicksResult):
     boxes: list[PILImage] = []
     user = await picks.dbUser(session)
 

@@ -9,7 +9,7 @@ from ..putils.draw import imageToBytes
 from ..models import *
 from ..images import *
 
-from .images import drawCaughtBoxes, drawStatus
+from .images import drawCaughtBoxes_, drawStatus
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
@@ -91,7 +91,7 @@ async def caughtMessage(picksResult: PicksResult):
         ms.append(MessageSegment.text(tx))
 
         ## 新版界面
-        image = await drawCaughtBoxes(session, picksResult)
+        image = await drawCaughtBoxes_(session, picksResult)
         ms.append(MessageSegment.image(imageToBytes(image)))
 
         ## 旧版界面

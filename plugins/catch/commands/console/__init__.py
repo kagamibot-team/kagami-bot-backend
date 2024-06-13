@@ -81,3 +81,16 @@ async def _(ctx: ConsoleMessageContext):
         await ctx.reply(UniMessage(f"{cls.__name__} ok"))
 
     await ctx.reply(UniMessage("ok"))
+
+
+@listenConsole(root)
+@matchLiteral("::clear-database")
+async def _(ctx: ConsoleMessageContext):
+    for cls in to_pickle_list:
+        session = get_session()
+
+        async with session.begin():
+            await session.execute(delete(cls))
+            await session.commit()
+    
+    await ctx.reply(UniMessage("ok"))
