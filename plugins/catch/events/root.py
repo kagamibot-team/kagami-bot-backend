@@ -19,17 +19,17 @@ def activateRoot(root: EventManager):
 
     @consoleHandler.handle()
     async def _(bot: ConsoleBot, event: ConsoleMessageEvent):
-        await root.emit(ConsoleMessageContext(event, bot))
+        await root.throw(ConsoleMessageContext(event, bot))
 
 
     @groupMessageHandler.handle()
     async def _(bot: Bot, event: GroupMessageEvent):
-        await root.emit(OnebotGroupMessageContext(event, bot))
+        await root.throw(OnebotGroupMessageContext(event, bot))
 
 
     @privateMessageHandler.handle()
     async def _(bot: Bot, event: PrivateMessageEvent):
-        await root.emit(OnebotPrivateMessageContext(event, bot))
+        await root.throw(OnebotPrivateMessageContext(event, bot))
 
 
 root = EventManager()

@@ -53,7 +53,7 @@ async def _(session: Session, ctx: ConsoleMessageContext):
     for cls in to_pickle_list:
         output[cls.__name__] = await sel(cls)
 
-    with open(os.path.join(os.getcwd(), "data/dumps.pickle"), "wb") as f:
+    with open(os.path.join(".", "data/dumps.pickle"), "wb") as f:
         pickle.dump(output, f)
 
     await ctx.reply(UniMessage("ok"))
@@ -62,7 +62,7 @@ async def _(session: Session, ctx: ConsoleMessageContext):
 @listenConsole(root)
 @matchLiteral("::load-pickle")
 async def _(ctx: ConsoleMessageContext):
-    with open(os.path.join(os.getcwd(), "data/dumps.pickle"), "rb") as f:
+    with open(os.path.join(".", "data/dumps.pickle"), "rb") as f:
         output: dict[str, list[dict[str, Any]]] = pickle.load(f)
     
     for cls in to_pickle_list:
@@ -104,7 +104,7 @@ async def _(ctx: ConsoleMessageContext):
     给 SQLITE 数据库备份，只要复制文件即可
     """
 
-    fp = os.path.join(os.getcwd(), "data/db.sqlite3")
+    fp = os.path.join(".", "data/db.sqlite3")
     if not os.path.exists(fp):
         await ctx.reply(UniMessage("数据库文件不存在"))
         return
@@ -112,7 +112,7 @@ async def _(ctx: ConsoleMessageContext):
     with open(fp, "rb") as f:
         data = f.read()
     
-    tp = os.path.join(os.getcwd(), f"data/backup/db-{int(time.time())}.sqlite3")
+    tp = os.path.join(".", f"data/backup/db-{int(time.time())}.sqlite3")
 
     with open(tp, "wb") as f:
         f.write(data)

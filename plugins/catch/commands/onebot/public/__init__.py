@@ -2,6 +2,7 @@ from . import catch
 from . import secrets
 from . import skin
 from . import awards
+from . import ping
 
 
 __all__ = [
@@ -9,4 +10,5 @@ __all__ = [
     "secrets",
     "skin",
     "awards",
+    "ping",
 ]
