@@ -74,12 +74,15 @@ async def _pickAward(session: Session, user: User) -> Pick | None:
     awardStorage.count += 1
     user.pick_count_remain -= 1
 
+    moneyDelta = level.price if countBefore > 0 else level.price + 20
+    user.money += moneyDelta
+
     pick = Pick(
         awardId=cast(int, award.data_id),
         awardName=award.name,
         countBefore=countBefore,
         countDelta=1,
-        money=level.price if countBefore > 0 else level.price + 20,
+        money=moneyDelta,
     )
 
     return pick

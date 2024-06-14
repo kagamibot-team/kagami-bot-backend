@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar, cast
 
+from nonebot import logger
 from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
 from nonebot.adapters.console.bot import Bot as _ConsoleBot
 

@@ -111,7 +111,7 @@ async def _(e: CatchResultMessageEvent):
         timeStr = f"{minutes}分钟" + timeStr
 
     if len(picks) == 0:
-        await e.ctx.send(UniMessage().text(f"小哥还没长成，请再等{timeStr}吧！"))
+        await e.ctx.reply(UniMessage().text(f"小哥还没长成，请再等{timeStr}吧！"))
         return
 
     msg = (
@@ -142,7 +142,7 @@ async def _(e: CatchResultMessageEvent):
 
     img = await verticalPile(boxes, 33, "left", "#EEEBE3", 80, 80, 80, 80)
 
-    await e.ctx.send(msg + UniMessage().image(raw=imageToBytes(img)))
+    await e.ctx.reply(msg + UniMessage().image(raw=imageToBytes(img)))
 
 
 @listenOnebot(root)

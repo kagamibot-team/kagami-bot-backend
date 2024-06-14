@@ -4,6 +4,7 @@
 
 import os
 import pickle
+import time
 from typing import Any
 from nonebot_plugin_alconna import UniMessage
 from nonebot_plugin_orm import Model, get_session
@@ -93,4 +94,27 @@ async def _(ctx: ConsoleMessageContext):
             await session.execute(delete(cls))
             await session.commit()
     
+    await ctx.reply(UniMessage("ok"))
+
+
+@listenConsole(root)
+@matchLiteral("::make-backup")
+async def _(ctx: ConsoleMessageContext):
+    """
+    给 SQLITE 数据库备份，只要复制文件即可
+    """
+
+    fp = os.path.join(os.getcwd(), "data/db.sqlite3")
+    if not os.path.exists(fp):
+        await ctx.reply(UniMessage("数据库文件不存在"))
+        return
+
+    with open(fp, "rb") as f:
+        data = f.read()
+    
+    tp = os.path.join(os.getcwd(), f"data/backup/db-{int(time.time())}.sqlite3")
+
+    with open(tp, "wb") as f:
+        f.write(data)
+
     await ctx.reply(UniMessage("ok"))
