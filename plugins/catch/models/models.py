@@ -1,7 +1,7 @@
 import functools
 import os
 from nonebot_plugin_orm import Model
-from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .mixins import *
@@ -203,6 +203,10 @@ class AwardTagRelation(Model, BaseMixin):
 
 class StorageStats(Model, BaseMixin):
     __tablename__ = "catch_award_counter"
+
+    __table_args__ = (
+        Index("storage_stat_index", "target_user_id", "target_award_id", unique=True),
+    )
 
     # def __init__(self, user: "User", award: Award, count: int = 0):
     #     super().__init__(
