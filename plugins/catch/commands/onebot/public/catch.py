@@ -1,66 +1,37 @@
 from dataclasses import dataclass
 import time
-from typing import Any, cast
 import PIL
 import PIL.Image
 from nonebot_plugin_alconna import Alconna, UniMessage
 from arclet.alconna import Arg, ArgFlag, Arparma
 from nonebot_plugin_orm import AsyncSession, get_session
 
+from ....putils.draw import imageToBytes
 from ....putils.draw.images import verticalPile
 
-from ....messages.images import drawCaughtBoxes_
+from ....images.components import catch
 
-from ....images.components import catch, display_box
-
-from ....putils.draw import imageToBytes
-
-from ....putils.typing import Session
-
+from ....models.data import AwardInfo, GetAwardInfo
 from ....models.models import *
-from ....models.crud import (
-    getAllSkins,
-    getAwardById,
-    getAwardDescription,
-    getAwardImage,
-    getUser,
-    getUserById,
-)
+from ....models.crud import getAwardById, getUser, getUserById
 
 from ....logic.catch import Pick, PickResult, pickAwards
 
-from .....catch.events import root
+from ....events import root
+from ....events.context import OnebotContext
+from ....events.decorator import listenOnebot, matchAlconna, matchRegex, withSessionLock
 
-from ....events.context import OnebotGroupMessageContext, OnebotPrivateMessageContext
-from ....events.decorator import (
-    listenOnebot,
-    matchAlconna,
-    matchRegex,
-    withSessionLock,
-)
 from ...basics.loading import withLoading
 
 
 @dataclass
-class AwardInfo:
-    awardId: int
-    awardImg: str
-    awardName: str
-    awardDescription: str
-    levelName: str
-    color: str
-
-
-@dataclass
 class CatchResultMessageEvent:
-    ctx: OnebotGroupMessageContext[Any] | OnebotPrivateMessageContext[Any]
+    ctx: OnebotContext
     pickResult: PickResult
     picks: list[tuple[Pick, AwardInfo]]
 
 
-async def prepareForMessage(
-    ctx: OnebotGroupMessageContext | OnebotPrivateMessageContext, pickResult: PickResult
-):
+async def prepareForMessage(ctx: OnebotContext, pickResult: PickResult):
     session = get_session()
 
     async with session.begin():
@@ -76,17 +47,6 @@ async def prepareForMessage(
         ]
 
     return CatchResultMessageEvent(ctx, pickResult, picks)
-
-
-async def GetAwardInfo(session: Session, user: User, award: Award):
-    return AwardInfo(
-        awardId=cast(int, award.data_id),
-        awardImg=await getAwardImage(session, user, award),
-        awardName=award.name,
-        awardDescription=await getAwardDescription(session, user, award),
-        levelName=award.level.name,
-        color=award.level.color_code,
-    )
 
 
 @root.listen(CatchResultMessageEvent)
@@ -135,7 +95,7 @@ async def _(e: CatchResultMessageEvent):
             stars=info.levelName,
             color=info.color,
             new=pick.countBefore == 0,
-            notation=f"x{pick.countDelta}"
+            notation=f"x{pick.countDelta}",
         )
 
         boxes.append(image)
@@ -147,13 +107,9 @@ async def _(e: CatchResultMessageEvent):
 
 @listenOnebot(root)
 @matchAlconna(Alconna("re:(抓小哥|zhua)", Arg("count", int, flags=[ArgFlag.OPTIONAL])))
-@withLoading()
+@withLoading("正在抓小哥...")
 @withSessionLock()
-async def _(
-    ctx: OnebotGroupMessageContext | OnebotPrivateMessageContext,
-    session: AsyncSession,
-    result: Arparma,
-):
+async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     count = result.query[int]("count")
 
     if count is None:
@@ -170,13 +126,9 @@ async def _(
 
 @listenOnebot(root)
 @matchRegex("^(狂抓|kz)$")
-@withLoading()
+@withLoading("正在抓小哥...")
 @withSessionLock()
-async def _(
-    ctx: OnebotGroupMessageContext | OnebotPrivateMessageContext,
-    session: AsyncSession,
-    _,
-):
+async def _(ctx: OnebotContext, session: AsyncSession, _):
     user = await getUser(session, ctx.getSenderId())
     pickResult = await pickAwards(session, user, -1)
     await session.commit()

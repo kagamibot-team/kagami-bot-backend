@@ -1,43 +1,19 @@
 from dataclasses import dataclass
-import math
-import time
 
 
-from ..commands.basics import at, image, text
+from ..commands.basics import at, text
 from ..putils.draw import imageToBytes
 
 from ..models import *
 from ..images import *
 
-from .images import drawCaughtBoxes_, drawStatus
+from .images import drawStatus
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
-from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
-
-import pathlib
+from nonebot_plugin_orm import AsyncSession, async_scoped_session
 
 
 Session = async_scoped_session | AsyncSession
-
-
-async def displayAward(session: async_scoped_session, award: Award, user: User):
-    name = award.name
-    skin = await getUsedSkin(session, user, award)
-
-    if skin is not None:
-        name = name + f"[{skin.skin.name}]"
-
-    return Message(
-        [
-            MessageSegment.text(name + f"【{award.level.name}】"),
-            MessageSegment.image(
-                pathlib.Path(await getAwardImage(session, user, award))
-            ),
-            MessageSegment.text(
-                f"\n\n{await getAwardDescription(session, user, award)}"
-            ),
-        ]
-    )
 
 
 def createLevelWrongFormat():

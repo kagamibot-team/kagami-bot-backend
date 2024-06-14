@@ -7,7 +7,6 @@ from .texts import (
     allAwards,
     allLevels,
     noAwardNamed,
-    displayAward,
     modifyOk,
     setIntervalWrongFormat,
     settingOk,

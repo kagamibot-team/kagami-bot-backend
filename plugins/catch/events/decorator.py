@@ -7,8 +7,9 @@ import re
 
 from nonebot_plugin_orm import AsyncSession, get_session
 
+from ..logic.admin import isAdmin
 
-from ..config import config
+
 from .context import (
     ConsoleMessageContext,
     Context,
@@ -69,20 +70,10 @@ def matchLiteral(text: str):
 
 
 def requireAdmin():
-    def wrapper(func: Callable[[TC, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC, *args: *TA):
-            if isinstance(ctx, ConsoleMessageContext):
+    def wrapper(func: Callable[[TCP, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TCP, *args: *TA):
+            if isAdmin(ctx):
                 return await func(ctx, *args)
-
-            if isinstance(ctx, OnebotGroupMessageContext):
-                if ctx.event.group_id in config.admin_groups:
-                    return await func(ctx, *args)
-
-            if isinstance(ctx, OnebotPrivateMessageContext):
-                if ctx.event.user_id == config.admin_id:
-                    return await func(ctx, *args)
-
-            return None
 
         return inner
 
@@ -149,16 +140,19 @@ globalSessionLockManager = SessionLockManager()
 def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
     def wrapper(func: Callable[[TCP, AsyncSession, *TA], Coroutine[Any, Any, T]]):
         async def inner(ctx: TCP, *args: *TA):
-            sender = ctx.getSenderId()
-            if sender is None:
-                lock = manager[-1]
-            else:
-                lock = manager[sender]
+            # sender = ctx.getSenderId()
+            # if sender is None:
+            #     lock = manager[-1]
+            # else:
+            #     lock = manager[sender]
+            lock = manager[-1]
 
             async with lock:
                 session = get_session()
                 async with session.begin():
-                    return await func(ctx, session, *args)
+                    msg = await func(ctx, session, *args)
+                    await session.close()
+                    return msg
 
         return inner
 

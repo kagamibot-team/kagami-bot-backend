@@ -1,5 +1,4 @@
 import base64
-import cProfile
 import os
 import time
 from typing_extensions import deprecated
@@ -7,20 +6,13 @@ import PIL
 import PIL.ImageDraw
 
 import PIL.ImageFont
-import nonebot
-from sqlalchemy import select
 from nonebot.log import logger
 from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
 from nonebot import get_driver
 
 from ..models import *
 
-from ..putils.draw.images import (
-    addUponPaste,
-    horizontalPile,
-    verticalPile,
-    combineABunchOfImage,
-)
+from ..putils.draw.images import addUponPaste, verticalPile, combineABunchOfImage
 from ..putils.draw.texts import (
     VerticalAnchor,
     drawABoxOfText,
@@ -33,7 +25,7 @@ from ..putils.draw.typing import PILImage
 from ..putils.draw.images import newImage
 from ..config import config
 
-from ..images import display_box, catch, refBookBox
+from ..images import display_box, refBookBox
 
 
 GLOBAL_SCALAR = 1.5
@@ -200,29 +192,6 @@ async def drawStatus(session: async_scoped_session, user: User | None):
         int(40 * GLOBAL_SCALAR),
         int(40 * GLOBAL_SCALAR),
     )
-
-
-async def drawCaughtBoxes_(session: Session, picks: PicksResult):
-    boxes: list[PILImage] = []
-    user = await picks.dbUser(session)
-
-    for pick in picks.picks:
-        award = await pick.dbAward(session)
-        level = award.level
-
-        image = await catch(
-            award.name,
-            await getAwardDescription(session, user, award),
-            await getAwardImage(session, user, award),
-            level.name,
-            level.color_code,
-            pick.isNew(),
-            f"+{pick.delta}",
-        )
-
-        boxes.append(image)
-
-    return await verticalPile(boxes, 33, "left", "#EEEBE3", 80, 80, 80, 80)
 
 
 driver = get_driver()

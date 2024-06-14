@@ -38,7 +38,7 @@ class Context(Generic[TE, TDC]):
 
 
 @dataclass
-class UniContext(Generic[TE, TB, TS], Context[TE, UniMessage[TS]]):
+class UniContext(Generic[TE, TB], Context[TE, UniMessage[Any]]):
     event: TE
     bot: TB
 
@@ -52,7 +52,7 @@ class UniContext(Generic[TE, TB, TS], Context[TE, UniMessage[TS]]):
         return await self.send(message)
 
 
-class OnebotGroupMessageContext(UniContext[_OneBotGroupMessageEvent, _OnebotBot, TS]):
+class OnebotGroupMessageContext(UniContext[_OneBotGroupMessageEvent, _OnebotBot]):
     def getSenderId(self):
         return self.event.user_id
 
@@ -60,9 +60,7 @@ class OnebotGroupMessageContext(UniContext[_OneBotGroupMessageEvent, _OnebotBot,
         return await self.send((UniMessage.at(str(self.getSenderId())) + " " + message))
 
 
-class OnebotPrivateMessageContext(
-    UniContext[_OneBotPrivateMessageEvent, _OnebotBot, TS]
-):
+class OnebotPrivateMessageContext(UniContext[_OneBotPrivateMessageEvent, _OnebotBot]):
     def getSenderId(self):
         return self.event.user_id
 
@@ -70,7 +68,7 @@ class OnebotPrivateMessageContext(
         return await self.send(message)
 
 
-class ConsoleMessageContext(UniContext[_ConsoleEvent, _ConsoleBot, TS]):
+class ConsoleMessageContext(UniContext[_ConsoleEvent, _ConsoleBot]):
     def getSenderId(self):
         return None
 
@@ -78,8 +76,9 @@ class ConsoleMessageContext(UniContext[_ConsoleEvent, _ConsoleBot, TS]):
         return await self.send(message)
 
 
+OnebotContext = OnebotGroupMessageContext | OnebotPrivateMessageContext
+
+
 PublicContext = (
-    OnebotGroupMessageContext[TS]
-    | OnebotPrivateMessageContext[TS]
-    | ConsoleMessageContext[TS]
+    OnebotGroupMessageContext | OnebotPrivateMessageContext | ConsoleMessageContext
 )

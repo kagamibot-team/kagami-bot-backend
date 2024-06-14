@@ -2,7 +2,7 @@ from nonebot import logger
 from ....models.data import obtainSkin
 from ....models.crud import getSkinByName, getUser, setSkin
 from ....putils.typing import Session
-from ....events.context import OnebotGroupMessageContext, OnebotPrivateMessageContext
+from ....events.context import OnebotContext
 from ....events import root
 from ....events.decorator import listenOnebot, matchLiteral, withSessionLock
 
@@ -10,7 +10,7 @@ from ....events.decorator import listenOnebot, matchLiteral, withSessionLock
 @listenOnebot(root)
 @matchLiteral("给小哥不是给")
 @withSessionLock()
-async def _(ctx: OnebotGroupMessageContext | OnebotPrivateMessageContext, session: Session):
+async def _(ctx: OnebotContext, session: Session):
     skin = await getSkinByName(session, "不是给")
 
     if skin is None:

@@ -7,7 +7,6 @@ from ..basics import CommandBase
 
 from .basics import (
     CatchStorage,
-    CatchDisplay,
     CatchProgress,
     CatchShop,
     CatchCheckMoney,
@@ -39,7 +38,6 @@ from .admin import (
 enabledCommand: list[CommandBase] = [
     CatchStorage(),
     CatchProgress(),
-    CatchDisplay(),
     CatchAllAwards(),
     CatchAllLevel(),
     CatchSetInterval(),

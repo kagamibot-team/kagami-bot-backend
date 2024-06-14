@@ -1,5 +1,5 @@
 from nonebot_plugin_alconna import Alconna, Arparma, UniMessage
-from arclet.alconna import Arg, ArgFlag
+from arclet.alconna import Arg
 from nonebot_plugin_orm import AsyncSession
 
 from ....models.data import switchSkin
@@ -52,13 +52,15 @@ async def _(
             return
 
         await setSkin(session, user, skin)
-        await ctx.reply(UniMessage().text(f"已经将 {skin.award.name} 的皮肤更改为 {name}"))
+        await ctx.reply(UniMessage().text(f"已经将 {skin.award.name} 的皮肤更换为 {name}"))
+        await session.commit()
         return
     
     skins = await getAllOwnedSkin(session, user, award)
     skin = await switchSkin(session, user, [s.skin for s in skins], award)
     
     if skin is None:
-        await ctx.reply(UniMessage().text(f"已经将 {name} 的皮肤更改为默认了"))
+        await ctx.reply(UniMessage().text(f"已经将 {name} 的皮肤更换为默认了"))
     else:
         await ctx.reply(UniMessage().text(f"已将 {name} 的皮肤更换为 {skin.name} 了"))
+    await session.commit()

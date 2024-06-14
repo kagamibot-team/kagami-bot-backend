@@ -17,7 +17,6 @@ from ..basics import (
 from ...models import *
 
 from ...messages import (
-    displayAward,
     drawStatus,
     drawStorage,
     KagamiShop,
@@ -68,28 +67,6 @@ class CatchProgress(Command):
                 await image(img),
             ]
         )
-
-
-@dataclass
-class CatchDisplay(Command):
-    commandPattern: str = f"^{KEYWORD_DISPLAY} ?{KEYWORD_AWARDS}? "
-    argsPattern: str = "(\\S+)$"
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        name = result.group(3)
-        award = await getAwardByName(env.session, name)
-
-        if award is None:
-            return Message([at(env.sender), text(f" 你没有名字叫 {name} 的小哥")])
-
-        ac = await getStorage(env.session, await getSender(env), award)
-
-        if ac.count <= 0:
-            return Message([at(env.sender), text(f" 你没有名字叫 {name} 的小哥")])
-
-        return await displayAward(env.session, award, await getSender(env))
 
 
 @asyncLock()

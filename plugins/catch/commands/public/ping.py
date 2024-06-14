@@ -32,6 +32,6 @@ async def ping(ctx: PublicContext, res: re.Match[str]):
 
 @listenPublic(root)
 @matchRegex("^[小|柊]镜[， ,]?跳?科目三$")
-@withLoading()
+@withLoading("")
 async def _(ctx: PublicContext, _: re.Match[str]):
     await asyncio.sleep(5)
