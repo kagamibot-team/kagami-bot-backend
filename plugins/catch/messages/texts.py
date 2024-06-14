@@ -1,4 +1,8 @@
 from dataclasses import dataclass
+import time
+
+from nonebot import logger
+from sqlalchemy import select
 
 
 from ..commands.basics import at, text
@@ -41,7 +45,9 @@ def noAwardNamed(name: str):
 
 
 async def allLevels(session: async_scoped_session):
-    levelObjs = await getAllLevels(session)
+    begin = time.time()
+    levelObjs = (await session.execute(select(Level))).scalars().all()
+    logger.debug("查询所有 Level 花费了 %.2f 秒" % (time.time() - begin))
 
     levels = [
         f"\n- 【{l.name}】权重 {l.weight} 爆率 {round((await getPosibilities(session, l)) * 100, 2)} %"

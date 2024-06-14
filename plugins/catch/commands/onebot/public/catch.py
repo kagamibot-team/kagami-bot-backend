@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import time
 import PIL
 import PIL.Image
+from nonebot import logger
 from nonebot_plugin_alconna import Alconna, UniMessage
 from arclet.alconna import Arg, ArgFlag, Arparma
 from nonebot_plugin_orm import AsyncSession, get_session
@@ -129,7 +130,10 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
 @withLoading("正在抓小哥...")
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, _):
+    begin = time.time()
     user = await getUser(session, ctx.getSenderId())
+    logger.debug(f"获取用户信息花了 {time.time() - begin} 秒")
+
     pickResult = await pickAwards(session, user, -1)
     await session.commit()
 

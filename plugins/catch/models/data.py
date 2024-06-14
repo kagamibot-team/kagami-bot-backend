@@ -5,6 +5,7 @@
 """
 
 from dataclasses import dataclass
+import time
 from typing import cast
 from nonebot import logger
 from nonebot_plugin_orm import AsyncSession, async_scoped_session
@@ -50,8 +51,10 @@ async def reduceAward(session: Session, user: User, award: Award, count: int) ->
 
 
 async def getPosibilities(session: Session, level: Level):
-    levels = await getAllLevels(session)
-    weightSum = sum([l.weight for l in levels])
+    begin = time.time()
+    levels = (await session.execute(select(Level.weight))).scalars()
+    weightSum = sum(levels)
+    logger.debug("获取所有等级耗时：%f" % (time.time() - begin))
 
     return level.weight / weightSum
 

@@ -295,7 +295,11 @@ async def removeAward(session: Session, award: Award):
 async def getUser(session: Session, qqid: int):
     "返回一个用户，如果该用户不存在，则立即创建"
 
-    userResult = await session.execute(select(User).filter(User.qq_id == str(qqid)))
+    userResult = await session.execute(
+        select(User)
+        .with_hint(User, "USE INDEX ix_catch_user_data_qq_id")
+        .filter(User.qq_id == str(qqid))
+    )
 
     user = userResult.scalar_one_or_none()
 

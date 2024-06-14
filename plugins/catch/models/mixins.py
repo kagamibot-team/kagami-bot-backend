@@ -11,7 +11,6 @@ class BaseMixin:
         nullable=False,
         default=datetime.datetime.now,
         onupdate=datetime.datetime.now,
-        index=True,
     )
 
 
@@ -23,8 +22,8 @@ class TagsMixin:
     tags: Mapped[str] = mapped_column(default="")
 
     def getTags(self) -> set[str]:
-        return set(e for e in self.tags.split(' ') if len(e) > 0)
-    
+        return set(e for e in self.tags.split(" ") if len(e) > 0)
+
     def setTags(self, tags: set[str]):
         self.tags = " ".join(tags)
 

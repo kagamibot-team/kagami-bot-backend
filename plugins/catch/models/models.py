@@ -146,7 +146,7 @@ class Award(Model, BaseMixin):
     description: Mapped[str] = mapped_column(default="")
     sorting_priority: Mapped[int] = mapped_column(default=0)
 
-    level_id = Column(Integer, ForeignKey("catch_level.data_id"))
+    level_id = Column(Integer, ForeignKey("catch_level.data_id"), index=True)
     level: Mapped[Level] = relationship(back_populates="awards", lazy="subquery")
 
     storage_stats: Mapped[list["StorageStats"]] = relationship(
@@ -262,7 +262,7 @@ class User(Model, BaseMixin):
     #         pick_max_cache=pick_max_cache,
     #     )
 
-    qq_id: Mapped[str] = mapped_column(unique=True)
+    qq_id: Mapped[str] = mapped_column(unique=True, index=True)
 
     storage_stats: Mapped[list[StorageStats]] = relationship(
         back_populates="user", lazy="subquery"

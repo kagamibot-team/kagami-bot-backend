@@ -5,7 +5,7 @@ from typing import cast
 
 from nonebot import logger
 from sqlalchemy import func, select
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, subqueryload
 
 from ..models.data import obtainSkin
 
@@ -65,7 +65,7 @@ async def _getStorage(session: Session, uid: int, awardId: int):
     return stats
 
 
-async def _pickAward(session: Session, user: User, levels: list[Level]) -> Pick | None:
+async def _pickAward(session: Session, user: User, levels: list[tuple[int, str, float, float]]) -> Pick | None:
     """
     该方法是内部方法，请不要在外部调用。
     抓一次小哥，如果成功则返回 `Pick`，不能够抓则返回 `None`。
@@ -78,18 +78,25 @@ async def _pickAward(session: Session, user: User, levels: list[Level]) -> Pick 
         logger.warning("没有等级，无法抓小哥")
         return None
 
-    level = random.choices(levels, weights=[l.weight for l in levels])[0]
+    level = random.choices(levels, weights=[l[2] for l in levels])[0]
 
     begin = time.time()
-    award = (await session.execute(select(
-        Award.data_id, Award.name
-    ).order_by(func.random()).limit(1))).one_or_none()
+    award = (
+        await session.execute(
+            select(Award.data_id, Award.name)
+            .filter(
+                Award.level_id == level[0],
+            )
+            .order_by(func.random())
+            .limit(1)
+        )
+    ).one_or_none()
     logger.debug("随机选择一个小哥使用了 %f 秒" % (time.time() - begin))
 
     if award is None:
-        logger.warning(f"等级 {level.name} 没有小哥，这是意料之外的事情")
+        logger.warning(f"等级 {level[1]} 没有小哥，这是意料之外的事情")
         return None
-    
+
     awardId, awardName = award
 
     begin = time.time()
@@ -100,7 +107,7 @@ async def _pickAward(session: Session, user: User, levels: list[Level]) -> Pick 
     awardStorage.count += 1
     user.pick_count_remain -= 1
 
-    moneyDelta = level.price if countBefore > 0 else level.price + 20
+    moneyDelta = level[3] if countBefore > 0 else level[3] + 20
     user.money += moneyDelta
 
     pick = Pick(
@@ -122,17 +129,24 @@ async def pickAwards(session: Session, user: User, count: int) -> PickResult:
     await calculateTime(session, user)
 
     begin = time.time()
-    levels = (await session.execute(select(Level).options(load_only(
-        Level.name, Level.weight, Level.price
-    )).filter(Level.awards.any()))).scalars().all()
-    logger.debug("查询等级表使用了 %f 秒" % (time.time() - begin))
+    levels = [
+        l.tuple()
+        for l in (
+            await session.execute(
+                select(Level.data_id, Level.name, Level.weight, Level.price).filter(Level.weight > 0)
+            )
+        ).all()
+    ]
+    logger.debug(
+        "查询等级表使用了 %f 秒, LENGTH = %d" % (time.time() - begin, len(levels))
+    )
 
     picks: dict[int, Pick] = {}
 
     i = 0
 
     while i < count or count < 0:
-        pick = await _pickAward(session, user, list(levels))
+        pick = await _pickAward(session, user, levels)
         if pick is None:
             break
 
