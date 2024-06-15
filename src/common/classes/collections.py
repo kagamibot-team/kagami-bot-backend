@@ -1,4 +1,10 @@
-class PriorityList[T]():
+from typing import Generic, TypeVar
+
+
+T = TypeVar("T")
+
+
+class PriorityList(Generic[T]):
     ls: list[tuple[int, T]]
 
     def __init__(self):
