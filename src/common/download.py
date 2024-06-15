@@ -33,3 +33,6 @@ async def download(url: str):
 async def writeData(raw: bytes, target: str):
     with open(target, 'wb') as f:
         f.write(raw)
+
+
+__all__ = ["download", "writeData"]

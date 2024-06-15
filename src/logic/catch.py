@@ -9,8 +9,8 @@ from sqlalchemy import func, select, update
 from src.common.data.skins import give_skin, set_skin
 from src.common.data.users import qid2did
 
-from src.events.decorator import withFreeSession
-from src.events.root import root
+from src.common.decorators.command_decorators import withFreeSession
+from src.common.event_root import root
 
 from src.common.db import AsyncSession
 from src.models import *

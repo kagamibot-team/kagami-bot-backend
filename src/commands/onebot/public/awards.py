@@ -9,8 +9,8 @@ from src.models import *
 
 from src.common.data.awards import AwardInfo
 from src.common.data.users import qid2did
-from src.events.context import OnebotContext
-from src.events.decorator import listenOnebot, matchAlconna, withSessionLock
+from src.common.classes.command_events import OnebotContext
+from src.common.decorators.command_decorators import listenOnebot, matchAlconna, withSessionLock
 
 
 @listenOnebot()

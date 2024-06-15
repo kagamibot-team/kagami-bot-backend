@@ -9,7 +9,7 @@ import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
 
-from ...common.threading import make_async
+from ..decorators.threading import make_async
 
 from .images import addUponPaste, newImage
 

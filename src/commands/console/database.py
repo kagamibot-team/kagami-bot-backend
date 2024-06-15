@@ -8,9 +8,9 @@ import time
 from typing import Any
 from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import delete, select
-from ...events.context import ConsoleContext
+from ...common.classes.command_events import ConsoleContext
 from src.common.db import get_session, AsyncSession
-from ...events.decorator import listenConsole, matchLiteral, withFreeSession
+from ...common.decorators.command_decorators import listenConsole, matchLiteral, withFreeSession
 
 from src.models import *
 

@@ -8,8 +8,8 @@ from sqlalchemy import select
 
 from src.models import *
 
-from src.events.context import PublicContext
-from src.events.decorator import (
+from src.common.classes.command_events import PublicContext
+from src.common.decorators.command_decorators import (
     listenPublic,
     matchAlconna,
     requireAdmin,

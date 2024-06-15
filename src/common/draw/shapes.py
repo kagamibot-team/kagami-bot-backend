@@ -3,7 +3,7 @@ import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageChops
 
-from src.common.threading import make_async
+from src.common.decorators.threading import make_async
 
 from .typing import Image, PillowColorLike
 from .images import addUpon

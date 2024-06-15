@@ -4,8 +4,8 @@ from src.common.data.skins import give_skin, set_skin
 from src.common.data.users import qid2did
 from src.common.db import AsyncSession
 from src.models.models import Skin
-from ....events.context import OnebotContext
-from ....events.decorator import listenOnebot, matchLiteral, withSessionLock
+from ....common.classes.command_events import OnebotContext
+from ....common.decorators.command_decorators import listenOnebot, matchLiteral, withSessionLock
 
 
 @listenOnebot()

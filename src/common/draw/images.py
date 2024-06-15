@@ -8,7 +8,7 @@ import numpy as np
 import cv2
 import cv2.typing
 
-from ...common.threading import make_async
+from ..decorators.threading import make_async
 
 from .typing import Cv2Image, Image
 

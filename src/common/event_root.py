@@ -3,11 +3,11 @@ from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, PrivateMessageEv
 from nonebot.adapters.console import Bot as ConsoleBot
 from nonebot.adapters.console import MessageEvent as ConsoleMessageEvent
 
-from src.common.event_manager import EventManager
-from .context import (
+from src.common.classes.event_manager import EventManager
+from .classes.command_events import (
     ConsoleContext,
-    OnebotGroupContext,
-    OnebotPrivateContext,
+    GroupContext,
+    PrivateContext,
 )
 
 
@@ -24,12 +24,15 @@ def activateRoot(root: EventManager):
 
     @groupMessageHandler.handle()
     async def _(bot: Bot, event: GroupMessageEvent):
-        await root.throw(OnebotGroupContext(event, bot))
+        await root.throw(GroupContext(event, bot))
 
 
     @privateMessageHandler.handle()
     async def _(bot: Bot, event: PrivateMessageEvent):
-        await root.throw(OnebotPrivateContext(event, bot))
+        await root.throw(PrivateContext(event, bot))
 
 
 root = EventManager()
+
+
+__all__ = ["root", "activateRoot"]

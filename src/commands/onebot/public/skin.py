@@ -1,7 +1,7 @@
 from nonebot import logger
 from nonebot_plugin_alconna import Alconna, Arparma, UniMessage
 from arclet.alconna import Arg
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,8 +16,8 @@ from src.models.models import (
     UsedSkin,
 )
 
-from ....events.context import OnebotGroupContext, OnebotPrivateContext
-from ....events.decorator import listenOnebot, matchAlconna, withSessionLock
+from ....common.classes.command_events import GroupContext, PrivateContext
+from ....common.decorators.command_decorators import listenOnebot, matchAlconna, withSessionLock
 
 
 async def switch_in_skin_list(session: AsyncSession, user: int, skins: list[tuple[int, str]]):
@@ -55,7 +55,7 @@ async def switch_in_skin_list(session: AsyncSession, user: int, skins: list[tupl
 @matchAlconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("name", str)))
 @withSessionLock()
 async def _(
-    ctx: OnebotGroupContext | OnebotPrivateContext,
+    ctx: GroupContext | PrivateContext,
     session: AsyncSession,
     result: Arparma,
 ):
