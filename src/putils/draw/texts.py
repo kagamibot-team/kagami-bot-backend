@@ -38,7 +38,7 @@ class TextBox:
     bottom: int
 
 
-FONT_BASE = os.path.join(".", "res", "catch", "fonts")
+FONT_BASE = os.path.join(".", "res", "fonts")
 
 
 def _res(fn: str):

@@ -7,7 +7,7 @@ import asyncio
 import re
 from nonebot_plugin_alconna import UniMessage
 
-from plugins.catch.commands.basics.loading import withLoading
+from ...commands.basics.loading import withLoading
 
 from ...config import config
 from ...events import PublicContext, root

@@ -2,7 +2,7 @@ import os
 import random
 
 from nonebot_plugin_alconna import UniMessage
-from plugins.catch.events import root
+from ....events import root
 from ....events.context import OnebotContext
 from ....events.decorator import listenOnebot
 

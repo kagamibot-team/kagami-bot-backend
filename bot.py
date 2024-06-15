@@ -10,12 +10,17 @@ from nonebot.adapters.console.adapter import Adapter as ConsoleAdapter
 
 nonebot.init()
 
+
+# 加载驱动器
 driver = nonebot.get_driver()
 driver.register_adapter(OneBotV11Adapter) # type: ignore
 driver.register_adapter(ConsoleAdapter) # type: ignore
 
 
-nonebot.load_plugins('plugins')
+nonebot.load_plugin('nonebot_plugin_orm')
+
+
+nonebot.load_plugin('src')
 
 
 if __name__ == '__main__':

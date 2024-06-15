@@ -18,7 +18,7 @@ def withLoading(text: str = "请稍候……"):
             receipt = await ctx.reply(
                 UniMessage()
                 .text(text)
-                .image(path=pathlib.Path("./res/catch/科目三.gif"))
+                .image(path=pathlib.Path("./res/科目三.gif"))
             )
             try:
                 msg = await func(ctx, *args)

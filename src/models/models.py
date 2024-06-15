@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .mixins import *
 
 
-DEFAULT_IMG = os.path.join(".", "res", "catch", "default.png")
+DEFAULT_IMG = os.path.join(".", "res", "default.png")
 
 
 class Global(Model, BaseMixin):

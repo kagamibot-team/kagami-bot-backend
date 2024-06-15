@@ -26,7 +26,7 @@ async def localImage(image: str):
 
 
 async def 科目三():
-    return MessageSegment.image(pathlib.Path("./res/catch/科目三.gif"))
+    return MessageSegment.image(pathlib.Path("./res/科目三.gif"))
 
 
 def decorateWithLoadingMessage(_text: str = " 稍候，正在查询你的小哥收集进度..."):

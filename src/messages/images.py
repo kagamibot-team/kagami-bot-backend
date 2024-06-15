@@ -154,7 +154,7 @@ async def drawStatus(session: async_scoped_session, user: User | None):
         for award in allAwards:
             if user and award.data_id not in userCollected:
                 awards.append(
-                    await drawAwardBox("./res/catch/blank_placeholder.png", "???", "")
+                    await drawAwardBox("./res/blank_placeholder.png", "???", "")
                 )
             elif user:
                 awards.append(

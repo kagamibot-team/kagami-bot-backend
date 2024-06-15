@@ -7,7 +7,7 @@ from arclet.alconna import Alconna, Arparma, Arg
 from nonebot_plugin_alconna import UniMessage
 from nonebot_plugin_orm import get_session
 
-from ....catch.events import root
+from ...events import root
 
 from ...models import *
 

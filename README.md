@@ -27,17 +27,9 @@ pipx ensurepath
 pipx install nb-cli
 nb adapter install nonebot-adapter-onebot
 pip install nonebot-plugin-orm
-pip install -r requirements.txt
 ```
 
-可能有些库会安装失败，`requirements.txt` 我是基于我当前的 Windows 环境生成的。在我的香橙派中经过试验，需要手动重新安装这些库：
-
-```bash
-pip install aiosqlite
-pip install PILLOW opencv-python
-pip install requests
-apt-get install ffmpeg libsm6 libxext6  -y
-```
+然后，需要安装一些额外的库，我暂时没有精力整理出来，请自行安装吧！
 
 ### 建立需要的文件夹
 
@@ -61,6 +53,10 @@ nb run
 由于一些原因，我不在这里放出适合的前端框架，请自行寻找。
 
 当找到合适的前端框架以后，请将其反向 Websocket 配置为 `ws://127.0.0.1:21333/onebot/v11/ws`。
+
+## 如何贡献
+
+详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 关于
 
