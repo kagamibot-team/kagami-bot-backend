@@ -48,7 +48,7 @@ class LevelAltName(Base, BaseMixin, AltNameMixin):
 
     __tablename__ = "catch_level_alt_name"
 
-    level_id = Column(Integer, ForeignKey("catch_level.data_id"))
+    level_id = Column(Integer, ForeignKey("catch_level.data_id", ondelete="CASCADE"))
     level: Mapped[Level] = relationship(back_populates="alt_names", lazy="subquery")
 
 
@@ -80,10 +80,10 @@ class LevelTagRelation(Base, BaseMixin):
 
     __tablename__ = "catch_level_tag_relation"
 
-    level_id = Column(Integer, ForeignKey("catch_level.data_id"))
+    level_id = Column(Integer, ForeignKey("catch_level.data_id", ondelete="CASCADE"))
     level: Mapped[Level] = relationship(back_populates="tags", lazy="subquery")
 
-    tag_id = Column(Integer, ForeignKey("catch_tag.data_id"))
+    tag_id = Column(Integer, ForeignKey("catch_tag.data_id", ondelete="CASCADE"))
     tag: Mapped[Tag] = relationship(back_populates="levels", lazy="subquery")
 
 
@@ -95,7 +95,7 @@ class Award(Base, BaseMixin):
     description: Mapped[str] = mapped_column(default="")
     sorting_priority: Mapped[int] = mapped_column(default=0)
 
-    level_id = Column(Integer, ForeignKey("catch_level.data_id"), index=True)
+    level_id = Column(Integer, ForeignKey("catch_level.data_id", ondelete="CASCADE"), index=True)
     level: Mapped[Level] = relationship(back_populates="awards", lazy="subquery")
 
     storage_stats: Mapped[list["StorageStats"]] = relationship(
@@ -120,7 +120,7 @@ class AwardAltName(Base, BaseMixin, AltNameMixin):
 
     __tablename__ = "catch_award_alt_name"
 
-    award_id = Column(Integer, ForeignKey("catch_award.data_id"), index=True)
+    award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"), index=True)
     award: Mapped[Award] = relationship(back_populates="alt_names", lazy="subquery")
 
 
@@ -131,10 +131,10 @@ class AwardTagRelation(Base, BaseMixin):
 
     __tablename__ = "catch_award_tag_relation"
 
-    award_id = Column(Integer, ForeignKey("catch_award.data_id"))
+    award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
     award: Mapped[Award] = relationship(back_populates="tags", lazy="subquery")
 
-    tag_id = Column(Integer, ForeignKey("catch_tag.data_id"))
+    tag_id = Column(Integer, ForeignKey("catch_tag.data_id", ondelete="CASCADE"))
     tag: Mapped[Tag] = relationship(back_populates="awards", lazy="subquery")
 
 
@@ -145,8 +145,8 @@ class StorageStats(Base, BaseMixin):
         Index("storage_stat_index", "target_user_id", "target_award_id", unique=True),
     )
 
-    target_user_id = Column(Integer, ForeignKey("catch_user_data.data_id"))
-    target_award_id = Column(Integer, ForeignKey("catch_award.data_id"))
+    target_user_id = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
+    target_award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
     count: Mapped[int] = mapped_column(default=0)
 
     user: Mapped["User"] = relationship(back_populates="storage_stats", lazy="subquery")
@@ -156,8 +156,8 @@ class StorageStats(Base, BaseMixin):
 class UsedStats(Base, BaseMixin):
     __tablename__ = "catch_award_stats"
 
-    target_user_id = Column(Integer, ForeignKey("catch_user_data.data_id"))
-    target_award_id = Column(Integer, ForeignKey("catch_award.data_id"))
+    target_user_id = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
+    target_award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
     count: Mapped[int] = mapped_column(default=0)
 
     user: Mapped["User"] = relationship(back_populates="used_stats", lazy="subquery")
@@ -193,8 +193,8 @@ class User(Base, BaseMixin):
 class UsedSkin(Base, BaseMixin):
     __tablename__ = "catch_skin_record"
 
-    user_id = Column(Integer, ForeignKey("catch_user_data.data_id"))
-    skin_id = Column(Integer, ForeignKey("catch_skin.data_id"))
+    user_id = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
+    skin_id = Column(Integer, ForeignKey("catch_skin.data_id", ondelete="CASCADE"))
 
     user: Mapped[User] = relationship(back_populates="used_skins", lazy="subquery")
     skin: Mapped["Skin"] = relationship(back_populates="used_skins", lazy="subquery")
@@ -203,8 +203,8 @@ class UsedSkin(Base, BaseMixin):
 class OwnedSkin(Base, BaseMixin):
     __tablename__ = "catch_skin_own_record"
 
-    user_id = Column(Integer, ForeignKey("catch_user_data.data_id"))
-    skin_id = Column(Integer, ForeignKey("catch_skin.data_id"))
+    user_id = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
+    skin_id = Column(Integer, ForeignKey("catch_skin.data_id", ondelete="CASCADE"))
 
     user: Mapped[User] = relationship(back_populates="owned_skins", lazy="subquery")
     skin: Mapped["Skin"] = relationship(back_populates="owned_skins", lazy="subquery")
@@ -217,7 +217,7 @@ class Skin(Base, BaseMixin):
     extra_description: Mapped[str] = mapped_column(default="")
     image: Mapped[str] = mapped_column(default=DEFAULT_IMG)
     price: Mapped[float] = mapped_column(default=-1.0)
-    applied_award_id = Column(Integer, ForeignKey("catch_award.data_id"))
+    applied_award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
 
     award: Mapped[Award] = relationship(back_populates="skins", lazy="subquery")
     used_skins: Mapped[list[UsedSkin]] = relationship(
@@ -239,8 +239,8 @@ class Skin(Base, BaseMixin):
 class SkinTagRelation(Base, BaseMixin):
     __tablename__ = "catch_skin_tag_relation"
 
-    skin_id = Column(Integer, ForeignKey("catch_skin.data_id"))
-    tag_id = Column(Integer, ForeignKey("catch_tag.data_id"))
+    skin_id = Column(Integer, ForeignKey("catch_skin.data_id", ondelete="CASCADE"))
+    tag_id = Column(Integer, ForeignKey("catch_tag.data_id", ondelete="CASCADE"))
     skin: Mapped[Skin] = relationship(back_populates="tags", lazy="subquery")
     tag: Mapped[Tag] = relationship(back_populates="skins", lazy="subquery")
 
@@ -252,7 +252,7 @@ class SkinAltName(Base, BaseMixin, AltNameMixin):
 
     __tablename__ = "catch_skin_alt_name"
 
-    skin_id = Column(Integer, ForeignKey("catch_skin.data_id"))
+    skin_id = Column(Integer, ForeignKey("catch_skin.data_id", ondelete="CASCADE"))
     skin: Mapped[Skin] = relationship(back_populates="alt_names", lazy="subquery")
 
 

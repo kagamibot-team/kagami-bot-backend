@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 import re
 from typing import Any, Callable, Coroutine, cast
-from sqlalchemy import delete, select
 from nonebot_plugin_orm import async_scoped_session
 from nonebot.adapters.onebot.v11 import Message
 
-from ..basics import (
+from .old_version import (
     CheckEnvironment,
     at,
     localImage,
@@ -16,20 +15,42 @@ from ..basics import (
     databaseIO
 )
 from ...common.download import download, writeData
-from ...utils.text_format_check import isFloat, not_negative
+from .db import *
+from .messages import *
 
-from src.db import *
-from models import *
+from src.models import *
 
-from ...messages import (
-    allAwards,
-    allLevels,
-    modifyOk,
-    setIntervalWrongFormat,
-    settingOk,
-    getImageTarget,
-    getSkinTarget,
-)
+
+def isFloat():
+    def inner(x: str):
+        try:
+            float(x)
+            return True
+        except:
+            pass
+        return False
+
+    return inner
+
+
+def combine(*rules: Callable[[str], bool]):
+    def inner(x: str):
+        for rule in rules:
+            if not rule(x):
+                return False
+
+        return True
+
+    return inner
+
+def not_negative():
+    def inner(x: str):
+        return float(x) >= 0
+
+    return combine(isFloat(), inner)
+
+
+
 
 
 from .keywords import *

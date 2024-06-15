@@ -3,7 +3,7 @@ import re
 from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
-from ..basics import (
+from .old_version import (
     CheckEnvironment,
     at,
     decorateWithLoadingMessage,
@@ -14,15 +14,9 @@ from ..basics import (
     databaseIO,
 )
 
-from src.db import *
-
-from ...messages import (
-    drawStatus,
-    drawStorage,
-    KagamiShop,
-    getGoodsList,
-)
-from ...messages.lang import *
+from .db import *
+from .messages import *
+from .messages.lang import *
 
 from .keywords import *
 from .tools import getSender

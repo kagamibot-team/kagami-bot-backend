@@ -1,9 +1,10 @@
 from nonebot import logger
-from src.db.data import obtainSkin
-from src.db.crud import getSkinByName, getUser, setSkin
+from sqlalchemy import select
+from src.common.data.skins import give_skin, set_skin
+from src.common.data.users import qid2did
 from src.common.db import AsyncSession
+from src.models.models import Skin
 from ....events.context import OnebotContext
-from ....events import root
 from ....events.decorator import listenOnebot, matchLiteral, withSessionLock
 
 
@@ -11,12 +12,13 @@ from ....events.decorator import listenOnebot, matchLiteral, withSessionLock
 @matchLiteral("给小哥不是给")
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession):
-    skin = await getSkinByName(session, "不是给")
+    query = select(Skin.data_id).filter(Skin.name == "不是给")
+    skin = (await session.execute(query)).scalar_one_or_none()
 
     if skin is None:
         logger.warning("这个世界没有给小哥。")
         return
     
-    user = await getUser(session, ctx.getSenderId())
-    await obtainSkin(session, user, skin)
-    await setSkin(session, user, skin)
+    user = await qid2did(session, ctx.getSenderId())
+    await give_skin(session, user, skin)
+    await set_skin(session, user, skin)

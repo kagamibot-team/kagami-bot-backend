@@ -3,7 +3,7 @@
 """
 
 
-from ..basics import CommandBase
+from .old_version import CommandBase
 
 from .basics import (
     CatchStorage,

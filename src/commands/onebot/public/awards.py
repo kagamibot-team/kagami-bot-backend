@@ -4,22 +4,12 @@ from arclet.alconna import Arg
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from models import (
-    Award,
-    AwardAltName,
-    Level,
-    Skin,
-    StorageStats,
-    UsedSkin,
-    UsedStats,
-)
 
-from src.db.data import AwardInfo
+from src.models import *
 
-from src.db.crud import getUser
-
+from src.common.data.awards import AwardInfo
+from src.common.data.users import qid2did
 from src.events.context import OnebotContext
-from src.events import root
 from src.events.decorator import listenOnebot, matchAlconna, withSessionLock
 
 
@@ -28,7 +18,7 @@ from src.events.decorator import listenOnebot, matchAlconna, withSessionLock
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     name = result.query[str]("name")
-    user = await getUser(session, ctx.getSenderId())
+    user = await qid2did(session, ctx.getSenderId())
 
     if name is None:
         return
@@ -66,14 +56,14 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     ac = (
         await session.execute(
             select(StorageStats.count)
-            .filter(StorageStats.user == user)
+            .filter(StorageStats.target_user_id == user)
             .filter(StorageStats.target_award_id == award[0])
         )
     ).scalar_one_or_none() or 0
     au = (
         await session.execute(
             select(UsedStats.count)
-            .filter(UsedStats.user == user)
+            .filter(UsedStats.target_user_id == user)
             .filter(UsedStats.target_award_id == award[0])
         )
     ).scalar_one_or_none() or 0
@@ -85,7 +75,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     skinQuery = (
         select(Skin.name, Skin.extra_description, Skin.image)
         .filter(Skin.applied_award_id == award[0])
-        .filter(Skin.used_skins.any(UsedSkin.user == user))
+        .filter(Skin.used_skins.any(UsedSkin.user_id == user))
     )
     skin = (await session.execute(skinQuery)).one_or_none()
 

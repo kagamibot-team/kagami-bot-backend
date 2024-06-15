@@ -12,8 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from nonebot_plugin_orm import async_scoped_session
 
+from src.models import *
+
 from .crud import *
-from models import *
+
 
 
 Session = async_scoped_session | AsyncSession

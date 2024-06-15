@@ -4,19 +4,19 @@ import time
 from typing import cast
 
 from nonebot import logger
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
-from src.db.data import obtainSkin
+from src.common.data.skins import give_skin, set_skin
+from src.common.data.users import qid2did
 
-from ..events.decorator import withFreeSession
+from src.events.decorator import withFreeSession
+from src.events.root import root
 
-from models import *
-from src.db.crud import *
-
-from ..events.root import root
-
-from .catch_time import calculateTime, timeToNextCatch
 from src.common.db import AsyncSession
+from src.models import *
+
+
+from .catch_time import calculateTime, getInterval
 
 
 @dataclass()
@@ -51,9 +51,10 @@ async def _getStorage(session: AsyncSession, uid: int, awardId: int):
 
     stats = (
         await session.execute(
-            select(StorageStats)
-            .filter(StorageStats.user.has(User.data_id == uid))
-            .filter(StorageStats.award.has(Award.data_id == awardId))
+            select(StorageStats).filter(
+                StorageStats.target_user_id == uid,
+                StorageStats.target_award_id == awardId,
+            )
         )
     ).scalar_one_or_none()
 
@@ -64,14 +65,13 @@ async def _getStorage(session: AsyncSession, uid: int, awardId: int):
     return stats
 
 
-async def _pickAward(session: AsyncSession, user: User, levels: list[tuple[int, str, float, float]]) -> Pick | None:
+async def _pickAward(
+    session: AsyncSession, uid: int, levels: list[tuple[int, str, float, float]]
+) -> Pick | None:
     """
     该方法是内部方法，请不要在外部调用。
     抓一次小哥，如果成功则返回 `Pick`，不能够抓则返回 `None`。
     """
-
-    if user.pick_count_remain == 0:
-        return None
 
     if len(levels) == 0:
         logger.warning("没有等级，无法抓小哥")
@@ -99,15 +99,13 @@ async def _pickAward(session: AsyncSession, user: User, levels: list[tuple[int, 
     awardId, awardName = award
 
     begin = time.time()
-    awardStorage = await _getStorage(session, cast(int, user.data_id), awardId)
+    awardStorage = await _getStorage(session, uid, awardId)
     logger.debug("查询库存使用了 %f 秒" % (time.time() - begin))
 
     countBefore = awardStorage.count
     awardStorage.count += 1
-    user.pick_count_remain -= 1
 
     moneyDelta = level[3] if countBefore > 0 else level[3] + 20
-    user.money += moneyDelta
 
     pick = Pick(
         awardId=awardId,
@@ -120,19 +118,27 @@ async def _pickAward(session: AsyncSession, user: User, levels: list[tuple[int, 
     return pick
 
 
-async def pickAwards(session: AsyncSession, user: User, count: int) -> PickResult:
+async def pickAwards(session: AsyncSession, uid: int, count: int) -> PickResult:
     """
     抓 `count` 次小哥，返回抓到的结果。
     """
 
-    await calculateTime(session, user)
+    pick_count_remain, pick_count_last_calculated, maxPickCount = await calculateTime(
+        session, uid
+    )
+
+    money = (
+        await session.execute(select(User.money).filter(User.data_id == uid))
+    ).scalar_one()
 
     begin = time.time()
     levels = [
         l.tuple()
         for l in (
             await session.execute(
-                select(Level.data_id, Level.name, Level.weight, Level.price).filter(Level.weight > 0)
+                select(Level.data_id, Level.name, Level.weight, Level.price).filter(
+                    Level.weight > 0
+                )
             )
         ).all()
     ]
@@ -145,7 +151,10 @@ async def pickAwards(session: AsyncSession, user: User, count: int) -> PickResul
     i = 0
 
     while i < count or count < 0:
-        pick = await _pickAward(session, user, levels)
+        if pick_count_remain == 0:
+            break
+
+        pick = await _pickAward(session, uid, levels)
         if pick is None:
             break
 
@@ -156,15 +165,29 @@ async def pickAwards(session: AsyncSession, user: User, count: int) -> PickResul
             picks[pick.awardId] = pick
 
         i += 1
+        pick_count_remain -= 1
+
+    interval = await getInterval(session)
+
+    dm = sum(p.money for p in picks.values())
+
+    await session.execute(
+        update(User)
+        .where(User.data_id == uid)
+        .values(
+            pick_count_remain=pick_count_remain,
+            money=money + dm,
+        )
+    )
 
     return PickResult(
         picks=list(picks.values()),
-        uid=cast(int, user.data_id),
-        restPickCount=user.pick_count_remain,
-        maxPickCount=user.pick_max_cache,
-        timeToNextPick=await timeToNextCatch(session, user),
-        pickInterval=(await getGlobal(session)).catch_interval,
-        moneyAfterPick=user.money,
+        uid=uid,
+        restPickCount=pick_count_remain,
+        maxPickCount=maxPickCount,
+        timeToNextPick=pick_count_last_calculated + interval,
+        pickInterval=interval,
+        moneyAfterPick=money + dm,
         extraMessages=[],
     )
 
@@ -189,9 +212,9 @@ async def _(session: AsyncSession, e: PickResult):
 
             if len(skins) > 0:
                 skin = random.choice(skins)
-                user = await getUserById(session, e.uid)
-                await obtainSkin(session, user, skin)
-                await setSkin(session, user, skin)
+                udid = await qid2did(session, e.uid)
+                await give_skin(session, udid, cast(int, skin.data_id))
+                await set_skin(session, udid, cast(int, skin.data_id))
                 e.extraMessages.append(f"在这些小哥之中，你抓到了一只 {skin.name}！")
                 await session.commit()
             else:

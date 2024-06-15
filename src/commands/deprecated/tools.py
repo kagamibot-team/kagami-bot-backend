@@ -2,10 +2,10 @@ from typing import Type
 
 from nonebot.adapters.onebot.v11 import Message
 
-from src.db.crud import getUser
-from ..basics import CheckEnvironment, CommandBase
-from ...config import config
-from models import *
+from .db import getUser
+from .old_version import CheckEnvironment, CommandBase
+from src.config import config
+
 
 
 async def getSender(env: CheckEnvironment):

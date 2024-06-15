@@ -2,11 +2,11 @@
 `curd` 模块主要用于数据库的增、删、查、改。任何逻辑都不应该在这里实现。
 """
 
-from re import L
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
 
-from models import *
+
+from src.models import *
 
 
 Session = async_scoped_session | AsyncSession

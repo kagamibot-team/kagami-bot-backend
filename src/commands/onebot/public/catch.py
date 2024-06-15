@@ -7,14 +7,14 @@ from nonebot_plugin_alconna import Alconna, UniMessage
 from arclet.alconna import Arg, ArgFlag, Arparma
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.common.data.awards import AwardInfo, getAwardInfo
+from src.common.data.users import qid2did
 from src.common.draw import imageToBytes
 from src.common.draw.images import verticalPile
 
 from src.components import catch
 
-from src.db.data import AwardInfo, GetAwardInfo
-from models import *
-from src.db.crud import getAwardById, getUser, getUserById
+
 
 from ....logic.catch import Pick, PickResult, pickAwards
 
@@ -38,14 +38,14 @@ async def prepareForMessage(ctx: OnebotContext, pickResult: PickResult):
 
     async with session.begin():
         begin = time.time()
-        user = await getUserById(session, pickResult.uid)
+        user = await qid2did(session, ctx.getSenderId())
         logger.debug("获取用户花费了%f秒" % (time.time() - begin))
 
         picks = [
             (
                 pick,
-                await GetAwardInfo(
-                    session, user, await getAwardById(session, pick.awardId)
+                await getAwardInfo(
+                    session, user, pick.awardId
                 ),
             )
             for pick in pickResult.picks
@@ -120,7 +120,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     if count is None:
         count = 1
 
-    user = await getUser(session, ctx.getSenderId())
+    user = await qid2did(session, ctx.getSenderId())
 
     pickResult = await pickAwards(session, user, count)
     await session.commit()
@@ -135,7 +135,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, _):
     begin = time.time()
-    user = await getUser(session, ctx.getSenderId())
+    user = await qid2did(session, ctx.getSenderId())
     logger.debug(f"获取用户信息花了 {time.time() - begin} 秒")
 
     begin = time.time()

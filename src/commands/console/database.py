@@ -11,7 +11,9 @@ from sqlalchemy import delete, select
 from ...events.context import ConsoleContext
 from src.common.db import get_session, AsyncSession
 from ...events.decorator import listenConsole, matchLiteral, withFreeSession
-from models import *
+
+from src.models import *
+
 
 
 to_pickle_list: list[type[Base]] = [

@@ -4,13 +4,13 @@ from nonebot.exception import FinishedException
 from typing import NoReturn
 
 
-from .commands.basics import (
+from src.commands.deprecated.old_version import (
     CallbackBase,
     CheckEnvironment,
     WaitForMoreInformationException,
 )
 
-from .commands.deprecated import enabledCommand
+from . import enabledCommand
 
 from nonebot_plugin_orm import async_scoped_session
 

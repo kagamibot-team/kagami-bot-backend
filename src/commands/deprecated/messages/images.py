@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
 from nonebot import get_driver
 
 from ..db import *
-from models import *
+
 
 from src.common.draw.images import addUponPaste, verticalPile, combineABunchOfImage
 from src.common.draw.texts import (
@@ -24,10 +24,12 @@ from src.common.draw.texts import (
 )
 from src.common.draw.typing import Image
 from src.common.draw.images import newImage
-from ..config import config
+from src.config import config
 
 from src.components import display_box, ref_book_box
 from src.common.db import get_session
+
+from src.models import *
 
 
 GLOBAL_SCALAR = 1.5

@@ -5,10 +5,11 @@ from nonebot import logger
 from nonebot_plugin_alconna import UniMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from src.events import root
-from models import *
-from ...events.context import PublicContext
-from ...events.decorator import (
+
+from src.models import *
+
+from src.events.context import PublicContext
+from src.events.decorator import (
     listenPublic,
     matchAlconna,
     requireAdmin,
@@ -41,10 +42,26 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     targ = Award.name, Skin.name, Skin.image, Skin.extra_description, Skin.price
 
     if name:
-        query1 = select(*targ).filter(Skin.award.has(Award.name == name)).join(Award, Skin.applied_award_id == Award.data_id)
-        query2 = select(*targ).filter(Skin.name == name).join(Award, Skin.applied_award_id == Award.data_id)
-        query3 = select(*targ).filter(Skin.award.has(Award.alt_names.any(AwardAltName.name == name))).join(Award, Skin.applied_award_id == Award.data_id)
-        query4 = select(*targ).filter(Skin.alt_names.any(SkinAltName.name == name)).join(Award, Skin.applied_award_id == Award.data_id)
+        query1 = (
+            select(*targ)
+            .filter(Skin.award.has(Award.name == name))
+            .join(Award, Skin.applied_award_id == Award.data_id)
+        )
+        query2 = (
+            select(*targ)
+            .filter(Skin.name == name)
+            .join(Award, Skin.applied_award_id == Award.data_id)
+        )
+        query3 = (
+            select(*targ)
+            .filter(Skin.award.has(Award.alt_names.any(AwardAltName.name == name)))
+            .join(Award, Skin.applied_award_id == Award.data_id)
+        )
+        query4 = (
+            select(*targ)
+            .filter(Skin.alt_names.any(SkinAltName.name == name))
+            .join(Award, Skin.applied_award_id == Award.data_id)
+        )
 
         begin = time.time()
         skins1 = (await session.execute(query1)).tuples()
@@ -82,6 +99,8 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     else:
         for skin in skins:
             skinInfo = SkinInfo(*skin)
-            message += f"{skinInfo.aName}[{skinInfo.name}]\n{skinInfo.extra_description}\n\n"
-    
+            message += (
+                f"{skinInfo.aName}[{skinInfo.name}]\n{skinInfo.extra_description}\n\n"
+            )
+
     await ctx.reply(message)
