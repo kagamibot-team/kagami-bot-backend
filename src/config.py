@@ -15,7 +15,7 @@ class Config(BaseModel):
     custom_replies: dict[str, str] = {}
 
     # 是否预先画好小哥的图片
-    predraw_images: bool = False
+    predraw_images: int = 0
 
 
 config = get_plugin_config(Config)
