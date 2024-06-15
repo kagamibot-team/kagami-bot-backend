@@ -15,8 +15,8 @@ from ..basics import (
     WaitForMoreInformationException,
     databaseIO
 )
-from ...putils.download import download, writeData
-from ...putils.text_format_check import isFloat, not_negative
+from ...utils.download import download, writeData
+from ...utils.text_format_check import isFloat, not_negative
 
 from ...models import *
 

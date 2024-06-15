@@ -1,7 +1,7 @@
 import time
 from ..models.models import *
 from ..models.crud import *
-from ..putils.typing import Session
+from ..utils.typing import Session
 
 
 async def calculateTime(session: Session, user: User):

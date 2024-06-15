@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 
 from ..commands.basics import at, text
-from ..putils.draw import imageToBytes
+from ..utils.draw import imageToBytes
 
 from ..models import *
 from ..images import *

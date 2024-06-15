@@ -3,8 +3,8 @@ import pathlib
 import re
 from typing import Type
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
-from ...putils.draw.typing import PILImage
-from ...putils.draw import imageToBytes
+from ...utils.draw.typing import PILImage
+from ...utils.draw import imageToBytes
 from dataclasses import dataclass
 from nonebot_plugin_orm import async_scoped_session
 

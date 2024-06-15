@@ -10,7 +10,7 @@ from nonebot_plugin_alconna import UniMessage
 from nonebot_plugin_orm import Model, get_session
 from sqlalchemy import delete, select
 from ...events.context import ConsoleMessageContext
-from ...putils.typing import Session
+from ...utils.typing import Session
 from ...events import root
 from ...events.decorator import listenConsole, matchLiteral, withFreeSession
 from ...models.models import *

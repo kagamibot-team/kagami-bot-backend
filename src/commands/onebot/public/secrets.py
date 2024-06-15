@@ -1,7 +1,7 @@
 from nonebot import logger
 from ....models.data import obtainSkin
 from ....models.crud import getSkinByName, getUser, setSkin
-from ....putils.typing import Session
+from ....utils.typing import Session
 from ....events.context import OnebotContext
 from ....events import root
 from ....events.decorator import listenOnebot, matchLiteral, withSessionLock

@@ -11,7 +11,7 @@ from ..models.data import obtainSkin
 
 from ..events.decorator import withFreeSession
 
-from ..putils.typing import Session
+from ..utils.typing import Session
 from ..models.models import *
 from ..models.crud import *
 

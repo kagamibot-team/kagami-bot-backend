@@ -7,8 +7,8 @@ from nonebot_plugin_alconna import Alconna, UniMessage
 from arclet.alconna import Arg, ArgFlag, Arparma
 from nonebot_plugin_orm import AsyncSession, get_session
 
-from ....putils.draw import imageToBytes
-from ....putils.draw.images import verticalPile
+from ....utils.draw import imageToBytes
+from ....utils.draw.images import verticalPile
 
 from ....images.components import catch
 

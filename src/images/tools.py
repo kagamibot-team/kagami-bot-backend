@@ -1,5 +1,5 @@
 """
-该文件需要转移到 putils 中
+该文件需要转移到 utils 中
 """
 
 def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
