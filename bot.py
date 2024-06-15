@@ -17,9 +17,6 @@ driver.register_adapter(OneBotV11Adapter) # type: ignore
 driver.register_adapter(ConsoleAdapter) # type: ignore
 
 
-nonebot.load_plugin('nonebot_plugin_orm')
-
-
 nonebot.load_plugin('src')
 
 
