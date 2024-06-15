@@ -1,8 +1,5 @@
 import requests
 import asyncio
-
-
-import requests
 import ssl
 
 

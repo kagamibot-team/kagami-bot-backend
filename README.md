@@ -4,49 +4,62 @@
 
 ### 创建虚拟环境
 
-首先，安装 Python 3.11 以上的版本，并安装 `venv` 库，然后使用 `venv` 库在合适的文件夹中创建虚拟环境。
+首先，因为我用到了一些新特性，所以需要安装 Python 3.12 或以上的版本，并安装 `venv` 库，然后使用 `venv` 库在合适的文件夹中创建虚拟环境。
 
 ```bash
-python -m venv ./passbot/
-cd ./passbot
+pip install virtualenv
+virtualenv .venv
 ```
 
-然后，激活虚拟环境。在不同的系统中，激活虚拟环境的方式不同，这里介绍 Linux 中的激活方法：
+然后，激活虚拟环境。在不同的系统中，激活虚拟环境的方式不同。在 Linux 中：
 
 ```bash
-source ./bin/activate
+source ./.venv/bin/activate
+```
+
+在 Windows 中：
+
+```bash
+.\.venv\Scripts\activate
 ```
 
 ### 安装需要的库
 
-注意下面安装 `pipx` 并 `ensurepath` 之后，需要先退出虚拟环境，再进入。
-
 ```bash
-pip install pipx
-pipx ensurepath
-pipx install nb-cli
-nb adapter install nonebot-adapter-onebot
-pip install nonebot-plugin-orm
+pip install 'nonebot2[fastapi]'
+pip install nonebot-adapter-onebot nonebot-adapter-console nonebot_plugin_alconna nonebot-plugin-orm[sqlite]
+pip install pillow opencv-python types-Pillow requests urllib3==1.26.5
 ```
 
-然后，需要安装一些额外的库，我暂时没有精力整理出来，请自行安装吧！
+### 配置 Bot
 
-### 建立需要的文件夹
+在项目目录中，创建 `.env` 文件。你可以填写以下内容：
+
+```
+ENVIRONMENT=dev
+```
+
+此时，将会自动挂载 `.env.dev` 中的配置项，里面是我写好了的一些配置。同样，如果要应用到生产环境，请设置：
+
+```
+ENVIRONMENT=prod
+```
+
+此时，将会自动挂载 `.env.prod` 中的配置项。
+
+### 迁移数据库
+
+初次运行时，需要先将本地的数据库升级到最新版本。
 
 ```bash
-mkdir data
-cd data
-mkdir catch
-cd catch
-mkdir awards
-mkdir skins
+alembic upgrade head
 ```
+
+这条命令的意思是，使用 alembic，将数据库更新到最新版本（HEAD）。
 
 ### 运行 Bot 后端
 
-```bash
-nb run
-```
+直接运行 `python bot.py` 即可。
 
 ### 选择合适的前端
 

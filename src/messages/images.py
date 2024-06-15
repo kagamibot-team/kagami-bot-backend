@@ -234,7 +234,7 @@ def getImageTarget(award: Award):
     uIndex: int = 0
 
     def _path():
-        return os.path.join(".", "data", "catch", "awards", f"{safename}_{uIndex}.png")
+        return os.path.join(".", "data", "awards", f"{safename}_{uIndex}.png")
 
     while os.path.exists(_path()):
         uIndex += 1
@@ -253,7 +253,7 @@ def getSkinTarget(skin: Skin):
     uIndex: int = 0
 
     def _path():
-        return os.path.join(".", "data", "catch", "skins", f"{safename}_{uIndex}.png")
+        return os.path.join(".", "data", "skins", f"{safename}_{uIndex}.png")
 
     while os.path.exists(_path()):
         uIndex += 1

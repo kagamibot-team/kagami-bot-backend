@@ -1,7 +1,14 @@
-/data/*
-.venv
-__pycache__
+/data
 data.json
 dev_*.py
-.env*
 .vscode
+
+# Python 虚拟环境和其他文件
+__pycache__
+.venv
+/Lib
+/Scripts
+pyvenv.cfg
+
+# Nonebot 的 .env 文件
+.env
