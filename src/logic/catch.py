@@ -5,25 +5,6 @@ from src.common.fast_import import *
 from .catch_time import *
 
 
-async def _getStorage(session: AsyncSession, uid: int, awardId: int):
-    "返回一个用户的小哥库存，如果没有，则立即创建"
-
-    stats = (
-        await session.execute(
-            select(StorageStats).filter(
-                StorageStats.target_user_id == uid,
-                StorageStats.target_award_id == awardId,
-            )
-        )
-    ).scalar_one_or_none()
-
-    if not stats:
-        stats = StorageStats(target_user_id=uid, target_award_id=awardId, count=0)
-        session.add(stats)
-
-    return stats
-
-
 async def _pickAward(
     session: AsyncSession, uid: int, levels: list[tuple[int, str, float, float]]
 ) -> Pick | None:
@@ -38,7 +19,6 @@ async def _pickAward(
 
     level = random.choices(levels, weights=[l[2] for l in levels])[0]
 
-    begin = time.time()
     award = (
         await session.execute(
             select(Award.data_id, Award.name)
@@ -49,7 +29,6 @@ async def _pickAward(
             .limit(1)
         )
     ).one_or_none()
-    logger.debug("随机选择一个小哥使用了 %f 秒" % (time.time() - begin))
 
     if award is None:
         logger.warning(f"等级 {level[1]} 没有小哥，这是意料之外的事情")
@@ -57,12 +36,7 @@ async def _pickAward(
 
     awardId, awardName = award
 
-    begin = time.time()
-    awardStorage = await _getStorage(session, uid, awardId)
-    logger.debug("查询库存使用了 %f 秒" % (time.time() - begin))
-
-    countBefore = awardStorage.count
-    awardStorage.count += 1
+    countBefore = await addStorage(session, uid, awardId, 1)
 
     moneyDelta = level[3] if countBefore > 0 else level[3] + 20
 
@@ -90,7 +64,6 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> PickResult:
         await session.execute(select(User.money).filter(User.data_id == uid))
     ).scalar_one()
 
-    begin = time.time()
     levels = [
         l.tuple()
         for l in (
@@ -101,9 +74,6 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> PickResult:
             )
         ).all()
     ]
-    logger.debug(
-        "查询等级表使用了 %f 秒, LENGTH = %d" % (time.time() - begin, len(levels))
-    )
 
     picks: dict[int, Pick] = {}
 

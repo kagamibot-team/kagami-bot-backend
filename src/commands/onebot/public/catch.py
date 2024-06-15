@@ -22,6 +22,7 @@ async def prepareForMessage(ctx: OnebotContext, pickResult: PickResult):
         user = await qid2did(session, ctx.getSenderId())
         logger.debug("获取用户花费了%f秒" % (time.time() - begin))
 
+        begin = time.time()
         picks = [
             (
                 pick,
@@ -31,11 +32,13 @@ async def prepareForMessage(ctx: OnebotContext, pickResult: PickResult):
             )
             for pick in pickResult.picks
         ]
+        logger.debug("getAwardInfo 花费了%f秒" % (time.time() - begin))
 
     return CatchResultMessageEvent(ctx, pickResult, picks)
 
 
 @root.listen(CatchResultMessageEvent)
+@computeTime
 async def _(e: CatchResultMessageEvent):
     pickResult = e.pickResult
 

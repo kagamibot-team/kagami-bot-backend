@@ -246,12 +246,12 @@ def withFreeSession():
     return wrapper
 
 
-def computeTime(func: Callable[[TCP, *TA], Coroutine[Any, Any, T]]):
+def computeTime(func: Callable[[*TA], Coroutine[Any, Any, T]]):
     """计算命令执行的时间，并在日志中输出"""
 
-    async def wrapper(ctx: TCP, *args: *TA):
+    async def wrapper(*args: *TA):
         start = time.time()
-        msg = await func(ctx, *args)
+        msg = await func(*args)
         logger.debug(f"{func.__name__} 花费了 {time.time() - start} 秒")
         return msg
 

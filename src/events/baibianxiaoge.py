@@ -1,10 +1,12 @@
 import random
+import time
 from src.common.fast_import import *
 
 
 @root.listen(PickResult)
 @withFreeSession()
 async def _(session: AsyncSession, e: PickResult):
+    begin = time.time()
     for pick in e.picks:
         if pick.awardName == "百变小哥":
             skins = (
@@ -33,3 +35,4 @@ async def _(session: AsyncSession, e: PickResult):
                 )
 
             break
+    logger.debug(f"百变小哥抽卡耗时：{time.time() - begin}秒")
