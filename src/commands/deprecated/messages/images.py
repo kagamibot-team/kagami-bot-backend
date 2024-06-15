@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import os
 import time
@@ -186,17 +187,24 @@ async def preDrawEverything():
     awards = await getAllAwards(session)
     begin = time.time()
 
+    tasks: set[asyncio.Task[Any]] = set()
+
+    async def _predraw(bg: str, img: str, ind: int, mx: int, nm: str):
+        await display_box(bg, img)
+        logger.info(f"{ind}/{mx} 预渲染完成了 {nm}")
+
     for ind, award in enumerate(awards):
         bg = award.level.color_code
-        await display_box(bg, award.img_path)
-        logger.info(f"{ind + 1}/{len(awards)} 预渲染完成了 {award.name}")
+        tasks.add(asyncio.create_task(_predraw(bg, award.img_path, ind + 1, len(awards), award.name)))
 
     skins = await getAllSkins(session)
 
     for ind, skin in enumerate(skins):
         bg = skin.award.level.color_code
-        await display_box(bg, skin.image)
-        logger.info(f"{ind + 1}/{len(skins)} 预渲染完成了 {skin.name}")
+        tasks.add(asyncio.create_task(_predraw(bg, skin.image, ind + 1, len(skins), skin.name)))
+    
+    for task in tasks:
+        await task
 
     logger.info(f"已经完成了预先绘制图像文件，耗时 {time.time() - begin}")
 
