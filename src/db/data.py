@@ -13,7 +13,7 @@ from sqlalchemy import select, update
 from nonebot_plugin_orm import async_scoped_session
 
 from .crud import *
-from .models import *
+from models import *
 
 
 Session = async_scoped_session | AsyncSession

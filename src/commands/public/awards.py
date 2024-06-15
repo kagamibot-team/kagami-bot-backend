@@ -9,7 +9,8 @@ from src.utils.db import get_session
 
 from ...events import root
 
-from ...models import *
+from models import *
+from src.db.crud import getAwardByName, getLevelByName, removeAward
 
 from ...events.context import PublicContext
 from ...events.decorator import listenPublic, requireAdmin, matchAlconna

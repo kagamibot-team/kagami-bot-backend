@@ -13,9 +13,9 @@ from ....utils.draw.images import verticalPile
 
 from ....images.components import catch
 
-from ....models.data import AwardInfo, GetAwardInfo
-from ....models.models import *
-from ....models.crud import getAwardById, getUser, getUserById
+from src.db.data import AwardInfo, GetAwardInfo
+from models import *
+from src.db.crud import getAwardById, getUser, getUserById
 
 from ....logic.catch import Pick, PickResult, pickAwards
 

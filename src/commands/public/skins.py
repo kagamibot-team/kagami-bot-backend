@@ -6,7 +6,7 @@ from nonebot_plugin_alconna import UniMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from src.events import root
-from ...models.models import *
+from models import *
 from ...events.context import PublicContext
 from ...events.decorator import (
     listenPublic,

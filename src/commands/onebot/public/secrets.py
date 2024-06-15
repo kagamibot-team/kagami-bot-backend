@@ -1,6 +1,6 @@
 from nonebot import logger
-from ....models.data import obtainSkin
-from ....models.crud import getSkinByName, getUser, setSkin
+from src.db.data import obtainSkin
+from src.db.crud import getSkinByName, getUser, setSkin
 from ....utils.typing import Session
 from ....events.context import OnebotContext
 from ....events import root

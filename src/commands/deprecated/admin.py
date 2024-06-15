@@ -18,7 +18,8 @@ from ..basics import (
 from ...utils.download import download, writeData
 from ...utils.text_format_check import isFloat, not_negative
 
-from ...models import *
+from src.db import *
+from models import *
 
 from ...messages import (
     allAwards,

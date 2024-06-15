@@ -7,13 +7,13 @@ from nonebot import logger
 from sqlalchemy import func, select
 from sqlalchemy.orm import load_only, subqueryload
 
-from ..models.data import obtainSkin
+from src.db.data import obtainSkin
 
 from ..events.decorator import withFreeSession
 
 from ..utils.typing import Session
-from ..models.models import *
-from ..models.crud import *
+from models import *
+from src.db.crud import *
 
 from ..events.root import root
 

@@ -1,9 +1,11 @@
 from typing import Type
 
 from nonebot.adapters.onebot.v11 import Message
+
+from src.db.crud import getUser
 from ..basics import CheckEnvironment, CommandBase
 from ...config import config
-from ...models import *
+from models import *
 
 
 async def getSender(env: CheckEnvironment):

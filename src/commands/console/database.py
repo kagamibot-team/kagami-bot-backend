@@ -13,7 +13,7 @@ from ...events.context import ConsoleContext
 from ...utils.typing import Session
 from ...events import root
 from ...events.decorator import listenConsole, matchLiteral, withFreeSession
-from ...models.models import *
+from models import *
 
 
 to_pickle_list: list[type[Base]] = [

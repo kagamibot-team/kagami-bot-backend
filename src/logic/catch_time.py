@@ -1,6 +1,6 @@
 import time
-from ..models.models import *
-from ..models.crud import *
+from models import *
+from src.db.crud import *
 from ..utils.typing import Session
 
 

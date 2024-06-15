@@ -2,9 +2,9 @@ from nonebot_plugin_alconna import Alconna, Arparma, UniMessage
 from arclet.alconna import Arg
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ....models.data import switchSkin
+from src.db.data import switchSkin
 
-from ....models.crud import getAllOwnedSkin, getAwardByName, getOwnedSkin, getSkinByName, getUsedSkin, getUsedSkinBySkin, getUser, setSkin
+from src.db.crud import getAllOwnedSkin, getAwardByName, getOwnedSkin, getSkinByName, getUsedSkinBySkin, getUser, setSkin
 
 from ....events.context import OnebotGroupContext, OnebotPrivateContext
 from ....events import root

@@ -6,7 +6,7 @@ from re import L
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
 
-from .models import *
+from models import *
 
 
 Session = async_scoped_session | AsyncSession

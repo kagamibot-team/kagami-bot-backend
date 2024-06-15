@@ -14,7 +14,7 @@ from ..basics import (
     databaseIO,
 )
 
-from ...models import *
+from src.db import *
 
 from ...messages import (
     drawStatus,

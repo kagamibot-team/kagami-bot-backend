@@ -4,7 +4,7 @@ from arclet.alconna import Arg
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.models.models import (
+from models import (
     Award,
     AwardAltName,
     Level,
@@ -14,9 +14,9 @@ from src.models.models import (
     UsedStats,
 )
 
-from src.models.data import AwardInfo
+from src.db.data import AwardInfo
 
-from src.models.crud import getUser
+from src.db.crud import getUser
 
 from src.events.context import OnebotContext
 from src.events import root

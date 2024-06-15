@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
 from src.utils.db import get_session
 from nonebot import get_driver
 
-from ..models import *
+from ..db import *
+from models import *
 
 from ..utils.draw.images import addUponPaste, verticalPile, combineABunchOfImage
 from ..utils.draw.texts import (
