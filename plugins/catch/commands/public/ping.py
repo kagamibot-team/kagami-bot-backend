@@ -28,6 +28,9 @@ async def ping(ctx: PublicContext, res: re.Match[str]):
     
     if (k := str(sender)) in custom_replies.keys():
         await ctx.send(UniMessage(custom_replies[k] + sgns))
+        return
+    
+    await ctx.send(UniMessage("在" + sgns))
 
 
 @listenPublic(root)
