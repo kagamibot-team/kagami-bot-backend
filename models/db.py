@@ -9,5 +9,9 @@ _async_session_factory = async_sessionmaker(
     _engine, class_=AsyncSession, expire_on_commit=True
 )
 
+
 def get_session():
     return _async_session_factory()
+
+
+__all__ = ["get_session"]

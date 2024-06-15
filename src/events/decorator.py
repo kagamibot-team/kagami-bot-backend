@@ -7,7 +7,7 @@ from arclet.alconna.typing import TDC
 import re
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.utils.db import get_session
+from models.db import get_session
 from nonebot import get_driver, logger
 
 from ..logic.admin import isAdmin

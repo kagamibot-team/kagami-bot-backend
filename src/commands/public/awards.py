@@ -2,10 +2,8 @@
 对小哥进行的增删查改操作
 """
 
-from dataclasses import dataclass
 from arclet.alconna import Alconna, Arparma, Arg
 from nonebot_plugin_alconna import UniMessage
-from src.utils.db import get_session
 
 from ...events import root
 

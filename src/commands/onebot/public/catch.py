@@ -6,7 +6,6 @@ from nonebot import logger
 from nonebot_plugin_alconna import Alconna, UniMessage
 from arclet.alconna import Arg, ArgFlag, Arparma
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.utils.db import get_session
 
 from ....utils.draw import imageToBytes
 from ....utils.draw.images import verticalPile

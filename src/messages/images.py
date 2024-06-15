@@ -8,7 +8,6 @@ import PIL.ImageDraw
 import PIL.ImageFont
 from nonebot.log import logger
 from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
-from src.utils.db import get_session
 from nonebot import get_driver
 
 from ..db import *

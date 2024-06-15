@@ -7,7 +7,6 @@ import pickle
 import time
 from typing import Any
 from nonebot_plugin_alconna import UniMessage
-from src.utils.db import get_session
 from sqlalchemy import delete, select
 from ...events.context import ConsoleContext
 from ...utils.typing import Session

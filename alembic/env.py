@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 import nonebot
 
-nonebot.init(_env_file=[".env", ".public.env"])
+nonebot.init()
 
 from models import Base
 import src.config
