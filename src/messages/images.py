@@ -13,8 +13,8 @@ from nonebot import get_driver
 from ..db import *
 from models import *
 
-from ..utils.draw.images import addUponPaste, verticalPile, combineABunchOfImage
-from ..utils.draw.texts import (
+from src.common.draw.images import addUponPaste, verticalPile, combineABunchOfImage
+from src.common.draw.texts import (
     VerticalAnchor,
     drawABoxOfText,
     drawLimitedBoxOfText,
@@ -22,11 +22,12 @@ from ..utils.draw.texts import (
     textFont,
     Fonts,
 )
-from ..utils.draw.typing import PILImage
-from ..utils.draw.images import newImage
+from src.common.draw.typing import Image
+from src.common.draw.images import newImage
 from ..config import config
 
-from ..images import display_box, refBookBox
+from src.components import display_box, ref_book_box
+from src.common.db import get_session
 
 
 GLOBAL_SCALAR = 1.5
@@ -101,7 +102,7 @@ async def drawAwardBox(
 
 
 async def drawStorage(session: async_scoped_session, user: User):
-    awards: list[PILImage] = []
+    awards: list[Image] = []
 
     acs = await getUserStorages(session, user)
 
@@ -110,7 +111,7 @@ async def drawStorage(session: async_scoped_session, user: User):
         count = ac.count
 
         awards.append(
-            await refBookBox(
+            await ref_book_box(
                 award.name,
                 str(count),
                 award.level.color_code,
@@ -124,7 +125,7 @@ async def drawStorage(session: async_scoped_session, user: User):
 
 
 async def drawStatus(session: async_scoped_session, user: User | None):
-    boxes: list[PILImage] = []
+    boxes: list[Image] = []
     levels = await getAllLevels(session)
 
     for level in levels:
@@ -150,7 +151,7 @@ async def drawStatus(session: async_scoped_session, user: User | None):
             )
         )
 
-        awards: list[PILImage] = []
+        awards: list[Image] = []
 
         for award in allAwards:
             if user and award.data_id not in userCollected:

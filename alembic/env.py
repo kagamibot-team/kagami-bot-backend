@@ -13,7 +13,7 @@ import nonebot
 
 nonebot.init()
 
-from models import Base
+from src.models import Base
 import src.config
 
 # Alembic Config 对象, 它提供正在使用的 .ini 文件中的值.

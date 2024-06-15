@@ -15,7 +15,7 @@ from ..basics import (
     WaitForMoreInformationException,
     databaseIO
 )
-from ...utils.download import download, writeData
+from ...common.download import download, writeData
 from ...utils.text_format_check import isFloat, not_negative
 
 from src.db import *

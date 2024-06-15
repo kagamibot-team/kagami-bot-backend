@@ -7,8 +7,10 @@ from arclet.alconna.typing import TDC
 import re
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from models.db import get_session
+from src.common.db import get_session
 from nonebot import get_driver, logger
+
+from src.events import root
 
 from ..logic.admin import isAdmin
 
@@ -20,7 +22,7 @@ from .context import (
     OnebotPrivateContext,
     PublicContext,
 )
-from .manager import EventManager
+from src.common.event_manager import EventManager
 
 
 T = TypeVar("T")
@@ -86,7 +88,7 @@ def requireAdmin():
 def debugOnly():
     def wrapper(func: Callable[[TC], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
-            if get_driver().env == 'dev':
+            if get_driver().env == "dev":
                 return await func(ctx)
 
         return inner
@@ -94,28 +96,28 @@ def debugOnly():
     return wrapper
 
 
-def listenGroup(manager: EventManager):
+def listenGroup(manager: EventManager = root):
     def wrapper(func: Callable[[OnebotGroupContext], Coroutine[Any, Any, T]]):
         manager.listen(OnebotGroupContext)(func)
 
     return wrapper
 
 
-def listenPrivate(manager: EventManager):
+def listenPrivate(manager: EventManager = root):
     def wrapper(func: Callable[[OnebotPrivateContext], Coroutine[Any, Any, T]]):
         manager.listen(OnebotPrivateContext)(func)
 
     return wrapper
 
 
-def listenConsole(manager: EventManager):
+def listenConsole(manager: EventManager = root):
     def wrapper(func: Callable[[ConsoleContext], Coroutine[Any, Any, T]]):
         manager.listen(ConsoleContext)(func)
 
     return wrapper
 
 
-def listenPublic(manager: EventManager):
+def listenPublic(manager: EventManager = root):
     def wrapper(func: Callable[[PublicContext], Coroutine[Any, Any, T]]):
         listenGroup(manager)(func)
         listenPrivate(manager)(func)
@@ -124,7 +126,7 @@ def listenPublic(manager: EventManager):
     return wrapper
 
 
-def listenOnebot(manager: EventManager):
+def listenOnebot(manager: EventManager = root):
     def wrapper(
         func: Callable[
             [OnebotGroupContext | OnebotPrivateContext], Coroutine[Any, Any, T]
@@ -181,7 +183,7 @@ def withFreeSession():
                 return await func(session, *args)
 
         return inner
-    
+
     return wrapper
 
 
@@ -189,7 +191,7 @@ def computeTime(func: Callable[[TCP, *TA], Coroutine[Any, Any, T]]):
     async def wrapper(ctx: TCP, *args: *TA):
         start = time.time()
         msg = await func(ctx, *args)
-        logger.debug(f'{func.__name__} 花费了 {time.time() - start} 秒')
+        logger.debug(f"{func.__name__} 花费了 {time.time() - start} 秒")
         return msg
-    
+
     return wrapper

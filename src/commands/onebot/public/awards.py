@@ -23,7 +23,7 @@ from src.events import root
 from src.events.decorator import listenOnebot, matchAlconna, withSessionLock
 
 
-@listenOnebot(root)
+@listenOnebot()
 @matchAlconna(Alconna("re:(展示|zhanshi|zs)", Arg("name", str)))
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):

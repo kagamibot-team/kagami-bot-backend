@@ -15,7 +15,7 @@ from ...events import PublicContext, root
 from ...events.decorator import listenPublic, matchRegex
 
 
-@listenPublic(root)
+@listenPublic()
 @matchRegex("^[小|柊]镜([!！?？。.,， 1;；：:'‘’\"“”]*)$")
 async def ping(ctx: PublicContext, res: re.Match[str]):
     sgns = res.group(1)
@@ -33,7 +33,7 @@ async def ping(ctx: PublicContext, res: re.Match[str]):
     await ctx.send(UniMessage("在" + sgns))
 
 
-@listenPublic(root)
+@listenPublic()
 @matchRegex("^[小|柊]镜[， ,]?跳?科目三$")
 @withLoading("")
 async def _(ctx: PublicContext, _: re.Match[str]):

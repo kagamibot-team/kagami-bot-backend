@@ -8,9 +8,9 @@ import numpy as np
 import cv2
 import cv2.typing
 
-from ..threading import make_async
+from ...common.threading import make_async
 
-from .typing import Cv2Image, PILImage, PillowColorLike
+from .typing import Cv2Image, Image
 
 
 @make_async
@@ -26,12 +26,12 @@ def loadImage(fp: str):
 
 
 @make_async
-def addUponPaste(raw: PILImage, src: PILImage, x: int, y: int):
+def addUponPaste(raw: Image, src: Image, x: int, y: int):
     raw.paste(src, (x, y), src.convert("RGBA"))
 
 
 @make_async
-def toOpenCVImage(raw: PILImage):
+def toOpenCVImage(raw: Image):
     return cv2.cvtColor(np.array(raw), cv2.COLOR_RGB2BGR)
 
 
@@ -47,8 +47,8 @@ def fastPaste(raw: Cv2Image, src: Cv2Image, x: int, y: int):
 
 @make_async
 def addUpon(
-    raw: PILImage,
-    src: PILImage,
+    raw: Image,
+    src: Image,
     x: float,
     y: float,
     anchorX: float = 0.5,
@@ -81,12 +81,12 @@ def addUpon(
 
 
 @make_async
-def resize(img: PILImage, width: int, height: int):
+def resize(img: Image, width: int, height: int):
     return img.resize((width, height))
 
 
 async def horizontalPile(
-    images: list[PILImage],
+    images: list[Image],
     paddingX: int,
     align: Literal["top", "bottom", "center"],
     background: str,
@@ -94,7 +94,7 @@ async def horizontalPile(
     marginLeft: int = 0,
     marginRight: int = 0,
     marginBottom: int = 0,
-) -> PILImage:
+) -> Image:
     maxHeight = max([i.height for i in images])
     width = sum([i.width for i in images]) + paddingX * len(images)
 
@@ -119,7 +119,7 @@ async def horizontalPile(
 
 
 async def verticalPile(
-    images: list[PILImage],
+    images: list[Image],
     paddingY: int,
     align: Literal["left", "center", "right"],
     background: str,
@@ -127,7 +127,7 @@ async def verticalPile(
     marginLeft: int = 0,
     marginRight: int = 0,
     marginBottom: int = 0,
-) -> PILImage:
+) -> Image:
     maxWidth = max([i.width for i in images])
     height = sum([i.height for i in images]) + paddingY * len(images)
 
@@ -154,7 +154,7 @@ async def verticalPile(
 async def combineABunchOfImage(
     paddingX: int,
     paddingY: int,
-    images: list[PILImage],
+    images: list[Image],
     rowMaxNumber: int,
     background: str,
     horizontalAlign: Literal["top", "center", "bottom"],
@@ -164,7 +164,7 @@ async def combineABunchOfImage(
     marginTop: int = 0,
     marginBottom: int = 0,
 ):
-    piles: list[PILImage] = []
+    piles: list[Image] = []
 
     i = 0
 

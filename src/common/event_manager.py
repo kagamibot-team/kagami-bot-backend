@@ -1,6 +1,7 @@
 import asyncio
 import time
-from typing import Any, Callable, Coroutine, Generic, TypeVar
+from typing import Any, Callable, Coroutine, TypeVar
+from src.common.collections import PriorityList
 
 from nonebot import logger
 
@@ -19,39 +20,15 @@ def _isinstance(obj: Any, typ: type):
         return False
 
 
-class PriorityList(Generic[T]):
-    ls: list[tuple[int, T]]
-
-    def __init__(self):
-        self.ls = []
-
-    def add(self, priority: int, item: T):
-        i = 0
-        while i < len(self.ls):
-            if self.ls[i][0] > priority:
-                break
-            i += 1
-        self.ls.insert(i, (priority, item))
-    
-    def __iter__(self):
-        return (item for _, item in self.ls)
-
-    def __len__(self):
-        return len(self.ls)
-
-    def __getitem__(self, index: int):
-        return self.ls[index][1]
-
-
 class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
     """
     用于整个 Bot 的事件系统
 
     使用方法:
-    
+
     ```python
     event = EventManager()
-    
+
     @event.listen(EventType)
     async def event_handler(event: EventType):
         ... # do something
@@ -120,7 +97,7 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
                         task.add_done_callback(tasks.discard)
                 except StopIteration:
                     pass
-    
+
     def merge(self, other: "EventManager"):
         for key in other.keys():
             if key not in self.keys():
@@ -128,3 +105,6 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
             else:
                 for l in other[key].ls:
                     self[key].add(l[0], l[1])
+
+
+__all__ = ["EventManager"]

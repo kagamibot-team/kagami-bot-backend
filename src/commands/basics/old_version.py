@@ -3,8 +3,8 @@ import pathlib
 import re
 from typing import Type
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
-from ...utils.draw.typing import PILImage
-from ...utils.draw import imageToBytes
+from src.common.draw.typing import Image
+from src.common.draw import imageToBytes
 from dataclasses import dataclass
 from nonebot_plugin_orm import async_scoped_session
 
@@ -17,7 +17,7 @@ def text(text: str):
     return MessageSegment.text(text)
 
 
-async def image(image: PILImage):
+async def image(image: Image):
     return MessageSegment.image(imageToBytes(image))
 
 

@@ -9,8 +9,7 @@ from typing import Any
 from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import delete, select
 from ...events.context import ConsoleContext
-from ...utils.typing import Session
-from ...events import root
+from src.common.db import get_session, AsyncSession
 from ...events.decorator import listenConsole, matchLiteral, withFreeSession
 from models import *
 
@@ -35,10 +34,10 @@ to_pickle_list: list[type[Base]] = [
 ]
 
 
-@listenConsole(root)
+@listenConsole()
 @matchLiteral("::dump-pickle")
 @withFreeSession()
-async def _(session: Session, ctx: ConsoleContext):
+async def _(session: AsyncSession, ctx: ConsoleContext):
     def asDict(obj: Base):
         return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
 
@@ -58,7 +57,7 @@ async def _(session: Session, ctx: ConsoleContext):
     await ctx.reply(UniMessage("ok"))
 
 
-@listenConsole(root)
+@listenConsole()
 @matchLiteral("::load-pickle")
 async def _(ctx: ConsoleContext):
     with open(os.path.join(".", "data/dumps.pickle"), "rb") as f:
@@ -83,7 +82,7 @@ async def _(ctx: ConsoleContext):
     await ctx.reply(UniMessage("ok"))
 
 
-@listenConsole(root)
+@listenConsole()
 @matchLiteral("::clear-database")
 async def _(ctx: ConsoleContext):
     for cls in to_pickle_list:
@@ -96,7 +95,7 @@ async def _(ctx: ConsoleContext):
     await ctx.reply(UniMessage("ok"))
 
 
-@listenConsole(root)
+@listenConsole()
 @matchLiteral("::make-backup")
 async def _(ctx: ConsoleContext):
     """

@@ -20,7 +20,7 @@ def randomKagami():
     return os.path.join(rootPath, random.choice(files))
 
 
-@listenOnebot(root)
+@listenOnebot()
 async def ping(ctx: OnebotContext):
     if ctx.event.is_tome() and len(ctx.getMessage()) == 1 and ctx.getMessage()[0].data['text'] == '':
         kagami = randomKagami()

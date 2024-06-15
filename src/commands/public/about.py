@@ -147,31 +147,31 @@ def constructHelpMessage(helps: list[str]) -> UniMessage:
     return UniMessage().text(text)
 
 
-@listenPublic(root)
+@listenPublic()
 @matchRegex("^(抓小哥|zhua) ?(更新|gx|upd|update)$")
 async def _(ctx: PublicContext, *_):
     await ctx.send(constructUpdateMessage(updateHistory))
 
 
-@listenPublic(root)
+@listenPublic()
 @matchRegex("^:: ?(抓小哥|zhua) ?(更新|gx|upd|update)$")
 async def _(ctx: PublicContext, *_):
     await ctx.send(constructUpdateMessage(updateHistoryDev))
 
 
-@listenPublic(root)
+@listenPublic()
 @matchRegex("^(抓小哥|zhua) ?(帮助|help)$")
 async def _(ctx: PublicContext, *_):
     await ctx.send(constructHelpMessage(help))
 
 
-@listenPublic(root)
+@listenPublic()
 @matchRegex("^:: ?(抓小哥|zhua) ?(帮助|help)$")
 async def _(ctx: PublicContext, *_):
     await ctx.send(constructHelpMessage(helpAdmin))
 
 
-@listenPublic(root)
+@listenPublic()
 @matchRegex("^(关于 ?抓小哥|zhua ?about)$")
 async def _(ctx: PublicContext, *_):
     await ctx.send(UniMessage().text("以后再写，详见 https://github.com/Passthem-desu/passthem-bot"))

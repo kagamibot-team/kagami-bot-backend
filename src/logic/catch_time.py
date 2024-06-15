@@ -1,10 +1,10 @@
 import time
 from models import *
 from src.db.crud import *
-from ..utils.typing import Session
+from src.common.db import AsyncSession
 
 
-async def calculateTime(session: Session, user: User):
+async def calculateTime(session: AsyncSession, user: User):
     """
     根据当前时间，重新计算玩家抓小哥的时间
     """
@@ -33,7 +33,7 @@ async def calculateTime(session: Session, user: User):
         user.pick_count_last_calculated = now
 
 
-async def timeToNextCatch(session: Session, user: User):
+async def timeToNextCatch(session: AsyncSession, user: User):
     """
     计算玩家下一次抓小哥的时间，在调用这个方法前，请先调用 `calculateTime`。
     """

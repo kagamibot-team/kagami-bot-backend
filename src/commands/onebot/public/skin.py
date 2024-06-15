@@ -11,7 +11,7 @@ from ....events import root
 from ....events.decorator import listenOnebot, matchAlconna, withSessionLock
 
 
-@listenOnebot(root)
+@listenOnebot()
 @matchAlconna(
     Alconna(
         "re:(更换|改变|替换|切换)(小哥)?(皮肤)",

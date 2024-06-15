@@ -7,5 +7,5 @@ PillowColorLikeStrong = str | int | tuple[int, int, int] | tuple[int, int, int, 
 PillowColorLike = int | tuple[int] | tuple[int, int] | tuple[int, int, int] | tuple[int, int, int, int] | str | float | tuple[float]
 PillowColorLikeWeak = PillowColorLike | None
 
-PILImage = PIL.Image.Image
+Image = PIL.Image.Image
 Cv2Image = cv2.typing.MatLike

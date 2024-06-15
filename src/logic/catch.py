@@ -5,19 +5,18 @@ from typing import cast
 
 from nonebot import logger
 from sqlalchemy import func, select
-from sqlalchemy.orm import load_only, subqueryload
 
 from src.db.data import obtainSkin
 
 from ..events.decorator import withFreeSession
 
-from ..utils.typing import Session
 from models import *
 from src.db.crud import *
 
 from ..events.root import root
 
 from .catch_time import calculateTime, timeToNextCatch
+from src.common.db import AsyncSession
 
 
 @dataclass()
@@ -47,7 +46,7 @@ class PickResult:
     extraMessages: list[str]
 
 
-async def _getStorage(session: Session, uid: int, awardId: int):
+async def _getStorage(session: AsyncSession, uid: int, awardId: int):
     "返回一个用户的小哥库存，如果没有，则立即创建"
 
     stats = (
@@ -65,7 +64,7 @@ async def _getStorage(session: Session, uid: int, awardId: int):
     return stats
 
 
-async def _pickAward(session: Session, user: User, levels: list[tuple[int, str, float, float]]) -> Pick | None:
+async def _pickAward(session: AsyncSession, user: User, levels: list[tuple[int, str, float, float]]) -> Pick | None:
     """
     该方法是内部方法，请不要在外部调用。
     抓一次小哥，如果成功则返回 `Pick`，不能够抓则返回 `None`。
@@ -121,7 +120,7 @@ async def _pickAward(session: Session, user: User, levels: list[tuple[int, str, 
     return pick
 
 
-async def pickAwards(session: Session, user: User, count: int) -> PickResult:
+async def pickAwards(session: AsyncSession, user: User, count: int) -> PickResult:
     """
     抓 `count` 次小哥，返回抓到的结果。
     """
@@ -172,7 +171,7 @@ async def pickAwards(session: Session, user: User, count: int) -> PickResult:
 
 @root.listen(PickResult)
 @withFreeSession()
-async def _(session: Session, e: PickResult):
+async def _(session: AsyncSession, e: PickResult):
     for pick in e.picks:
         if pick.awardName == "百变小哥":
             skins = (

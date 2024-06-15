@@ -25,7 +25,7 @@ class SkinInfo:
     price: float
 
 
-@listenPublic(root)
+@listenPublic()
 @requireAdmin()
 @matchAlconna(
     Alconna(

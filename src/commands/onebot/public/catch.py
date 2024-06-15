@@ -7,10 +7,10 @@ from nonebot_plugin_alconna import Alconna, UniMessage
 from arclet.alconna import Arg, ArgFlag, Arparma
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ....utils.draw import imageToBytes
-from ....utils.draw.images import verticalPile
+from src.common.draw import imageToBytes
+from src.common.draw.images import verticalPile
 
-from ....images.components import catch
+from src.components import catch
 
 from src.db.data import AwardInfo, GetAwardInfo
 from models import *
@@ -23,6 +23,7 @@ from ....events.context import OnebotContext
 from ....events.decorator import listenOnebot, matchAlconna, matchRegex, withSessionLock
 
 from ...basics.loading import withLoading
+from src.common.db import get_session
 
 
 @dataclass
@@ -109,7 +110,7 @@ async def _(e: CatchResultMessageEvent):
     await e.ctx.reply(msg + UniMessage().image(raw=imageToBytes(img)))
 
 
-@listenOnebot(root)
+@listenOnebot()
 @matchAlconna(Alconna("re:(抓小哥|zhua)", Arg("count", int, flags=[ArgFlag.OPTIONAL])))
 @withLoading("正在抓小哥...")
 @withSessionLock()
@@ -128,7 +129,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     await root.emit(await prepareForMessage(ctx, pickResult))
 
 
-@listenOnebot(root)
+@listenOnebot()
 @matchRegex("^(狂抓|kz)$")
 @withLoading("正在抓小哥...")
 @withSessionLock()

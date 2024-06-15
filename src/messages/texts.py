@@ -6,13 +6,13 @@ from sqlalchemy import select
 
 
 from ..commands.basics import at, text
-from ..utils.draw import imageToBytes
+from src.common.draw import imageToBytes
 
 from models.base import *
 from models import *
 from ..db.crud import *
 from ..db.data import *
-from ..images import *
+from src.components import *
 
 from .images import drawStatus
 
