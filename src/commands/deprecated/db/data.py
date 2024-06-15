@@ -10,7 +10,6 @@ from typing import cast
 from nonebot import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
-from nonebot_plugin_orm import async_scoped_session
 
 from src.models import *
 
@@ -18,7 +17,7 @@ from .crud import *
 
 
 
-Session = async_scoped_session | AsyncSession
+Session = AsyncSession
 
 
 async def setInterval(session: Session, interval: float):
@@ -205,7 +204,7 @@ async def GetAwardInfo(session: Session, user: User, award: Award):
     )
     
 
-async def buy(session: async_scoped_session, user: User, code: str, price: float):
+async def buy(session: AsyncSession, user: User, code: str, price: float):
     user.money -= price
 
     if code == "加上限":

@@ -15,12 +15,12 @@ from src.components import *
 from .images import drawStatus
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
-from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models import *
 
 
-Session = async_scoped_session | AsyncSession
+Session = AsyncSession
 
 
 def createLevelWrongFormat():
@@ -47,7 +47,7 @@ def noAwardNamed(name: str):
     return Message(MessageSegment.text(f"没有叫做 {name} 的小哥"))
 
 
-async def allLevels(session: async_scoped_session):
+async def allLevels(session: AsyncSession):
     begin = time.time()
     levelObjs = (await session.execute(select(Level))).scalars().all()
     logger.debug("查询所有 Level 花费了 %.2f 秒" % (time.time() - begin))
@@ -61,7 +61,7 @@ async def allLevels(session: async_scoped_session):
     return Message(MessageSegment.text("所有包含的等级：" + "".join(levels)))
 
 
-async def allAwards(session: async_scoped_session):
+async def allAwards(session: AsyncSession):
     _levels = await getAllLevels(session)
 
     _result: list[str] = []
@@ -109,7 +109,7 @@ class Goods:
     soldout: bool = False
 
 
-async def getGoodsList(session: async_scoped_session, user: User):
+async def getGoodsList(session: AsyncSession, user: User):
     goods: list[Goods] = []
 
     cacheDelta = user.pick_max_cache + 1
@@ -140,7 +140,7 @@ async def getGoodsList(session: async_scoped_session, user: User):
     return goods
 
 
-async def KagamiShop(session: async_scoped_session, sender: int, senderUser: User):
+async def KagamiShop(session: AsyncSession, sender: int, senderUser: User):
     textBuilder = f"\n===== 小镜的shop =====\n现在你手上有 {senderUser.money} 薯片\n输入 小镜的shop 购买 商品码 就可以买了哦\n\n"
 
     goodTexts: list[str] = []

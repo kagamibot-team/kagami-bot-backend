@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import re
 from typing import Any, Callable, Coroutine, cast
-from nonebot_plugin_orm import async_scoped_session
 from nonebot.adapters.onebot.v11 import Message
 
 from .old_version import (
@@ -14,11 +13,13 @@ from .old_version import (
     WaitForMoreInformationException,
     databaseIO
 )
-from ...common.download import download, writeData
+from src.common.download import download, writeData
 from .db import *
 from .messages import *
 
 from src.models import *
+
+from src.common.db import AsyncSession
 
 
 def isFloat():
@@ -199,7 +200,7 @@ class Clear(Command):
 @dataclass
 class CatchModifyCallback(CallbackBase):
     modifyType: str
-    modifyObject: Callable[[async_scoped_session], Coroutine[Any, Any, Award | None]]
+    modifyObject: Callable[[AsyncSession], Coroutine[Any, Any, Award | None]]
 
     def callbackMessage(self, env: CheckEnvironment, reason: str = ""):
         info: str = f" {reason}，请再次输入它的 " if reason else " 请输入它的 "

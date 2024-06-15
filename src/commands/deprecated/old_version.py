@@ -6,7 +6,7 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
 from src.common.draw.typing import Image
 from src.common.draw import imageToBytes
 from dataclasses import dataclass
-from nonebot_plugin_orm import async_scoped_session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def at(sender: int):
@@ -115,7 +115,7 @@ class CheckEnvironment:
     text: str
     message_id: int
     message: Message
-    session: async_scoped_session
+    session: AsyncSession
     bot: Bot
     group_id: int
 

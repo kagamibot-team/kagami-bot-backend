@@ -7,7 +7,7 @@ import PIL.ImageDraw
 
 import PIL.ImageFont
 from nonebot.log import logger
-from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
+from sqlalchemy.ext.asyncio import AsyncSession
 from nonebot import get_driver
 
 from ..db import *
@@ -35,7 +35,7 @@ from src.models import *
 GLOBAL_SCALAR = 1.5
 
 
-Session = async_scoped_session | AsyncSession
+Session = AsyncSession
 
 
 @deprecated("Use images.components.display_box instead")
@@ -103,7 +103,7 @@ async def drawAwardBox(
     return base
 
 
-async def drawStorage(session: async_scoped_session, user: User):
+async def drawStorage(session: AsyncSession, user: User):
     awards: list[Image] = []
 
     acs = await getUserStorages(session, user)
@@ -126,7 +126,7 @@ async def drawStorage(session: async_scoped_session, user: User):
     )
 
 
-async def drawStatus(session: async_scoped_session, user: User | None):
+async def drawStatus(session: AsyncSession, user: User | None):
     boxes: list[Image] = []
     levels = await getAllLevels(session)
 

@@ -3,13 +3,13 @@
 """
 
 from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 from src.models import *
 
 
-Session = async_scoped_session | AsyncSession
+Session = AsyncSession
 
 
 ### GLOBAL ###
