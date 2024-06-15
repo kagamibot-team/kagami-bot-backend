@@ -84,7 +84,7 @@ async def display_box(
     image = display_box_cache[key].copy()
 
     if new:
-        image_new = PIL.Image.open("./res/NewIcon/新！标签.png")
+        image_new = PIL.Image.open("./res/new.png")
         image_new = image_new.convert("RGBA")
 
         image.paste(image_new, (88, 0), image_new)
