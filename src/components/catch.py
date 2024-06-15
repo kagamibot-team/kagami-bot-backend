@@ -3,7 +3,6 @@ import PIL.Image
 
 
 from src.common.draw.texts import Fonts, drawASingleLineClassic, drawLimitedBoxOfTextClassic, drawLimitedBoxOfTextWithScalar
-from src.common.draw.typing import Image
 from src.components.display_box import display_box
 
 
@@ -15,7 +14,7 @@ async def catch(
     color: str,
     new: bool,
     notation: str,
-) -> Image:
+) -> PIL.Image.Image:
     left_display = await display_box(color, image, new)
     rightDescription = await drawLimitedBoxOfTextClassic(
         text=description,

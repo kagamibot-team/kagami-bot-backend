@@ -1,9 +1,7 @@
 import os
 import random
 
-from nonebot_plugin_alconna import UniMessage
-from ....common.classes.command_events import OnebotContext
-from ....common.decorators.command_decorators import listenOnebot
+from src.common.fast_import import *
 
 
 def randomKagami():

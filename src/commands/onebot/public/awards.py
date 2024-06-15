@@ -1,16 +1,7 @@
 import pathlib
-from nonebot_plugin_alconna import Alconna, Arparma, UniMessage
-from arclet.alconna import Arg
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 
-from src.models import *
-
-from src.common.data.awards import AwardInfo
-from src.common.data.users import qid2did
-from src.common.classes.command_events import OnebotContext
-from src.common.decorators.command_decorators import listenOnebot, matchAlconna, withSessionLock
+from src.common.fast_import import *
 
 
 @listenOnebot()

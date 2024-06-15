@@ -2,16 +2,7 @@
 对小哥进行的增删查改操作
 """
 
-from arclet.alconna import Alconna, Arparma, Arg
-from nonebot_plugin_alconna import UniMessage
-from sqlalchemy import delete, select
-
-from src.common.db import get_session
-
-from src.common.classes.command_events import PublicContext
-from src.common.decorators.command_decorators import listenPublic, requireAdmin, matchAlconna
-
-from src.models import *
+from src.common.fast_import import *
 
 
 @listenPublic()

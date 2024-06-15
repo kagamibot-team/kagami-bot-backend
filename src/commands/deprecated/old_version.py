@@ -3,10 +3,7 @@ import pathlib
 import re
 from typing import Type
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
-from src.common.draw.typing import Image
-from src.common.draw import imageToBytes
-from dataclasses import dataclass
-from sqlalchemy.ext.asyncio import AsyncSession
+from src.common.fast_import import *
 
 
 def at(sender: int):

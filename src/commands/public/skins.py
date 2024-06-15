@@ -1,20 +1,5 @@
-from dataclasses import dataclass
 import time
-from arclet.alconna import Arg, Alconna, Arparma, ArgFlag
-from nonebot import logger
-from nonebot_plugin_alconna import UniMessage
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
-from src.models import *
-
-from src.common.classes.command_events import PublicContext
-from src.common.decorators.command_decorators import (
-    listenPublic,
-    matchAlconna,
-    requireAdmin,
-    withFreeSession,
-)
+from src.common.fast_import import *
 
 
 @dataclass

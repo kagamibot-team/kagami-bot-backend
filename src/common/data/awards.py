@@ -1,20 +1,8 @@
-from dataclasses import dataclass
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import Award, Level, Skin, UsedSkin
-
-
-@dataclass
-class AwardInfo:
-    awardId: int
-    awardImg: str
-    awardName: str
-    awardDescription: str
-    levelName: str
-    color: str
-    skinName: str | None
+from src.common.dataclasses.award_info import AwardInfo
 
 
 async def getAwardInfo(session: AsyncSession, uid: int, aid: int):

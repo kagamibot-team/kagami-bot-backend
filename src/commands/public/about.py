@@ -2,9 +2,7 @@
 显示更新信息
 """
 
-from nonebot_plugin_alconna import UniMessage
-from ...common.classes.command_events import PublicContext
-from ...common.decorators.command_decorators import listenPublic, matchRegex
+from src.common.fast_import import *
 
 
 updateHistory: dict[str, list[str]] = {

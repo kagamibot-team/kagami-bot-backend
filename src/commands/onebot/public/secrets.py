@@ -1,11 +1,4 @@
-from nonebot import logger
-from sqlalchemy import select
-from src.common.data.skins import give_skin, set_skin
-from src.common.data.users import qid2did
-from src.common.db import AsyncSession
-from src.models.models import Skin
-from ....common.classes.command_events import OnebotContext
-from ....common.decorators.command_decorators import listenOnebot, matchLiteral, withSessionLock
+from src.common.fast_import import *
 
 
 @listenOnebot()

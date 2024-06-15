@@ -1,6 +1,8 @@
-"""
-该文件需要转移到 utils 中
-"""
+import PIL
+import PIL.Image
+import cv2
+import numpy as np
+
 
 def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
     assert len(hex_color) == 7 or len(hex_color) == 4
@@ -25,4 +27,10 @@ def mix_color(
     )
 
 
-__all__ = ['hex_to_rgb', 'rgb_to_hex', 'mix_color']
+def imageToBytes(img: PIL.Image.Image):
+    _, im = cv2.imencode('.png', cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR))
+
+    return im.tobytes()
+
+
+__all__ = ['hex_to_rgb', 'rgb_to_hex', 'mix_color', 'imageToBytes']

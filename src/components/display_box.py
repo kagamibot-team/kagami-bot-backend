@@ -3,12 +3,11 @@ import PIL.Image
 
 
 from src.common.draw.images import loadImage
-from src.common.draw.typing import Image
 from src.common.draw.shapes import applyMask, roundedRectangleMask, drawRoundedRectangleWithScalar
 from src.common.draw.tools import hex_to_rgb, rgb_to_hex, mix_color
 
 
-async def _display_box(color: str, central_image: str) -> Image:
+async def _display_box(color: str, central_image: str) -> PIL.Image.Image:
     image = await loadImage(central_image)
     image = image.resize((180, 144), PIL.Image.ADAPTIVE)
     image = await applyMask(image, await roundedRectangleMask(180, 144, 10))

@@ -1,49 +1,8 @@
-from dataclasses import dataclass
 import random
 import time
-from typing import cast
 
-from nonebot import logger
-from sqlalchemy import func, select, update
-
-from src.common.data.skins import give_skin, set_skin
-from src.common.data.users import qid2did
-
-from src.common.decorators.command_decorators import withFreeSession
-from src.common.event_root import root
-
-from src.common.db import AsyncSession
-from src.models import *
-
-
-from .catch_time import calculateTime, getInterval
-
-
-@dataclass()
-class Pick:
-    """
-    抓小哥的单个结果
-    """
-
-    awardId: int
-    awardName: str
-    countBefore: int
-    countDelta: int
-    money: float
-
-
-@dataclass()
-class PickResult:
-    picks: list[Pick]
-    uid: int
-    restPickCount: int
-    maxPickCount: int
-    timeToNextPick: float
-    pickInterval: float
-
-    moneyAfterPick: float
-
-    extraMessages: list[str]
+from src.common.fast_import import *
+from .catch_time import *
 
 
 async def _getStorage(session: AsyncSession, uid: int, awardId: int):
@@ -190,36 +149,3 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> PickResult:
         moneyAfterPick=money + dm,
         extraMessages=[],
     )
-
-
-@root.listen(PickResult)
-@withFreeSession()
-async def _(session: AsyncSession, e: PickResult):
-    for pick in e.picks:
-        if pick.awardName == "百变小哥":
-            skins = (
-                await session.execute(
-                    select(Skin).filter(Skin.applied_award_id == pick.awardId)
-                )
-            ).scalars()
-
-            skins = [
-                skin
-                for skin in skins
-                if len([o for o in skin.owned_skins if cast(int, o.user_id) == e.uid])
-                == 0
-            ]
-
-            if len(skins) > 0:
-                skin = random.choice(skins)
-                udid = await qid2did(session, e.uid)
-                await give_skin(session, udid, cast(int, skin.data_id))
-                await set_skin(session, udid, cast(int, skin.data_id))
-                e.extraMessages.append(f"在这些小哥之中，你抓到了一只 {skin.name}！")
-                await session.commit()
-            else:
-                e.extraMessages.append(
-                    "在这些小哥之中，你抓到了一只百变小哥，但是它已经没辙了，只会在你面前装嫩了。"
-                )
-
-            break

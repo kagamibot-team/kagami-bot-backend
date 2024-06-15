@@ -1,23 +1,4 @@
-from nonebot import logger
-from nonebot_plugin_alconna import Alconna, Arparma, UniMessage
-from arclet.alconna import Arg
-from sqlalchemy import select
-from sqlalchemy.exc import MultipleResultsFound
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from src.common.data.skins import clear_skin, set_skin
-from src.common.data.users import qid2did
-from src.models.models import (
-    Award,
-    AwardAltName,
-    OwnedSkin,
-    Skin,
-    SkinAltName,
-    UsedSkin,
-)
-
-from ....common.classes.command_events import GroupContext, PrivateContext
-from ....common.decorators.command_decorators import listenOnebot, matchAlconna, withSessionLock
+from src.common.fast_import import *
 
 
 async def switch_in_skin_list(session: AsyncSession, user: int, skins: list[tuple[int, str]]):

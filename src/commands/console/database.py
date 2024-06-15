@@ -5,15 +5,8 @@
 import os
 import pickle
 import time
-from typing import Any
-from nonebot_plugin_alconna import UniMessage
-from sqlalchemy import delete, select
-from ...common.classes.command_events import ConsoleContext
-from src.common.db import get_session, AsyncSession
-from ...common.decorators.command_decorators import listenConsole, matchLiteral, withFreeSession
 
-from src.models import *
-
+from src.common.fast_import import *
 
 
 to_pickle_list: list[type[Base]] = [

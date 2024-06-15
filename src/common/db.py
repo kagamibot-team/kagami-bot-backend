@@ -23,4 +23,4 @@ def get_session():
     return _async_session_factory()
 
 
-__all__ = ["get_session", "AsyncSession"]
+__all__ = ["get_session"]

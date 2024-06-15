@@ -4,20 +4,12 @@
 
 
 import asyncio
-import re
-from nonebot_plugin_alconna import UniMessage
-
-from src.common.decorators.command_decorators import withLoading
-
-from ...config import config
-from src.common.classes.command_events import PublicContext
-
-from ...common.decorators.command_decorators import listenPublic, matchRegex
+from src.common.fast_import import *
 
 
 @listenPublic()
 @matchRegex("^[小|柊]镜([!！?？。.,， 1;；：:'‘’\"“”]*)$")
-async def ping(ctx: PublicContext, res: re.Match[str]):
+async def ping(ctx: PublicContext, res: Match[str]):
     sgns = res.group(1)
     sender = ctx.getSenderId()
     custom_replies = config.custom_replies
@@ -36,5 +28,5 @@ async def ping(ctx: PublicContext, res: re.Match[str]):
 @listenPublic()
 @matchRegex("^[小|柊]镜[， ,]?跳?科目三$")
 @withLoading("")
-async def _(ctx: PublicContext, _: re.Match[str]):
+async def _(ctx: PublicContext, _: Match[str]):
     await asyncio.sleep(5)

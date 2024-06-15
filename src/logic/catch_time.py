@@ -1,9 +1,5 @@
 import time
-from sqlalchemy import select, update
-
-
-from src.common.db import AsyncSession
-from src.models import *
+from src.common.fast_import import *
 
 
 async def getInterval(session: AsyncSession):

@@ -1,29 +1,10 @@
-from dataclasses import dataclass
 import time
-import PIL
-import PIL.Image
-from nonebot import logger
-from nonebot_plugin_alconna import Alconna, UniMessage
-from arclet.alconna import Arg, ArgFlag, Arparma
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from src.common.data.awards import AwardInfo, getAwardInfo
-from src.common.data.users import qid2did
-from src.common.draw import imageToBytes
-from src.common.draw.images import verticalPile
-
-from src.components import catch
-
 
 
 from ....logic.catch import Pick, PickResult, pickAwards
 
-from src.common.event_root import root
-from ....common.classes.command_events import OnebotContext
-from ....common.decorators.command_decorators import listenOnebot, matchAlconna, matchRegex, withSessionLock
 
-from src.common.decorators.command_decorators import withLoading
-from src.common.db import get_session
+from src.common.fast_import import *
 
 
 @dataclass

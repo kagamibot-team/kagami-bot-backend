@@ -1,35 +1,9 @@
 import base64
 import os
 import time
-from typing_extensions import deprecated
-import PIL
-import PIL.ImageDraw
 
-import PIL.ImageFont
-from nonebot.log import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from nonebot import get_driver
-
-from ..db import *
-
-
-from src.common.draw.images import addUponPaste, verticalPile, combineABunchOfImage
-from src.common.draw.texts import (
-    VerticalAnchor,
-    drawABoxOfText,
-    drawLimitedBoxOfText,
-    drawText,
-    textFont,
-    Fonts,
-)
-from src.common.draw.typing import Image
-from src.common.draw.images import newImage
-from src.config import config
-
-from src.components import display_box, ref_book_box
-from src.common.db import get_session
-
-from src.models import *
+from src.commands.deprecated.db import *
+from src.common.fast_import import *
 
 
 GLOBAL_SCALAR = 1.5
