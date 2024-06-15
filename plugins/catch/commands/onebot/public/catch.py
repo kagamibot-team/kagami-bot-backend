@@ -36,7 +36,10 @@ async def prepareForMessage(ctx: OnebotContext, pickResult: PickResult):
     session = get_session()
 
     async with session.begin():
+        begin = time.time()
         user = await getUserById(session, pickResult.uid)
+        logger.debug("获取用户花费了%f秒" % (time.time() - begin))
+
         picks = [
             (
                 pick,
@@ -134,8 +137,10 @@ async def _(ctx: OnebotContext, session: AsyncSession, _):
     user = await getUser(session, ctx.getSenderId())
     logger.debug(f"获取用户信息花了 {time.time() - begin} 秒")
 
+    begin = time.time()
     pickResult = await pickAwards(session, user, -1)
     await session.commit()
+    logger.debug(f"抓小哥总共耗时 {time.time() - begin} 秒")
 
     await root.emit(pickResult)
     await root.emit(await prepareForMessage(ctx, pickResult))

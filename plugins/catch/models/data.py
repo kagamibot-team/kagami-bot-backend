@@ -177,7 +177,9 @@ class AwardInfo:
 
 
 async def GetAwardInfo(session: Session, user: User, award: Award):
+    begin = time.time()
     record = await getUsedSkin(session, user, award)
+    logger.debug("获取皮肤记录花了 %.3f 秒" % (time.time() - begin))
 
     desc = award.description
     img = award.img_path
