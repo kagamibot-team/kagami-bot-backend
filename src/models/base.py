@@ -1,10 +1,15 @@
 import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import Column, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.ext.declarative import declarative_base
 
 
-class Base(DeclarativeBase):
-    pass
+Base = declarative_base()
+
+if TYPE_CHECKING:
+    class Base(DeclarativeBase):
+        pass
 
 
 class BaseMixin:
