@@ -15,7 +15,7 @@ class BaseMixin:
 
 
 class AltNameMixin:
-    name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column(unique=True, index=True)
 
 
 class TagsMixin:

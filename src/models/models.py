@@ -92,7 +92,7 @@ class Award(Model, BaseMixin):
     __tablename__ = "catch_award"
 
     img_path: Mapped[str] = mapped_column(default=DEFAULT_IMG)
-    name: Mapped[str] = mapped_column(default="", unique=True)
+    name: Mapped[str] = mapped_column(default="", unique=True, index=True)
     description: Mapped[str] = mapped_column(default="")
     sorting_priority: Mapped[int] = mapped_column(default=0)
 
@@ -121,7 +121,7 @@ class AwardAltName(Model, BaseMixin, AltNameMixin):
 
     __tablename__ = "catch_award_alt_name"
 
-    award_id = Column(Integer, ForeignKey("catch_award.data_id"))
+    award_id = Column(Integer, ForeignKey("catch_award.data_id"), index=True)
     award: Mapped[Award] = relationship(back_populates="alt_names", lazy="subquery")
 
 
