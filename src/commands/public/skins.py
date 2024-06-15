@@ -72,11 +72,16 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
 
     message = UniMessage().text("所有皮肤：\n")
 
-    for skin in skins:
-        skinInfo = SkinInfo(*skin)
+    if len(skins) < 5:
+        for skin in skins:
+            skinInfo = SkinInfo(*skin)
 
-        message += f"{skinInfo.aName}[{skinInfo.name}]"
-        message += UniMessage().image(path=skinInfo.image)
-        message += f"\n{skinInfo.extra_description}\n\n"
+            message += f"{skinInfo.aName}[{skinInfo.name}]"
+            message += UniMessage().image(path=skinInfo.image)
+            message += f"{skinInfo.extra_description}\n\n"
+    else:
+        for skin in skins:
+            skinInfo = SkinInfo(*skin)
+            message += f"{skinInfo.aName}[{skinInfo.name}]\n{skinInfo.extra_description}\n\n"
     
     await ctx.reply(message)

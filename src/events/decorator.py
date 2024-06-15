@@ -1,4 +1,5 @@
 import asyncio
+import time
 from typing import Any, Callable, Coroutine, TypeVar, TypeVarTuple
 from arclet.alconna import Alconna, Arparma
 from arclet.alconna.typing import TDC
@@ -6,7 +7,7 @@ from arclet.alconna.typing import TDC
 import re
 
 from nonebot_plugin_orm import AsyncSession, get_session
-from nonebot import get_driver
+from nonebot import get_driver, logger
 
 from ..logic.admin import isAdmin
 
@@ -179,5 +180,15 @@ def withFreeSession():
                 return await func(session, *args)
 
         return inner
+    
+    return wrapper
+
+
+def computeTime(func: Callable[[TCP, *TA], Coroutine[Any, Any, T]]):
+    async def wrapper(ctx: TCP, *args: *TA):
+        start = time.time()
+        msg = await func(ctx, *args)
+        logger.debug(f'{func.__name__} 花费了 {time.time() - start} 秒')
+        return msg
     
     return wrapper
