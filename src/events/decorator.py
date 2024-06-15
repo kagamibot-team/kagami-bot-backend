@@ -6,15 +6,16 @@ from arclet.alconna.typing import TDC
 import re
 
 from nonebot_plugin_orm import AsyncSession, get_session
+from nonebot import get_driver
 
 from ..logic.admin import isAdmin
 
 
 from .context import (
-    ConsoleMessageContext,
+    ConsoleContext,
     Context,
-    OnebotGroupMessageContext,
-    OnebotPrivateMessageContext,
+    OnebotGroupContext,
+    OnebotPrivateContext,
     PublicContext,
 )
 from .manager import EventManager
@@ -80,23 +81,34 @@ def requireAdmin():
     return wrapper
 
 
+def debugOnly():
+    def wrapper(func: Callable[[TC], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC):
+            if get_driver().env == 'dev':
+                return await func(ctx)
+
+        return inner
+
+    return wrapper
+
+
 def listenGroup(manager: EventManager):
-    def wrapper(func: Callable[[OnebotGroupMessageContext], Coroutine[Any, Any, T]]):
-        manager.listen(OnebotGroupMessageContext)(func)
+    def wrapper(func: Callable[[OnebotGroupContext], Coroutine[Any, Any, T]]):
+        manager.listen(OnebotGroupContext)(func)
 
     return wrapper
 
 
 def listenPrivate(manager: EventManager):
-    def wrapper(func: Callable[[OnebotPrivateMessageContext], Coroutine[Any, Any, T]]):
-        manager.listen(OnebotPrivateMessageContext)(func)
+    def wrapper(func: Callable[[OnebotPrivateContext], Coroutine[Any, Any, T]]):
+        manager.listen(OnebotPrivateContext)(func)
 
     return wrapper
 
 
 def listenConsole(manager: EventManager):
-    def wrapper(func: Callable[[ConsoleMessageContext], Coroutine[Any, Any, T]]):
-        manager.listen(ConsoleMessageContext)(func)
+    def wrapper(func: Callable[[ConsoleContext], Coroutine[Any, Any, T]]):
+        manager.listen(ConsoleContext)(func)
 
     return wrapper
 
@@ -113,7 +125,7 @@ def listenPublic(manager: EventManager):
 def listenOnebot(manager: EventManager):
     def wrapper(
         func: Callable[
-            [OnebotGroupMessageContext | OnebotPrivateMessageContext], Coroutine[Any, Any, T]
+            [OnebotGroupContext | OnebotPrivateContext], Coroutine[Any, Any, T]
         ]
     ):
         listenGroup(manager)(func)

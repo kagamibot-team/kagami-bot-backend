@@ -5,9 +5,9 @@ from nonebot.adapters.console import MessageEvent as ConsoleMessageEvent
 
 from .manager import EventManager
 from .context import (
-    ConsoleMessageContext,
-    OnebotGroupMessageContext,
-    OnebotPrivateMessageContext,
+    ConsoleContext,
+    OnebotGroupContext,
+    OnebotPrivateContext,
 )
 
 
@@ -19,17 +19,17 @@ def activateRoot(root: EventManager):
 
     @consoleHandler.handle()
     async def _(bot: ConsoleBot, event: ConsoleMessageEvent):
-        await root.throw(ConsoleMessageContext(event, bot))
+        await root.throw(ConsoleContext(event, bot))
 
 
     @groupMessageHandler.handle()
     async def _(bot: Bot, event: GroupMessageEvent):
-        await root.throw(OnebotGroupMessageContext(event, bot))
+        await root.throw(OnebotGroupContext(event, bot))
 
 
     @privateMessageHandler.handle()
     async def _(bot: Bot, event: PrivateMessageEvent):
-        await root.throw(OnebotPrivateMessageContext(event, bot))
+        await root.throw(OnebotPrivateContext(event, bot))
 
 
 root = EventManager()

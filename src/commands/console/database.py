@@ -9,7 +9,7 @@ from typing import Any
 from nonebot_plugin_alconna import UniMessage
 from nonebot_plugin_orm import Model, get_session
 from sqlalchemy import delete, select
-from ...events.context import ConsoleMessageContext
+from ...events.context import ConsoleContext
 from ...utils.typing import Session
 from ...events import root
 from ...events.decorator import listenConsole, matchLiteral, withFreeSession
@@ -39,7 +39,7 @@ to_pickle_list: list[type[Model]] = [
 @listenConsole(root)
 @matchLiteral("::dump-pickle")
 @withFreeSession()
-async def _(session: Session, ctx: ConsoleMessageContext):
+async def _(session: Session, ctx: ConsoleContext):
     def asDict(obj: Model):
         return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
 
@@ -61,7 +61,7 @@ async def _(session: Session, ctx: ConsoleMessageContext):
 
 @listenConsole(root)
 @matchLiteral("::load-pickle")
-async def _(ctx: ConsoleMessageContext):
+async def _(ctx: ConsoleContext):
     with open(os.path.join(".", "data/dumps.pickle"), "rb") as f:
         output: dict[str, list[dict[str, Any]]] = pickle.load(f)
     
@@ -86,7 +86,7 @@ async def _(ctx: ConsoleMessageContext):
 
 @listenConsole(root)
 @matchLiteral("::clear-database")
-async def _(ctx: ConsoleMessageContext):
+async def _(ctx: ConsoleContext):
     for cls in to_pickle_list:
         session = get_session()
 
@@ -99,7 +99,7 @@ async def _(ctx: ConsoleMessageContext):
 
 @listenConsole(root)
 @matchLiteral("::make-backup")
-async def _(ctx: ConsoleMessageContext):
+async def _(ctx: ConsoleContext):
     """
     给 SQLITE 数据库备份，只要复制文件即可
     """

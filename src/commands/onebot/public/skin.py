@@ -6,7 +6,7 @@ from ....models.data import switchSkin
 
 from ....models.crud import getAllOwnedSkin, getAwardByName, getOwnedSkin, getSkinByName, getUsedSkin, getUsedSkinBySkin, getUser, setSkin
 
-from ....events.context import OnebotGroupMessageContext, OnebotPrivateMessageContext
+from ....events.context import OnebotGroupContext, OnebotPrivateContext
 from ....events import root
 from ....events.decorator import listenOnebot, matchAlconna, withSessionLock
 
@@ -20,7 +20,7 @@ from ....events.decorator import listenOnebot, matchAlconna, withSessionLock
 )
 @withSessionLock()
 async def _(
-    ctx: OnebotGroupMessageContext | OnebotPrivateMessageContext,
+    ctx: OnebotGroupContext | OnebotPrivateContext,
     session: AsyncSession,
     result: Arparma,
 ):

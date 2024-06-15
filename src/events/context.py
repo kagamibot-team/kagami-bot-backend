@@ -13,7 +13,7 @@ from nonebot.adapters.onebot.v11 import MessageEvent as _OneBotMessageEvent
 from nonebot.adapters.onebot.v11.bot import Bot as _OnebotBot
 
 from nonebot_plugin_alconna.uniseg.message import UniMessage
-from nonebot_plugin_alconna import Segment, At
+from nonebot_plugin_alconna import Segment, At, Text
 from nonebot.adapters import Event, Bot
 
 from arclet.alconna.typing import TDC
@@ -27,14 +27,14 @@ TS = TypeVar("TS", bound=Segment)
 class Context(Generic[TE, TDC]):
     event: TE
 
-    def getEvent(self) -> TE:
-        return self.event
-
     def getMessage(self) -> TDC:
         return cast(TDC, self.event.get_message())
 
     def getText(self) -> str:
         return self.event.get_message().extract_plain_text()
+    
+    def isTextOnly(self) -> bool:
+        raise NotImplementedError
 
 
 @dataclass
@@ -50,9 +50,12 @@ class UniContext(Generic[TE, TB], Context[TE, UniMessage[Any]]):
 
     async def reply(self, message: UniMessage[Any]):
         return await self.send(message)
+    
+    def isTextOnly(self) -> bool:
+        return self.getMessage().only(Text)
 
 
-class OnebotGroupMessageContext(UniContext[_OneBotGroupMessageEvent, _OnebotBot]):
+class OnebotGroupContext(UniContext[_OneBotGroupMessageEvent, _OnebotBot]):
     def getSenderId(self):
         return self.event.user_id
 
@@ -60,7 +63,7 @@ class OnebotGroupMessageContext(UniContext[_OneBotGroupMessageEvent, _OnebotBot]
         return await self.send((UniMessage.at(str(self.getSenderId())) + " " + message))
 
 
-class OnebotPrivateMessageContext(UniContext[_OneBotPrivateMessageEvent, _OnebotBot]):
+class OnebotPrivateContext(UniContext[_OneBotPrivateMessageEvent, _OnebotBot]):
     def getSenderId(self):
         return self.event.user_id
 
@@ -68,7 +71,7 @@ class OnebotPrivateMessageContext(UniContext[_OneBotPrivateMessageEvent, _Onebot
         return await self.send(message)
 
 
-class ConsoleMessageContext(UniContext[_ConsoleEvent, _ConsoleBot]):
+class ConsoleContext(UniContext[_ConsoleEvent, _ConsoleBot]):
     def getSenderId(self):
         return None
 
@@ -76,9 +79,9 @@ class ConsoleMessageContext(UniContext[_ConsoleEvent, _ConsoleBot]):
         return await self.send(message)
 
 
-OnebotContext = OnebotGroupMessageContext | OnebotPrivateMessageContext
+OnebotContext = OnebotGroupContext | OnebotPrivateContext
 
 
 PublicContext = (
-    OnebotGroupMessageContext | OnebotPrivateMessageContext | ConsoleMessageContext
+    OnebotGroupContext | OnebotPrivateContext | ConsoleContext
 )
