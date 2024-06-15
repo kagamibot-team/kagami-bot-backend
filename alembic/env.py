@@ -11,11 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 # 初始化 Nonebot
 
 import nonebot
-nonebot.init(_env_file=['.env', '.public.env'])
-nonebot.load_plugin('src')
 
-from nonebot_plugin_orm.env import no_drop_table
-from nonebot_plugin_orm import plugin_config
+nonebot.init(_env_file=['.env', '.public.env'])
+
+import src.models.models
+
+# from nonebot_plugin_orm.env import no_drop_table
+from nonebot_plugin_orm import plugin_config, Model
 
 # Alembic Config 对象, 它提供正在使用的 .ini 文件中的值.
 config = context.config
@@ -32,8 +34,7 @@ else:
 # 模型的 MetaData, 用于 "autogenerate" 支持.
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-# target_metadata = config.attributes["metadatas"][""]
-target_metadata = None
+target_metadata = Model.metadata
 
 # 其他来自 config 的值, 可以按 env.py 的需求定义, 例如可以获取:
 # my_important_option = config.get_main_option("my_important_option")
@@ -72,7 +73,7 @@ def do_run_migrations(connection: Connection) -> None:
                 connection=connection,
                 render_as_batch=True,
                 target_metadata=target_metadata,
-                include_object=no_drop_table,
+                # include_object=no_drop_table,
             ),
             **plugin_config.alembic_context,
         }
