@@ -9,7 +9,7 @@ import nonebot
 from nonebot.adapters.onebot.v11 import Adapter as OneBotV11Adapter
 from nonebot.adapters.console.adapter import Adapter as ConsoleAdapter
 
-nonebot.init(_env_file=".public.env")
+nonebot.init()
 
 
 # 加载驱动器
