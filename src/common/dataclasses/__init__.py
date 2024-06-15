@@ -1,1 +1,2 @@
-from catch_data import *
+from .award_info import *
+from .catch_data import *

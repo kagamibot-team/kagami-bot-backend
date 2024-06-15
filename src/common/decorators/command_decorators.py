@@ -87,9 +87,6 @@ def matchLiteral(text: str):
 
     def wrapper(func: Callable[[TC], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
-            if not ctx.isTextOnly():
-                return None
-
             if text != ctx.getText():
                 return None
 
