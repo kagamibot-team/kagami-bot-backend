@@ -1,6 +1,10 @@
 import datetime
 from sqlalchemy import Column, DateTime, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 class BaseMixin:
@@ -28,4 +32,4 @@ class TagsMixin:
         self.tags = " ".join(tags)
 
 
-__all__ = ["BaseMixin", "AltNameMixin", "TagsMixin"]
+__all__ = ["BaseMixin", "AltNameMixin", "TagsMixin", "Base"]

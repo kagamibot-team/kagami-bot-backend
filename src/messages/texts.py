@@ -14,7 +14,7 @@ from ..images import *
 from .images import drawStatus
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
-from nonebot_plugin_orm import AsyncSession, async_scoped_session
+from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
 
 
 Session = async_scoped_session | AsyncSession

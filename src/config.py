@@ -17,5 +17,8 @@ class Config(BaseModel):
     # 是否预先画好小哥的图片
     predraw_images: int = 0
 
+    # 数据库的路径
+    sqlalchemy_database_url: str = "sqlite+aiosqlite:///./data/db.sqlite3"
+
 
 config = get_plugin_config(Config)

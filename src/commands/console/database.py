@@ -7,7 +7,7 @@ import pickle
 import time
 from typing import Any
 from nonebot_plugin_alconna import UniMessage
-from nonebot_plugin_orm import Model, get_session
+from src.utils.db import get_session
 from sqlalchemy import delete, select
 from ...events.context import ConsoleContext
 from ...utils.typing import Session
@@ -16,7 +16,7 @@ from ...events.decorator import listenConsole, matchLiteral, withFreeSession
 from ...models.models import *
 
 
-to_pickle_list: list[type[Model]] = [
+to_pickle_list: list[type[Base]] = [
     Global,
     Level,
     LevelAltName,
@@ -40,10 +40,10 @@ to_pickle_list: list[type[Model]] = [
 @matchLiteral("::dump-pickle")
 @withFreeSession()
 async def _(session: Session, ctx: ConsoleContext):
-    def asDict(obj: Model):
+    def asDict(obj: Base):
         return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
 
-    async def sel(cls: type[Model]):
+    async def sel(cls: type[Base]):
         return list(
             map(lambda x: asDict(x), (await session.execute(select(cls))).scalars())
         )

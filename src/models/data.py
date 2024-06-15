@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import time
 from typing import cast
 from nonebot import logger
-from nonebot_plugin_orm import AsyncSession, async_scoped_session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from nonebot_plugin_orm import async_scoped_session
 

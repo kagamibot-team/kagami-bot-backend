@@ -1,18 +1,26 @@
 import pathlib
 from nonebot_plugin_alconna import Alconna, Arparma, UniMessage
 from arclet.alconna import Arg
-from nonebot_plugin_orm import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from ....models.models import Award, AwardAltName, Level, Skin, StorageStats, UsedSkin, UsedStats
+from src.models.models import (
+    Award,
+    AwardAltName,
+    Level,
+    Skin,
+    StorageStats,
+    UsedSkin,
+    UsedStats,
+)
 
-from ....models.data import AwardInfo
+from src.models.data import AwardInfo
 
-from ....models.crud import getUser
+from src.models.crud import getUser
 
-from ....events.context import OnebotContext
-from ....events import root
-from ....events.decorator import computeTime, listenOnebot, matchAlconna, withSessionLock
+from src.events.context import OnebotContext
+from src.events import root
+from src.events.decorator import listenOnebot, matchAlconna, withSessionLock
 
 
 @listenOnebot(root)
@@ -52,7 +60,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     if award is None:
         await ctx.reply(UniMessage(f"没有叫 {name} 的小哥"))
         return
-    
+
     award = award.tuple()
 
     ac = (
@@ -73,10 +81,12 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     if ac + au <= 0:
         await ctx.reply(UniMessage(f"你还没有遇到过叫做 {name} 的小哥"))
         return
-    
-    skinQuery = select(Skin.name, Skin.extra_description, Skin.image).filter(Skin.applied_award_id == award[0]).filter(Skin.used_skins.any(
-        UsedSkin.user == user
-    ))
+
+    skinQuery = (
+        select(Skin.name, Skin.extra_description, Skin.image)
+        .filter(Skin.applied_award_id == award[0])
+        .filter(Skin.used_skins.any(UsedSkin.user == user))
+    )
     skin = (await session.execute(skinQuery)).one_or_none()
 
     info = AwardInfo(
@@ -86,13 +96,15 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
         awardDescription=award[3],
         levelName=award[4],
         color=award[5],
-        skinName=None
+        skinName=None,
     )
-    
+
     if skin:
         skin = skin.tuple()
         info.skinName = skin[0]
-        info.awardDescription = skin[1] if len(skin[1].strip()) > 0 else info.awardDescription
+        info.awardDescription = (
+            skin[1] if len(skin[1].strip()) > 0 else info.awardDescription
+        )
         info.awardImg = skin[2]
 
     nameDisplay = info.awardName

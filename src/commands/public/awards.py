@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 from arclet.alconna import Alconna, Arparma, Arg
 from nonebot_plugin_alconna import UniMessage
-from nonebot_plugin_orm import get_session
+from src.utils.db import get_session
 
 from ...events import root
 

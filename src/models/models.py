@@ -1,15 +1,14 @@
 import os
-from nonebot_plugin_orm import Model
 from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .mixins import *
+from .base import *
 
 
 DEFAULT_IMG = os.path.join(".", "res", "default.png")
 
 
-class Global(Model, BaseMixin):
+class Global(Base, BaseMixin):
     """
     全局变量表
     """
@@ -19,7 +18,7 @@ class Global(Model, BaseMixin):
     catch_interval: Mapped[float] = mapped_column(default=3600)
 
 
-class Level(Model, BaseMixin):
+class Level(Base, BaseMixin):
     """
     小哥等级表
     """
@@ -42,7 +41,7 @@ class Level(Model, BaseMixin):
     )
 
 
-class LevelAltName(Model, BaseMixin, AltNameMixin):
+class LevelAltName(Base, BaseMixin, AltNameMixin):
     """
     一个承载所有等级的别名的表
     """
@@ -53,7 +52,7 @@ class LevelAltName(Model, BaseMixin, AltNameMixin):
     level: Mapped[Level] = relationship(back_populates="alt_names", lazy="subquery")
 
 
-class Tag(Model, BaseMixin):
+class Tag(Base, BaseMixin):
     """
     标签表
     """
@@ -74,7 +73,7 @@ class Tag(Model, BaseMixin):
     )
 
 
-class LevelTagRelation(Model, BaseMixin):
+class LevelTagRelation(Base, BaseMixin):
     """
     等级标签关联表
     """
@@ -88,7 +87,7 @@ class LevelTagRelation(Model, BaseMixin):
     tag: Mapped[Tag] = relationship(back_populates="levels", lazy="subquery")
 
 
-class Award(Model, BaseMixin):
+class Award(Base, BaseMixin):
     __tablename__ = "catch_award"
 
     img_path: Mapped[str] = mapped_column(default=DEFAULT_IMG)
@@ -114,7 +113,7 @@ class Award(Model, BaseMixin):
     tags: Mapped[list["AwardTagRelation"]] = relationship(back_populates="award", lazy="subquery")
 
 
-class AwardAltName(Model, BaseMixin, AltNameMixin):
+class AwardAltName(Base, BaseMixin, AltNameMixin):
     """
     一个承载所有小哥的别名的表
     """
@@ -125,7 +124,7 @@ class AwardAltName(Model, BaseMixin, AltNameMixin):
     award: Mapped[Award] = relationship(back_populates="alt_names", lazy="subquery")
 
 
-class AwardTagRelation(Model, BaseMixin):
+class AwardTagRelation(Base, BaseMixin):
     """
     一个承载所有小哥的标签关联表
     """
@@ -139,7 +138,7 @@ class AwardTagRelation(Model, BaseMixin):
     tag: Mapped[Tag] = relationship(back_populates="awards", lazy="subquery")
 
 
-class StorageStats(Model, BaseMixin):
+class StorageStats(Base, BaseMixin):
     __tablename__ = "catch_award_counter"
 
     __table_args__ = (
@@ -154,7 +153,7 @@ class StorageStats(Model, BaseMixin):
     award: Mapped[Award] = relationship(back_populates="storage_stats", lazy="subquery")
 
 
-class UsedStats(Model, BaseMixin):
+class UsedStats(Base, BaseMixin):
     __tablename__ = "catch_award_stats"
 
     target_user_id = Column(Integer, ForeignKey("catch_user_data.data_id"))
@@ -165,7 +164,7 @@ class UsedStats(Model, BaseMixin):
     award: Mapped[Award] = relationship(back_populates="used_stats", lazy="subquery")
 
 
-class User(Model, BaseMixin):
+class User(Base, BaseMixin):
     __tablename__ = "catch_user_data"
 
     qq_id: Mapped[str] = mapped_column(unique=True, index=True)
@@ -191,7 +190,7 @@ class User(Model, BaseMixin):
     )
 
 
-class UsedSkin(Model, BaseMixin):
+class UsedSkin(Base, BaseMixin):
     __tablename__ = "catch_skin_record"
 
     user_id = Column(Integer, ForeignKey("catch_user_data.data_id"))
@@ -201,7 +200,7 @@ class UsedSkin(Model, BaseMixin):
     skin: Mapped["Skin"] = relationship(back_populates="used_skins", lazy="subquery")
 
 
-class OwnedSkin(Model, BaseMixin):
+class OwnedSkin(Base, BaseMixin):
     __tablename__ = "catch_skin_own_record"
 
     user_id = Column(Integer, ForeignKey("catch_user_data.data_id"))
@@ -211,7 +210,7 @@ class OwnedSkin(Model, BaseMixin):
     skin: Mapped["Skin"] = relationship(back_populates="owned_skins", lazy="subquery")
 
 
-class Skin(Model, BaseMixin):
+class Skin(Base, BaseMixin):
     __tablename__ = "catch_skin"
 
     name: Mapped[str] = mapped_column()
@@ -237,7 +236,7 @@ class Skin(Model, BaseMixin):
     )
 
 
-class SkinTagRelation(Model, BaseMixin):
+class SkinTagRelation(Base, BaseMixin):
     __tablename__ = "catch_skin_tag_relation"
 
     skin_id = Column(Integer, ForeignKey("catch_skin.data_id"))
@@ -246,7 +245,7 @@ class SkinTagRelation(Model, BaseMixin):
     tag: Mapped[Tag] = relationship(back_populates="skins", lazy="subquery")
 
 
-class SkinAltName(Model, BaseMixin, AltNameMixin):
+class SkinAltName(Base, BaseMixin, AltNameMixin):
     """
     一个承载所有皮肤的别名的表
     """
@@ -258,6 +257,7 @@ class SkinAltName(Model, BaseMixin, AltNameMixin):
 
 
 __all__ = [
+    "Base",
     "Global",
     "Level",
     "LevelAltName",

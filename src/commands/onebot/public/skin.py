@@ -1,6 +1,6 @@
 from nonebot_plugin_alconna import Alconna, Arparma, UniMessage
 from arclet.alconna import Arg
-from nonebot_plugin_orm import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....models.data import switchSkin
 

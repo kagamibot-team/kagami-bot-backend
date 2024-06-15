@@ -7,7 +7,8 @@ import PIL.ImageDraw
 
 import PIL.ImageFont
 from nonebot.log import logger
-from nonebot_plugin_orm import AsyncSession, async_scoped_session, get_session
+from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
+from src.utils.db import get_session
 from nonebot import get_driver
 
 from ..models import *

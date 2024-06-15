@@ -3,7 +3,7 @@ import time
 from arclet.alconna import Arg, Alconna, Arparma, ArgFlag
 from nonebot import logger
 from nonebot_plugin_alconna import UniMessage
-from nonebot_plugin_orm import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from src.events import root
 from ...models.models import *

@@ -4,7 +4,7 @@
 
 from re import L
 from sqlalchemy import delete, select
-from nonebot_plugin_orm import AsyncSession, async_scoped_session
+from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
 
 from .models import *
 
