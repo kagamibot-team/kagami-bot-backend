@@ -97,7 +97,7 @@ async def _(ctx: PublicContext, res: Arparma):
 @requireAdmin()
 @withAlconna(
     Alconna(
-        "re:(修改|更改|调整|改变)小哥",
+        "re:(修改|更改|调整|改变|设置|设定)小哥",
         ["::"],
         Arg("小哥原名", str),
         Option("名字", Arg("小哥新名字", str), alias=["--name", "名称", "-n", "-N"], compact=True),
@@ -111,10 +111,6 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     if res.error_info is not None and isinstance(res.error_info, ArgumentMissing):
         await ctx.reply(UniMessage(repr(res.error_info)))
         return
-    
-    # if res.error_info is not None and isinstance(res.error_info, InvalidParam):
-    #     await ctx.reply(UniMessage(repr(res.error_info)))
-    #     return
     
     if not res.matched:
         return
@@ -130,7 +126,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
         await ctx.reply(UniMessage(f"名字叫 {name} 的小哥不存在。"))
         return
 
-    newName = res.query[str]("名字")
+    newName = res.query[str]("小哥新名字")
     levelName = res.query[str]("等级名字")
     _description = res.query[tuple[str]]("描述")
     image = res.query[Image]("图片")

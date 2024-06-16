@@ -76,8 +76,8 @@ async def _(
             await ctx.reply(UniMessage().text(f"你还没有 {name}"))
             return
 
-
-        await ctx.reply(UniMessage().text(f"已经将的皮肤设置为 {name} 了"))
+        await set_skin(session, user, skin)
+        await ctx.reply(UniMessage().text(f"已经将皮肤设置为 {name} 了"))
         await session.commit()
         return
 

@@ -97,5 +97,5 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
         UniMessage()
         .text(nameDisplay + f"【{info.levelName}】")
         .image(path=pathlib.Path(info.awardImg))
-        .text(f"\n\n{info.awardDescription}")
+        .text(f"\n{info.awardDescription}")
     )

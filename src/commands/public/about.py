@@ -57,7 +57,7 @@ updateHistory: dict[str, list[str]] = {
     "0.5.2": [
         "修复了切换皮肤没有响应的问题",
         "大幅度优化了抓小哥的速度",
-    ]
+    ],
 }
 
 
@@ -76,9 +76,10 @@ updateHistoryDev: dict[str, list[str]] = {
     ],
     "0.5.2": [
         "因为优化充分，相信已经不会出现数据库锁超时问题了",
-        "将添加小哥指令迁移到了新指令系统中",
+        "将更改小哥和更改皮肤指令迁移到了新指令系统中",
         "修复了 SQLite 不会自动判断外键的问题",
-    ]
+        "Bot 初始化的时候使用多线程预渲染，以保证生产环境能在一分钟内启动",
+    ],
 }
 
 
@@ -149,7 +150,7 @@ def constructHelpMessage(helps: list[str]) -> UniMessage:
 
     for item in helps:
         text += f"- {item}\n"
-    
+
     return UniMessage().text(text)
 
 
@@ -180,4 +181,8 @@ async def _(ctx: PublicContext, *_):
 @listenPublic()
 @matchRegex("^(关于 ?抓小哥|zhua ?about)$")
 async def _(ctx: PublicContext, *_):
-    await ctx.send(UniMessage().text("以后再写，详见 https://github.com/Passthem-desu/passthem-bot"))
+    await ctx.send(
+        UniMessage().text(
+            "以后再写，详见 https://github.com/Passthem-desu/passthem-bot"
+        )
+    )
