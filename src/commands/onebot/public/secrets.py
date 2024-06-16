@@ -15,3 +15,4 @@ async def _(ctx: OnebotContext, session: AsyncSession):
     user = await qid2did(session, ctx.getSenderId())
     await give_skin(session, user, skin)
     await set_skin(session, user, skin)
+    await session.commit()
