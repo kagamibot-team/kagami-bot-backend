@@ -14,7 +14,7 @@ def text(text: str):
     return MessageSegment.text(text)
 
 
-async def image(image: Image):
+async def image(image: PILImage):
     return MessageSegment.image(imageToBytes(image))
 
 

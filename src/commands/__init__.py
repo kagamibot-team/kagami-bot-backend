@@ -7,24 +7,38 @@ import importlib
 import os
 import pathlib
 import pkgutil
+from types import ModuleType
 
 
 to_walk = ('console', 'public', 'onebot')
 
 
-def _import(name: str, *parents: str) -> None:
-    importlib.import_module('.'.join([__name__, *parents, name]))
+_modules: list[ModuleType] = []
 
 
-def _walk(path: str, *parents: str) -> None:
+def _import(name: str, *parents: str):
+    return importlib.import_module('.'.join([__name__, *parents, name]))
+
+
+def _walk(path: str, *parents: str) -> list[ModuleType]:
+    mds: list[ModuleType] = []
+
     for _, name, _ in pkgutil.iter_modules([path]):
-        _import(name, *parents)
+        mds.append(_import(name, *parents))
     
     for subfolder in os.listdir(path):
         if os.path.isdir(os.path.join(path, subfolder)):
-            _walk(os.path.join(path, subfolder), *parents, subfolder)
+            mds += _walk(os.path.join(path, subfolder), *parents, subfolder)
+
+    return mds
 
 
-for parent in to_walk:
-    package_dir = pathlib.Path(__file__).resolve().parent
-    _walk(os.path.join(package_dir, parent), parent)
+def walk():
+    global _modules
+
+    for parent in to_walk:
+        package_dir = pathlib.Path(__file__).resolve().parent
+        _modules = _walk(os.path.join(package_dir, parent), parent)
+
+
+walk()

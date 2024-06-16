@@ -19,7 +19,7 @@ def randomKagami():
 
 @listenOnebot()
 async def ping(ctx: OnebotContext):
-    if ctx.event.is_tome() and len(ctx.getMessage()) == 1 and ctx.getMessage()[0].data['text'] == '':
+    if ctx.event.is_tome() and len(await ctx.getMessage()) == 1 and (await ctx.getMessage())[0].data['text'] == '':
         kagami = randomKagami()
         if kagami is None:
             return

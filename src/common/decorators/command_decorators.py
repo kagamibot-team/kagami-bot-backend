@@ -45,10 +45,28 @@ def matchAlconna(rule: Alconna[UniMessage[Any]]):
 
     def wrapper(func: Callable[[TC, Arparma[UniMessage[Any]]], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
-            result = rule.parse(ctx.getMessage())
+            result = rule.parse(await ctx.getMessage())
 
             if not result.matched:
                 return None
+
+            return await func(ctx, result)
+
+        return inner
+
+    return wrapper
+
+
+def withAlconna(rule: Alconna[UniMessage[Any]]):
+    """传入一个 Alconna 参数。不检查是否匹配。
+
+    Args:
+        rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
+    """
+
+    def wrapper(func: Callable[[TC, Arparma[UniMessage[Any]]], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC):
+            result = rule.parse(await ctx.getMessage())
 
             return await func(ctx, result)
 
@@ -66,7 +84,7 @@ def matchRegex(rule: str):
 
     def wrapper(func: Callable[[TC, re.Match[str]], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
-            result = re.fullmatch(rule, ctx.getText())
+            result = re.fullmatch(rule, await ctx.getText())
 
             if result is None:
                 return None
@@ -87,7 +105,7 @@ def matchLiteral(text: str):
 
     def wrapper(func: Callable[[TC], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
-            if text != ctx.getText():
+            if text != await ctx.getText():
                 return None
 
             return await func(ctx)
@@ -306,4 +324,5 @@ __all__ = [
     "withFreeSession",
     "computeTime",
     "withLoading",
+    "withAlconna",
 ]

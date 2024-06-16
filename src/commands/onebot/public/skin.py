@@ -51,7 +51,7 @@ async def _(
 
     if award is None:
         query = select(Award.data_id).filter(
-            Award.alt_names.has(AwardAltName.name == name)
+            Award.alt_names.any(AwardAltName.name == name)
         )
         award = (await session.execute(query)).scalar_one_or_none()
 
@@ -60,7 +60,7 @@ async def _(
         skin = (await session.execute(query)).scalar_one_or_none()
         if skin is None:
             query = select(Skin.data_id).filter(
-                Skin.alt_names.has(SkinAltName.name == name)
+                Skin.alt_names.any(SkinAltName.name == name)
             )
             skin = (await session.execute(query)).scalar_one_or_none()
 
@@ -76,12 +76,13 @@ async def _(
             await ctx.reply(UniMessage().text(f"你还没有 {name}"))
             return
 
-        await set_skin(session, user, skin)
+
+        await ctx.reply(UniMessage().text(f"已经将的皮肤设置为 {name} 了"))
         await session.commit()
         return
 
     query = (
-        select(OwnedSkin.data_id, Skin.name)
+        select(OwnedSkin.skin_id, Skin.name)
         .join(Skin, OwnedSkin.skin_id == Skin.data_id)
         .filter(OwnedSkin.user_id == user)
         .filter(Skin.applied_award_id == award)

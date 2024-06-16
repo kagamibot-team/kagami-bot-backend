@@ -1,6 +1,8 @@
+import os
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.common.download import download, writeData
 from src.models.models import *
 from src.common.dataclasses.award_info import AwardInfo
 
@@ -74,3 +76,30 @@ async def addStorage(session: AsyncSession, uid: int, aid: int, count: int):
     )
     await session.execute(query)
     return res
+
+
+async def getAidByName(session: AsyncSession, name: str):
+    query = select(Award.data_id).filter(Award.name == name)
+    res = (await session.execute(query)).scalar_one_or_none()
+
+    if res is None:
+        query = select(Award.data_id).filter(Award.alt_names.any(
+            AwardAltName.name == name
+        ))
+        res = (await session.execute(query)).scalar_one_or_none()
+    
+    return res
+
+
+async def downloadAwardImage(aid: int, url: str):
+    uIndex: int = 0
+
+    def _path():
+        return os.path.join(".", "data", "awards", f"{aid}_{uIndex}.png")
+
+    while os.path.exists(_path()):
+        uIndex += 1
+
+    await writeData(await download(url), _path())
+
+    return _path()

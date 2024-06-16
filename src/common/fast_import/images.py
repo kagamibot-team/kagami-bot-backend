@@ -6,4 +6,4 @@ import PIL.ImageFont
 import PIL.Image
 
 
-Image = PIL.Image.Image
+PILImage = PIL.Image.Image

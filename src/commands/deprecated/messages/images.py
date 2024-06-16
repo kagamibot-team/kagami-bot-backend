@@ -79,7 +79,7 @@ async def drawAwardBox(
 
 
 async def drawStorage(session: AsyncSession, user: User):
-    awards: list[Image] = []
+    awards: list[PILImage] = []
 
     acs = await getUserStorages(session, user)
 
@@ -102,7 +102,7 @@ async def drawStorage(session: AsyncSession, user: User):
 
 
 async def drawStatus(session: AsyncSession, user: User | None):
-    boxes: list[Image] = []
+    boxes: list[PILImage] = []
     levels = await getAllLevels(session)
 
     for level in levels:
@@ -128,7 +128,7 @@ async def drawStatus(session: AsyncSession, user: User | None):
             )
         )
 
-        awards: list[Image] = []
+        awards: list[PILImage] = []
 
         for award in allAwards:
             if user and award.data_id not in userCollected:

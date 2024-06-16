@@ -23,11 +23,12 @@ class UniContext(Generic[TE, TB]):
     event: TE
     bot: TB
 
-    def getMessage(self) -> UniMessage[Any]:
-        return cast(UniMessage[Any], self.event.get_message())
+    async def getMessage(self) -> UniMessage[Any]:
+        # return cast(UniMessage[Any], self.event.get_message())
+        return cast(UniMessage, await UniMessage.generate(event=self.event, bot=self.bot))
 
-    def getText(self) -> str:
-        return self.getMessage().extract_plain_text()
+    async def getText(self) -> str:
+        return (await self.getMessage()).extract_plain_text()
 
     async def send(self, message: UniMessage[Any]):
         return await message.send(
@@ -38,8 +39,8 @@ class UniContext(Generic[TE, TB]):
     async def reply(self, message: UniMessage[Any]):
         return await self.send(message)
 
-    def isTextOnly(self) -> bool:
-        return self.getMessage().only(Text)
+    async def isTextOnly(self) -> bool:
+        return (await self.getMessage()).only(Text)
 
 
 class GroupContext(UniContext[GroupMessageEvent, _OnebotBot]):
