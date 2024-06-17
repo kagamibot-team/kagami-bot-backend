@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import re
-from typing import Any, Callable, Coroutine, cast
+from typing import Callable
 from nonebot.adapters.onebot.v11 import Message
 
 from .old_version import (
@@ -9,17 +9,12 @@ from .old_version import (
     localImage,
     text,
     Command,
-    CallbackBase,
-    WaitForMoreInformationException,
     databaseIO
 )
-from src.common.download import download, writeData
 from .db import *
 from .messages import *
 
 from src.models import *
-
-from src.common.db import AsyncSession
 
 
 def isFloat():
@@ -44,14 +39,12 @@ def combine(*rules: Callable[[str], bool]):
 
     return inner
 
+
 def not_negative():
     def inner(x: str):
         return float(x) >= 0
 
     return combine(isFloat(), inner)
-
-
-
 
 
 from .keywords import *
@@ -68,18 +61,6 @@ class CatchAllLevel(Command):
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
         return await allLevels(env.session)
-
-
-@requireAdmin
-@dataclass
-class CatchAllAwards(Command):
-    commandPattern: str = f"^:: ?{KEYWORD_EVERY}{KEYWORD_AWARDS}"
-    argsPattern: str = "$"
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        return await allAwards(env.session)
 
 
 @requireAdmin

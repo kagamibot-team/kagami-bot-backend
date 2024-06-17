@@ -19,13 +19,10 @@ from src.commands.deprecated.old_version import (
 
 
 from .basics import (
-    CatchStorage,
-    CatchProgress,
     CatchShop,
 )
 
 from .admin import (
-    CatchAllAwards,
     CatchAllLevel,
     CatchSetInterval,
     CatchLevelModify,
@@ -46,9 +43,6 @@ from .admin import (
 
 
 enabledCommand: list[CommandBase] = [
-    CatchStorage(),
-    CatchProgress(),
-    CatchAllAwards(),
     CatchAllLevel(),
     CatchSetInterval(),
     CatchLevelModify(),

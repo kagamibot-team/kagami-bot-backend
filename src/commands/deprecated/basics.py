@@ -1,14 +1,11 @@
 from dataclasses import dataclass
 import re
-from sqlalchemy import select
 from nonebot.adapters.onebot.v11 import Message
 
 from .old_version import (
     CheckEnvironment,
     at,
-    decorateWithLoadingMessage,
     text,
-    image,
     Command,
     asyncLock,
     databaseIO,
@@ -20,47 +17,6 @@ from .messages.lang import *
 
 from .keywords import *
 from .tools import getSender
-
-
-@decorateWithLoadingMessage(MSG_STORAGE_LOADING)
-@dataclass
-class CatchStorage(Command):
-    commandPattern: str = f"^{KEYWORD_BASE_COMMAND}?{KEYWORD_STORAGE}"
-    argsPattern: str = "$"
-
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
-        storageImage = await drawStorage(env.session, await getSender(env))
-
-        return Message(
-            [
-                at(env.sender),
-                text(MSG_STORAGE),
-                await image(storageImage),
-            ]
-        )
-
-
-@decorateWithLoadingMessage(MSG_STATUS_LOADING)
-@dataclass
-class CatchProgress(Command):
-    commandPattern: str = f"^{KEYWORD_BASE_COMMAND} ?{KEYWORD_PROGRESS} ?"
-    argsPattern: str = "$"
-
-    async def check(self, env: CheckEnvironment) -> Message | None:
-        return await super().check(env)
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        img = await drawStatus(env.session, await getSender(env))
-
-        return Message(
-            [
-                at(env.sender),
-                text(f" 的小哥收集进度："),
-                await image(img),
-            ]
-        )
 
 
 @asyncLock()

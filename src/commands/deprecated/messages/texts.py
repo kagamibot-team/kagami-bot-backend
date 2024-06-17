@@ -12,8 +12,6 @@ from ..db.crud import *
 from ..db.data import *
 from src.components import *
 
-from .images import drawStatus
-
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -59,37 +57,6 @@ async def allLevels(session: AsyncSession):
     ]
 
     return Message(MessageSegment.text("所有包含的等级：" + "".join(levels)))
-
-
-async def allAwards(session: AsyncSession):
-    _levels = await getAllLevels(session)
-
-    _result: list[str] = []
-
-    for level in _levels:
-        _awards = level.awards
-
-        if len(_awards) == 0:
-            continue
-
-        if level.name == "名称已丢失":
-            continue
-
-        _result.append(
-            f"【{level.name}】爆率: {await getPosibilities(session, level) * 100}%\n"
-            + "，".join([award.name for award in _awards])
-        )
-
-    result = "\n\n".join(_result)
-
-    image = await drawStatus(session, None)
-
-    return Message(
-        [
-            MessageSegment.text("===== 奖池 =====\n" + result),
-            MessageSegment.image(imageToBytes(image)),
-        ]
-    )
 
 
 def settingOk():
