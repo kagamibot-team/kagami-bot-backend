@@ -1,8 +1,10 @@
 import nonebot
+import unittest
+
 nonebot.init()
 
 
-from tests.test_catch import *
+from tests import *
 
 
 if __name__ == "__main__":
