@@ -1,7 +1,7 @@
 import nonebot
 import unittest
 
-nonebot.init()
+nonebot.init(_env_file=".env.test")
 
 
 from tests import *

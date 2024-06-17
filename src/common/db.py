@@ -5,14 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from src.config import config
 
 
-_engine = create_async_engine(config.sqlalchemy_database_url)
+sqlEngine = create_async_engine(config.sqlalchemy_database_url)
 
 _async_session_factory = async_sessionmaker(
-    _engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+    sqlEngine, class_=AsyncSession, expire_on_commit=False, autoflush=False
 )
 
 
-@sqlalchemy.event.listens_for(_engine.sync_engine, "connect")
+@sqlalchemy.event.listens_for(sqlEngine.sync_engine, "connect")
 def set_sqlite_pragma(dbapi_connection: PoolProxiedConnection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
@@ -23,4 +23,4 @@ def get_session():
     return _async_session_factory()
 
 
-__all__ = ["get_session"]
+__all__ = ["get_session", "sqlEngine"]
