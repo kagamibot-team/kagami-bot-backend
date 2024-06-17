@@ -5,6 +5,10 @@ from src.common.fast_import import *
 from src.logic.catch_time import *
 
 from src.commands.onebot.catch import picks
+from tests.mock.contexts import MockGroupContext
+
+
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, Bot, Adapter
 
 
 class TestCatch(unittest.IsolatedAsyncioTestCase):
@@ -92,6 +96,9 @@ class TestCatch(unittest.IsolatedAsyncioTestCase):
             ut = await calculateTime(session, uid)
             self.assertEqual(ut.pickRemain, 3)
             self.assertAlmostEqual(ut.pickLastUpdated, time.time(), delta=1)
+    
+    async def test5(self):
+        await root.emit(MockGroupContext(Message("kz")))
 
 
 if __name__ == "__main__":
