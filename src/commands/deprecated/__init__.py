@@ -22,7 +22,6 @@ from .basics import (
     CatchStorage,
     CatchProgress,
     CatchShop,
-    CatchCheckMoney,
 )
 
 from .admin import (
@@ -62,7 +61,6 @@ enabledCommand: list[CommandBase] = [
     CatchAdminDeleteSkinOwnership(),
     CatchShop(),
     CatchResetEveryoneCacheCount(),
-    CatchCheckMoney(),
     CatchGiveMoney(),
     AddAltName(),
     RemoveAltName(),
