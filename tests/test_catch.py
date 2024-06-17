@@ -6,7 +6,6 @@ from src.logic.catch import pickAwards
 from src.logic.catch_time import *
 
 from src.commands.onebot.catch import picks, save_picks
-from tests.mock.contexts import MockGroupContext
 
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, Bot, Adapter

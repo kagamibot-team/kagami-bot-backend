@@ -34,6 +34,7 @@ async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
         la.msg.catch_top.format(
             userTime.pickRemain,
             userTime.pickMax,
+            timeStr,
             counts,
             f"{int(money)}{la.unit.money}",
             f"{int(e.moneyUpdated)}{la.unit.money}",
@@ -83,7 +84,7 @@ async def save_picks(
             .join(Level, Award.level_id == Level.data_id)
         )
         name, image, description, level, color = (
-            (await session.execute(query)).one().tuple()
+            (await session.execute(query)).tuples().one()
         )
 
         preEvent.displays[aid] = PickDisplay(
