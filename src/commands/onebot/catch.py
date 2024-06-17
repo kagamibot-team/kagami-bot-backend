@@ -133,7 +133,7 @@ async def picks(
     query = (
         update(User)
         .where(User.data_id == uid)
-        .values(money=User.money + 1)
+        .values(money=User.money + pickResult.money)
         .returning(User.money)
     )
     res = (await session.execute(query)).scalar_one()
