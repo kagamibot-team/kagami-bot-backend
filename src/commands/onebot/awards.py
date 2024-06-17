@@ -135,7 +135,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
 
             imgs.append(await ref_book_box(name, "", color, img))
 
-        baseImgs.append(await _title(lname, lcolor))
+        baseImgs.append(await _title(f"{lname} {met_sums}/{len(awards)}", lcolor))
         baseImgs.append(await _combine_cells(imgs))
 
     img = await verticalPile(baseImgs, 15, "left", "#9B9690", 120, 60, 60, 60)
