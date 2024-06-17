@@ -129,13 +129,3 @@ class CatchShop(Command):
                 )
 
         return self.errorMessage(env)
-
-
-@dataclass
-class CatchCheckMoney(Command):
-    commandPattern: str = f"^(我有多少薯片|mysp)"
-    argsPattern: str = "$"
-
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
-        user = await getSender(env)
-        return Message([at(env.sender), text(f" 你有 {user.money} 薯片")])
