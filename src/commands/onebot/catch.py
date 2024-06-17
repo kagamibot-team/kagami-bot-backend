@@ -58,36 +58,9 @@ async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
     await ctx.reply(msg + UniMessage().image(raw=imageToBytes(img)))
 
 
-async def picks(
-    ctx: OnebotContext, session: AsyncSession, uid: int, count: int | None = None
+async def save_picks(
+    *, pickResult: Picks, uid: int, session: AsyncSession, userTime: UserTime
 ):
-    """
-    进行一次抓小哥。抓小哥的流程如下：
-    - 刷新计算用户的时间，包括抓小哥的时间和可以抓的次数
-    - 抓一次小哥，先把结果存在内存中
-    - 发布 `PicksEvent` 事件以允许对结果进行修改
-    - 将数据写入数据库会话中
-    - 发布 `PrePickMessageEvent` 事件以方便为消息展示做准备
-    - 数据库提交更改并关闭
-    - 生成图片，发送回复
-
-    Args:
-        ctx (OnebotContext): 抓小哥的上下文
-        session (AsyncSession): 所开启的数据库会话，将会在中途关闭
-        uid (int): 数据库中的用户 ID
-        count (int | None, optional): 抓的次数，如果为 None，则尽可能多抓
-    """
-
-    userTime = await calculateTime(session, uid)
-    count = count or userTime.pickRemain
-    count = min(userTime.pickMax, count)
-    count = max(0, count)
-
-    pickResult = await pickAwards(session, uid, count)
-    pickEvent = PicksEvent(uid, pickResult, session)
-
-    await root.emit(pickEvent)
-
     preEvent = PrePickMessageEvent(pickResult, {}, uid, session, userTime)
 
     # 在这里进行了数据库库存的操作
@@ -138,6 +111,43 @@ async def picks(
     )
     res = (await session.execute(query)).scalar_one()
     preEvent.moneyUpdated = res
+
+    return preEvent
+
+
+async def picks(
+    ctx: OnebotContext, session: AsyncSession, uid: int, count: int | None = None
+):
+    """
+    进行一次抓小哥。抓小哥的流程如下：
+    - 刷新计算用户的时间，包括抓小哥的时间和可以抓的次数
+    - 抓一次小哥，先把结果存在内存中
+    - 发布 `PicksEvent` 事件以允许对结果进行修改
+    - 将数据写入数据库会话中
+    - 发布 `PrePickMessageEvent` 事件以方便为消息展示做准备
+    - 数据库提交更改并关闭
+    - 生成图片，发送回复
+
+    Args:
+        ctx (OnebotContext): 抓小哥的上下文
+        session (AsyncSession): 所开启的数据库会话，将会在中途关闭
+        uid (int): 数据库中的用户 ID
+        count (int | None, optional): 抓的次数，如果为 None，则尽可能多抓
+    """
+
+    userTime = await calculateTime(session, uid)
+    count = count or userTime.pickRemain
+    count = min(userTime.pickMax, count)
+    count = max(0, count)
+
+    pickResult = await pickAwards(session, uid, count)
+    pickEvent = PicksEvent(uid, pickResult, session)
+
+    await root.emit(pickEvent)
+
+    preEvent = await save_picks(
+        pickResult=pickResult, uid=uid, session=session, userTime=userTime
+    )
 
     await root.emit(preEvent)
     await session.commit()

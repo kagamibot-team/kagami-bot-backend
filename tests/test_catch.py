@@ -2,9 +2,10 @@ import unittest
 
 
 from src.common.fast_import import *
+from src.logic.catch import pickAwards
 from src.logic.catch_time import *
 
-from src.commands.onebot.catch import picks
+from src.commands.onebot.catch import picks, save_picks
 from tests.mock.contexts import MockGroupContext
 
 
@@ -21,7 +22,7 @@ class TestCatch(unittest.IsolatedAsyncioTestCase):
 
         async with session.begin():
             level = Level(name="一星", weight=1)
-            award = Award(name="百变小哥")
+            award = Award(name="百变小哥", level=level)
             skin = Skin(name="小境", award=award)
             glob = Global(catch_interval=10)
 
@@ -96,9 +97,49 @@ class TestCatch(unittest.IsolatedAsyncioTestCase):
             ut = await calculateTime(session, uid)
             self.assertEqual(ut.pickRemain, 3)
             self.assertAlmostEqual(ut.pickLastUpdated, time.time(), delta=1)
-    
-    async def test5(self):
-        await root.emit(MockGroupContext(Message("kz")))
+
+    async def test_catch(self):
+        session = get_session()
+
+        async with session.begin():
+            uid = await qid2did(session, 123)
+            await updateUserTime(session, uid, 3, time.time())
+            await session.commit()
+
+        async with session.begin():
+            userTime = await calculateTime(session, uid)
+            pickResult = await pickAwards(session, uid, 1)
+            pickEvent = PicksEvent(uid, pickResult, session)
+            await root.emit(pickEvent)
+
+            kagami = (
+                await session.execute(
+                    select(Skin.data_id).filter(
+                        Skin.name == "小境",
+                        Skin.owned_skins.any(OwnedSkin.user_id == uid),
+                    )
+                )
+            ).scalar_one_or_none()
+            self.assertIsNone(kagami)
+
+            pev = await save_picks(pickResult=pickResult, uid=uid, session=session, userTime=userTime)
+            self.assertAlmostEqual(pev.moneyUpdated, 20)
+            await session.commit()
+        
+        async with session.begin():
+            pickResult = await pickAwards(session, uid, 1)
+            pickEvent = PicksEvent(uid, pickResult, session)
+            await root.emit(pickEvent)
+
+            kagami = (
+                await session.execute(
+                    select(Skin.data_id).filter(
+                        Skin.name == "小境",
+                        Skin.owned_skins.any(OwnedSkin.user_id == uid),
+                    )
+                )
+            ).scalar_one_or_none()
+            self.assertIsNotNone(kagami)
 
 
 if __name__ == "__main__":
