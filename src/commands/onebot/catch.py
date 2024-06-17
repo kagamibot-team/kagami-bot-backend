@@ -126,6 +126,7 @@ async def picks(
         count_remain=userTime.pickRemain - spent_count,
         last_calc=userTime.pickLastUpdated,
     )
+    preEvent.userTime.pickRemain = userTime.pickRemain - spent_count
     query = (
         update(User)
         .where(User.data_id == uid)
