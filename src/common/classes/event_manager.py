@@ -98,13 +98,5 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
                 except StopIteration:
                     pass
 
-    def merge(self, other: "EventManager"):
-        for key in other.keys():
-            if key not in self.keys():
-                self[key] = other[key]
-            else:
-                for l in other[key].ls:
-                    self[key].add(l[0], l[1])
-
 
 __all__ = ["EventManager"]
