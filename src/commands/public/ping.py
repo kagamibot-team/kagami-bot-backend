@@ -15,14 +15,14 @@ async def ping(ctx: PublicContext, res: Match[str]):
     custom_replies = config.custom_replies
 
     if sender is None:
-        await ctx.send(UniMessage("在" + sgns))
+        await ctx.send(UniMessage(la.msg.default_reply + sgns))
         return
     
     if (k := str(sender)) in custom_replies.keys():
         await ctx.send(UniMessage(custom_replies[k] + sgns))
         return
     
-    await ctx.send(UniMessage("在" + sgns))
+    await ctx.send(UniMessage(la.msg.default_reply + sgns))
 
 
 @listenPublic()

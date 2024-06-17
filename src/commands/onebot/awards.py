@@ -17,22 +17,23 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     award = await getAidByName(session, name)
 
     if award is None:
-        await ctx.reply(UniMessage(f"没有叫 {name} 的小哥"))
+        await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
         return
 
     if await getStatistics(session, user, award) <= 0:
-        await ctx.reply(UniMessage(f"你还没有遇到过叫做 {name} 的小哥"))
+        await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
         return
 
     info = await getAwardInfo(session, user, award)
-    nameDisplay = info.awardName
 
     if info.skinName is not None:
-        nameDisplay += f"[{info.skinName}]"
+        nameDisplay = la.disp.award_display_with_skin.format(info.awardName, info.skinName, info.levelName)
+    else:
+        nameDisplay = la.disp.award_display.format(info.awardName, info.levelName)
 
     await ctx.reply(
         UniMessage()
-        .text(nameDisplay + f"【{info.levelName}】")
+        .text(nameDisplay)
         .image(path=pathlib.Path(info.awardImg))
         .text(f"\n{info.awardDescription}")
     )
@@ -101,7 +102,7 @@ async def _get_others(session: AsyncSession, uid: int):
 
 @listenOnebot()
 @matchAlconna(Alconna("re:(zhuajd|抓进度|抓小哥进度)"))
-@withLoading("正在思考你遇到过的小哥……")
+@withLoading(la.loading.zhuajd)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
     uid = await qid2did(session, ctx.getSenderId())
@@ -125,7 +126,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
 
             if sto + use == 0:
                 img = "./res/blank_placeholder.png"
-                name = "???"
+                name = la.disp.award_unknown_name
                 color = "#696361"
             elif aid in skins.keys():
                 img = skins[aid]
@@ -144,7 +145,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
 
 @listenOnebot()
 @matchAlconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
-@withLoading("正在数小哥……")
+@withLoading(la.loading.kc)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
     uid = await qid2did(session, ctx.getSenderId())
@@ -183,8 +184,8 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
 
 @listenOnebot()
 @requireAdmin()
-@matchAlconna(Alconna("re:(::所有小哥)"))
-@withLoading("正在生成")
+@matchAlconna(Alconna("re:(所有|全部)小哥", ["::"]))
+@withLoading(la.loading.all_xg)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
     levels = await _get_levels(session)

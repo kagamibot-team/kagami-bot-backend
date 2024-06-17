@@ -10,4 +10,4 @@ async def _(ctx: OnebotContext, session: AsyncSession, _):
     )
     res = res.scalar_one_or_none() or 0.0
 
-    await ctx.reply(UniMessage(f"你有 {int(res)} 薯片"))
+    await ctx.reply(UniMessage(la.msg.mysp.format(int(res))))

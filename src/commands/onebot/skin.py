@@ -10,7 +10,7 @@ async def switch_in_skin_list(session: AsyncSession, user: int, skins: list[tupl
     try:
         used = (await session.execute(query)).one_or_none()
     except MultipleResultsFound:
-        logger.warning(f"用户 {user} 有多个应用了的皮肤，将其清空")
+        logger.warning(la.warn.log_multi_skin.format(user))
         await clear_skin(session, user)
         return None
     
@@ -27,7 +27,7 @@ async def switch_in_skin_list(session: AsyncSession, user: int, skins: list[tupl
             await set_skin(session, user, skins[i + 1][0])
             return skins[i + 1]
     
-    logger.warning(f"用户 {user} 应用了不存在的皮肤")
+    logger.warning(la.warn.log_use_skin_not_exists.format(user))
     await clear_skin(session, user)
     return None
 
@@ -65,7 +65,7 @@ async def _(
             skin = (await session.execute(query)).scalar_one_or_none()
 
         if skin is None:
-            await ctx.reply(UniMessage().text(f"你所输入的 {name} 不存在"))
+            await ctx.reply(UniMessage().text(la.err.not_found.format(name)))
             return
 
         query = select(OwnedSkin.data_id).filter(
@@ -73,11 +73,11 @@ async def _(
         )
         owned = (await session.execute(query)).scalar_one_or_none()
         if owned is None:
-            await ctx.reply(UniMessage().text(f"你还没有 {name}"))
+            await ctx.reply(UniMessage().text(la.err.not_own.format(name)))
             return
 
         await set_skin(session, user, skin)
-        await ctx.reply(UniMessage().text(f"已经将皮肤设置为 {name} 了"))
+        await ctx.reply(UniMessage().text(la.msg.skin_set.format(name)))
         await session.commit()
         return
 
@@ -91,8 +91,8 @@ async def _(
     skin = await switch_in_skin_list(session, user, list(skins))
 
     if skin is None:
-        await ctx.reply(UniMessage().text(f"已经将 {name} 的皮肤更换为默认了"))
+        await ctx.reply(UniMessage().text(la.msg.skin_set_default.format(name)))
     else:
-        await ctx.reply(UniMessage().text(f"已将 {name} 的皮肤更换为 {skin[1]} 了"))
+        await ctx.reply(UniMessage().text(la.msg.skin_set_2.format(name, skin[1])))
     
     await session.commit()

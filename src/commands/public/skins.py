@@ -48,29 +48,15 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
             .join(Award, Skin.applied_award_id == Award.data_id)
         )
 
-        begin = time.time()
         skins1 = (await session.execute(query1)).tuples()
-        logger.debug(f"查询耗时1: {time.time() - begin}")
-
-        begin = time.time()
         skins2 = (await session.execute(query2)).tuples()
-        logger.debug(f"查询耗时2: {time.time() - begin}")
-
-        begin = time.time()
         skins3 = (await session.execute(query3)).tuples()
-        logger.debug(f"查询耗时3: {time.time() - begin}")
-
-        begin = time.time()
         skins4 = (await session.execute(query4)).tuples()
-        logger.debug(f"查询耗时4: {time.time() - begin}")
 
         skins = list(skins1) + list(skins2) + list(skins3) + list(skins4)
     else:
         query = select(*targ).join(Award, Skin.applied_award_id == Award.data_id)
-
-        begin = time.time()
         skins = list((await session.execute(query)).tuples())
-        logger.debug(f"查询耗时: {time.time() - begin}")
 
     message = UniMessage().text("所有皮肤：\n")
 

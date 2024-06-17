@@ -57,7 +57,7 @@ async def _(session: AsyncSession, ctx: ConsoleContext):
 async def _(ctx: ConsoleContext):
     with open(os.path.join(".", "data/dumps.pickle"), "rb") as f:
         output: dict[str, list[dict[str, Any]]] = pickle.load(f)
-    
+
     for cls in to_pickle_list:
         session = get_session()
 
@@ -86,7 +86,7 @@ async def _(ctx: ConsoleContext):
         async with session.begin():
             await session.execute(delete(cls))
             await session.commit()
-    
+
     await ctx.reply(UniMessage("ok"))
 
 
@@ -99,12 +99,12 @@ async def _(ctx: ConsoleContext):
 
     fp = os.path.join(".", "data/db.sqlite3")
     if not os.path.exists(fp):
-        await ctx.reply(UniMessage("数据库文件不存在"))
+        await ctx.reply(UniMessage(la.dev.database_not_found))
         return
 
     with open(fp, "rb") as f:
         data = f.read()
-    
+
     tp = os.path.join(".", f"data/backup/db-{int(time.time())}.sqlite3")
 
     with open(tp, "wb") as f:

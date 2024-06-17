@@ -9,7 +9,7 @@ async def _(ctx: OnebotContext, session: AsyncSession):
     skin = (await session.execute(query)).scalar_one_or_none()
 
     if skin is None:
-        logger.warning("这个世界没有给小哥。")
+        logger.warning(la.err.log_no_gei)
         return
     
     user = await qid2did(session, ctx.getSenderId())

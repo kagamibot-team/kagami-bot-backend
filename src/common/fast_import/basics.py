@@ -6,3 +6,4 @@ from src.config import config
 
 from src.common.event_root import *
 from src.common.download import *
+from src.common.lang.zh import la

@@ -20,21 +20,24 @@ async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
     minutes = int(deltaTime / 60) % 60
     hours = int(deltaTime / 3600)
 
-    timeStr = f"{seconds}秒"
+    timeStr = f"{seconds}{la.unit.second}"
     if hours > 0:
-        timeStr = f"{hours}小时{minutes}分钟" + timeStr
+        timeStr = f"{minutes}{la.unit.minute}" + timeStr
     elif minutes > 0:
-        timeStr = f"{minutes}分钟" + timeStr
+        timeStr = f"{hours}{la.unit.hour}{minutes}{la.unit.minute}" + timeStr
 
     if len(pickDisplay) == 0:
-        await ctx.reply(UniMessage().text(f"小哥还没长成，请再等{timeStr}吧！"))
+        await ctx.reply(UniMessage().text(la.err.catch_not_available.format(timeStr)))
         return
 
-    msg = UniMessage().text(
-        f"剩余抓小哥的次数：{userTime.pickRemain}/{userTime.pickMax}\n"
-        f"下次次数恢复还需要{timeStr}\n"
-        f"你刚刚一共抓了 {counts} 只小哥，并得到了 {int(money)} 薯片\n"
-        f"现在，你一共有 {int(e.moneyUpdated)} 薯片\n"
+    msg = UniMessage(
+        la.msg.catch_top.format(
+            userTime.pickRemain,
+            userTime.pickMax,
+            counts,
+            f"{int(money)}{la.unit.money}",
+            f"{int(e.moneyUpdated)}{la.unit.money}",
+        )
     )
 
     boxes: list[PIL.Image.Image] = []
@@ -147,7 +150,7 @@ async def picks(
 @matchAlconna(
     Alconna("re:(抓小哥|zhua|抓抓)", Arg("count", int, flags=[ArgFlag.OPTIONAL]))
 )
-@withLoading("正在抓小哥...")
+@withLoading(la.loading.zhua)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     count = result.query[int]("count") or 1
@@ -157,7 +160,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
 
 @listenOnebot()
 @matchRegex("^(狂抓|kz|狂抓小哥)$")
-@withLoading("正在抓小哥...")
+@withLoading(la.loading.kz)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, _):
     user = await qid2did(session, ctx.getSenderId())
