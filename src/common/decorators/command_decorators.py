@@ -231,12 +231,12 @@ def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
 
     def wrapper(func: Callable[[TCP, AsyncSession, *TA], Coroutine[Any, Any, T]]):
         async def inner(ctx: TCP, *args: *TA):
-            sender = ctx.getSenderId()
-            if sender is None:
-                lock = manager[-1]
-            else:
-                lock = manager[sender]
-            # lock = manager[-1]
+            # sender = ctx.getSenderId()
+            # if sender is None:
+            #     lock = manager[-1]
+            # else:
+            #     lock = manager[sender]
+            lock = manager[-1]
 
             async with lock:
                 session = get_session()
