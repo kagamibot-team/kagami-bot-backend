@@ -1,4 +1,5 @@
 import os
+from nonebot import logger
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +16,7 @@ async def give_skin(session: AsyncSession, uid: int, sid: int):
     if result.scalar() is None:
         new_skin = OwnedSkin(user_id=uid, skin_id=sid)
         session.add(new_skin)
+        await session.flush()
 
 
 async def set_skin(session: AsyncSession, uid: int, sid: int):
@@ -27,6 +29,7 @@ async def set_skin(session: AsyncSession, uid: int, sid: int):
     else:
         new_skin = UsedSkin(user_id=uid, skin_id=sid)
         session.add(new_skin)
+    await session.flush()
 
 
 async def clear_skin(session: AsyncSession, uid: int):

@@ -22,13 +22,17 @@ async def _(e: PicksEvent):
             # 第一次遇到百变小哥不给皮肤
             return
 
-        query = (
-            select(Skin.data_id)
-            .filter(Skin.applied_award_id == 35)
-            .join(OwnedSkin, OwnedSkin.skin_id == Skin.data_id)
-            .filter(OwnedSkin.user_id != e.uid)
-        )
+        query = select(Skin.data_id).filter(Skin.applied_award_id == 35)
         skins = (await session.execute(query)).scalars().all()
+
+        query = (
+            select(OwnedSkin.skin_id)
+            .join(Skin, Skin.data_id == OwnedSkin.skin_id)
+            .filter(Skin.applied_award_id == 35)
+            .filter(OwnedSkin.user_id == e.uid)
+        )
+        skins2 = (await session.execute(query)).scalars().all()
+        skins = [s for s in skins if s not in skins2]
 
         if len(skins) == 0:
             return
@@ -51,7 +55,7 @@ async def _(e: PrePickMessageEvent):
         skin = (await e.session.execute(query)).one_or_none()
         if skin:
             name, description, image = skin.tuple()
-            display.name += f'[{name}]'
+            display.name += f"[{name}]"
             display.image = image
 
             if len(description.strip()) > 0:

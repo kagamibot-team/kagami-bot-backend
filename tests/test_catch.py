@@ -22,8 +22,8 @@ class TestCatch(unittest.IsolatedAsyncioTestCase):
 
         async with session.begin():
             level = Level(name="一星", weight=1)
-            award = Award(name="百变小哥", level=level)
-            skin = Skin(name="小境", award=award)
+            award = Award(name="百变小哥", level=level, data_id=35)
+            skin = Skin(name="小境", applied_award_id=35)
             glob = Global(catch_interval=10)
 
             session.add(level)
@@ -127,6 +127,7 @@ class TestCatch(unittest.IsolatedAsyncioTestCase):
             await session.commit()
         
         async with session.begin():
+            userTime = await calculateTime(session, uid)
             pickResult = await pickAwards(session, uid, 1)
             pickEvent = PicksEvent(uid, pickResult, session)
             await root.emit(pickEvent)
