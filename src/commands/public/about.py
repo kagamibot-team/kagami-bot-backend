@@ -60,7 +60,8 @@ updateHistory: dict[str, list[str]] = {
     ],
     "0.5.3": [
         "修复了和给小哥有关的一个特性",
-        "修复了抓小哥界面中皮肤没有正常展示的 Bug"
+        "修复了抓小哥界面中皮肤没有正常展示的 Bug",
+        "优化了部分指令",
     ]
 }
 
@@ -85,7 +86,8 @@ updateHistoryDev: dict[str, list[str]] = {
         "Bot 初始化的时候使用多线程预渲染，以保证生产环境能在一分钟内启动",
     ],
     "0.5.3": [
-        "让抓小哥的逻辑更加清晰。流程上添加了 PicksEvent 和 PrePickMessageEvent，为以后开发成就系统和其他触发条件做准备"
+        "让抓小哥的逻辑更加清晰。流程上添加了 PicksEvent 和 PrePickMessageEvent，为以后开发成就系统和其他触发条件做准备",
+        "转移了 kc zhuajd ::所有小哥 三个指令到新指令系统，并优化了它们的数据库操作"
     ]
 }
 
