@@ -17,8 +17,13 @@ async def getInterval(session: AsyncSession):
 async def updateUserTime(
     session: AsyncSession, uid: int, count_remain: int, last_calc: float
 ):
-    """
-    更新玩家抓小哥的时间
+    """更新玩家抓小哥的时间
+
+    Args:
+        session (AsyncSession): 数据库会话
+        uid (int): 用户在数据库中的 ID
+        count_remain (int): 剩余抓的次数
+        last_calc (float): 上一次计算抓的时间
     """
 
     await session.execute(
@@ -28,10 +33,14 @@ async def updateUserTime(
     )
 
 
-async def calculateTime(session: AsyncSession, uid: int):
+async def calculateTime(session: AsyncSession, uid: int) -> UserTime:
     """
     根据当前时间，重新计算玩家抓小哥的时间和上限。
-    该函数会自动更新数据库中的数据。
+    该函数不会更新数据库中的数据。
+
+    Args:
+        session (AsyncSession): 数据库会话
+        uid (int): 用户在数据库中的 ID
     """
 
     maxPickCount, pick_count_remain, pick_count_last_calculated = (
@@ -51,40 +60,22 @@ async def calculateTime(session: AsyncSession, uid: int):
     now = time.time()
 
     if pickInterval == 0:
-        await updateUserTime(session, uid, maxPickCount, now)
-        return maxPickCount, now, maxPickCount
-
-    if pick_count_remain >= maxPickCount:
-        await updateUserTime(session, uid, pick_count_remain, now)
-        return pick_count_remain, now, maxPickCount
-
-    cycles = int((now - pick_count_last_calculated) / pickInterval)
-    pick_count_last_calculated += cycles * pickInterval
-    pick_count_remain += cycles
-
-    if pick_count_remain > maxPickCount:
-        pick_count_remain = maxPickCount
+        pick_count_remain = max(maxPickCount, pick_count_remain)
         pick_count_last_calculated = now
+    elif pick_count_remain >= maxPickCount:
+        pick_count_last_calculated = now
+    else:
+        cycles = int((now - pick_count_last_calculated) / pickInterval)
+        pick_count_last_calculated += cycles * pickInterval
+        pick_count_remain += cycles
 
-    await updateUserTime(session, uid, pick_count_remain, pick_count_last_calculated)
+        if pick_count_remain > maxPickCount:
+            pick_count_remain = maxPickCount
+            pick_count_last_calculated = now
 
-    return pick_count_remain, pick_count_last_calculated, maxPickCount
-
-
-async def timeToNextCatch(session: AsyncSession, user: User):
-    """
-    计算玩家下一次抓小哥的时间，在调用这个方法前，请先调用 `calculateTime`。
-    """
-
-    maxPickCount = user.pick_max_cache
-    pickInterval = await getInterval(session)
-
-    now = time.time()
-
-    if pickInterval == 0:
-        return now
-
-    if user.pick_count_remain >= maxPickCount:
-        return now
-
-    return user.pick_count_last_calculated + pickInterval
+    return UserTime(
+        pickMax=maxPickCount,
+        pickRemain=pick_count_remain,
+        pickLastUpdated=pick_count_last_calculated,
+        interval=pickInterval,
+    )

@@ -13,7 +13,7 @@ class PriorityList(Generic[T]):
     def add(self, priority: int, item: T):
         i = 0
         while i < len(self.ls):
-            if self.ls[i][0] > priority:
+            if self.ls[i][0] < priority:
                 break
             i += 1
         self.ls.insert(i, (priority, item))

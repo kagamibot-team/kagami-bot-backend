@@ -58,7 +58,40 @@ async def getStorage(session: AsyncSession, uid: int, aid: int):
     return (await session.execute(query)).scalar_one_or_none()
 
 
+async def getStatistics(session: AsyncSession, uid: int, aid: int):
+    """获得迄今为止一共抓到了多少小哥
+
+    Args:
+        session (AsyncSession): 数据库会话
+        uid (int): 用户在数据库中的 ID
+        aid (int): 小哥在数据库中的 ID
+    """
+
+    query1 = select(StorageStats.count).filter(
+        StorageStats.target_user_id == uid, StorageStats.target_award_id == aid
+    )
+    query2 = select(UsedStats.count).filter(
+        UsedStats.target_user_id == uid, UsedStats.target_award_id == aid
+    )
+
+    sto = (await session.execute(query1)).scalar_one_or_none() or 0
+    use = (await session.execute(query2)).scalar_one_or_none() or 0
+
+    return sto + use
+
+
 async def addStorage(session: AsyncSession, uid: int, aid: int, count: int):
+    """增减一个用户的小哥库存
+
+    Args:
+        session (AsyncSession): 数据库会话
+        uid (int): 用户 ID
+        aid (int): 小哥 ID
+        count (int): 增减数量
+
+    Returns:
+        int: 在调整库存之前，用户的库存值
+    """
     res = await getStorage(session, uid, aid)
 
     if res is None:
@@ -83,11 +116,11 @@ async def getAidByName(session: AsyncSession, name: str):
     res = (await session.execute(query)).scalar_one_or_none()
 
     if res is None:
-        query = select(Award.data_id).filter(Award.alt_names.any(
-            AwardAltName.name == name
-        ))
+        query = select(Award.data_id).filter(
+            Award.alt_names.any(AwardAltName.name == name)
+        )
         res = (await session.execute(query)).scalar_one_or_none()
-    
+
     return res
 
 
