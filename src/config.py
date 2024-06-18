@@ -20,5 +20,11 @@ class Config(BaseModel):
     # 数据库的路径
     sqlalchemy_database_url: str = "sqlite+aiosqlite:///./data/db.sqlite3"
 
+    # 是否启用仅在白名单群聊中才能够响应消息
+    enable_white_list: bool = False
+
+    # 白名单群聊
+    white_list_group: list[int] = []
+
 
 config = get_plugin_config(Config)

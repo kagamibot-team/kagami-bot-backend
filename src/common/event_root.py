@@ -10,6 +10,8 @@ from .classes.command_events import (
     PrivateContext,
 )
 
+from src.config import config
+
 
 def activateRoot(root: EventManager):
     consoleHandler = on_type(ConsoleMessageEvent)
@@ -24,6 +26,9 @@ def activateRoot(root: EventManager):
 
     @groupMessageHandler.handle()
     async def _(bot: Bot, event: GroupMessageEvent):
+        if config.enable_white_list and event.group_id not in config.white_list_group:
+            return
+        
         await root.throw(GroupContext(event, bot))
 
 
