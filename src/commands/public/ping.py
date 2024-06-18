@@ -30,3 +30,9 @@ async def ping(ctx: PublicContext, res: Match[str]):
 @withLoading("")
 async def _(ctx: PublicContext, _: Match[str]):
     await asyncio.sleep(5)
+
+
+@listenPublic()
+@matchLiteral("给")
+async def _(ctx: PublicContext):
+    await ctx.reply(UniMessage().text("给"))
