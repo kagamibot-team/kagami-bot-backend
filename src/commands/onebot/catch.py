@@ -138,7 +138,7 @@ async def picks(
 
     userTime = await calculateTime(session, uid)
     count = count or userTime.pickRemain
-    count = min(userTime.pickMax, count)
+    count = min(userTime.pickRemain, count)
     count = max(0, count)
 
     pickResult = await pickAwards(session, uid, count)
