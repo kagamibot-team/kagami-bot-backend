@@ -159,6 +159,7 @@ class About:
         ],
         "0.5.5": [
             "修复了一些和皮肤有关的问题",
+            "给",
         ],
     }
     update_dev: dict[str, list[str]] = {
