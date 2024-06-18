@@ -2,44 +2,33 @@ import unittest
 
 
 from src.common.fast_import import *
+from src.common.fast_import import AsyncSession
 from src.logic.catch import pickAwards
 from src.logic.catch_time import *
 
-from src.commands.onebot.catch import picks, save_picks
+from src.commands.onebot.catch import save_picks
+
+from .base.test_case import SQLTestCase
 
 
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, Bot, Adapter
+class TestCatch(SQLTestCase):
+    async def createData(self, session: AsyncSession) -> None:
+        level = Level(name="一星", weight=1)
+        award = Award(name="百变小哥", level=level, data_id=35)
+        skin = Skin(name="小境", applied_award_id=35)
+        glob = Global(catch_interval=10)
 
+        session.add(level)
+        session.add(award)
+        session.add(glob)
+        session.add(skin)
 
-class TestCatch(unittest.IsolatedAsyncioTestCase):
-    async def asyncSetUp(self):
-        async with sqlEngine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-            await conn.run_sync(Base.metadata.create_all)
+        uid = await qid2did(session, 123)
+        await session.execute(
+            update(User).where(User.data_id == uid).values(pick_max_cache=3)
+        )
 
-        session = get_session()
-
-        async with session.begin():
-            level = Level(name="一星", weight=1)
-            award = Award(name="百变小哥", level=level, data_id=35)
-            skin = Skin(name="小境", applied_award_id=35)
-            glob = Global(catch_interval=10)
-
-            session.add(level)
-            session.add(award)
-            session.add(glob)
-            session.add(skin)
-
-            uid = await qid2did(session, 123)
-            await session.execute(
-                update(User).where(User.data_id == uid).values(pick_max_cache=3)
-            )
-
-            await session.commit()
-
-    async def asyncTearDown(self) -> None:
-        async with sqlEngine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
+        await session.commit()
 
     async def test_catch_time_normal(self):
         session = get_session()
@@ -121,10 +110,12 @@ class TestCatch(unittest.IsolatedAsyncioTestCase):
             ).scalar_one_or_none()
             self.assertIsNone(kagami)
 
-            pev = await save_picks(pickResult=pickResult, uid=uid, session=session, userTime=userTime)
+            pev = await save_picks(
+                pickResult=pickResult, uid=uid, session=session, userTime=userTime
+            )
             self.assertAlmostEqual(pev.moneyUpdated, 20)
             await session.commit()
-        
+
         async with session.begin():
             userTime = await calculateTime(session, uid)
             pickResult = await pickAwards(session, uid, 1)
