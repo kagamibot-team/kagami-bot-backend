@@ -24,7 +24,7 @@ class Config(BaseModel):
     enable_white_list: bool = False
 
     # 白名单群聊
-    white_list_group: list[int] = []
+    white_list_groups: list[int] = []
 
 
 config = get_plugin_config(Config)

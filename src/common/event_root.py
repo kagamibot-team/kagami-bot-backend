@@ -26,7 +26,7 @@ def activateRoot(root: EventManager):
 
     @groupMessageHandler.handle()
     async def _(bot: Bot, event: GroupMessageEvent):
-        if config.enable_white_list and event.group_id not in config.white_list_group:
+        if config.enable_white_list and event.group_id not in config.white_list_groups:
             return
         
         await root.throw(GroupContext(event, bot))
