@@ -296,7 +296,7 @@ def withLoading(text: str = "请稍候……"):
             except Exception as e:
                 await ctx.reply(
                     UniMessage().text(
-                        f"程序遇到了错误：{repr(e)}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！"
+                        f"程序遇到了错误：{repr(e)}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉!！"
                     )
                 )
 
