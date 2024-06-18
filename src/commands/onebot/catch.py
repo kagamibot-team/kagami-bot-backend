@@ -70,7 +70,7 @@ async def save_picks(
     for aid in pickResult.awards.keys():
         pick = pickResult.awards[aid]
         spent_count += pick.delta
-        before = await addStorage(session, uid, aid, pick.delta)
+        before = await add_storage(session, uid, aid, pick.delta)
 
         query = (
             select(
@@ -165,7 +165,7 @@ async def picks(
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     count = result.query[int]("count") or 1
-    user = await qid2did(session, ctx.getSenderId())
+    user = await get_uid_by_qqid(session, ctx.getSenderId())
     await picks(ctx, session, user, count)
 
 
@@ -174,5 +174,5 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
 @withLoading(la.loading.kz)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, _):
-    user = await qid2did(session, ctx.getSenderId())
+    user = await get_uid_by_qqid(session, ctx.getSenderId())
     await picks(ctx, session, user)

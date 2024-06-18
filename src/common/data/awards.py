@@ -7,7 +7,7 @@ from src.models.models import *
 from src.common.dataclasses.award_info import AwardInfo
 
 
-async def getAwardInfo(session: AsyncSession, uid: int, aid: int):
+async def get_award_info(session: AsyncSession, uid: int, aid: int):
     query = (
         select(
             Award.data_id,
@@ -50,7 +50,7 @@ async def getAwardInfo(session: AsyncSession, uid: int, aid: int):
     return info
 
 
-async def getStorage(session: AsyncSession, uid: int, aid: int):
+async def get_storage(session: AsyncSession, uid: int, aid: int):
     query = select(StorageStats.count).filter(
         StorageStats.target_user_id == uid, StorageStats.target_award_id == aid
     )
@@ -58,7 +58,7 @@ async def getStorage(session: AsyncSession, uid: int, aid: int):
     return (await session.execute(query)).scalar_one_or_none()
 
 
-async def getStatistics(session: AsyncSession, uid: int, aid: int):
+async def get_statistics(session: AsyncSession, uid: int, aid: int):
     """获得迄今为止一共抓到了多少小哥
 
     Args:
@@ -80,7 +80,7 @@ async def getStatistics(session: AsyncSession, uid: int, aid: int):
     return sto + use
 
 
-async def addStorage(session: AsyncSession, uid: int, aid: int, count: int):
+async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
     """增减一个用户的小哥库存
 
     Args:
@@ -92,7 +92,7 @@ async def addStorage(session: AsyncSession, uid: int, aid: int, count: int):
     Returns:
         int: 在调整库存之前，用户的库存值
     """
-    res = await getStorage(session, uid, aid)
+    res = await get_storage(session, uid, aid)
 
     if res is None:
         newStorage = StorageStats(target_user_id=uid, target_award_id=aid, count=count)
@@ -111,7 +111,7 @@ async def addStorage(session: AsyncSession, uid: int, aid: int, count: int):
     return res
 
 
-async def getAidByName(session: AsyncSession, name: str):
+async def get_aid_by_name(session: AsyncSession, name: str):
     query = select(Award.data_id).filter(Award.name == name)
     res = (await session.execute(query)).scalar_one_or_none()
 
@@ -124,7 +124,7 @@ async def getAidByName(session: AsyncSession, name: str):
     return res
 
 
-async def downloadAwardImage(aid: int, url: str):
+async def download_award_image(aid: int, url: str):
     uIndex: int = 0
 
     def _path():

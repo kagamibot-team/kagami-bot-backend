@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.models import User
 
 
-async def qid2did(session: AsyncSession, qqid: int | str):
+async def get_uid_by_qqid(session: AsyncSession, qqid: int | str):
     qqid = str(qqid)
 
     result = await session.execute(select(User.data_id).where(User.qq_id == qqid))
@@ -20,7 +20,7 @@ async def qid2did(session: AsyncSession, qqid: int | str):
     return data_id
 
 
-async def did2qid(session: AsyncSession, data_id: int | str):
+async def get_qqid_by_uid(session: AsyncSession, data_id: int | str):
     data_id = str(data_id)
 
     result = await session.execute(select(User.qq_id).where(User.data_id == data_id))

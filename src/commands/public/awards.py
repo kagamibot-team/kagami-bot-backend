@@ -25,7 +25,7 @@ async def _(ctx: PublicContext, res: Arparma):
     session = get_session()
 
     async with session.begin():
-        _award = await getAidByName(session, name)
+        _award = await get_aid_by_name(session, name)
 
         if _award is not None:
             await ctx.reply(UniMessage(la.err.award_exists.format(name)))
@@ -122,7 +122,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     if name is None:
         return
 
-    aid = await getAidByName(session, name)
+    aid = await get_aid_by_name(session, name)
 
     if aid is None:
         await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
@@ -142,7 +142,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
         messages += f"成功将名字叫 {name} 的小哥的名字改为 {newName}。\n"
 
     if levelName is not None:
-        lid = await getLidByName(session, levelName)
+        lid = await get_lid_by_name(session, levelName)
 
         if lid is None:
             messages += f"更改等级未成功，因为名字叫 {levelName} 的等级不存在。"
@@ -165,7 +165,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
             logger.warning(f"名字叫 {name} 的小哥的图片地址为空。")
         else:
             try:
-                fp = await downloadAwardImage(aid, imageUrl)
+                fp = await download_award_image(aid, imageUrl)
                 await session.execute(
                     update(Award).where(Award.data_id == aid).values(img_path=fp)
                 )

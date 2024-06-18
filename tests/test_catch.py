@@ -23,7 +23,7 @@ class TestCatch(SQLTestCase):
         session.add(glob)
         session.add(skin)
 
-        uid = await qid2did(session, 123)
+        uid = await get_uid_by_qqid(session, 123)
         await session.execute(
             update(User).where(User.data_id == uid).values(pick_max_cache=3)
         )
@@ -34,12 +34,12 @@ class TestCatch(SQLTestCase):
         session = get_session()
 
         async with session.begin():
-            uid = await qid2did(session, 123)
+            uid = await get_uid_by_qqid(session, 123)
             await updateUserTime(session, uid, 0, time.time() - 25)
             await session.commit()
 
         async with session.begin():
-            uid = await qid2did(session, 123)
+            uid = await get_uid_by_qqid(session, 123)
             ut = await calculateTime(session, uid)
             self.assertEqual(ut.pickRemain, 2)
             self.assertAlmostEqual(ut.pickLastUpdated, time.time() - 5, delta=1)
@@ -48,12 +48,12 @@ class TestCatch(SQLTestCase):
         session = get_session()
 
         async with session.begin():
-            uid = await qid2did(session, 123)
+            uid = await get_uid_by_qqid(session, 123)
             await updateUserTime(session, uid, -1, time.time() - 20)
             await session.commit()
 
         async with session.begin():
-            uid = await qid2did(session, 123)
+            uid = await get_uid_by_qqid(session, 123)
             ut = await calculateTime(session, uid)
             self.assertEqual(ut.pickRemain, 1)
             self.assertAlmostEqual(ut.pickLastUpdated, time.time(), delta=1)
@@ -62,12 +62,12 @@ class TestCatch(SQLTestCase):
         session = get_session()
 
         async with session.begin():
-            uid = await qid2did(session, 123)
+            uid = await get_uid_by_qqid(session, 123)
             await updateUserTime(session, uid, 4, time.time() - 20)
             await session.commit()
 
         async with session.begin():
-            uid = await qid2did(session, 123)
+            uid = await get_uid_by_qqid(session, 123)
             ut = await calculateTime(session, uid)
             self.assertEqual(ut.pickRemain, 4)
             self.assertAlmostEqual(ut.pickLastUpdated, time.time(), delta=1)
@@ -76,12 +76,12 @@ class TestCatch(SQLTestCase):
         session = get_session()
 
         async with session.begin():
-            uid = await qid2did(session, 123)
+            uid = await get_uid_by_qqid(session, 123)
             await updateUserTime(session, uid, 2, time.time() - 20)
             await session.commit()
 
         async with session.begin():
-            uid = await qid2did(session, 123)
+            uid = await get_uid_by_qqid(session, 123)
             ut = await calculateTime(session, uid)
             self.assertEqual(ut.pickRemain, 3)
             self.assertAlmostEqual(ut.pickLastUpdated, time.time(), delta=1)
@@ -90,7 +90,7 @@ class TestCatch(SQLTestCase):
         session = get_session()
 
         async with session.begin():
-            uid = await qid2did(session, 123)
+            uid = await get_uid_by_qqid(session, 123)
             await updateUserTime(session, uid, 3, time.time())
             await session.commit()
 

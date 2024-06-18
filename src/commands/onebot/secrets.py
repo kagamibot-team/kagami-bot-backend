@@ -12,7 +12,7 @@ async def _(ctx: OnebotContext, session: AsyncSession):
         logger.warning(la.err.log_no_gei)
         return
 
-    user = await qid2did(session, ctx.getSenderId())
+    user = await get_uid_by_qqid(session, ctx.getSenderId())
     await give_skin(session, user, skin)
     await set_skin(session, user, skin)
     await session.commit()
@@ -22,7 +22,7 @@ async def _(ctx: OnebotContext, session: AsyncSession):
 @matchLiteral("给小哥是给")
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession):
-    uid = await qid2did(session, ctx.getSenderId())
+    uid = await get_uid_by_qqid(session, ctx.getSenderId())
     query = select(Award.data_id).filter(Award.name == "给小哥")
     aid = (await session.execute(query)).scalar_one()
     await clear_skin(session, uid, aid)

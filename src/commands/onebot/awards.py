@@ -9,22 +9,22 @@ from src.common.fast_import import *
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     name = result.query[str]("name")
-    user = await qid2did(session, ctx.getSenderId())
+    user = await get_uid_by_qqid(session, ctx.getSenderId())
 
     if name is None:
         return
 
-    award = await getAidByName(session, name)
+    award = await get_aid_by_name(session, name)
 
     if award is None:
         await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
         return
 
-    if await getStatistics(session, user, award) <= 0:
+    if await get_statistics(session, user, award) <= 0:
         await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
         return
 
-    info = await getAwardInfo(session, user, award)
+    info = await get_award_info(session, user, award)
 
     if info.skinName is not None:
         nameDisplay = la.disp.award_display_with_skin.format(info.awardName, info.skinName, info.levelName)
@@ -105,7 +105,7 @@ async def _get_others(session: AsyncSession, uid: int):
 @withLoading(la.loading.zhuajd)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
-    uid = await qid2did(session, ctx.getSenderId())
+    uid = await get_uid_by_qqid(session, ctx.getSenderId())
     if uid is None:
         return
 
@@ -148,7 +148,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
 @withLoading(la.loading.kc)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
-    uid = await qid2did(session, ctx.getSenderId())
+    uid = await get_uid_by_qqid(session, ctx.getSenderId())
     if uid is None:
         return
 

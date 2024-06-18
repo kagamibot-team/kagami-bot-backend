@@ -23,7 +23,7 @@ class TestSkins(SQLTestCase):
         query = select(OwnedSkin.data_id).filter(OwnedSkin.skin_id == 1)
 
         async with session.begin():
-            uid = await qid2did(session, 20000)
+            uid = await get_uid_by_qqid(session, 20000)
             
             await give_skin(session, uid, 2)
             await session.commit()
@@ -46,7 +46,7 @@ class TestSkins(SQLTestCase):
         query2 = select(UsedSkin.data_id).filter(UsedSkin.skin_id == 2)
 
         async with session.begin():
-            uid = await qid2did(session, 20000)
+            uid = await get_uid_by_qqid(session, 20000)
             
             await give_skin(session, uid, 1)
             await give_skin(session, uid, 2)
@@ -87,7 +87,7 @@ class TestSkins(SQLTestCase):
         query3 = select(UsedSkin.data_id).filter(UsedSkin.skin_id == 3)
 
         async with session.begin():
-            uid = await qid2did(session, 20000)
+            uid = await get_uid_by_qqid(session, 20000)
             
             await give_skin(session, uid, 1)
             await give_skin(session, uid, 2)
@@ -132,7 +132,7 @@ class TestSkins(SQLTestCase):
         query3 = select(UsedSkin.data_id).filter(UsedSkin.skin_id == 3)
 
         async with session.begin():
-            uid = await qid2did(session, 20000)
+            uid = await get_uid_by_qqid(session, 20000)
             
             await give_skin(session, uid, 1)
             await switch_skin_of_award(session, uid, 2)

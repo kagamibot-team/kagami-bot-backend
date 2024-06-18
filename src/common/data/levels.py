@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.models import Level, LevelAltName
 
 
-async def getLidByName(session: AsyncSession, name: str):
+async def get_lid_by_name(session: AsyncSession, name: str):
     query = select(Level.data_id).filter(Level.name == name)
     res = (await session.execute(query)).scalar_one_or_none()
 

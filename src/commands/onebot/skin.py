@@ -10,12 +10,12 @@ async def _(
     result: Arparma,
 ):
     name = result.query[str]("name")
-    user = await qid2did(session, ctx.getSenderId())
+    user = await get_uid_by_qqid(session, ctx.getSenderId())
 
     if name is None:
         return
 
-    award = await getAidByName(session, name)
+    award = await get_aid_by_name(session, name)
     if award is None:
         skin = await get_sid_by_name(session, name)
 
