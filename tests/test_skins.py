@@ -188,3 +188,33 @@ class TestSkins(SQLTestCase):
             self.assertIsNotNone(res)
             res = (await session.execute(query2)).scalar_one_or_none()
             self.assertIsNone(res)
+    
+    async def test_switch_skin_of_award_2(self):
+        session = get_session()
+
+        query = select(UsedSkin.data_id).filter(UsedSkin.skin_id == 1)
+        query2 = select(UsedSkin.data_id).filter(UsedSkin.skin_id == 2)
+        query3 = select(UsedSkin.data_id).filter(UsedSkin.skin_id == 3)
+
+        async with session.begin():
+            uid = await get_uid_by_qqid(session, 20000)
+            
+            await give_skin(session, uid, 1)
+            await give_skin(session, uid, 2)
+            await give_skin(session, uid, 3)
+
+            await session.commit()
+        
+        async with session.begin():
+            await switch_skin_of_award(session, uid, 2)
+            await switch_skin_of_award(session, uid, 3)
+            await switch_skin_of_award(session, uid, 2)
+            await session.commit()
+        
+        async with session.begin():
+            res = (await session.execute(query)).scalar_one_or_none()
+            self.assertIsNone(res)
+            res = (await session.execute(query2)).scalar_one_or_none()
+            self.assertIsNotNone(res)
+            res = (await session.execute(query3)).scalar_one_or_none()
+            self.assertIsNotNone(res)
