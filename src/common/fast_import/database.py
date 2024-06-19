@@ -10,5 +10,6 @@ from src.common.data.awards import *
 from src.common.data.skins import *
 from src.common.data.users import *
 from src.common.data.levels import *
+from src.common.data.tags import *
 
 from src.common.dataclasses import *

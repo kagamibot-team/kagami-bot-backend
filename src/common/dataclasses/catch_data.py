@@ -12,6 +12,7 @@ class Pick:
 
     beforeStats: int
     delta: int
+    level: int
 
 
 @dataclass
@@ -22,6 +23,7 @@ class Picks:
 
     awards: dict[int, Pick]
     money: float
+    uid: int
 
 
 @dataclass
@@ -31,6 +33,7 @@ class PicksEvent:
     """
 
     uid: int
+    group_id: int | None
     picks: Picks
     session: AsyncSession
 
@@ -57,6 +60,7 @@ class PrePickMessageEvent:
     """
 
     picks: Picks
+    group_id: int | None
     displays: dict[int, PickDisplay]
     uid: int
     session: AsyncSession
