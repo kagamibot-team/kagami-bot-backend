@@ -2,9 +2,11 @@
 所有仅在控制台中才能使用的指令
 """
 
+import asyncio
 import os
 import pickle
 import time
+import tarfile
 
 from src.common.fast_import import *
 
@@ -30,6 +32,7 @@ to_pickle_list: list[type[Base]] = [
 
 
 @listenConsole()
+@debugOnly()
 @matchLiteral("::dump-pickle")
 @withFreeSession()
 async def _(session: AsyncSession, ctx: ConsoleContext):
@@ -53,6 +56,7 @@ async def _(session: AsyncSession, ctx: ConsoleContext):
 
 
 @listenConsole()
+@debugOnly()
 @matchLiteral("::load-pickle")
 async def _(ctx: ConsoleContext):
     with open(os.path.join(".", "data/dumps.pickle"), "rb") as f:
@@ -78,6 +82,7 @@ async def _(ctx: ConsoleContext):
 
 
 @listenConsole()
+@debugOnly()
 @matchLiteral("::clear-database")
 async def _(ctx: ConsoleContext):
     for cls in to_pickle_list:
@@ -110,4 +115,23 @@ async def _(ctx: ConsoleContext):
     with open(tp, "wb") as f:
         f.write(data)
 
+    await ctx.reply(UniMessage("ok"))
+
+
+def _backup():
+    with tarfile.open(f"data/backup/backup-{int(time.time())}.tar.gz", "w:gz") as tar:
+        tar.add('data/skins')
+        tar.add('data/awards')
+        tar.add('data/kagami')
+        tar.add('data/db.sqlite3')
+
+        if os.path.exists('data/catch/'):
+            tar.add('data/catch')
+
+
+@listenConsole()
+@matchLiteral("::backup-full")
+async def _(ctx: ConsoleContext):
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, _backup)
     await ctx.reply(UniMessage("ok"))

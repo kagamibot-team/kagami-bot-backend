@@ -24,6 +24,7 @@ import src as _
 
 # 如果不存在目录，则开始构建
 os.makedirs(os.path.join(".", "data"), exist_ok=True)
+os.makedirs(os.path.join(".", "data", "backup"), exist_ok=True)
 os.makedirs(os.path.join(".", "data", "catch"), exist_ok=True)
 # os.makedirs(os.path.join(".", "data", "catch", "awards"), exist_ok=True)
 # os.makedirs(os.path.join(".", "data", "catch", "skins"), exist_ok=True)

@@ -80,7 +80,12 @@ async def switch_skin_of_award(session: AsyncSession, user: int, aid: int):
     if len(skins) == 0:
         return None
 
-    query = select(UsedSkin.skin_id).filter(UsedSkin.user_id == user)
+    query = (
+        select(UsedSkin.skin_id)
+        .filter(UsedSkin.user_id == user)
+        .join(Skin, UsedSkin.skin_id == Skin.data_id)
+        .filter(Skin.applied_award_id == aid)
+    )
 
     try:
         used = (await session.execute(query)).one_or_none()

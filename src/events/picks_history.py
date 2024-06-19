@@ -11,18 +11,21 @@ async def _(evt: PrePickMessageEvent):
     query = select(LevelTagRelation.level_id).filter(LevelTagRelation.tag_id == tag)
     levels = (await evt.session.execute(query)).scalars().all()
 
+    flag = False
     _event_picks: dict[int, PickDisplay] = {}
 
     for aid, pick in evt.picks.awards.items():
         if pick.level in levels:
             _event_picks[aid] = evt.displays[aid]
+            flag = True
 
-    catch_histroy_list.add_record(
-        evt.group_id,
-        CatchHistory(
-            time.time(),
-            _event_picks,
-            evt.uid,
-            int(await get_qqid_by_uid(evt.session, evt.uid)),
-        ),
-    )
+    if flag:
+        catch_histroy_list.add_record(
+            evt.group_id,
+            CatchHistory(
+                time.time(),
+                _event_picks,
+                evt.uid,
+                int(await get_qqid_by_uid(evt.session, evt.uid)),
+            ),
+        )
