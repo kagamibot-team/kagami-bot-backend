@@ -18,7 +18,7 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
         Picks: 抓小哥结果的记录
     """
 
-    picks = Picks(awards={}, money=0)
+    picks = Picks(awards={}, money=0, uid=uid)
     assert count >= 0
 
     # 初始化一些会重复用的量
@@ -51,7 +51,7 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
         if award in picks.awards.keys():
             picks.awards[award].delta += 1
         else:
-            picks.awards[award] = Pick(await get_statistics(session, uid, award), 1)
+            picks.awards[award] = Pick(await get_statistics(session, uid, award), 1, level[0])
         
         picks.money += level[2]
 
