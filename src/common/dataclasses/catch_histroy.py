@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 import time
 
+from nonebot import logger
+
 from src.common.dataclasses.catch_data import PickDisplay
 
 
@@ -30,16 +32,19 @@ class CatchHistoryContainer:
 
         if group_id in self.dicts.keys():
             self.dicts[group_id].append(record)
-        self.dicts[group_id] = [record]
+        else:
+            self.dicts[group_id] = [record]
 
     def _update(self):
         now = time.time()
         threshold = now - 86400
 
         for gid in self.dicts.keys():
+            logger.info(self.dicts[gid])
             self.dicts[gid] = [
                 ch for ch in self.dicts[gid] if ch.caught_time >= threshold
             ]
+            logger.info(self.dicts[gid])
 
 
 catch_histroy_list = CatchHistoryContainer()
