@@ -137,7 +137,14 @@ async def picks(
     """
 
     userTime = await calculateTime(session, uid)
-    count = count or userTime.pickRemain
+
+    if count is None:
+        count = userTime.pickRemain
+
+    if count <= 0 and userTime.pickRemain != 0:
+        await ctx.reply(UniMessage().text(la.err.invalid_catch_count.format(count)))
+        return
+    
     count = min(userTime.pickRemain, count)
     count = max(0, count)
 
@@ -164,7 +171,12 @@ async def picks(
 @withLoading(la.loading.zhua)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
-    count = result.query[int]("count") or 1
+    logger.info(result.query[int]("count"))
+    count = result.query[int]("count")
+
+    if count is None:
+        count = 1
+    
     user = await get_uid_by_qqid(session, ctx.getSenderId())
     await picks(ctx, session, user, count)
 

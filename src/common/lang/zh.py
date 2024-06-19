@@ -24,6 +24,8 @@ class Error:
     not_found = "你说的 {} 不存在"
     not_own = "你还没有 {}"
 
+    invalid_catch_count = "你想让我抓 {} 个小哥，你让我怎么抓嘛！"
+
 
 class Warning:
     log_multi_skin = "用户 {} 有多个应用了的皮肤，将其清空"
