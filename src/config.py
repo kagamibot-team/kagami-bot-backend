@@ -27,4 +27,9 @@ class Config(BaseModel):
     white_list_groups: list[int] = []
 
 
-config = get_plugin_config(Config)
+config = Config()
+
+
+def init_config():
+    global config
+    config = get_plugin_config(Config)

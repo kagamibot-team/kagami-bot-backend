@@ -19,7 +19,11 @@ driver.register_adapter(ConsoleAdapter)  # type: ignore
 
 
 # 需要在 Nonebot 初始化完成后，才能导入插件内容
-import src as _
+import src
+import src.config
+
+
+src.config.init_config()
 
 
 # 如果不存在目录，则开始构建

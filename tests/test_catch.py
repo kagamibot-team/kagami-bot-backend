@@ -97,7 +97,7 @@ class TestCatch(SQLTestCase):
         async with session.begin():
             userTime = await calculateTime(session, uid)
             pickResult = await pickAwards(session, uid, 1)
-            pickEvent = PicksEvent(uid, pickResult, session)
+            pickEvent = PicksEvent(uid, None, pickResult, session)
             await root.emit(pickEvent)
 
             kagami = (
@@ -111,7 +111,7 @@ class TestCatch(SQLTestCase):
             self.assertIsNone(kagami)
 
             pev = await save_picks(
-                pickResult=pickResult, uid=uid, session=session, userTime=userTime
+                pickResult=pickResult, group_id=None, uid=uid, session=session, userTime=userTime
             )
             self.assertAlmostEqual(pev.moneyUpdated, 20)
             await session.commit()
@@ -119,7 +119,7 @@ class TestCatch(SQLTestCase):
         async with session.begin():
             userTime = await calculateTime(session, uid)
             pickResult = await pickAwards(session, uid, 1)
-            pickEvent = PicksEvent(uid, pickResult, session)
+            pickEvent = PicksEvent(uid, None, pickResult, session)
             await root.emit(pickEvent)
 
             kagami = (

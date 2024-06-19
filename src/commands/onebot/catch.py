@@ -62,12 +62,12 @@ async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
 async def save_picks(
     *,
     pickResult: Picks,
-    groud_id: int | None,
+    group_id: int | None,
     uid: int,
     session: AsyncSession,
     userTime: UserTime,
 ):
-    preEvent = PrePickMessageEvent(pickResult, groud_id, {}, uid, session, userTime)
+    preEvent = PrePickMessageEvent(pickResult, group_id, {}, uid, session, userTime)
 
     # 在这里进行了数据库库存的操作
     spent_count = 0
@@ -165,7 +165,7 @@ async def picks(
 
     preEvent = await save_picks(
         pickResult=pickResult,
-        groud_id=group_id,
+        group_id=group_id,
         uid=uid,
         session=session,
         userTime=userTime,
