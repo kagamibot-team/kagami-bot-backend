@@ -252,6 +252,7 @@ async def drawLimitedBoxOfTextClassic(
     expandInnerRight: int = 0,
     strokeWidth: int = 0,
     strokeColor: str = "#000000",
+    align: HorizontalAnchor = HorizontalAnchor.left
 ):
     lines: list[str] = []
     lWidth = 0
@@ -301,7 +302,19 @@ async def drawLimitedBoxOfTextClassic(
             strokeWidth=strokeWidth,
             strokeColor=strokeColor,
         )
-        base.paste(dr, (leftPointer - expandInnerLeft, topPointer - expandInnerTop))
+        if align == HorizontalAnchor.left:
+            base.paste(dr, (leftPointer - expandInnerLeft, topPointer - expandInnerTop))
+        elif align == HorizontalAnchor.right:
+            x = leftPointer + maxWidth - dr.width + expandInnerRight
+            base.paste(dr, (x, topPointer - expandInnerTop))
+        elif align == HorizontalAnchor.middle:
+            x = int(
+                -(dr.width - expandInnerLeft - expandInnerRight) / 2
+                - expandInnerLeft
+                + leftPointer
+                + maxWidth / 2
+            )
+            base.paste(dr, (x, topPointer - expandInnerTop))
         topPointer += lineHeight
 
     return base

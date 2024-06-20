@@ -11,6 +11,9 @@ class Config(BaseModel):
     # 允许管理 Bot 的小哥库等的各种事项的群
     admin_groups: list[int] = []
 
+    # 我是谁
+    my_name: list[str] = ["小镜", "柊镜"]
+
     # 在发送「小镜！！！」的时候，遇到特殊的 QQ 号，回复特殊的内容
     custom_replies: dict[str, str] = {}
 
@@ -25,6 +28,5 @@ class Config(BaseModel):
 
     # 白名单群聊
     white_list_groups: list[int] = []
-
 
 config = get_plugin_config(Config)

@@ -157,7 +157,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
         await session.execute(
             update(Award).where(Award.data_id == aid).values(description=description)
         )
-        messages += f"成功将名字叫 {name} 的小哥的描述改为 {description}。\n"
+        messages += f"成功将名字叫 {name} 的小哥的描述改为 {description}\n"
 
     if image is not None:
         imageUrl = image.url

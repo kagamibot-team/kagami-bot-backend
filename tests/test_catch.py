@@ -8,7 +8,7 @@ from src.logic.catch_time import *
 
 from src.commands.onebot.catch import save_picks
 
-from .base.test_case import SQLTestCase
+from .base.basic_test_case import SQLTestCase
 
 
 class TestCatch(SQLTestCase):

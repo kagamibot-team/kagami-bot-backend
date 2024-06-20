@@ -23,22 +23,25 @@ class UniContext(Generic[TE, TB]):
     event: TE
     bot: TB
 
-    async def getMessage(self) -> UniMessage[Any]:
+    async def getMessage(self) -> UniMessage[Segment]:
         # return cast(UniMessage[Any], self.event.get_message())
         return cast(
-            UniMessage, await UniMessage.generate(event=self.event, bot=self.bot)
+            UniMessage[Segment], await UniMessage.generate(event=self.event, bot=self.bot)
         )
 
     async def getText(self) -> str:
         return (await self.getMessage()).extract_plain_text()
 
-    async def send(self, message: UniMessage[Any]):
+    async def send(self, message: UniMessage[Any] | str):
+        if isinstance(message, str):
+            message = UniMessage(message)
+        
         return await message.send(
             target=self.event,
             bot=self.bot,
         )
 
-    async def reply(self, message: UniMessage[Any]):
+    async def reply(self, message: UniMessage[Any] | str):
         return await self.send(message)
 
     async def isTextOnly(self) -> bool:
@@ -58,7 +61,7 @@ class GroupContext(UniContext[GroupMessageEvent, _OnebotBot]):
         name = info["card"] or name
         return name
 
-    async def reply(self, message: UniMessage[Any]):
+    async def reply(self, message: UniMessage[Any] | str):
         return await self.send((UniMessage.at(str(self.getSenderId())) + " " + message))
 
 
@@ -66,16 +69,10 @@ class PrivateContext(UniContext[PrivateMessageEvent, _OnebotBot]):
     def getSenderId(self):
         return self.event.user_id
 
-    async def reply(self, message: UniMessage[Any]):
-        return await self.send(message)
-
 
 class ConsoleContext(UniContext[_ConsoleEvent, _ConsoleBot]):
     def getSenderId(self):
         return None
-
-    async def reply(self, message: UniMessage[Any]):
-        return await self.send(message)
 
 
 OnebotContext = GroupContext | PrivateContext

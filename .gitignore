@@ -12,3 +12,6 @@ pyvenv.cfg
 
 # Nonebot 的 .env 文件
 .env
+
+# Nonebot 的截图文件
+/nonebot_*.svg
