@@ -17,11 +17,6 @@ from .old_version import (
     WaitForMoreInformationException,
 )
 
-
-from .basics import (
-    CatchShop,
-)
-
 from .admin import (
     CatchAllLevel,
     CatchSetInterval,
@@ -53,7 +48,6 @@ enabledCommand: list[CommandBase] = [
     CatchAdminDisplay(),
     CatchAdminObtainSkin(),
     CatchAdminDeleteSkinOwnership(),
-    CatchShop(),
     CatchResetEveryoneCacheCount(),
     CatchGiveMoney(),
     AddAltName(),

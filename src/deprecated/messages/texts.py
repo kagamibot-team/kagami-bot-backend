@@ -1,12 +1,7 @@
-from dataclasses import dataclass
 import time
 
 from nonebot import logger
 from sqlalchemy import select
-
-
-from ..old_version import at, text
-from src.common.draw import imageToBytes
 
 from ..db.crud import *
 from ..db.data import *
@@ -21,28 +16,8 @@ from src.models import *
 Session = AsyncSession
 
 
-def createLevelWrongFormat():
-    return Message(
-        MessageSegment.text(
-            "你的格式有问题，应该是 ::创建等级 名字 权重 价值 (可选)颜色Hue(0-360)"
-        )
-    )
-
-
-def deleteLevelWrongFormat():
-    return Message(MessageSegment.text("你的格式有问题，应该是 ::删除等级 名字"))
-
-
 def setIntervalWrongFormat():
     return Message(MessageSegment.text("你的格式有问题，应该是 ::设置周期 秒数"))
-
-
-def displayWrongFormat():
-    return Message(MessageSegment.text("你的格式有问题，应该是 展示 类型"))
-
-
-def noAwardNamed(name: str):
-    return Message(MessageSegment.text(f"没有叫做 {name} 的小哥"))
 
 
 async def allLevels(session: AsyncSession):
@@ -65,63 +40,3 @@ def settingOk():
 
 def modifyOk():
     return Message(MessageSegment.text("更改好了"))
-
-
-@dataclass
-class Goods:
-    code: str
-    name: str
-    description: str
-    price: float
-    soldout: bool = False
-
-
-async def getGoodsList(session: AsyncSession, user: User):
-    goods: list[Goods] = []
-
-    cacheDelta = user.pick_max_cache + 1
-    goods.append(
-        Goods(
-            "加上限",
-            f"增加卡槽至 {cacheDelta}",
-            f"将囤积可以抓的小哥的数量上限增加至 {cacheDelta}",
-            25 * (2 ** (cacheDelta - 1)),
-        )
-    )
-
-    skins = await getAllSkinsSelling(session)
-
-    for skin in skins:
-        isOwned = await getOwnedSkin(session, user, skin)
-
-        goods.append(
-            Goods(
-                "皮肤" + skin.name,
-                "购买皮肤 " + skin.name,
-                f"小哥 {skin.award.name} 的皮肤 {skin.name}",
-                skin.price,
-                isOwned is not None,
-            )
-        )
-
-    return goods
-
-
-async def KagamiShop(session: AsyncSession, sender: int, senderUser: User):
-    textBuilder = f"\n===== 小镜的shop =====\n现在你手上有 {senderUser.money} 薯片\n输入 小镜的shop 购买 商品码 就可以买了哦\n\n"
-
-    goodTexts: list[str] = []
-
-    for good in await getGoodsList(session, senderUser):
-        soldoutMessage = "[售罄] " if good.soldout else ""
-
-        goodTexts.append(
-            f"{soldoutMessage}{good.name}\n"
-            f"- {good.description}\n"
-            f"- 商品码：{good.code}\n"
-            f"- 价格：{good.price} 薯片\n"
-        )
-
-    textBuilder += "\n".join(goodTexts)
-
-    return Message([at(sender), text(textBuilder)])

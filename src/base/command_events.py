@@ -26,7 +26,8 @@ class UniContext(Generic[TE, TB]):
     async def getMessage(self) -> UniMessage[Segment]:
         # return cast(UniMessage[Any], self.event.get_message())
         return cast(
-            UniMessage[Segment], await UniMessage.generate(event=self.event, bot=self.bot)
+            UniMessage[Segment],
+            await UniMessage.generate(event=self.event, bot=self.bot),
         )
 
     async def getText(self) -> str:
@@ -35,7 +36,7 @@ class UniContext(Generic[TE, TB]):
     async def send(self, message: UniMessage[Any] | str):
         if isinstance(message, str):
             message = UniMessage(message)
-        
+
         return await message.send(
             target=self.event,
             bot=self.bot,
@@ -55,11 +56,14 @@ class GroupContext(UniContext[GroupMessageEvent, _OnebotBot]):
     async def getSenderNameInGroup(self):
         sender = self.getSenderId()
         info = await self.bot.get_group_member_info(
-            group_id=self.event.group_id, user_id=sender, no_cache=True
+            group_id=self.event.group_id, user_id=sender
         )
         name: str = info["nickname"]
         name = info["card"] or name
         return name
+
+    async def getSenderName(self):
+        return await self.getSenderNameInGroup()
 
     async def reply(self, message: UniMessage[Any] | str):
         return await self.send((UniMessage.at(str(self.getSenderId())) + " " + message))
@@ -68,6 +72,10 @@ class GroupContext(UniContext[GroupMessageEvent, _OnebotBot]):
 class PrivateContext(UniContext[PrivateMessageEvent, _OnebotBot]):
     def getSenderId(self):
         return self.event.user_id
+
+    async def getSenderName(self) -> str:
+        info = await self.bot.get_stranger_info(user_id=self.getSenderId())
+        return info["nick"]
 
 
 class ConsoleContext(UniContext[_ConsoleEvent, _ConsoleBot]):
