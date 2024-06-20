@@ -33,17 +33,19 @@ class Warning:
 
 
 class Loading:
-    zhuajd = "正在思考你遇到过的小哥……"
+    zhuajd = "正在回想你遇到过的小哥……"
     kc = "正在清点仓库里的小哥数量……"
     all_xg = "正在生成图片……"
-    zhua = "正在抓小哥……"
-    kz = "正在抓小哥……"
+    zhua = "抓小哥机正在运作中……"
+    kz = "抓小哥机正在运作中……"
+    pfjd = "正在回想你见过的皮肤……"
 
 
 class Display:
     award_display = "{}【{}】"
     award_display_with_skin = "{}[{}]【{}】"
     award_unknown_name = "???"
+    skin_using = "使用中"
 
 
 class Unit:
