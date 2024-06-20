@@ -84,6 +84,9 @@ def matchRegex(rule: str):
 
     def wrapper(func: Callable[[TC, re.Match[str]], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
+            if not await ctx.isTextOnly():
+                return
+
             result = re.fullmatch(rule, await ctx.getText())
 
             if result is None:
@@ -105,6 +108,9 @@ def matchLiteral(text: str):
 
     def wrapper(func: Callable[[TC], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
+            if not await ctx.isTextOnly():
+                return
+            
             if text != await ctx.getText():
                 return None
 
