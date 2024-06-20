@@ -14,4 +14,4 @@ def timestamp_to_datetime(ts: float):
     return datetime.datetime.fromtimestamp(ts)
 
 
-__all__ = ["to_utc8", "timestamp_to_datetime"]
+__all__ = ["to_utc8", "timestamp_to_datetime", "now_datetime"]
