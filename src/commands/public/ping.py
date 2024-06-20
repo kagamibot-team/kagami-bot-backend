@@ -2,7 +2,6 @@
 小镜！！！
 """
 
-
 import asyncio
 from src.common.fast_import import *
 
@@ -10,56 +9,61 @@ from src.common.fast_import import *
 def __match_char(c: str):
     o = ord(c)
 
-    if 0x20 <= o <= 0x2f:
-        return True
-    if 0x3A <= o <= 0x40:
-        return True
-    if 0x5B <= o <= 0x60:
-        return True
-    if 0x7B <= o <= 0x7E:
-        return True
-    if 0xA0 <= o <= 0xBF or o == 0xD7 or o == 0xF7:
-        return True
-    
-    # https://en.wikipedia.org/wiki/Unicode_symbol
-    # 字母数字变体
-    if 0x20A0 <= o <= 0x20CF:
-        return True
-    if 0x2000 <= o <= 0x206F:
-        return True
-    if 0x2100 <= o <= 0x214F:
-        return True
-    
-    # 箭头
-    if 0x2190 <= o <= 0x21FF:
-        return True
-    if 0x2794 <= o <= 0x27BF:
-        return True
-    if 0x2B00 <= o <= 0x2BFF:
-        return True
-    if 0x27F0 <= o <= 0x27FF:
-        return True
-    if 0x2900 <= o <= 0x297F:
-        return True
-    if 0x1F800 <= o <= 0x1F8FF:
-        return True
-    
-    # Emoji 符号
-    if 0x2700 <= o <= 0x27BF:
-        return True
-    if 0x1F600 <= o <= 0x1F64F:
-        return True
-    if 0x2600 <= o <= 0x26FF:
-        return True
-    if 0x1F300 <= o <= 0x1F5FF:
-        return True
-    if 0x1F900 <= o <= 0x1F9FF:
-        return True
-    if 0x1FA70 <= o <= 0x1FAF8:
-        return True
-    if 0x1F680 <= o <= 0x1F9FF:
-        return True
-    
+    rules = (
+        # ASCII 范围内的符号
+        0x20 <= o <= 0x2F,
+        0x3A <= o <= 0x40,
+        0x5B <= o <= 0x60,
+        0x7B <= o <= 0x7E,
+        0xA0 <= o <= 0xBF,
+        o == 0xD7,
+        o == 0xF7,
+        # ==================
+        # https://en.wikibooks.org/wiki/Unicode/Character_reference/F000-FFFF
+        # ==================
+        # 全宽符号与半宽符号变种
+        0xFF01 <= o <= 0xFF20,
+        0xFF3B <= o <= 0xFF40,
+        0xFF5B <= o <= 0xFF65,
+        0xFFE0 <= o <= 0xFFEE,
+        # CJK 标点兼容与纵排符号
+        0xFE10 <= o <= 0xFE19,
+        0xFE30 <= o <= 0xFE4F,
+        # Small Form Variants
+        0xFE50 <= o <= 0xFE6B,
+        # Combining Half Marks
+        0xFE20 <= o <= 0xFE2F,
+        # 错误符号
+        o == 0xFFFD,
+        # ==================
+        # https://en.wikipedia.org/wiki/Unicode_symbol
+        # https://en.wikipedia.org/wiki/Punctuation
+        # ==================
+        # 字母数字变体
+        0x20A0 <= o <= 0x20CF,
+        0x2000 <= o <= 0x206F,
+        0x2100 <= o <= 0x214F,
+        # 箭头
+        0x2190 <= o <= 0x21FF,
+        0x2794 <= o <= 0x27BF,
+        0x2B00 <= o <= 0x2BFF,
+        0x27F0 <= o <= 0x27FF,
+        0x2900 <= o <= 0x297F,
+        0x1F800 <= o <= 0x1F8FF,
+        # Emoji 符号
+        0x2700 <= o <= 0x27BF,
+        0x1F600 <= o <= 0x1F64F,
+        0x2600 <= o <= 0x26FF,
+        0x1F300 <= o <= 0x1F5FF,
+        0x1F900 <= o <= 0x1F9FF,
+        0x1FA70 <= o <= 0x1FAF8,
+        0x1F680 <= o <= 0x1F9FF,
+    )
+
+    for rule in rules:
+        if rule:
+            return True
+
     return False
 
 
@@ -67,31 +71,12 @@ def __match_str(s: str):
     for c in s:
         if not __match_char(c):
             return False
-    
+
     return True
 
 
-# @listenPublic()
-@listenConsole()
-@matchRegex("^[小|柊]镜([!！?？。.,， 1;；：:'‘’\"“”]*)$")
-async def _(ctx: ConsoleContext, res: Match[str]):
-    sgns = res.group(1)
-    sender = ctx.getSenderId()
-    custom_replies = config.custom_replies
-
-    if sender is None:
-        await ctx.send(UniMessage(la.msg.default_reply + sgns))
-        return
-    
-    if (k := str(sender)) in custom_replies.keys():
-        await ctx.send(UniMessage(custom_replies[k] + sgns))
-        return
-    
-    await ctx.send(UniMessage(la.msg.default_reply + sgns))
-
-
-@listenOnebot()
-async def _(ctx: OnebotContext):
+@listenPublic()
+async def _(ctx: PublicContext):
     message = await ctx.getMessage()
     if len(message) == 0:
         return
@@ -99,9 +84,10 @@ async def _(ctx: OnebotContext):
         return
     if not msg0.text.startswith(("小镜", "柊镜")):
         return
+    logger.info(repr(msg0.text[2:]))
     if not __match_str(msg0.text[2:]):
         return
-    
+
     rep_name = la.msg.default_reply
     sender = ctx.getSenderId()
     custom_replies = config.custom_replies
@@ -128,4 +114,3 @@ async def _(ctx: OnebotContext):
 @withLoading("")
 async def _(ctx: PublicContext, _: Match[str]):
     await asyncio.sleep(5)
-
