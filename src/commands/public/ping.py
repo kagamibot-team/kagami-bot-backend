@@ -109,7 +109,7 @@ async def _(ctx: PublicContext):
             if not __match_str(msg.text):
                 return
             _output += UniMessage.text(msg.text)
-        if isinstance(msg, Emoji):
+        elif isinstance(msg, Emoji):
             _output += msg
         else:
             return
