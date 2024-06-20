@@ -9,3 +9,4 @@ from src.common.event_root import *
 from src.common.download import *
 from src.common.lang.zh import la
 from src.common.times import *
+from src.common.message_tools import localize_image
