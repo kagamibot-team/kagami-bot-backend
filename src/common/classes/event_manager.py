@@ -99,4 +99,4 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
                     pass
 
 
-__all__ = ["EventManager"]
+__all__ = ["EventManager", "Listener"]
