@@ -6,10 +6,10 @@ from arclet.alconna import Alconna, Arparma
 import re
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.common.db import get_session
+from src.base.db import get_session
 from nonebot import get_driver, logger
 
-from src.common.event_root import root
+from src.base.event_root import root
 
 from ...logic.admin import isAdmin
 
@@ -27,7 +27,7 @@ from ..classes.command_events import (
     PublicContext,
     UniContext,
 )
-from src.common.classes.event_manager import EventManager
+from src.base.event_manager import EventManager
 
 
 T = TypeVar("T")

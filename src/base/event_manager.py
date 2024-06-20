@@ -1,7 +1,7 @@
 import asyncio
 import time
 from typing import Any, Callable, Coroutine, TypeVar
-from src.common.classes.collections import PriorityList
+from src.base.collections import PriorityList
 
 from nonebot import logger
 

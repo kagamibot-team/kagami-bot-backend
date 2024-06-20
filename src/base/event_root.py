@@ -3,8 +3,8 @@ from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, PrivateMessageEv
 from nonebot.adapters.console import Bot as ConsoleBot
 from nonebot.adapters.console import MessageEvent as ConsoleMessageEvent
 
-from src.common.classes.event_manager import EventManager
-from .classes.command_events import (
+from src.base.event_manager import EventManager
+from ..common.classes.command_events import (
     ConsoleContext,
     GroupContext,
     PrivateContext,

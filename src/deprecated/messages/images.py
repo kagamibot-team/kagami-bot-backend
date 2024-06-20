@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-from src.commands.deprecated.db import *
+from ..db import *
 from src.common.fast_import import *
 
 

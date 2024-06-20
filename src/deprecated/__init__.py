@@ -3,7 +3,7 @@
 """
 
 
-from src.common.db import get_session
+from src.base.db import get_session
 from .old_version import CommandBase
 from nonebot import on_type
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message
@@ -11,7 +11,7 @@ from nonebot.exception import FinishedException
 from typing import NoReturn
 
 
-from src.commands.deprecated.old_version import (
+from .old_version import (
     CallbackBase,
     CheckEnvironment,
     WaitForMoreInformationException,

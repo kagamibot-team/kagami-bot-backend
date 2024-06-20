@@ -4,7 +4,7 @@ from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 
 from src.models.models import *
 from src.models.base import *
-from src.common.db import *
+from src.base.db import *
 
 from src.common.data.awards import *
 from src.common.data.skins import *

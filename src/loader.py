@@ -6,7 +6,7 @@ import pkgutil
 from types import ModuleType
 
 from nonebot import get_driver, logger
-from src.common.event_root import activateRoot, root
+from src.base.event_root import activateRoot, root
 
 
 loaded_modules: list[ModuleType] = []
