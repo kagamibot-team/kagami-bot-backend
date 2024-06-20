@@ -6,6 +6,7 @@ import pkgutil
 from types import ModuleType
 
 from nonebot import get_driver, logger
+from src.base.collections import PriorityList
 from src.base.event_root import activateRoot, root
 
 
@@ -42,7 +43,8 @@ def load_packages():
 
 
 def reload():
-    root.clear()
+    for key in root.keys():
+        root[key] = PriorityList()
     for p in loaded_modules:
         try:
             importlib.reload(p)
@@ -50,7 +52,8 @@ def reload():
             logger.error(f"重载模块 {p.__name__} 失败，原因：{e}")
     logger.info("重载了%d个模块" % len(loaded_modules))
 
-    loaded_modules.clear()
+    while loaded_modules:
+        loaded_modules.pop()
     load_packages()
 
 
