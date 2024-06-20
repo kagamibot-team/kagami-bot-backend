@@ -15,9 +15,8 @@ async def repeat(ctx: PublicContext):
     if not msg0o.startswith(n):
         return
     msg0o_ = msg0o.replace("复读镜 ", "")
-    while "复读镜 复读镜 " in msg0o_:
-        msg0o_ = msg0o_.replace("复读镜 复读镜 ", "")
-
+    while "复读镜 " in msg0o_:
+        msg0o_ = msg0o_.replace("复读镜 ", "")
     while msg0o_.startswith(" "):
         msg0o_ = msg0o_.replace(" ", "")
     if len(msg0o_) == 0 and len(message) == 1:
