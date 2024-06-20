@@ -1,5 +1,5 @@
 from ..common.classes.command_events import ConsoleContext, GroupContext, PrivateContext, PublicContext
-from ..config import config
+from ..common.config import config
 
 
 def isAdmin(ctx: PublicContext) -> bool:

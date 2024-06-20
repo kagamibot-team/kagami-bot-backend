@@ -10,7 +10,7 @@ from ..common.classes.command_events import (
     PrivateContext,
 )
 
-from src.config import config
+from src.common.config import config
 
 
 def activateRoot(root: EventManager):

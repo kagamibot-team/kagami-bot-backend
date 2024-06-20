@@ -15,14 +15,14 @@ nonebot.init()
 
 import src.models.models
 import src.models.base
-import src.config
+import src.common.config
 
 # Alembic Config 对象, 它提供正在使用的 .ini 文件中的值.
 config = context.config
 
 # 默认 AsyncEngine
 # engine: AsyncEngine = config.attributes["engines"][""]
-engine = create_async_engine(src.config.config.sqlalchemy_database_url)
+engine = create_async_engine(src.common.config.config.sqlalchemy_database_url)
 
 # 模型的 MetaData, 用于 "autogenerate" 支持.
 # from myapp import mymodel

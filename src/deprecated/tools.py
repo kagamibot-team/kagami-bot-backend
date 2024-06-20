@@ -4,7 +4,7 @@ from nonebot.adapters.onebot.v11 import Message
 
 from .db import getUser
 from .old_version import CheckEnvironment, CommandBase
-from src.config import config
+from src.common.config import config
 
 
 

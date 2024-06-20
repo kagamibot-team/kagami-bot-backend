@@ -2,7 +2,7 @@ import sqlalchemy
 import sqlalchemy.event
 from sqlalchemy import PoolProxiedConnection
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from src.config import config
+from src.common.config import config
 
 
 sqlEngine = create_async_engine(config.sqlalchemy_database_url)
