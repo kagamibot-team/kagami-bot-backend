@@ -1,15 +1,14 @@
 from src.common.fast_import import *
-from nonebot_plugin_alconna import Image, Text, At, Emoji
+from nonebot_plugin_alconna import Text, At, Emoji
 import re
 
 
 @listenPublic()
-
-
 async def repeat(ctx: PublicContext):
     message = await ctx.getMessage()
-    msg0: Text
     msg0 = message[0]
+    if not isinstance(msg0, Text):
+        return
     n = match_list[0]
     msg0o: str = msg0.text
     if not msg0o.startswith(n):
