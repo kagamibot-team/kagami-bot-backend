@@ -82,10 +82,18 @@ async def _(ctx: PublicContext):
         return
     if not isinstance((msg0 := message[0]), Text):
         return
-    if not msg0.text.startswith(("小镜", "柊镜")):
+
+    msg0o: str | None = None
+
+    for name in config.my_name:
+        if msg0.text.startswith(name):
+            msg0o = msg0.text[len(name) :]
+            break
+
+    if msg0o is None:
         return
-    logger.info(repr(msg0.text[2:]))
-    if not __match_str(msg0.text[2:]):
+
+    if not __match_str(msg0o):
         return
 
     rep_name = la.msg.default_reply
@@ -94,7 +102,7 @@ async def _(ctx: PublicContext):
     if (k := str(sender)) in custom_replies.keys():
         rep_name = custom_replies[k]
 
-    _output = UniMessage.text(rep_name + msg0.text[2:])
+    _output = UniMessage.text(rep_name + msg0o)
 
     for msg in message[1:]:
         if isinstance(msg, Text):
