@@ -1,6 +1,6 @@
 from src.common.fast_import import *
 from src.common.fast_import import AsyncSession
-from .base.test_case import SQLTestCase
+from .base.basic_test_case import SQLTestCase
 
 
 class TestSkins(SQLTestCase):
