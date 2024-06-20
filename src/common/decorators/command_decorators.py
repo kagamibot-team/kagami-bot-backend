@@ -20,7 +20,7 @@ from typing import Any, Callable, Coroutine, TypeVar, TypeVarTuple
 from nonebot_plugin_alconna import UniMessage
 
 
-from ..classes.command_events import (
+from ...base.command_events import (
     ConsoleContext,
     GroupContext,
     PrivateContext,

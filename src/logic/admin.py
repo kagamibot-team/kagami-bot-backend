@@ -1,4 +1,4 @@
-from ..common.classes.command_events import ConsoleContext, GroupContext, PrivateContext, PublicContext
+from ..base.command_events import ConsoleContext, GroupContext, PrivateContext, PublicContext
 from ..common.config import config
 
 

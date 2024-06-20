@@ -5,5 +5,5 @@ from arclet.alconna.exceptions import ArgumentMissing, InvalidParam
 from nonebot_plugin_alconna import UniMessage, Image, Text, At, Emoji
 from nonebot.exception import ActionFailed
 
-from src.common.classes.command_events import *
+from src.base.command_events import *
 from src.common.decorators.command_decorators import *
