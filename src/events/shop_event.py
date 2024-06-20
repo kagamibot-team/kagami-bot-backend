@@ -10,13 +10,13 @@ async def _(e: ShopBuildingEvent):
     catchMax = userTime.pickMax
     e.data.products.append(
         ProductData(
-            image="./res/default.png",
+            image="./res/add1.png",
             title=f"增加卡槽上限",
             description="增加卡槽上限至%d" % catchMax,
             price=25 * (2 ** (catchMax - 1)),
             sold_out=False,
             alias=["加上限", "增加上限", "增加卡槽上限", "增加上限至%d" % catchMax],
-            background_color="#9e9d95"
+            background_color="#9e9d95",
         )
     )
 
@@ -41,7 +41,14 @@ async def _(e: ShopBuildingEvent):
     """增加小哥皮肤商品"""
 
     query = (
-        select(Skin.name, Skin.price, Skin.image, Award.name, Level.color_code)
+        select(
+            Skin.name,
+            Skin.price,
+            Skin.image,
+            Award.name,
+            Level.color_code,
+            Skin.extra_description,
+        )
         .filter(Skin.price > 0)
         .join(Award, Award.data_id == Skin.applied_award_id)
         .join(Level, Level.data_id == Award.level_id)
@@ -55,18 +62,21 @@ async def _(e: ShopBuildingEvent):
     )
     owned = (await e.session.execute(query)).scalars().all()
 
-    for name, price, image, aname, color in skins:
+    for name, price, image, aname, color, desc in skins:
         e.data.products.append(
             ProductData(
                 image=image,
                 title=f"皮肤{name}",
-                description=f"这是小哥{aname}的皮肤",
+                description=f"这是{aname}的皮肤",
                 price=price,
                 sold_out=name in owned,
                 alias=[],
                 background_color=color,
             )
         )
+
+        if len(desc) > 0:
+            e.data.products[-1].description += f"\n{desc}"
 
 
 @root.listen(ShopBuyEvent)
