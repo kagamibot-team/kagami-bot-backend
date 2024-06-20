@@ -53,8 +53,8 @@ async def _(
         "re:(pfjd|pftj|皮肤图鉴|皮肤进度|皮肤收集进度)"
     )
 )
-@withSessionLock()
 @withLoading()
+@withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, _: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
 
