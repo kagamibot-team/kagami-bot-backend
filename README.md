@@ -12,7 +12,7 @@
 
 制作人员名单（Bilibili用户名）：
 
-- 程序：passthem
+- 程序：passthem、MrChenBeta、AlphaQX
 - 策划：Yscao、榆木华、Dleshers沣、阿我饿一屋雨、passthem
 - 绘画：Yscao、榆木华、Dleshers沣、阿我饿一屋雨
 

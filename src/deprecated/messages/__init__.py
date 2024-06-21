@@ -7,11 +7,8 @@
 
 from .texts import (
     allLevels,
-    noAwardNamed,
     modifyOk,
     setIntervalWrongFormat,
     settingOk,
-    KagamiShop,
-    getGoodsList,
 )
 from . import images

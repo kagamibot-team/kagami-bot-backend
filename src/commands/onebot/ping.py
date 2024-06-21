@@ -1,7 +1,8 @@
+import asyncio
 import os
 import random
 
-from src.common.fast_import import *
+from src.imports import *
 
 
 def randomKagami():
@@ -25,3 +26,10 @@ async def ping(ctx: OnebotContext):
             return
         
         await ctx.reply(UniMessage().image(path=kagami))
+
+
+@listenOnebot()
+@matchRegex("^[小|柊]镜[， ,]?跳?科目三$")
+@withLoading("")
+async def _(ctx: PublicContext, _: Match[str]):
+    await asyncio.sleep(5)

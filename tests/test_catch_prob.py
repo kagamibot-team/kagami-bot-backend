@@ -1,8 +1,8 @@
-from src.common.fast_import import AsyncSession
-from .base.basic_test_case import SQLTestCase
+# from src.imports import AsyncSession
+# from .base.basic_test_case import SQLTestCase
 
-from src.common.fast_import import *
-from src.logic.catch import pickAwards
+# from src.imports import *
+# from src.logic.catch import pickAwards
 
 
 # class TestRandomCatchProb(SQLTestCase):

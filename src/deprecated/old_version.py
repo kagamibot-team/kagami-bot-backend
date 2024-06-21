@@ -3,7 +3,7 @@ import pathlib
 import re
 from typing import Type
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
-from src.common.fast_import import *
+from src.imports import *
 
 
 def at(sender: int):

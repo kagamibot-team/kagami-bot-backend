@@ -4,7 +4,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.download import download, writeData
-from src.models.models import Award, OwnedSkin, Skin, SkinAltName, UsedSkin
+from src.models.models import OwnedSkin, Skin, SkinAltName, UsedSkin
 from sqlalchemy.exc import MultipleResultsFound
 from src.common.lang.zh import la
 

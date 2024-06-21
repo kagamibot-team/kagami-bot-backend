@@ -1,8 +1,8 @@
 import asyncio
 import time
 
-from src.commands.deprecated.db import *
-from src.common.fast_import import *
+from ..db import *
+from src.imports import *
 
 
 GLOBAL_SCALAR = 1.5

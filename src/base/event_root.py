@@ -1,16 +1,16 @@
-from nonebot import on_type
+from nonebot import on_type # type: ignore
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, PrivateMessageEvent
 from nonebot.adapters.console import Bot as ConsoleBot
 from nonebot.adapters.console import MessageEvent as ConsoleMessageEvent
 
-from src.common.classes.event_manager import EventManager
-from .classes.command_events import (
+from src.base.event_manager import EventManager
+from .command_events import (
     ConsoleContext,
     GroupContext,
     PrivateContext,
 )
 
-from src.config import config
+from src.common.config import config
 
 
 def activateRoot(root: EventManager):

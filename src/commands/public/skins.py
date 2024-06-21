@@ -1,5 +1,4 @@
-from src.common.fast_import import *
-from src.components.ref_book import skin_book
+from src.imports import *
 
 
 @dataclass
@@ -9,63 +8,6 @@ class SkinInfo:
     image: str
     extra_description: str
     price: float
-
-
-@listenPublic()
-@requireAdmin()
-@matchAlconna(
-    Alconna(
-        ["::"],
-        "re:(所有|全部)皮肤",
-        Arg("name", str, flags=[ArgFlag.OPTIONAL]),
-    )
-)
-@withLoading()
-@withFreeSession()
-async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
-    name = res.query[str]("name")
-
-    query = (
-        select(Skin.name, Award.name, Skin.price, Level.color_code, Skin.image)
-        .join(Award, Skin.applied_award_id == Award.data_id)
-        .join(Level, Level.data_id == Award.level_id)
-        .order_by(-Level.sorting_priority, Level.weight, Skin.applied_award_id)
-    )
-
-    if name:
-        query1 = query.filter(Award.name == name)
-        query2 = query.filter(Skin.name == name)
-        query3 = query.filter(Award.alt_names.any(AwardAltName.name == name))
-        query4 = query.filter(Skin.alt_names.any(SkinAltName.name == name))
-
-        skins1 = (await session.execute(query1)).tuples()
-        skins2 = (await session.execute(query2)).tuples()
-        skins3 = (await session.execute(query3)).tuples()
-        skins4 = (await session.execute(query4)).tuples()
-
-        skins = list(skins1) + list(skins2) + list(skins3) + list(skins4)
-    else:
-        skins = list((await session.execute(query)).tuples())
-
-    boxes: list[PILImage] = []
-    for box in skins:
-        boxes.append(await skin_book(box[0], box[1], str(box[2]), box[3], box[4]))
-
-    imgout = await combineABunchOfImage(
-        paddingX=0,
-        paddingY=0,
-        images=boxes,
-        rowMaxNumber=6,
-        background="#9B9690",
-        horizontalAlign="top",
-        verticalAlign="left",
-        marginLeft=30,
-        marginRight=30,
-        marginBottom=30,
-        marginTop=30,
-    )
-
-    await ctx.send(UniMessage().image(raw=imageToBytes(imgout)))
 
 
 @listenPublic()

@@ -1,5 +1,5 @@
 import time
-from src.common.fast_import import *
+from src.imports import *
 
 
 @root.listen(PrePickMessageEvent)

@@ -2,7 +2,7 @@
 显示更新信息
 """
 
-from src.common.fast_import import *
+from src.imports import *
 
 
 updateHistory: dict[str, list[str]] = la.about.update
