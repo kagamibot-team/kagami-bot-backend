@@ -12,6 +12,17 @@ from nonebot.adapters.console.adapter import Adapter as ConsoleAdapter
 nonebot.init()
 
 
+# 检查数据库
+
+from alembic.config import Config
+from alembic import command
+
+
+nonebot.logger.info("检查数据库状态")
+config = Config("./alembic.ini")
+command.upgrade(config, "head")
+
+
 # 加载驱动器
 driver = nonebot.get_driver()
 driver.register_adapter(OneBotV11Adapter)  # type: ignore

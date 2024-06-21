@@ -189,6 +189,14 @@ class User(Base, BaseMixin):
         back_populates="user", lazy="subquery"
     )
 
+    # 20240622 追加
+    # 和签到有关的两个字段
+    last_sign_in_time: Mapped[float] = mapped_column(default=0, server_default="0")
+    sign_in_count: Mapped[int] = mapped_column(default=0, server_default="0")
+
+    # Feature flag: 未来可能会启用的若干项，现在先开个字段
+    feature_flag: Mapped[str] = mapped_column(default="", server_default="")
+
 
 class UsedSkin(Base, BaseMixin):
     __tablename__ = "catch_skin_record"
