@@ -70,7 +70,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
     money_sum = 0.0
     products: list[ProductData] = []
 
-    for buy in buys:
+    for buy in set(buys):
         for product in shop_data.iterate():
             if buy == product.title or buy in product.alias:
                 if product.sold_out:
