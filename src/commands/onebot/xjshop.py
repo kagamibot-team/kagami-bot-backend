@@ -96,12 +96,11 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
     buy_result += f"总计：{money_sum}{la.unit.money}\n"
 
     if money_sum > money_left:
-        buy_result += f"实付：0.00{la.unit.money}\n"
-        buy_result += f"余额：{money_left}{la.unit.money}\n"
-        buy_result += "--------------------\n"
-        buy_result += "  购买失败，余额不足\n"
-        buy_result += "  欢迎下次光临\n"
-        buy_result += "--------------------\n"
+        await ctx.reply("你什么也没买到……因为你薯片不够了")
+        return
+    elif money_sum == 0:
+        await ctx.reply("你什么也没买到……小镜找不到你要买的东西，或者它们都卖光了")
+        return
     else:
         buy_result += f"实付：{money_sum}{la.unit.money}\n"
         buy_result += f"余额：{money_left - money_sum}{la.unit.money}\n"
