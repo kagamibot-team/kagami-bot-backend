@@ -12,7 +12,21 @@ from nonebot.adapters.console.adapter import Adapter as ConsoleAdapter
 nonebot.init()
 
 
-# 检查数据库
+# 如果不存在目录，则开始构建
+os.makedirs(os.path.join(".", "data"), exist_ok=True)
+os.makedirs(os.path.join(".", "data", "backup"), exist_ok=True)
+os.makedirs(os.path.join(".", "data", "catch"), exist_ok=True)
+# os.makedirs(os.path.join(".", "data", "catch", "awards"), exist_ok=True)
+# os.makedirs(os.path.join(".", "data", "catch", "skins"), exist_ok=True)
+os.makedirs(os.path.join(".", "data", "awards"), exist_ok=True)
+os.makedirs(os.path.join(".", "data", "skins"), exist_ok=True)
+os.makedirs(os.path.join(".", "data", "kagami"), exist_ok=True)
+
+
+if not os.path.exists("./data/db.sqlite3"):
+    with open("./data/db.sqlite3", "wb") as f:
+        pass
+
 
 from alembic.config import Config
 from alembic import command
@@ -31,17 +45,6 @@ driver.register_adapter(ConsoleAdapter)  # type: ignore
 
 # 需要在 Nonebot 初始化完成后，才能导入插件内容
 import src as _
-
-
-# 如果不存在目录，则开始构建
-os.makedirs(os.path.join(".", "data"), exist_ok=True)
-os.makedirs(os.path.join(".", "data", "backup"), exist_ok=True)
-os.makedirs(os.path.join(".", "data", "catch"), exist_ok=True)
-# os.makedirs(os.path.join(".", "data", "catch", "awards"), exist_ok=True)
-# os.makedirs(os.path.join(".", "data", "catch", "skins"), exist_ok=True)
-os.makedirs(os.path.join(".", "data", "awards"), exist_ok=True)
-os.makedirs(os.path.join(".", "data", "skins"), exist_ok=True)
-os.makedirs(os.path.join(".", "data", "kagami"), exist_ok=True)
 
 
 if __name__ == "__main__":
