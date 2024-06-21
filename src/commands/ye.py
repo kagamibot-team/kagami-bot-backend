@@ -25,3 +25,4 @@ async def _(ctx: OnebotContext, session: AsyncSession):
             return
 
         await give_skin(session, uid, ye)
+        await session.commit()

@@ -246,7 +246,7 @@ def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
                 session = get_session()
                 async with session.begin():
                     msg = await func(ctx, session, *args)
-                    await session.close()
+                    await session.commit()
                     return msg
 
         return inner
