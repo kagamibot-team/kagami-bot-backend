@@ -1,5 +1,5 @@
 from nonebot import logger, get_driver
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TypeVar, Any, NoReturn, Never, Callable, Awaitable, Literal
 from typing_extensions import deprecated
 from src.common.config import config

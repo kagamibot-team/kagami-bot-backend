@@ -75,7 +75,7 @@ def __match_str(s: str):
 
 
 @listenPublic()
-async def _(ctx: PublicContext):
+async def _(ctx: UniMessageContext):
     message = await ctx.getMessage()
     if len(message) == 0:
         return

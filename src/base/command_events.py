@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, Iterable, Sequence, TypeVar, cast
+from typing import Any, Generic, Iterable, Protocol, Sequence, TypeVar, cast
 
 from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
 from nonebot.adapters.console.bot import Bot as _ConsoleBot
@@ -23,6 +23,10 @@ TRECEIPT = TypeVar("TRECEIPT")
 TONEBOTEVENT = TypeVar("TONEBOTEVENT", bound=GroupMessageEvent | PrivateMessageEvent)
 
 
+class Recallable(Protocol):
+    async def recall(self, *args: Any, **kwargs: Any) -> Any: ...
+
+
 class Context(ABC, Generic[TRECEIPT]):
     @abstractmethod
     async def getMessage(self) -> Sequence[Any]: ...
@@ -43,15 +47,15 @@ class Context(ABC, Generic[TRECEIPT]):
     async def isTextOnly(self) -> bool: ...
 
 
-class UniMessageContext(Context[Receipt]):
+class UniMessageContext(Context[Recallable]):
     @abstractmethod
-    async def getMessage(self) -> UniMessage[Any]: ...
+    async def getMessage(self) -> UniMessage[Segment]: ...
 
     @abstractmethod
-    async def send(self, message: Iterable[Any] | str) -> Receipt: ...
+    async def send(self, message: Iterable[Any] | str) -> Recallable: ...
 
     @abstractmethod
-    async def reply(self, message: Iterable[Any] | str) -> Receipt: ...
+    async def reply(self, message: Iterable[Any] | str) -> Recallable: ...
 
     async def getText(self) -> str:
         return (await self.getMessage()).extract_plain_text()
@@ -65,9 +69,9 @@ class UniContext(UniMessageContext, Generic[TE, TB]):
     event: TE
     bot: TB
 
-    async def getMessage(self) -> UniMessage[Any]:
+    async def getMessage(self) -> UniMessage[Segment]:
         return cast(
-            UniMessage[Any],
+            UniMessage[Segment],
             await UniMessage.generate(event=self.event, bot=self.bot),  # type: ignore
         )
 
@@ -127,7 +131,7 @@ class ConsoleContext(UniContext[_ConsoleEvent, _ConsoleBot]):
 
 
 # FALLBACK
-PublicContext = Context
+PublicContext = UniMessageContext
 
 
 __all__ = [
