@@ -1,4 +1,3 @@
-import enum
 import os
 from typing import Literal
 import PIL

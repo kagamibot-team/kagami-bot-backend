@@ -2,7 +2,6 @@
 小镜！！！
 """
 
-import asyncio
 from src.imports import *
 
 
@@ -115,10 +114,3 @@ async def _(ctx: PublicContext):
             return
 
     await ctx.send(_output)
-
-
-@listenPublic()
-@matchRegex("^[小|柊]镜[， ,]?跳?科目三$")
-@withLoading("")
-async def _(ctx: PublicContext, _: Match[str]):
-    await asyncio.sleep(5)

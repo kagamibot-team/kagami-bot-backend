@@ -13,7 +13,7 @@ _async_session_factory = async_sessionmaker(
 
 
 @sqlalchemy.event.listens_for(sqlEngine.sync_engine, "connect")
-def set_sqlite_pragma(dbapi_connection: PoolProxiedConnection, connection_record):
+def set_sqlite_pragma(dbapi_connection: PoolProxiedConnection, _):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()

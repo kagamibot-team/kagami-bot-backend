@@ -1,6 +1,6 @@
 import asyncio
 import time
-from typing import Any, Callable, Coroutine, TypeVar, TypeVarTuple
+from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple
 from arclet.alconna import Alconna, Arparma
 
 import re
@@ -24,26 +24,26 @@ from ...base.command_events import (
     ConsoleContext,
     GroupContext,
     PrivateContext,
-    PublicContext,
-    UniContext,
+    Context,
+    UniMessageContext,
 )
 from src.base.event_manager import EventManager
 
 
 T = TypeVar("T")
-TC = TypeVar("TC", bound=UniContext, covariant=True)
-TCP = TypeVar("TCP", bound=PublicContext, covariant=True)
+TC = TypeVar("TC", bound=Context, covariant=True)
+TCU = TypeVar("TCU", bound=UniMessageContext, covariant=True)
 TA = TypeVarTuple("TA")
 
 
-def matchAlconna(rule: Alconna[UniMessage[Any]]):
+def matchAlconna(rule: Alconna[Sequence[Any]]):
     """匹配是否符合 Alconna 规则。
 
     Args:
         rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
     """
 
-    def wrapper(func: Callable[[TC, Arparma[UniMessage[Any]]], Coroutine[Any, Any, T]]):
+    def wrapper(func: Callable[[TC, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
             result = rule.parse(await ctx.getMessage())
 
@@ -57,14 +57,14 @@ def matchAlconna(rule: Alconna[UniMessage[Any]]):
     return wrapper
 
 
-def withAlconna(rule: Alconna[UniMessage[Any]]):
+def withAlconna(rule: Alconna[Sequence[Any]]):
     """传入一个 Alconna 参数。不检查是否匹配。
 
     Args:
         rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
     """
 
-    def wrapper(func: Callable[[TC, Arparma[UniMessage[Any]]], Coroutine[Any, Any, T]]):
+    def wrapper(func: Callable[[TC, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC):
             result = rule.parse(await ctx.getMessage())
 
@@ -124,8 +124,8 @@ def matchLiteral(text: str):
 def requireAdmin():
     """限制只有管理员才能执行该命令。"""
 
-    def wrapper(func: Callable[[TCP, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TCP, *args: *TA):
+    def wrapper(func: Callable[[TC, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC, *args: *TA):
             if isAdmin(ctx):
                 return await func(ctx, *args)
 
@@ -193,7 +193,7 @@ def listenPublic(manager: EventManager = root):
         manager (EventManager, optional): 事件管理器，默认是 root。
     """
 
-    def wrapper(func: Callable[[PublicContext], Coroutine[Any, Any, T]]):
+    def wrapper(func: Callable[[Context], Coroutine[Any, Any, T]]):
         listenGroup(manager)(func)
         listenPrivate(manager)(func)
         listenConsole(manager)(func)
@@ -235,8 +235,8 @@ globalSessionLockManager = SessionLockManager()
 def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
     """获得一个异步的 SQLAlchemy 会话，并使用锁来保证线程安全。"""
 
-    def wrapper(func: Callable[[TCP, AsyncSession, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TCP, *args: *TA):
+    def wrapper(func: Callable[[TC, AsyncSession, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC, *args: *TA):
             # sender = ctx.getSenderId()
             # if sender is None:
             #     lock = manager[-1]
@@ -289,8 +289,8 @@ def withLoading(text: str = "请稍候……"):
         text (str, optional): 附带的文本，默认是 "请稍候……"。
     """
 
-    def wrapper(func: Callable[[TC, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC, *args: *TA):
+    def wrapper(func: Callable[[TCU, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TCU, *args: *TA):
             receipt = await ctx.reply(
                 UniMessage().text(text).image(path=pathlib.Path("./res/科目三.gif"))
             )

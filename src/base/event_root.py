@@ -1,4 +1,4 @@
-from nonebot import on_type
+from nonebot import on_type # type: ignore
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, PrivateMessageEvent
 from nonebot.adapters.console import Bot as ConsoleBot
 from nonebot.adapters.console import MessageEvent as ConsoleMessageEvent
