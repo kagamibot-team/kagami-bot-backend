@@ -4,7 +4,6 @@ from typing import Any, Generic, Iterable, Sequence, TypeVar, cast
 
 from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
 from nonebot.adapters.console.bot import Bot as _ConsoleBot
-from nonebot.adapters.console import Message as _ConsoleMessage
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot.adapters.onebot.v11 import PrivateMessageEvent
@@ -119,26 +118,9 @@ class PrivateContext(OnebotContext[PrivateMessageEvent]):
 
 
 @dataclass
-class ConsoleContext(Context[None]):
+class ConsoleContext(UniContext[_ConsoleEvent, _ConsoleBot]):
     event: _ConsoleEvent
     bot: _ConsoleBot
-
-    async def getMessage(self) -> list[str]:
-        return [str(s) for s in self.event.message]
-
-    async def send(self, message: Sequence[Any] | str) -> None:
-        return await self.bot.send_msg(
-            user_id="", message=_ConsoleMessage("".join([str(a) for a in message]))
-        )
-
-    async def reply(self, message: Sequence[Any] | str) -> None:
-        return await self.send(message)
-
-    async def getText(self) -> str:
-        return self.event.message.extract_plain_text()
-
-    async def isTextOnly(self) -> bool:
-        return True
 
     def getSenderId(self):
         return None

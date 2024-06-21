@@ -43,8 +43,8 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
         rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
     """
 
-    def wrapper(func: Callable[[TC, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC):
+    def wrapper(func: Callable[[TCU, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TCU):
             result = rule.parse(await ctx.getMessage())
 
             if not result.matched:
@@ -110,7 +110,7 @@ def matchLiteral(text: str):
         async def inner(ctx: TC):
             if not await ctx.isTextOnly():
                 return
-            
+
             if text != await ctx.getText():
                 return None
 
@@ -193,10 +193,8 @@ def listenPublic(manager: EventManager = root):
         manager (EventManager, optional): 事件管理器，默认是 root。
     """
 
-    def wrapper(func: Callable[[Context], Coroutine[Any, Any, T]]):
-        listenGroup(manager)(func)
-        listenPrivate(manager)(func)
-        listenConsole(manager)(func)
+    def wrapper(func: Callable[[UniMessageContext], Coroutine[Any, Any, T]]):
+        manager.listen(UniMessageContext)(func)
 
     return wrapper
 
