@@ -19,7 +19,11 @@ class ProductData:
 class ShopData:
     """记录一个商店的信息"""
 
-    products: list[ProductData]
+    products: dict[str, list[ProductData]]
+
+    def push(self, product: ProductData, type: str):
+        """将商品添加到商店中。"""
+        self.products.setdefault(type, []).append(product)
 
 
 @dataclass

@@ -8,17 +8,18 @@ async def _(e: ShopBuildingEvent):
 
     userTime = await calculateTime(e.session, e.uid)
     catchMax = userTime.pickMax
-    e.data.products.append(
-        ProductData(
-            image="./res/add1.png",
-            title=f"增加卡槽上限",
-            description="增加卡槽上限至%d" % catchMax,
-            price=25 * (2 ** (catchMax - 1)),
-            sold_out=False,
-            alias=["加上限", "增加上限", "增加卡槽上限", "增加上限至%d" % catchMax],
-            background_color="#9e9d95",
-        )
+    pd = ProductData(
+        image="./res/add1.png",
+        title=f"增加卡槽上限",
+        description="增加卡槽上限至%d" % catchMax,
+        price=25 * (2 ** (catchMax - 1)),
+        sold_out=False,
+        alias=["加上限", "增加上限", "增加卡槽上限", "增加上限至%d" % catchMax],
+        background_color="#9e9d95",
     )
+    if not "道具" in e.data.products.keys():
+        e.data.products["道具"] = []
+    e.data.products["道具"].append(pd)
 
 
 @root.listen(ShopBuyEvent)
@@ -47,7 +48,6 @@ async def _(e: ShopBuildingEvent):
             Skin.image,
             Award.name,
             Level.color_code,
-            Skin.extra_description,
         )
         .filter(Skin.price > 0)
         .join(Award, Award.data_id == Skin.applied_award_id)
@@ -62,21 +62,19 @@ async def _(e: ShopBuildingEvent):
     )
     owned = (await e.session.execute(query)).scalars().all()
 
-    for name, price, image, aname, color, desc in skins:
-        e.data.products.append(
-            ProductData(
-                image=image,
-                title=f"皮肤{name}",
-                description=f"这是{aname}的皮肤",
-                price=price,
-                sold_out=name in owned,
-                alias=[],
-                background_color=color,
-            )
+    for name, price, image, aname, color in skins:
+        pd = ProductData(
+            image=await blurred(image, 100),
+            title=f"皮肤{name}",
+            description=f"{aname}",
+            price=price,
+            sold_out=name in owned,
+            alias=[],
+            background_color=color,
         )
-
-        if len(desc) > 0:
-            e.data.products[-1].description += f"\n{desc}"
+        if not "皮肤" in e.data.products.keys():
+            e.data.products["皮肤"] = []
+        e.data.products["皮肤"].append(pd)
 
 
 @root.listen(ShopBuyEvent)

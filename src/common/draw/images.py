@@ -1,8 +1,10 @@
 import enum
+import os
 from typing import Literal
 import PIL
 import PIL.Image
 import PIL.ImageTransform
+import PIL.ImageFilter
 
 import numpy as np
 import cv2
@@ -81,6 +83,19 @@ def addUpon(
 @make_async
 def resize(img: PIL.Image.Image, width: int, height: int):
     return img.resize((width, height))
+
+
+async def blurred(fp: str, radius: int):
+    filename = os.path.basename(fp)
+    fpo = os.path.join(os.path.dirname(fp), f"blurred_{radius}_{filename}")
+
+    if os.path.exists(fpo):
+        return fpo
+
+    img = await loadImage(fp)
+    img = img.filter(PIL.ImageFilter.BoxBlur(radius))
+    img.save(fpo)
+    return fpo
 
 
 async def horizontalPile(
@@ -199,4 +214,5 @@ __all__ = [
     "verticalPile",
     "combineABunchOfImage",
     "resize",
+    "blurred",
 ]

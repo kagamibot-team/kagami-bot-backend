@@ -8,11 +8,26 @@ from src.common.fast_import import *
 async def send_shop_message(ctx: OnebotContext, shop: ShopData):
     boxes: list[PILImage] = []
 
-    for product in shop.products:
-        boxes.append(await product_box(product))
+    for group, products in shop.products.items():
+        boxes.append(
+            await drawASingleLineClassic(
+                group, "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 60
+            )
+        )
 
-    image = await verticalPile(boxes, 33, "left", "#EEEBE3", 80, 80, 80, 80)
-    await ctx.reply("输入“小镜商店 购买 商品名”就可以购买了" + UniMessage.image(raw=imageToBytes(image)))
+        subs: list[PILImage] = []
+        for product in products:
+            subs.append(await product_box(product))
+        boxes.append(
+            await combineABunchOfImage(0, 0, subs, 3, "#9B9690", "center", "left", marginBottom=30)
+        )
+
+    image = await verticalPile(boxes, 0, "left", "#9B9690", 484, 80, 80, 80)
+    image.paste(PIL.Image.open("./res/kagami_shop.png"), (0, 0))
+    await ctx.reply(
+        "输入“小镜商店 购买 商品名”就可以购买了"
+        + UniMessage.image(raw=imageToBytes(image))
+    )
 
 
 @listenOnebot()
@@ -31,7 +46,7 @@ async def send_shop_message(ctx: OnebotContext, shop: ShopData):
 async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
     buys = res.query[list[str]]("商品名列表")
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
-    shop_data = ShopData([])
+    shop_data = ShopData({})
     shop_data_evt = ShopBuildingEvent(shop_data, ctx.getSenderId(), uid, session)
     await root.emit(shop_data_evt)
 
@@ -54,16 +69,17 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
     products: list[ProductData] = []
 
     for buy in buys:
-        for product in shop_data.products:
-            if buy == product.title or buy in product.alias:
-                if product.sold_out:
-                    buy_result += f"- {product.title} 已售罄\n"
-                    continue
+        for products in shop_data.products.values():
+            for product in products:
+                if buy == product.title or buy in product.alias:
+                    if product.sold_out:
+                        buy_result += f"- {product.title} 已售罄\n"
+                        continue
 
-                buy_result += f"- {product.title} {product.price}{la.unit.money}\n"
-                money_sum += product.price
-                products.append(product)
-                break
+                    buy_result += f"- {product.title} {product.price}{la.unit.money}\n"
+                    money_sum += product.price
+                    products.append(product)
+                    break
         else:
             buy_result += f"- {buy} 未找到\n"
             continue
