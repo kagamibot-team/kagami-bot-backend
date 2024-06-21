@@ -75,7 +75,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
             if buy == product.title or buy in product.alias:
                 if product.sold_out:
                     buy_result += f"- {product.title} 已售罄\n"
-                    continue
+                    break
 
                 buy_result += f"- {product.title} {product.price}{la.unit.money}\n"
                 money_sum += product.price
