@@ -28,6 +28,7 @@ def __match_char(c: str):
         # CJK 标点兼容与纵排符号
         0xFE10 <= o <= 0xFE19,
         0xFE30 <= o <= 0xFE4F,
+        0x3000 <= o <= 0x303F,
         # Small Form Variants
         0xFE50 <= o <= 0xFE6B,
         # Combining Half Marks
