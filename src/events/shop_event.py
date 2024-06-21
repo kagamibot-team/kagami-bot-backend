@@ -7,7 +7,7 @@ async def _(e: ShopBuildingEvent):
     """增加卡槽上限的商品"""
 
     userTime = await calculateTime(e.session, e.uid)
-    catchMax = userTime.pickMax
+    catchMax = userTime.pickMax + 1
     pd = ProductData(
         image="./res/add1.png",
         title=f"增加卡槽上限",
