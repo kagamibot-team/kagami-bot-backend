@@ -24,6 +24,12 @@ class ShopData:
     def push(self, product: ProductData, type: str):
         """将商品添加到商店中。"""
         self.products.setdefault(type, []).append(product)
+    
+    def iterate(self):
+        """迭代商店中的商品。"""
+        for product_list in self.products.values():
+            for product in product_list:
+                yield product
 
 
 @dataclass

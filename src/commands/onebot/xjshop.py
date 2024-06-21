@@ -19,7 +19,9 @@ async def send_shop_message(ctx: OnebotContext, shop: ShopData):
         for product in products:
             subs.append(await product_box(product))
         boxes.append(
-            await combineABunchOfImage(0, 0, subs, 3, "#9B9690", "center", "left", marginBottom=30)
+            await combineABunchOfImage(
+                0, 0, subs, 3, "#9B9690", "center", "left", marginBottom=30
+            )
         )
 
     image = await verticalPile(boxes, 0, "left", "#9B9690", 484, 80, 80, 80)
@@ -69,17 +71,16 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
     products: list[ProductData] = []
 
     for buy in buys:
-        for products in shop_data.products.values():
-            for product in products:
-                if buy == product.title or buy in product.alias:
-                    if product.sold_out:
-                        buy_result += f"- {product.title} 已售罄\n"
-                        continue
+        for product in shop_data.iterate():
+            if buy == product.title or buy in product.alias:
+                if product.sold_out:
+                    buy_result += f"- {product.title} 已售罄\n"
+                    continue
 
-                    buy_result += f"- {product.title} {product.price}{la.unit.money}\n"
-                    money_sum += product.price
-                    products.append(product)
-                    break
+                buy_result += f"- {product.title} {product.price}{la.unit.money}\n"
+                money_sum += product.price
+                products.append(product)
+                break
         else:
             buy_result += f"- {buy} 未找到\n"
             continue
