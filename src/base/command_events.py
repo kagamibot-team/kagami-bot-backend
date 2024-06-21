@@ -27,6 +27,11 @@ class Recallable(Protocol):
     async def recall(self, *args: Any, **kwargs: Any) -> Any: ...
 
 
+class NoRecall(Recallable):
+    async def recall(self, *args: Any, **kwargs: Any) -> Any:
+        return None
+
+
 class Context(ABC, Generic[TRECEIPT]):
     @abstractmethod
     async def getMessage(self) -> Sequence[Any]: ...
@@ -75,7 +80,7 @@ class UniContext(UniMessageContext, Generic[TE, TB]):
             await UniMessage.generate(event=self.event, bot=self.bot),  # type: ignore
         )
 
-    async def send(self, message: Iterable[Any] | str):
+    async def send(self, message: Iterable[Any] | str) -> Recallable:
         message = UniMessage(message)
 
         return await message.send(
@@ -125,6 +130,10 @@ class PrivateContext(OnebotContext[PrivateMessageEvent]):
 class ConsoleContext(UniContext[_ConsoleEvent, _ConsoleBot]):
     event: _ConsoleEvent
     bot: _ConsoleBot
+
+    async def send(self, message: Iterable[Any] | str):
+        await self.bot.send(self.event, str(message))
+        return NoRecall()
 
     def getSenderId(self):
         return None
