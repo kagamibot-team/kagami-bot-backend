@@ -2,7 +2,7 @@ import asyncio
 import time
 
 from ..db import *
-from src.common.fast_import import *
+from src.imports import *
 
 
 GLOBAL_SCALAR = 1.5

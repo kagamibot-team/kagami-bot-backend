@@ -2,7 +2,7 @@ import qrcode
 import qrcode.main
 import qrcode.constants
 import PIL.Image
-from src.common.fast_import import *
+from src.imports import *
 
 
 async def send_shop_message(ctx: OnebotContext, shop: ShopData):

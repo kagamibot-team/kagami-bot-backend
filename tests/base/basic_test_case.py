@@ -1,6 +1,6 @@
 import unittest
 
-from src.common.fast_import import *
+from src.imports import *
 
 
 class SQLTestCase(unittest.IsolatedAsyncioTestCase):

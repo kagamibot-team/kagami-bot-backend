@@ -1,5 +1,5 @@
 import random
-from src.common.fast_import import *
+from src.imports import *
 
 
 # 抓到新小哥时，多奖励 20 薯片

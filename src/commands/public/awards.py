@@ -2,7 +2,7 @@
 对小哥进行的增删查改操作
 """
 
-from src.common.fast_import import *
+from src.imports import *
 
 
 @listenPublic()

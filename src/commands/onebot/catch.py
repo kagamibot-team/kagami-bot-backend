@@ -1,7 +1,7 @@
 import time
 
 
-from src.common.fast_import import *
+from src.imports import *
 from src.logic.catch import pickAwards
 from src.logic.catch_time import calculateTime, updateUserTime
 

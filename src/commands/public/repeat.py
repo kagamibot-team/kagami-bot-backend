@@ -1,4 +1,4 @@
-from src.common.fast_import import *
+from src.imports import *
 from nonebot_plugin_alconna import Text, At, Emoji
 import re
 

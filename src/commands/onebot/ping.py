@@ -1,7 +1,7 @@
 import os
 import random
 
-from src.common.fast_import import *
+from src.imports import *
 
 
 def randomKagami():

@@ -8,7 +8,7 @@ import pickle
 import time
 import tarfile
 
-from src.common.fast_import import *
+from src.imports import *
 
 
 to_pickle_list: list[type[Base]] = [

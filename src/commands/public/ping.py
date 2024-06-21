@@ -3,7 +3,7 @@
 """
 
 import asyncio
-from src.common.fast_import import *
+from src.imports import *
 
 
 def __match_char(c: str):
