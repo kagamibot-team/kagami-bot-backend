@@ -129,6 +129,9 @@ class ConsoleContext(UniContext[_ConsoleEvent, _ConsoleBot]):
     def getSenderId(self):
         return None
 
+    async def getMessage(self) -> UniMessage[Any]:
+        return UniMessage(self.event.message.extract_plain_text())
+
 
 # FALLBACK
 PublicContext = UniMessageContext
