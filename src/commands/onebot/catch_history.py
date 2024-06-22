@@ -4,7 +4,7 @@ from src.imports import *
 @listenGroup()
 @matchRegex("(zhua|抓|抓小哥)?(xb|喜报)")
 async def _(ctx: GroupContext, _):
-    history_list = catch_histroy_list.get_records(ctx.event.group_id)
+    history_list = catch_history_list.get_records(ctx.event.group_id)
 
     message: str = ""
     records: dict[str, dict[str, list[tuple[str, dict[int, PickDisplay]]]]] = {}

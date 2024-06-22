@@ -47,7 +47,7 @@ class CatchHistoryContainer:
             # logger.info(self.dicts[gid])
 
 
-catch_histroy_list = CatchHistoryContainer()
+catch_history_list = CatchHistoryContainer()
 
 
-__all__ = ["CatchHistory", "CatchHistoryContainer", "catch_histroy_list"]
+__all__ = ["CatchHistory", "CatchHistoryContainer", "catch_history_list"]

@@ -20,7 +20,7 @@ async def _(evt: PrePickMessageEvent):
             flag = True
 
     if flag:
-        catch_histroy_list.add_record(
+        catch_history_list.add_record(
             evt.group_id,
             CatchHistory(
                 time.time(),
