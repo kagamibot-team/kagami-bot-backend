@@ -1,0 +1,14 @@
+nonebot2[fastapi]
+nonebot-adapter-onebot
+nonebot-adapter-console
+nonebot_plugin_alconna
+pillow
+opencv-python-headless
+types-Pillow
+requests
+urllib3==1.26.5
+SQLAlchemy
+alembic
+aiosqlite
+pytz
+qrcode
