@@ -20,7 +20,7 @@ def randomKagami():
 
 @listenGroup()
 async def ping(ctx: GroupContext):
-    if ctx.event.is_tome() and len(await ctx.getMessage()) == 1 and (await ctx.getMessage())[0].data['text'] == '':
+    if ctx.event.to_me and len(await ctx.getMessage()) == 1 and (await ctx.getMessage())[0].data['text'] == '':
         kagami = randomKagami()
         if kagami is None:
             return
