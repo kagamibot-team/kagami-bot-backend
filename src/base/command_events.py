@@ -4,8 +4,8 @@ from typing import Any, Generic, Iterable, Protocol, Sequence, TypeVar, cast
 
 from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
 from nonebot.adapters.console.bot import Bot as _ConsoleBot
+from nonebot.adapters import Message
 
-from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot.adapters.onebot.v11 import PrivateMessageEvent
 from nonebot.adapters.onebot.v11.bot import Bot as _OnebotBot
 
@@ -14,18 +14,33 @@ from nonebot_plugin_alconna.uniseg.adapters import EXPORTER_MAPPING, BUILDER_MAP
 from nonebot_plugin_alconna import Segment, Text
 
 
-TRECEIPT = TypeVar("TRECEIPT")
-
-TE = TypeVar("TE", bound=GroupMessageEvent | PrivateMessageEvent)
-
-
 class Recallable(Protocol):
     async def recall(self, *args: Any, **kwargs: Any) -> Any: ...
 
 
 class NoRecall(Recallable):
-    async def recall(self, *args: Any, **kwargs: Any) -> Any:
+    async def recall(self) -> None:
         return None
+
+
+class OnebotEventProtocol(Protocol):
+    user_id: int
+    to_me: bool
+
+    def get_message(self) -> Message[Any]: ...
+
+
+class OnebotGroupEventProtocol(OnebotEventProtocol, Protocol):
+    group_id: int
+
+
+class __:
+    user_id: int = 1
+    group_id: int = 2
+
+
+TRECEIPT = TypeVar("TRECEIPT")
+TE = TypeVar("TE", bound="OnebotEventProtocol")
 
 
 @dataclass
@@ -85,14 +100,6 @@ class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
             UniMessage(BUILDER_MAPPING["OneBot V11"].generate(self.event.get_message())),  # type: ignore
         )
 
-    async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
-        message = UniMessage(message)
-        msg_out = await EXPORTER_MAPPING["OneBot V11"].export(message, self.bot, False)
-        msg_info = await self.bot.send(self.event, msg_out)
-
-        return OnebotReceipt(self.bot, msg_info["message_id"])
-
-
     async def reply(self, message: Iterable[Any] | str):
         return await self.send(message)
 
@@ -104,7 +111,7 @@ class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
         return info["nick"]
 
 
-class GroupContext(OnebotContext[GroupMessageEvent]):
+class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
     async def getSenderNameInGroup(self):
         sender = self.getSenderId()
         info = await self.bot.get_group_member_info(
@@ -114,8 +121,14 @@ class GroupContext(OnebotContext[GroupMessageEvent]):
         name = info["card"] or name
         return name
 
-    async def getSenderName(self):
-        return await self.getSenderNameInGroup()
+    async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
+        message = UniMessage(message)
+        msg_out = await EXPORTER_MAPPING["OneBot V11"].export(message, self.bot, False)
+        msg_info = await self.bot.send_group_msg(
+            group_id=self.event.group_id, message=msg_out
+        )
+
+        return OnebotReceipt(self.bot, msg_info["message_id"])
 
     async def reply(self, message: Iterable[Any] | str):
         return await self.send(
@@ -138,8 +151,15 @@ class GroupContext(OnebotContext[GroupMessageEvent]):
         return info["role"] == "admin" or info["role"] == "owner"
 
 
-class PrivateContext(OnebotContext[PrivateMessageEvent]):
-    pass
+class PrivateContext(OnebotContext[OnebotEventProtocol]):
+    async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
+        message = UniMessage(message)
+        msg_out = await EXPORTER_MAPPING["OneBot V11"].export(message, self.bot, False)
+        msg_info = await self.bot.send_private_msg(
+            user_id=self.event.user_id, message=msg_out
+        )
+
+        return OnebotReceipt(self.bot, msg_info["message_id"])
 
 
 @dataclass
