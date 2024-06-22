@@ -31,19 +31,7 @@ async def _(ctx: PublicContext, res: Arparma):
             await ctx.reply(UniMessage(la.err.award_exists.format(name)))
             return
 
-        level = (
-            await session.execute(select(Level.data_id).filter(Level.name == levelName))
-        ).scalar_one_or_none()
-
-        if level is None:
-            level = (
-                await session.execute(
-                    select(Level.data_id).filter(
-                        Level.alt_names.any(LevelAltName.name == levelName)
-                    )
-                )
-            ).scalar_one_or_none()
-
+        level = await get_lid_by_name(session, levelName)
         if level is None:
             await ctx.reply(UniMessage(la.err.level_not_found.format(levelName)))
             return
