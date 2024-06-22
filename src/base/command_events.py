@@ -9,7 +9,7 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot.adapters.onebot.v11 import PrivateMessageEvent
 from nonebot.adapters.onebot.v11.bot import Bot as _OnebotBot
 
-from nonebot_plugin_alconna.uniseg.message import UniMessage, Receipt
+from nonebot_plugin_alconna.uniseg.message import UniMessage
 from nonebot_plugin_alconna import Segment, Text
 from nonebot.adapters import Event, Bot
 
@@ -96,7 +96,7 @@ class UniContext(UniMessageContext, Generic[TE, TB]):
 class OnebotContext(UniContext[TONEBOTEVENT, _OnebotBot]):
     event: TONEBOTEVENT
     bot: _OnebotBot
-    
+
     def getSenderId(self):
         return self.event.user_id
 
@@ -124,6 +124,19 @@ class GroupContext(OnebotContext[GroupMessageEvent]):
                 UniMessage[Any], UniMessage.at(str(self.getSenderId())) + " " + message
             )
         )
+
+    async def is_group_admin(self) -> bool:
+        """判断自己是不是这个群的管理员
+
+        Returns:
+            bool: 是否是管理员
+        """
+
+        info = await self.bot.get_group_member_info(
+            group_id=self.event.group_id, user_id=int(self.bot.self_id)
+        )
+
+        return info["role"] == "admin" or info["role"] == "owner"
 
 
 class PrivateContext(OnebotContext[PrivateMessageEvent]):
