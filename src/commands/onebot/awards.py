@@ -108,11 +108,19 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
     if uid is None:
         return
-
+    
     levels = await _get_levels(session)
     skins, storages, used = await _get_others(session, uid)
 
     baseImgs: list[PILImage] = []
+
+    name = await ctx.getSenderName()
+    baseImgs.append(
+            await drawASingleLineClassic(
+                f"{name} 的抓小哥进度", "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 80, 0, 30
+            )
+        )
+    
     for lid, lname, lcolor in levels:
         awards = await _get_awards(session, lid)
         if len(awards) == 0:
@@ -134,13 +142,13 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
             else:
                 met_sums += 1
 
-            imgs.append(await ref_book_box(name, "", color, img))
+            imgs.append(await ref_book_box(name, str(sto) if (sto + use) else "", color, img))
 
         baseImgs.append(await _title(f"{lname} {met_sums}/{len(awards)}", lcolor))
         baseImgs.append(await _combine_cells(imgs))
 
-    img = await verticalPile(baseImgs, 15, "left", "#9B9690", 120, 60, 60, 60)
-    await ctx.reply(UniMessage().image(raw=imageToBytes(img)))
+    img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
 @listenOnebot()
