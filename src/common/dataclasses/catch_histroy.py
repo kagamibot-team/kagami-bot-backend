@@ -40,11 +40,11 @@ class CatchHistoryContainer:
         threshold = now - 86400
 
         for gid in self.dicts.keys():
-            logger.info(self.dicts[gid])
+            # logger.info(self.dicts[gid])
             self.dicts[gid] = [
                 ch for ch in self.dicts[gid] if ch.caught_time >= threshold
             ]
-            logger.info(self.dicts[gid])
+            # logger.info(self.dicts[gid])
 
 
 catch_histroy_list = CatchHistoryContainer()

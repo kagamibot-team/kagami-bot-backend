@@ -185,7 +185,7 @@ async def picks(
 @withLoading(la.loading.zhua)
 @withSessionLock()
 async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
-    logger.info(result.query[int]("count"))
+    # logger.info(result.query[int]("count"))
     count = result.query[int]("count")
 
     if count is None:

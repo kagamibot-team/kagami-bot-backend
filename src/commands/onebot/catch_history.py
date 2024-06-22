@@ -16,7 +16,7 @@ async def _(ctx: GroupContext, _):
         dt_str_day = dt.strftime(r"%Y年%m月%d日")
         dt_str_time = dt.strftime(r"%H:%M:%S")
 
-        logger.info(history.uid)
+        # logger.info(history.uid)
 
         name: str = str(history.uid)
 
