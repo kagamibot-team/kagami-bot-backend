@@ -1,7 +1,8 @@
 import pathlib
-
+import math
 
 from src.imports import *
+from typing import Sequence
 
 
 @listenOnebot()
@@ -44,7 +45,7 @@ async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
         paddingX=0,
         paddingY=0,
         images=imgs,
-        rowMaxNumber=6,
+        rowMaxNumber=8,
         background="#9B9690",
         horizontalAlign="top",
         verticalAlign="left",
@@ -65,10 +66,10 @@ async def _title(lname: str, lcolor: str):
 
 
 async def _get_levels(session: AsyncSession):
-    query = select(Level.data_id, Level.name, Level.color_code).order_by(
+    query = select(Level.data_id, Level.name, Level.color_code, Level.weight).order_by(
         -Level.sorting_priority, Level.weight
     )
-    return (await session.execute(query)).tuples()
+    return (await session.execute(query)).tuples().all()
 
 
 async def _get_awards(session: AsyncSession, lid: int):
@@ -100,6 +101,25 @@ async def _get_others(session: AsyncSession, uid: int):
     return skins, storages, used
 
 
+def calc_progress(levels: Sequence[tuple[int, str, str, float]], met_sums: dict[int, int], awards: dict[int, Sequence[tuple[int, str, str]]]):
+    param: int = 10
+    denominator: float = 0
+    for _, name, _, lweight in levels:
+        if lweight == 0:
+            continue
+        logger.info("%s: %f ^ %f = %f" % (name, lweight, 1.0/param, math.pow(lweight, 1.0/param)))
+        denominator += 1.0/math.pow(lweight, 1.0/param)
+    
+    progress: float = 0
+    for lid, _, _, lweight in levels:
+        if lweight == 0:
+            continue
+        numerator: float = 1.0/math.pow(lweight, 1.0/param)
+        progress += numerator/denominator * (1.0*met_sums[lid]/len(awards[lid]))
+
+    return progress
+
+
 @listenOnebot()
 @matchAlconna(Alconna("re:(zhuajd|抓进度|抓小哥进度)"))
 @withLoading(la.loading.zhuajd)
@@ -111,23 +131,36 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
     
     levels = await _get_levels(session)
     skins, storages, used = await _get_others(session, uid)
+    awards: dict[int, Sequence[tuple[int, str, str]]] = {}
+    met_sums: dict[int, int] = {}
+    
+    for lid, _, _, _ in levels:
+        awards[lid] = await _get_awards(session, lid)
+        met_sums[lid] = 0
+        if len(awards[lid]) == 0:
+            continue
+        imgs: list[PILImage] = []
+        for aid, _, _ in awards[lid]:
+            sto = storages[aid] if aid in storages.keys() else 0
+            use = used[aid] if aid in used.keys() else 0
+            if sto + use:
+                met_sums[lid] += 1
 
     baseImgs: list[PILImage] = []
 
     name = await ctx.getSenderName()
+    percent_progress: float = calc_progress(levels, met_sums, awards)
     baseImgs.append(
             await drawASingleLineClassic(
-                f"{name} 的抓小哥进度", "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 80, 0, 30
+                f"{name} 的抓小哥进度：{str(round(percent_progress*100, 2))}%", "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 80, 0, 30
             )
         )
     
-    for lid, lname, lcolor in levels:
-        awards = await _get_awards(session, lid)
-        if len(awards) == 0:
+    for lid, lname, lcolor, _ in levels:
+        if len(awards[lid]) == 0:
             continue
         imgs: list[PILImage] = []
-        met_sums = 0
-        for aid, name, img in awards:
+        for aid, name, img in awards[lid]:
             color = lcolor
             sto = storages[aid] if aid in storages.keys() else 0
             use = used[aid] if aid in used.keys() else 0
@@ -138,13 +171,10 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
                 color = "#696361"
             elif aid in skins.keys():
                 img = skins[aid]
-                met_sums += 1
-            else:
-                met_sums += 1
 
             imgs.append(await ref_book_box(name, str(sto) if (sto + use) else "", color, img))
 
-        baseImgs.append(await _title(f"{lname} {met_sums}/{len(awards)}", lcolor))
+        baseImgs.append(await _title(f"{lname} {met_sums[lid]}/{len(awards[lid])}", lcolor))
         baseImgs.append(await _combine_cells(imgs))
 
     img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
@@ -164,7 +194,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
     skins, storages, used = await _get_others(session, uid)
 
     imgs: list[PILImage] = []
-    for lid, _, lcolor in levels:
+    for lid, _, lcolor, _ in levels:
         awards = await _get_awards(session, lid)
         _imgs: list[tuple[int, PILImage]] = []
 
@@ -199,7 +229,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
     levels = await _get_levels(session)
 
     baseImgs: list[PILImage] = []
-    for lid, lname, lcolor in levels:
+    for lid, lname, lcolor, _ in levels:
         awards = await _get_awards(session, lid)
 
         if len(awards) == 0:
