@@ -26,10 +26,10 @@ async def _(session: AsyncSession, ctx: PublicContext, _):
 
     for name, weight, color_code, price, award_count in levels:
         if weight_sum > 0:
-            prob = f"概率{round(weight / weight_sum * 100, 2)}%"
+            prob = f"权重{weight} 概率{round(weight / weight_sum * 100, 2)}%"
         else:
             prob = f"权重{weight}"
         
-        message += f"\n- {name}[{color_code}] {prob} 奖励 {price} 共有 {award_count} 小哥"
+        message += f"\n- {name}[{color_code}] {prob} 奖励 {price}{la.unit.money} 共有 {award_count} 小哥"
     
     await ctx.send(message)
