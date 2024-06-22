@@ -10,6 +10,7 @@ from nonebot.adapters.onebot.v11 import PrivateMessageEvent
 from nonebot.adapters.onebot.v11.bot import Bot as _OnebotBot
 
 from nonebot_plugin_alconna.uniseg.message import UniMessage
+from nonebot_plugin_alconna.uniseg.adapters import EXPORTER_MAPPING, BUILDER_MAPPING
 from nonebot_plugin_alconna import Segment, Text
 from nonebot.adapters import Event, Bot
 
@@ -70,32 +71,24 @@ class UniMessageContext(Context[Recallable]):
 
 
 @dataclass
-class UniContext(UniMessageContext, Generic[TE, TB]):
-    event: TE
-    bot: TB
+class OnebotContext(UniMessageContext, Generic[TONEBOTEVENT]):
+    event: TONEBOTEVENT
+    bot: _OnebotBot
 
     async def getMessage(self) -> UniMessage[Segment]:
         return cast(
             UniMessage[Segment],
-            await UniMessage.generate(event=self.event, bot=self.bot),  # type: ignore
+            UniMessage(BUILDER_MAPPING["OneBot V11"].generate(self.event.get_message())),  # type: ignore
         )
 
     async def send(self, message: Iterable[Any] | str) -> Recallable:
         message = UniMessage(message)
+        msg_out = await EXPORTER_MAPPING["OneBot V11"].export(message, self.bot, False)
 
-        return await message.send(
-            target=self.event,
-            bot=self.bot,
-        )
+        return await self.bot.send(self.event, msg_out)
 
     async def reply(self, message: Iterable[Any] | str):
         return await self.send(message)
-
-
-@dataclass
-class OnebotContext(UniContext[TONEBOTEVENT, _OnebotBot]):
-    event: TONEBOTEVENT
-    bot: _OnebotBot
 
     def getSenderId(self):
         return self.event.user_id
@@ -144,13 +137,16 @@ class PrivateContext(OnebotContext[PrivateMessageEvent]):
 
 
 @dataclass
-class ConsoleContext(UniContext[_ConsoleEvent, _ConsoleBot]):
+class ConsoleContext(UniMessageContext):
     event: _ConsoleEvent
     bot: _ConsoleBot
 
-    # async def send(self, message: Iterable[Any] | str):
-    #     await self.bot.send(self.event, str(message))
-    #     return NoRecall()
+    async def send(self, message: Iterable[Any] | str):
+        await self.bot.send(self.event, str(message))
+        return NoRecall()
+
+    async def reply(self, message: Iterable[Any] | str):
+        return await self.send(message)
 
     def getSenderId(self):
         return None
@@ -164,7 +160,6 @@ PublicContext = UniMessageContext
 
 
 __all__ = [
-    "UniContext",
     "GroupContext",
     "PrivateContext",
     "ConsoleContext",
