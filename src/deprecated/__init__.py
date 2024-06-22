@@ -18,8 +18,6 @@ from .old_version import (
 )
 
 from .admin import (
-    CatchAllLevel,
-    CatchSetInterval,
     CatchLevelModify,
     CatchCreateLevel,
     Give,
@@ -28,7 +26,6 @@ from .admin import (
     CatchAdminDisplay,
     CatchAdminObtainSkin,
     CatchAdminDeleteSkinOwnership,
-    CatchResetEveryoneCacheCount,
     CatchGiveMoney,
     AddAltName,
     RemoveAltName,
@@ -38,8 +35,6 @@ from .admin import (
 
 
 enabledCommand: list[CommandBase] = [
-    CatchAllLevel(),
-    CatchSetInterval(),
     CatchLevelModify(),
     CatchCreateLevel(),
     Give(),
@@ -48,7 +43,6 @@ enabledCommand: list[CommandBase] = [
     CatchAdminDisplay(),
     CatchAdminObtainSkin(),
     CatchAdminDeleteSkinOwnership(),
-    CatchResetEveryoneCacheCount(),
     CatchGiveMoney(),
     AddAltName(),
     RemoveAltName(),

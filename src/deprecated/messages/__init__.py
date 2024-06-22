@@ -6,7 +6,6 @@
 
 
 from .texts import (
-    allLevels,
     modifyOk,
     setIntervalWrongFormat,
     settingOk,

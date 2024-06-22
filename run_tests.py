@@ -6,7 +6,23 @@ from types import ModuleType
 import nonebot
 import unittest
 
-nonebot.init(_env_file=(".env.test",))
+from nonebot.adapters.onebot.v11 import Adapter as OneBotV11Adapter
+from nonebot.adapters.console.adapter import Adapter as ConsoleAdapter
+
+nonebot.init(
+    _env_file=(),
+    sqlalchemy_database_url="sqlite+aiosqlite:///:memory:",
+    enable_white_list=True,
+    white_list_groups=[1, 2],
+    admin_id=3,
+    admin_groups=[1],
+    custom_replies={"4": "a"},
+    my_name=["小镜"],
+)
+
+driver = nonebot.get_driver()
+driver.register_adapter(OneBotV11Adapter)  # type: ignore
+driver.register_adapter(ConsoleAdapter)  # type: ignore
 
 import src as _
 

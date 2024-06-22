@@ -1,34 +1,26 @@
 import asyncio
+import pathlib
+import re
 import time
 from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple
+
 from arclet.alconna import Alconna, Arparma
-
-import re
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from src.base.db import get_session
 from nonebot import get_driver, logger
-
-from src.base.event_root import root
-
-from ...logic.admin import isAdmin
-
-
-import pathlib
-from typing import Any, Callable, Coroutine, TypeVar, TypeVarTuple
-
+from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import UniMessage
+from sqlalchemy.ext.asyncio import AsyncSession
 
-
-from ...base.command_events import (
+from src.base.command_events import (
     ConsoleContext,
+    Context,
     GroupContext,
     PrivateContext,
-    Context,
     UniMessageContext,
 )
+from src.base.db import get_session
 from src.base.event_manager import EventManager
-
+from src.base.event_root import root
+from src.logic.admin import isAdmin
 
 T = TypeVar("T")
 TC = TypeVar("TC", bound=Context, covariant=True)
@@ -297,6 +289,8 @@ def withLoading(text: str = "请稍候……"):
                 return msg
             except StopIteration as e:
                 raise e from e
+            except ActionFailed as e:
+                logger.warning("又遇到了，那久违的「ActionFailed」")
             except Exception as e:
                 await ctx.reply(
                     UniMessage().text(

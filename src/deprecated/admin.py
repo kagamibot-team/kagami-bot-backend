@@ -52,37 +52,6 @@ from .tools import getSender, isValidColorCode, requireAdmin
 
 
 @requireAdmin
-@dataclass
-class CatchAllLevel(Command):
-    commandPattern: str = f"^:: ?{KEYWORD_EVERY}{KEYWORD_LEVEL}"
-    argsPattern: str = "$"
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        return await allLevels(env.session)
-
-
-@requireAdmin
-@databaseIO()
-class CatchSetInterval(Command):
-    def __init__(self):
-        super().__init__(f"^:: ?{KEYWORD_CHANGE} ?{KEYWORD_INTERVAL}", " ?(-?[0-9]+)$")
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return setIntervalWrongFormat()
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        interval = int(result.group(3))
-        await setInterval(env.session, interval)
-        message = settingOk()
-
-        return message
-
-
-@requireAdmin
 @databaseIO()
 class Give(Command):
     def __init__(self):
@@ -371,29 +340,6 @@ class CatchAdminDeleteSkinOwnership(Command):
 
         await deleteSkinOwnership(env.session, await getSender(env), skin)
         return modifyOk()
-
-
-@requireAdmin
-@databaseIO()
-@dataclass
-class CatchResetEveryoneCacheCount(Command):
-    commandPattern: str = f":: ?{KEYWORD_RESET} ?{KEYWORD_CACHE_COUNT}"
-    argsPattern: str = "( (\\d+))?$"
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message([at(env.sender), text("MSG_RESET_CACHE_WRONG_FORMAT")])
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        if result.group(4) is None:
-            await resetCacheCount(env.session, 1)
-            return Message([at(env.sender), text("MSG_RESET_CACHE_OK")])
-
-        count = int(result.group(4))
-        if count < 1:
-            return self.errorMessage(env)
-        await resetCacheCount(env.session, count)
 
 
 @requireAdmin

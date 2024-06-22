@@ -3,6 +3,7 @@
 """
 
 from src.imports import *
+from packaging.version import Version
 
 
 updateHistory: dict[str, list[str]] = la.about.update
@@ -11,14 +12,14 @@ help: list[str] = la.about.help
 helpAdmin: list[str] = la.about.help_admin
 
 
-def constructUpdateMessage(updates: dict[str, list[str]], count: int = 5) -> UniMessage:
+def constructUpdateMessage(updates: dict[str, list[str]], count: int = 3) -> UniMessage:
     """
     构造更新信息
     """
 
     text = f"{la.about.update_header}\n"
 
-    for key in sorted(updates.keys(), reverse=True):
+    for key in sorted(updates.keys(), reverse=True, key=Version):
         if count == 0:
             break
 

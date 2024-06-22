@@ -18,9 +18,9 @@ def randomKagami():
     return os.path.join(rootPath, random.choice(files))
 
 
-@listenOnebot()
-async def ping(ctx: OnebotContext):
-    if ctx.event.is_tome() and len(await ctx.getMessage()) == 1 and (await ctx.getMessage())[0].data['text'] == '':
+@listenGroup()
+async def ping(ctx: GroupContext):
+    if ctx.event.to_me and len(await ctx.getMessage()) == 1 and (await ctx.getMessage())[0].data['text'] == '':
         kagami = randomKagami()
         if kagami is None:
             return

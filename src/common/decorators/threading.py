@@ -1,7 +1,5 @@
 import asyncio
-
-from typing import Callable, TypeVar, ParamSpec
-
+from typing import Callable, ParamSpec, TypeVar
 
 T = TypeVar("T")
 P = ParamSpec("P")
