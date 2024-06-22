@@ -92,7 +92,11 @@ class UniContext(UniMessageContext, Generic[TE, TB]):
         return await self.send(message)
 
 
+@dataclass
 class OnebotContext(UniContext[TONEBOTEVENT, _OnebotBot]):
+    event: TONEBOTEVENT
+    bot: _OnebotBot
+    
     def getSenderId(self):
         return self.event.user_id
 
