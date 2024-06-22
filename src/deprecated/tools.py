@@ -26,7 +26,7 @@ def isValidColorCode(raw: str):
 def requireAdmin(cls: Type[CommandBase]):
     class _cls(cls):
         async def check(self, env: CheckEnvironment) -> Message | None:
-            if env.group_id not in config.admin_groups:
+            if env.group_id not in config.admin_groups and env.sender != config.admin_id:
                 return None
 
             return await super().check(env)

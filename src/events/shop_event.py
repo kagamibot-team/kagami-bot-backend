@@ -32,7 +32,6 @@ async def _(e: ShopBuyEvent):
             .where(User.data_id == e.uid)
             .values(
                 pick_max_cache=User.pick_max_cache + 1,
-                money=User.money - e.product.price,
             )
         )
 

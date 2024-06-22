@@ -13,7 +13,7 @@ import nonebot
 
 nonebot.init()
 
-import src.models.models
+import src.models
 import src.models.base
 import src.common.config
 
