@@ -12,3 +12,4 @@ alembic
 aiosqlite
 pytz
 qrcode
+freezegun
