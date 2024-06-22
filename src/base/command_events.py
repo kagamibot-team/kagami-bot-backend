@@ -12,16 +12,11 @@ from nonebot.adapters.onebot.v11.bot import Bot as _OnebotBot
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 from nonebot_plugin_alconna.uniseg.adapters import EXPORTER_MAPPING, BUILDER_MAPPING
 from nonebot_plugin_alconna import Segment, Text
-from nonebot.adapters import Event, Bot
 
-
-TE = TypeVar("TE", bound=Event)
-TB = TypeVar("TB", bound=Bot)
-TS = TypeVar("TS", bound=Segment)
 
 TRECEIPT = TypeVar("TRECEIPT")
 
-TONEBOTEVENT = TypeVar("TONEBOTEVENT", bound=GroupMessageEvent | PrivateMessageEvent)
+TE = TypeVar("TE", bound=GroupMessageEvent | PrivateMessageEvent)
 
 
 class Recallable(Protocol):
@@ -31,6 +26,15 @@ class Recallable(Protocol):
 class NoRecall(Recallable):
     async def recall(self, *args: Any, **kwargs: Any) -> Any:
         return None
+
+
+@dataclass
+class OnebotReceipt:
+    bot: _OnebotBot
+    message_id: int
+
+    async def recall(self):
+        await self.bot.delete_msg(message_id=self.message_id)
 
 
 class Context(ABC, Generic[TRECEIPT]):
@@ -53,15 +57,15 @@ class Context(ABC, Generic[TRECEIPT]):
     async def isTextOnly(self) -> bool: ...
 
 
-class UniMessageContext(Context[Recallable]):
+class UniMessageContext(Context[TRECEIPT], Generic[TRECEIPT]):
     @abstractmethod
     async def getMessage(self) -> UniMessage[Segment]: ...
 
     @abstractmethod
-    async def send(self, message: Iterable[Any] | str) -> Recallable: ...
+    async def send(self, message: Iterable[Any] | str) -> TRECEIPT: ...
 
     @abstractmethod
-    async def reply(self, message: Iterable[Any] | str) -> Recallable: ...
+    async def reply(self, message: Iterable[Any] | str) -> TRECEIPT: ...
 
     async def getText(self) -> str:
         return (await self.getMessage()).extract_plain_text()
@@ -71,8 +75,8 @@ class UniMessageContext(Context[Recallable]):
 
 
 @dataclass
-class OnebotContext(UniMessageContext, Generic[TONEBOTEVENT]):
-    event: TONEBOTEVENT
+class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
+    event: TE
     bot: _OnebotBot
 
     async def getMessage(self) -> UniMessage[Segment]:
@@ -81,11 +85,13 @@ class OnebotContext(UniMessageContext, Generic[TONEBOTEVENT]):
             UniMessage(BUILDER_MAPPING["OneBot V11"].generate(self.event.get_message())),  # type: ignore
         )
 
-    async def send(self, message: Iterable[Any] | str) -> Recallable:
+    async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
         message = UniMessage(message)
         msg_out = await EXPORTER_MAPPING["OneBot V11"].export(message, self.bot, False)
+        msg_info = await self.bot.send(self.event, msg_out)
 
-        return await self.bot.send(self.event, msg_out)
+        return OnebotReceipt(self.bot, msg_info["message_id"])
+
 
     async def reply(self, message: Iterable[Any] | str):
         return await self.send(message)
