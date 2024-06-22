@@ -131,9 +131,9 @@ class ConsoleContext(UniContext[_ConsoleEvent, _ConsoleBot]):
     event: _ConsoleEvent
     bot: _ConsoleBot
 
-    async def send(self, message: Iterable[Any] | str):
-        await self.bot.send(self.event, str(message))
-        return NoRecall()
+    # async def send(self, message: Iterable[Any] | str):
+    #     await self.bot.send(self.event, str(message))
+    #     return NoRecall()
 
     def getSenderId(self):
         return None

@@ -12,6 +12,12 @@ from nonebot.adapters.console.adapter import Adapter as ConsoleAdapter
 nonebot.init()
 
 
+# 加载驱动器
+driver = nonebot.get_driver()
+driver.register_adapter(OneBotV11Adapter)  # type: ignore
+driver.register_adapter(ConsoleAdapter)  # type: ignore
+
+
 # 如果不存在目录，则开始构建
 os.makedirs(os.path.join(".", "data"), exist_ok=True)
 os.makedirs(os.path.join(".", "data", "backup"), exist_ok=True)
@@ -35,12 +41,6 @@ from alembic import command
 nonebot.logger.info("检查数据库状态")
 config = Config("./alembic.ini")
 command.upgrade(config, "head")
-
-
-# 加载驱动器
-driver = nonebot.get_driver()
-driver.register_adapter(OneBotV11Adapter)  # type: ignore
-driver.register_adapter(ConsoleAdapter)  # type: ignore
 
 
 # 需要在 Nonebot 初始化完成后，才能导入插件内容
