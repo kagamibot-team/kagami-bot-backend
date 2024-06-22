@@ -4,14 +4,11 @@ from typing import Any, Generic, Iterable, Protocol, Sequence, TypeVar, cast
 
 from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
 from nonebot.adapters.console.bot import Bot as _ConsoleBot
-from nonebot.adapters import Message
-
-from nonebot.adapters.onebot.v11 import PrivateMessageEvent
-from nonebot.adapters.onebot.v11.bot import Bot as _OnebotBot
+from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 from nonebot_plugin_alconna.uniseg.message import UniMessage
-from nonebot_plugin_alconna.uniseg.adapters import EXPORTER_MAPPING, BUILDER_MAPPING
-from nonebot_plugin_alconna import Segment, Text
+from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING
+from nonebot_plugin_alconna import Segment, Image, Text, At, Emoji
 
 
 class Recallable(Protocol):
@@ -27,16 +24,40 @@ class OnebotEventProtocol(Protocol):
     user_id: int
     to_me: bool
 
-    def get_message(self) -> Message[Any]: ...
+    def get_message(self) -> Message: ...
 
 
 class OnebotGroupEventProtocol(OnebotEventProtocol, Protocol):
     group_id: int
 
 
-class __:
-    user_id: int = 1
-    group_id: int = 2
+class OnebotBotProtocol(Protocol):
+    self_id: str
+
+    async def call_api(self, api: str, **data: Any) -> Any: ...
+
+
+def export_msg(msg: UniMessage[Any]) -> Message:
+    result = Message()
+
+    for seg in msg:
+        if isinstance(seg, Text):
+            result.append(MessageSegment.text(seg.text))
+        elif isinstance(seg, Image):
+            if seg.raw is not None:
+                result.append(MessageSegment.image(file=seg.raw))
+            elif seg.path is not None:
+                result.append(MessageSegment.image(file=seg.path))
+            else:
+                raise Exception("需要输出的 Image 节点请指定其 raw 或 path 属性")
+        elif isinstance(seg, At):
+            result.append(MessageSegment.at(seg.target))
+        elif isinstance(seg, Emoji):
+            result.append(MessageSegment.face(int(seg.id)))
+        else:
+            raise Exception(f"暂时不支持处理 {seg}，请联系 Passthem 添加对这种消息的支持")
+
+    return result
 
 
 TRECEIPT = TypeVar("TRECEIPT")
@@ -45,11 +66,11 @@ TE = TypeVar("TE", bound="OnebotEventProtocol")
 
 @dataclass
 class OnebotReceipt:
-    bot: _OnebotBot
+    bot: OnebotBotProtocol
     message_id: int
 
     async def recall(self):
-        await self.bot.delete_msg(message_id=self.message_id)
+        await self.bot.call_api("delete_msg", message_id=self.message_id)
 
 
 class Context(ABC, Generic[TRECEIPT]):
@@ -92,7 +113,7 @@ class UniMessageContext(Context[TRECEIPT], Generic[TRECEIPT]):
 @dataclass
 class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
     event: TE
-    bot: _OnebotBot
+    bot: OnebotBotProtocol
 
     async def getMessage(self) -> UniMessage[Segment]:
         return cast(
@@ -107,15 +128,15 @@ class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
         return self.event.user_id
 
     async def getSenderName(self) -> str:
-        info = await self.bot.get_stranger_info(user_id=self.getSenderId())
+        info = await self.bot.call_api("get_stranger_info", user_id=self.getSenderId())
         return info["nick"]
 
 
 class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
     async def getSenderNameInGroup(self):
         sender = self.getSenderId()
-        info = await self.bot.get_group_member_info(
-            group_id=self.event.group_id, user_id=sender
+        info = await self.bot.call_api(
+            "get_group_member_info", group_id=self.event.group_id, user_id=sender
         )
         name: str = info["nickname"]
         name = info["card"] or name
@@ -123,9 +144,9 @@ class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
 
     async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
         message = UniMessage(message)
-        msg_out = await EXPORTER_MAPPING["OneBot V11"].export(message, self.bot, False)
-        msg_info = await self.bot.send_group_msg(
-            group_id=self.event.group_id, message=msg_out
+        msg_out = export_msg(message)
+        msg_info = await self.bot.call_api(
+            "send_group_msg", group_id=self.event.group_id, message=msg_out
         )
 
         return OnebotReceipt(self.bot, msg_info["message_id"])
@@ -144,8 +165,10 @@ class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
             bool: 是否是管理员
         """
 
-        info = await self.bot.get_group_member_info(
-            group_id=self.event.group_id, user_id=int(self.bot.self_id)
+        info = await self.bot.call_api(
+            "get_group_member_info",
+            group_id=self.event.group_id,
+            user_id=int(self.bot.self_id),
         )
 
         return info["role"] == "admin" or info["role"] == "owner"
@@ -154,9 +177,9 @@ class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
 class PrivateContext(OnebotContext[OnebotEventProtocol]):
     async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
         message = UniMessage(message)
-        msg_out = await EXPORTER_MAPPING["OneBot V11"].export(message, self.bot, False)
-        msg_info = await self.bot.send_private_msg(
-            user_id=self.event.user_id, message=msg_out
+        msg_out = export_msg(message)
+        msg_info = await self.bot.call_api(
+            "send_private_msg", user_id=self.event.user_id, message=msg_out
         )
 
         return OnebotReceipt(self.bot, msg_info["message_id"])

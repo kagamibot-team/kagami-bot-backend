@@ -19,8 +19,11 @@ async def _(ctx: GroupContext, _):
         name: str = str(history.uid)
 
         try:
-            info = await ctx.bot.get_group_member_info(
-                group_id=ctx.event.group_id, user_id=history.qqid, no_cache=True
+            info = await ctx.bot.call_api(
+                "get_group_member_info",
+                group_id=ctx.event.group_id,
+                user_id=history.qqid,
+                no_cache=True,
             )
             name: str = info["nickname"]
             name = info["card"] or name
