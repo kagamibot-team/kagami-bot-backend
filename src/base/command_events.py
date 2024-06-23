@@ -18,7 +18,7 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING
-from nonebot_plugin_alconna import Segment, Image, Text, At, Emoji
+from nonebot_plugin_alconna import Reply, Segment, Image, Text, At, Emoji
 
 
 class Recallable(Protocol):
@@ -109,6 +109,8 @@ def export_msg(msg: UniMessage[Any]) -> Message:
             result.append(MessageSegment.at(seg.target))
         elif isinstance(seg, Emoji):
             result.append(MessageSegment.face(int(seg.id)))
+        elif isinstance(seg, Reply):
+            result.append(MessageSegment.reply(int(seg.id)))
         else:
             raise Exception(
                 f"暂时不支持处理 {seg}，请联系 Passthem 添加对这种消息的支持"
@@ -209,7 +211,7 @@ class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
         ```python
         await ctx.sendCompact("消息1", "消息2")
         await ctx.sendCompact(
-            UniMessage().image(...).text("这里是我的一些话"), 
+            UniMessage().image(...).text("这里是我的一些话"),
             "还有呢……"
         )
         ```
@@ -254,12 +256,28 @@ class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
             "send_group_forward_msg", group_id=self.event.group_id, messages=messages
         )
 
-    async def reply(self, message: Iterable[Any] | str):
-        return await self.send(
-            cast(
-                UniMessage[Any], UniMessage.at(str(self.getSenderId())) + " " + message
-            )
-        )
+    async def reply(
+        self,
+        message: Iterable[Any] | str,
+        ref: bool = False,
+        at: bool = True,
+    ):
+        """回复从 Context 来的消息
+
+        Args:
+            message (Iterable[Any] | str): 发送的消息。
+            ref (bool, optional): 是否要引用原消息，默认为 False。
+            at (bool, optional): 是否要 at 发送者，默认为 True。
+
+        Returns:
+            Any: 调用发送消息接口时返回的 JSON 字典，具体需要查阅 Onebot V11 文档
+        """
+        msg = message
+        if at:
+            msg = UniMessage.at(str(self.getSenderId())) + " " + msg
+        if ref:
+            msg = UniMessage.reply((await self.getMessage()).get_message_id()) + msg
+        return await self.send(msg)
 
     async def is_group_admin(self) -> bool:
         """判断自己是不是这个群的管理员
