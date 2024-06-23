@@ -91,7 +91,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
             await root.emit(evt)
 
     money_update_query = (
-        update(User.money)
+        update(User)
         .where(User.data_id == uid)
         .values(money=money_left - money_sum)
     )
