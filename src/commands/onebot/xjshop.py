@@ -5,7 +5,7 @@ import PIL.Image
 from src.imports import *
 
 
-async def send_shop_message(ctx: OnebotContext, shop: ShopData):
+async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
     boxes: list[PILImage] = []
 
     for group, products in shop.products.items():
@@ -45,7 +45,7 @@ async def send_shop_message(ctx: OnebotContext, shop: ShopData):
 )
 @withLoading()
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     buys = res.query[list[str]]("商品名列表")
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
     shop_data = ShopData()

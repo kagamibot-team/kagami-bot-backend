@@ -8,7 +8,7 @@ from typing import Sequence
 @listenOnebot()
 @matchAlconna(Alconna("re:(展示|zhanshi|zs)", Arg("name", str)))
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
     name = result.query[str]("name")
     user = await get_uid_by_qqid(session, ctx.getSenderId())
 
@@ -124,7 +124,7 @@ def calc_progress(levels: Sequence[tuple[int, str, str, float]], met_sums: dict[
 @matchAlconna(Alconna("re:(zhuajd|抓进度|抓小哥进度)"))
 @withLoading(la.loading.zhuajd)
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
     if uid is None:
         return
@@ -185,7 +185,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
 @matchAlconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
 @withLoading(la.loading.kc)
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
     if uid is None:
         return
@@ -237,7 +237,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
 @matchAlconna(Alconna("re:(所有|全部)小哥", ["::"]))
 @withLoading(la.loading.all_xg)
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     levels = await _get_levels(session)
 
     baseImgs: list[PILImage] = []

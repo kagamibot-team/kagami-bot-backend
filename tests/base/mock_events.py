@@ -1,7 +1,7 @@
 from typing import Any, Iterable
 from nonebot_plugin_alconna import Segment
 from nonebot_plugin_alconna.uniseg.message import UniMessage
-from src.base.command_events import Recallable
+from src.base.onebot_basic import Recallable
 from src.imports import *
 
 from nonebot.adapters.onebot.v11 import Message

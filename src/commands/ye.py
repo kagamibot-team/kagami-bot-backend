@@ -4,7 +4,7 @@ from src.imports import *
 @listenOnebot()
 @matchLiteral("哇嘎嘎嘎")
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession):
+async def _(ctx: OnebotMessageContext, session: AsyncSession):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
 
     # 在数据库中，小光和小望的 ID
