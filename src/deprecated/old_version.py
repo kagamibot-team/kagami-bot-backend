@@ -4,6 +4,7 @@ import re
 from typing import Type
 from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
 from src.imports import *
+from dataclasses import dataclass
 
 
 def at(sender: int):

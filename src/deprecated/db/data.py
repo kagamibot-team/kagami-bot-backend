@@ -4,7 +4,7 @@
 未来需要实现，将该模块中所有对数据库的操作全部转移至 `curd` 中。
 """
 
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 import time
 from typing import cast
 from nonebot import logger

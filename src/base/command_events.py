@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from typing import (
     Any,
     Generic,
@@ -129,10 +129,13 @@ TRECEIPT = TypeVar("TRECEIPT")
 TE = TypeVar("TE", bound="OnebotEventProtocol")
 
 
-@dataclass
 class OnebotReceipt:
     bot: OnebotBotProtocol
     message_id: int
+
+    def __init__(self, bot: OnebotBotProtocol, message_id: int) -> None:
+        self.bot = bot
+        self.message_id = message_id
 
     async def recall(self):
         await self.bot.call_api("delete_msg", message_id=self.message_id)
@@ -175,10 +178,13 @@ class UniMessageContext(Context[TRECEIPT], Generic[TRECEIPT]):
         return (await self.getMessage()).only(Text)
 
 
-@dataclass
 class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
     event: TE
     bot: OnebotBotProtocol
+
+    def __init__(self, event: TE, bot: OnebotBotProtocol) -> None:
+        self.event = event
+        self.bot = bot
 
     @abstractmethod
     async def _send(self, message: Message) -> Any: ...
@@ -344,10 +350,13 @@ class PrivateContext(OnebotContext[OnebotEventProtocol]):
         )
 
 
-@dataclass
 class ConsoleContext(UniMessageContext):
     event: _ConsoleEvent
     bot: _ConsoleBot
+
+    def __init__(self, event: _ConsoleEvent, bot: _ConsoleBot) -> None:
+        self.event = event
+        self.bot = bot
 
     async def send(self, message: Iterable[Any] | str):
         await self.bot.send(self.event, str(message))

@@ -1,5 +1,5 @@
 import time
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 
 from src.common.dataclasses.catch_data import PickDisplay
 
@@ -14,6 +14,9 @@ class CatchHistory:
 
 class CatchHistoryContainer:
     dicts: dict[int, list[CatchHistory]]
+
+    def to_dict(self):
+        return 
 
     def __init__(self) -> None:
         self.dicts = {}

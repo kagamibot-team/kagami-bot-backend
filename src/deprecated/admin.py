@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 import re
 from typing import Callable
 from nonebot.adapters.onebot.v11 import Message
