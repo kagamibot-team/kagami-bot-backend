@@ -1,3 +1,16 @@
+"""
+## 关于 API
+
+详见 https://napneko.github.io/zh-CN/develop/api
+以及 https://napneko.github.io/zh-CN/develop/extends_api
+
+若在测试环境中：
+详见 https://llonebot.github.io/zh-CN/develop/api
+以及 https://llonebot.github.io/zh-CN/develop/extends_api
+
+请保证调用的 API 在 NapNeko 中有相应实现
+"""
+
 from src.base.onebot_basic import handle_input_message, OnebotBotProtocol, MessageLike
 from src.common.qq_emoji_enum import QQEmoji
 
