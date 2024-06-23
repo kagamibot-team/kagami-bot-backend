@@ -1,7 +1,5 @@
-from dataclasses import dataclass
 import time
-
-from nonebot import logger
+from dataclasses import dataclass
 
 from src.common.dataclasses.catch_data import PickDisplay
 
@@ -40,11 +38,9 @@ class CatchHistoryContainer:
         threshold = now - 86400
 
         for gid in self.dicts.keys():
-            # logger.info(self.dicts[gid])
             self.dicts[gid] = [
                 ch for ch in self.dicts[gid] if ch.caught_time >= threshold
             ]
-            # logger.info(self.dicts[gid])
 
 
 catch_history_list = CatchHistoryContainer()

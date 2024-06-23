@@ -16,8 +16,6 @@ async def _(ctx: GroupContext, _):
         dt_str_day = dt.strftime(r"%Y年%m月%d日")
         dt_str_time = dt.strftime(r"%H:%M:%S")
 
-        # logger.info(history.uid)
-
         name: str = str(history.uid)
 
         try:
@@ -45,14 +43,21 @@ async def _(ctx: GroupContext, _):
             message += f"- 玩家 {name}\n"
             for get_info in get_list:
                 message += f"在 {get_info[0]} 抓到了："
-                message +=  "".join([
-                                        f"{display.name} ×{display.pick.delta} ，"
-                                        for _, display in get_info[1].items()
-                                    ]).rstrip("，") + "；\n"
+                message += (
+                    "".join(
+                        [
+                            f"{display.name} ×{display.pick.delta} ，"
+                            for _, display in get_info[1].items()
+                        ]
+                    ).rstrip("，")
+                    + "；\n"
+                )
             message = message.rstrip("；\n") + "。\n\n"
 
     if len(message) > 0:
-        await ctx.send(UniMessage().text("===== 喜报 =====\n\n" + message.rstrip("\n")))
+        await ctx.sendCompact(
+            UniMessage().text("===== 喜报 =====\n\n" + message.rstrip("\n"))
+        )
     else:
         await ctx.send(
             UniMessage().text(
