@@ -12,7 +12,7 @@ help: list[str] = la.about.help
 helpAdmin: list[str] = la.about.help_admin
 
 
-def constructUpdateMessage(updates: dict[str, list[str]], count: int = 5) -> UniMessage:
+def constructUpdateMessage(updates: dict[str, list[str]], count: int = 3) -> UniMessage:
     """
     构造更新信息
     """
