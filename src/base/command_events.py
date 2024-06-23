@@ -6,7 +6,6 @@ from typing import (
     Iterable,
     Literal,
     NotRequired,
-    Optional,
     Protocol,
     Sequence,
     TypeVar,
@@ -22,6 +21,8 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING
 from nonebot_plugin_alconna import Reply, Segment, Image, Text, At, Emoji
+
+from src.common.qq_emoji_enum import QQEmoji
 
 
 class Recallable(Protocol):
@@ -214,12 +215,15 @@ class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
             msg = UniMessage.reply((await self.getMessage()).get_message_id()) + msg
         return await self.send(msg)
 
-    async def stickEmoji(self, emoji_id: int | str):
+    async def stickEmoji(self, emoji_id: int | str | QQEmoji):
         """贴表情
 
         Args:
-            emoji_id (int | str): 表情的 ID，参见[相关文档](https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html#EmojiType)
+            emoji_id (int | str | QQEmoji): 表情的 ID，参见[相关文档](https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html#EmojiType)
         """
+        if isinstance(emoji_id, QQEmoji):
+            emoji_id = emoji_id.value
+        
         await self.bot.call_api(
             "set_msg_emoji_like",
             message_id=(await self.getMessage()).get_message_id(),
