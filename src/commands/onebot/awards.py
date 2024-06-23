@@ -215,9 +215,21 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
         _imgs.sort(key=lambda x: -x[0])
         imgs += [i[1] for i in _imgs]
 
-    await ctx.reply(
-        UniMessage().image(raw=imageToBytes(await _combine_cells(imgs, marginTop=60)))
+    name = await ctx.getSenderName()
+    area_title = await drawASingleLineClassic(
+        f"{name} 的抓小哥库存：", "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 80, 0, 30
     )
+    area_box = await combineABunchOfImage(
+        paddingX=0,
+        paddingY=0,
+        images=imgs,
+        rowMaxNumber=8,
+        background="#9B9690",
+        horizontalAlign="top",
+        verticalAlign="left",
+    )
+    img = await verticalPile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
 @listenOnebot()

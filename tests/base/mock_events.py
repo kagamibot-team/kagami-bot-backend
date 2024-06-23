@@ -12,12 +12,15 @@ class MockReceipt(Recallable):
         logger.info(f"Recalling message: {args}, {kwargs}")
 
 
-@dataclass
 class MockUniMessageContext(UniMessageContext):
     message: UniMessage[Any]
     sender: int = 0
 
-    sent: list[UniMessage[Any]] = field(default_factory=list)
+    def __init__(self, message: UniMessage[Any], sender: int = 0) -> None:
+        self.message = message
+        self.sender = sender
+
+    sent: list[UniMessage[Any]] = []
 
     async def getMessage(self) -> UniMessage[Segment]:
         return self.message
@@ -33,12 +36,16 @@ class MockUniMessageContext(UniMessageContext):
         return await self.send(message)
 
 
-@dataclass
 class MockOnebot:
     self_id: str
 
-    called_apis: list[tuple[str, dict[str, Any]]] = field(default_factory=list)
-    sent_messages: list[Message] = field(default_factory=list)
+    called_apis: list[tuple[str, dict[str, Any]]]
+    sent_messages: list[Message]
+
+    def __init__(self, self_id: str) -> None:
+        self.self_id = self_id
+        self.called_apis = []
+        self.sent_messages = []
 
     async def call_api(self, api: str, **data: Any) -> Any:
         self.called_apis.append((api, data))
@@ -54,23 +61,32 @@ class MockOnebot:
                 "nickname": "这是我的昵称",
                 "role": "admin",
             }
-        
+
         if api == "get_stranger_info":
             return {
                 "nick": "这是我的昵称",
             }
 
 
-@dataclass
 class MockOnebotEvent:
     user_id: int
     to_me: bool
     message: Message
 
+    def __init__(self, user_id: int, to_me: bool, message: Message) -> None:
+        self.user_id = user_id
+        self.to_me = to_me
+        self.message = message
+
     def get_message(self) -> Message:
         return self.message
 
 
-@dataclass
 class MockOnebotGroupEvent(MockOnebotEvent):
     group_id: int
+
+    def __init__(
+        self, user_id: int, to_me: bool, message: Message, group_id: int
+    ) -> None:
+        super().__init__(user_id, to_me, message)
+        self.group_id = group_id

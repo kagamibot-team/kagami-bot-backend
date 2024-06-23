@@ -51,8 +51,12 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
         if award in picks.awards.keys():
             picks.awards[award].delta += 1
         else:
-            picks.awards[award] = Pick(await get_statistics(session, uid, award), 1, level[0])
-        
+            picks.awards[award] = Pick(
+                beforeStats=await get_statistics(session, uid, award),
+                delta=1,
+                level=level[0],
+            )
+
         picks.money += level[2]
 
     return picks

@@ -4,10 +4,10 @@
 未来需要实现，将该模块中所有对数据库的操作全部转移至 `curd` 中。
 """
 
-from dataclasses import dataclass
 import time
 from typing import cast
 from nonebot import logger
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
@@ -166,8 +166,7 @@ async def getUserStoragesByLevel(session: Session, user: User, level: Level):
     return (await session.execute(_query)).scalars().all()
 
 
-@dataclass
-class AwardInfo:
+class AwardInfo(BaseModel):
     awardId: int
     awardImg: str
     awardName: str

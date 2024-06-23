@@ -41,7 +41,25 @@ async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
         )
     )
 
+    titles: list[PIL.Image.Image] = []
     boxes: list[PIL.Image.Image] = []
+
+    name = await ctx.getSenderName()
+    titles.append(
+            await drawASingleLineClassic(
+                f"{name} 的一抓！", "#63605C", Fonts.ALIMAMA_SHU_HEI, 80, 0
+            )
+        )
+    titles.append(
+            await drawLimitedBoxOfTextClassic(
+                text=f"本次获得{int(money)}{la.unit.money}，目前共有{int(e.moneyUpdated)}{la.unit.money}。\n剩余次数：{userTime.pickRemain}/{userTime.pickMax}，距下次次数恢复还要{timeStr}。",
+                maxWidth=800,
+                lineHeight=26,
+                color="#9B9690",
+                font=Fonts.JINGNAN_BOBO_HEI,
+                fontSize=24,
+            )
+        )
 
     for display in pickDisplay.values():
         image = await catch(
@@ -55,8 +73,11 @@ async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
         )
         boxes.append(image)
 
-    img = await verticalPile(boxes, 33, "left", "#EEEBE3", 80, 80, 80, 80)
-    await ctx.reply(msg + UniMessage().image(raw=imageToBytes(img)))
+    area_title = await verticalPile(titles, 2, "left", "#EEEBE3", 0, 0, 0, 0)
+    area_box = await verticalPile(boxes, 33, "left", "#EEEBE3", 0, 0, 0, 0)
+    img = await verticalPile([area_title, area_box], 20, "left", "#EEEBE3", 60, 80, 80, 80)
+    # await ctx.reply(msg + UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
 async def save_picks(
