@@ -58,7 +58,6 @@ async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
                 color="#9B9690",
                 font=Fonts.JINGNAN_BOBO_HEI,
                 fontSize=24,
-                expandBottom=-26,
             )
         )
 

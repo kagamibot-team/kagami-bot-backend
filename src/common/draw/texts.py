@@ -281,7 +281,7 @@ async def drawLimitedBoxOfTextClassic(
         "RGBA",
         (
             expandLeft + expandRight + maxWidth,
-            expandTop + expandBottom + (len(lines) + 1) * lineHeight,
+            expandTop + expandBottom + len(lines) * lineHeight,
         ),
         "#00000000",
     )
