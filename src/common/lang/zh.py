@@ -201,6 +201,12 @@ class About:
             "榆木华: 抓小哥进度添加标题、小哥数量",
             "榆木华: 微调抓进度界面，新增进度百分比计算与显示",
         ],
+        "0.5.12": [
+            "修复小镜商店的 Bug",
+            "从本次更新之后，喜报的信息能够持久化保存了",
+            "榆木华: 库存界面添加标题",
+            "榆木华: 给抓小哥界面加了标题",
+        ],
     }
     update_dev: dict[str, list[str]] = {
         "0.4.5": [
@@ -264,6 +270,12 @@ class About:
             "迁移了所有等级、更改周期两个指令到新系统",
             "重构解耦了 UniContext 相关的定义，不再与 Nonebot 标准协议完全贴合，并为单元测试提供了 Mock 环境所需要的类。如果需要调用 OnebotV11 API，请使用 call_api 方法",
             "更新信息现在已经可以以正确的顺序排序了",
+        ],
+        "0.5.12": [
+            "将大部分 dataclass 迁移到 Pydantic",
+            "添加了 OnebotContext 合并转发消息和贴表情的接口",
+            "榆木华：修复 verticalPile 多一行 paddingY 的 bug",
+            "榆木华：优化 drawLimitedBoxOfTextClassic 函数",
         ],
     }
 
