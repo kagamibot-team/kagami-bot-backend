@@ -5,6 +5,8 @@ from typing import (
     Generic,
     Iterable,
     Literal,
+    NotRequired,
+    Optional,
     Protocol,
     Sequence,
     TypeVar,
@@ -12,6 +14,7 @@ from typing import (
     cast,
 )
 
+from nonebot import logger
 from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
 from nonebot.adapters.console.bot import Bot as _ConsoleBot
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -48,9 +51,11 @@ class OnebotBotProtocol(Protocol):
 
 
 class _ForwardMessageData(TypedDict):
-    name: str
-    uin: str
-    content: Message
+    id: NotRequired[int]
+    name: NotRequired[str]
+    uin: NotRequired[str]
+    content: NotRequired[Message]
+    seq: NotRequired[str]
 
 
 class _ForwardMessageNode(TypedDict):
@@ -186,8 +191,40 @@ class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
             UniMessage(BUILDER_MAPPING["OneBot V11"].generate(self.event.get_message())),  # type: ignore
         )
 
-    async def reply(self, message: Iterable[Any] | str):
-        return await self.send(message)
+    async def reply(
+        self,
+        message: Iterable[Any] | str,
+        ref: bool = False,
+        at: bool = True,
+    ):
+        """回复从 Context 来的消息
+
+        Args:
+            message (Iterable[Any] | str): 发送的消息。
+            ref (bool, optional): 是否要引用原消息，默认为 False。
+            at (bool, optional): 是否要 at 发送者，默认为 True。
+
+        Returns:
+            Any: 调用发送消息接口时返回的 JSON 字典，具体需要查阅 Onebot V11 文档
+        """
+        msg = message
+        if at:
+            msg = UniMessage.at(str(self.getSenderId())) + " " + msg
+        if ref:
+            msg = UniMessage.reply((await self.getMessage()).get_message_id()) + msg
+        return await self.send(msg)
+
+    async def stickEmoji(self, emoji_id: int | str):
+        """贴表情
+
+        Args:
+            emoji_id (int | str): 表情的 ID，参见[相关文档](https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html#EmojiType)
+        """
+        await self.bot.call_api(
+            "set_msg_emoji_like",
+            message_id=(await self.getMessage()).get_message_id(),
+            emoji_id=str(emoji_id),
+        )
 
     def getSenderId(self):
         return self.event.user_id
@@ -219,19 +256,38 @@ class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
         不知道为什么，这个接口发送消息的速度不是很快。
 
         Returns:
-            Any: 根据 Onebot V11 协议返回的内容
+            Any: 根据 Go-CQHTTP API 协议返回的内容，详见 https://docs.go-cqhttp.org/api/
         """
 
         nodes: list[_ForwardMessageNode] = []
 
         for message in messages:
-            if (
-                isinstance(message, Message)
-                or isinstance(message, str)
-                or isinstance(message, Iterable)
-            ):
+            if isinstance(message, str) or isinstance(message, dict):
                 message = forwardMessage(message)
-            nodes.append({"type": "node", "data": message})
+                nodes.append({"type": "node", "data": message})
+            else:
+                if isinstance(message, UniMessage):
+                    message = export_msg(message)
+                elif isinstance(message, Message):
+                    pass
+                else:
+                    raise Exception(
+                        f"暂时不支持处理 {message}，请联系 Passthem 添加对这种消息的支持"
+                    )
+
+                info = await self.bot.call_api(
+                    "send_private_msg", user_id=self.bot.self_id, message=message
+                )
+                message_id = info["message_id"]
+
+                rid_info = await self.bot.call_api("get_msg", message_id=message_id)
+
+                logger.info(info)
+                logger.info(rid_info)
+
+                nodes.append({"data": {"id": int(rid_info["real_id"])}, "type": "node"})
+
+        logger.info(nodes)
 
         return await self._send_forward(nodes)
 
@@ -255,29 +311,6 @@ class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
         return await self.bot.call_api(
             "send_group_forward_msg", group_id=self.event.group_id, messages=messages
         )
-
-    async def reply(
-        self,
-        message: Iterable[Any] | str,
-        ref: bool = False,
-        at: bool = True,
-    ):
-        """回复从 Context 来的消息
-
-        Args:
-            message (Iterable[Any] | str): 发送的消息。
-            ref (bool, optional): 是否要引用原消息，默认为 False。
-            at (bool, optional): 是否要 at 发送者，默认为 True。
-
-        Returns:
-            Any: 调用发送消息接口时返回的 JSON 字典，具体需要查阅 Onebot V11 文档
-        """
-        msg = message
-        if at:
-            msg = UniMessage.at(str(self.getSenderId())) + " " + msg
-        if ref:
-            msg = UniMessage.reply((await self.getMessage()).get_message_id()) + msg
-        return await self.send(msg)
 
     async def is_group_admin(self) -> bool:
         """判断自己是不是这个群的管理员
