@@ -1,4 +1,3 @@
-from pydantic.dataclasses import dataclass
 import re
 from typing import Callable
 from nonebot.adapters.onebot.v11 import Message
@@ -15,6 +14,8 @@ from .db import *
 from .messages import *
 
 from src.models import *
+
+from dataclasses import dataclass
 
 
 def isFloat():

@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from pydantic.dataclasses import dataclass
 from typing import (
     Any,
     Generic,

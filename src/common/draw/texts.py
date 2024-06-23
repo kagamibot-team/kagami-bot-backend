@@ -1,8 +1,9 @@
-from pydantic.dataclasses import dataclass
 import enum
 from functools import cache
 import os
 from typing import Literal
+
+from dataclasses import dataclass
 
 import PIL
 import PIL.Image

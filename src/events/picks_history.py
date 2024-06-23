@@ -1,4 +1,5 @@
 import time
+
 from src.imports import *
 
 
@@ -23,9 +24,9 @@ async def _(evt: PrePickMessageEvent):
         catch_history_list.add_record(
             evt.group_id,
             CatchHistory(
-                time.time(),
-                _event_picks,
-                evt.uid,
-                int(await get_qqid_by_uid(evt.session, evt.uid)),
+                caught_time=time.time(),
+                displays=_event_picks,
+                uid=evt.uid,
+                qqid=int(await get_qqid_by_uid(evt.session, evt.uid)),
             ),
         )

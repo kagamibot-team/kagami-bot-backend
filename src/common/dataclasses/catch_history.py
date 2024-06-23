@@ -1,22 +1,25 @@
 import time
-from pydantic.dataclasses import dataclass
+from typing import Any
+from pydantic import BaseModel, TypeAdapter
 
 from src.common.dataclasses.catch_data import PickDisplay
 
 
-@dataclass
-class CatchHistory:
+class CatchHistory(BaseModel):
     caught_time: float
     displays: dict[int, PickDisplay]
     uid: int
     qqid: int
 
 
+CatchHistoryBuilder = TypeAdapter(CatchHistory)
+
+
 class CatchHistoryContainer:
     dicts: dict[int, list[CatchHistory]]
 
-    def to_dict(self):
-        return 
+    def dumps(self) -> dict[int, list[dict[str, Any]]]:
+        return {k: [v.model_dump() for v in vs] for k, vs in self.dicts.items()}
 
     def __init__(self) -> None:
         self.dicts = {}

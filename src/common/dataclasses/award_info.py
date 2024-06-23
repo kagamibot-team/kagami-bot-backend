@@ -1,8 +1,7 @@
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass
-class AwardInfo:
+class AwardInfo(BaseModel):
     awardId: int
     awardImg: str
     awardName: str

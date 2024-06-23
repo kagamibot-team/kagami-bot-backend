@@ -48,7 +48,7 @@ async def send_shop_message(ctx: OnebotContext, shop: ShopData):
 async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
     buys = res.query[list[str]]("商品名列表")
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
-    shop_data = ShopData({})
+    shop_data = ShopData()
     shop_data_evt = ShopBuildingEvent(shop_data, ctx.getSenderId(), uid, session)
     await root.emit(shop_data_evt)
 

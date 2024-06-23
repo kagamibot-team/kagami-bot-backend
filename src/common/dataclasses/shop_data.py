@@ -1,9 +1,8 @@
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-@dataclass
-class ProductData:
+class ProductData(BaseModel):
     """在各种商店中存储商品和价格的数据类。"""
 
     image: str
@@ -15,11 +14,10 @@ class ProductData:
     background_color: str
 
 
-@dataclass
-class ShopData:
+class ShopData(BaseModel):
     """记录一个商店的信息"""
 
-    products: dict[str, list[ProductData]]
+    products: dict[str, list[ProductData]] = {}
 
     def push(self, product: ProductData, type: str):
         """将商品添加到商店中。"""

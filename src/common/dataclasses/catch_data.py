@@ -1,11 +1,10 @@
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.dataclasses.user import UserTime
 
 
-@dataclass
-class Pick:
+class Pick(BaseModel):
     """
     单条抓小哥的记录
     """
@@ -15,8 +14,7 @@ class Pick:
     level: int
 
 
-@dataclass
-class Picks:
+class Picks(BaseModel):
     """
     一个记录抓小哥结果的数据类，仅储存在内存中，可以在后续流程中更改其中的结果。
     """
@@ -45,8 +43,7 @@ class PicksEvent:
         self.session = session
 
 
-@dataclass
-class PickDisplay:
+class PickDisplay(BaseModel):
     """
     将会呈交给图像渲染的一行「抓到了」的信息
     """
