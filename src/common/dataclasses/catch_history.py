@@ -1,6 +1,8 @@
+import os
+from pathlib import Path
 import time
-from typing import Any
-from pydantic import BaseModel, TypeAdapter
+from nonebot import logger
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from src.common.dataclasses.catch_data import PickDisplay
 
@@ -15,14 +17,22 @@ class CatchHistory(BaseModel):
 CatchHistoryBuilder = TypeAdapter(CatchHistory)
 
 
-class CatchHistoryContainer:
-    dicts: dict[int, list[CatchHistory]]
+class CatchHistoryContainer(BaseModel):
+    dicts: dict[int, list[CatchHistory]] = {}
 
-    def dumps(self) -> dict[int, list[dict[str, Any]]]:
-        return {k: [v.model_dump() for v in vs] for k, vs in self.dicts.items()}
+    def save(self, fp: str | Path = Path("./data/catch_history.json")):
+        with open(fp, "w", encoding="utf-8") as f:
+            f.write(self.model_dump_json())
 
-    def __init__(self) -> None:
-        self.dicts = {}
+    def weak_load(self, fp: str | Path = Path("./data/catch_history.json")):
+        if not os.path.exists(fp):
+            return None
+
+        with open(fp, "r", encoding="utf-8") as f:
+            try:
+                self.dicts = self.model_validate_json(f.read()).dicts
+            except ValidationError as e:
+                logger.warning(f"在试图从硬盘持久话取喜报历史记录的时候发生了问题 {e}")
 
     def get_records(self, group_id: int) -> list[CatchHistory]:
         self._update()
@@ -38,8 +48,11 @@ class CatchHistoryContainer:
             self.dicts[group_id].append(record)
         else:
             self.dicts[group_id] = [record]
+        
+        self.save()
 
     def _update(self):
+        self.weak_load()
         now = time.time()
         threshold = now - 86400
 
