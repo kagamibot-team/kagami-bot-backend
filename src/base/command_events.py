@@ -1,6 +1,16 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, Iterable, Protocol, Sequence, TypeVar, cast
+from typing import (
+    Any,
+    Generic,
+    Iterable,
+    Literal,
+    Protocol,
+    Sequence,
+    TypeVar,
+    TypedDict,
+    cast,
+)
 
 from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
 from nonebot.adapters.console.bot import Bot as _ConsoleBot
@@ -37,6 +47,51 @@ class OnebotBotProtocol(Protocol):
     async def call_api(self, api: str, **data: Any) -> Any: ...
 
 
+class _ForwardMessageData(TypedDict):
+    name: str
+    uin: str
+    content: Message
+
+
+class _ForwardMessageNode(TypedDict):
+    type: Literal["node"]
+    data: _ForwardMessageData
+
+
+def forwardMessage(
+    content: Message | str | Iterable[Any], name: str = "", uin: int | str = ""
+) -> _ForwardMessageData:
+    """构造转发消息
+
+    Args:
+        name (str): 发送者应该呈现的名字
+        uin (int | str): 发送者的 QQ 号，用于识别是否为好友等
+        content (Message): 消息内容
+    """
+
+    if isinstance(content, dict):
+        if set(content.keys()) == {"name", "uin", "content"}:
+            if (
+                isinstance(content["name"], str)
+                and isinstance(content["uin"], str)
+                and isinstance(content["content"], Message)
+            ):
+                return cast(_ForwardMessageData, content)
+
+    if isinstance(content, str):
+        content = Message(MessageSegment.text(content))
+    elif isinstance(content, UniMessage):
+        content = export_msg(content)
+    elif isinstance(content, Message):
+        pass
+    else:
+        raise Exception(
+            f"暂时不支持处理 {content}，如果遇到这个错误，请联系 Passthem。"
+        )
+
+    return {"name": name, "uin": str(uin), "content": content}
+
+
 def export_msg(msg: UniMessage[Any]) -> Message:
     result = Message()
 
@@ -55,7 +110,9 @@ def export_msg(msg: UniMessage[Any]) -> Message:
         elif isinstance(seg, Emoji):
             result.append(MessageSegment.face(int(seg.id)))
         else:
-            raise Exception(f"暂时不支持处理 {seg}，请联系 Passthem 添加对这种消息的支持")
+            raise Exception(
+                f"暂时不支持处理 {seg}，请联系 Passthem 添加对这种消息的支持"
+            )
 
     return result
 
@@ -115,6 +172,12 @@ class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
     event: TE
     bot: OnebotBotProtocol
 
+    @abstractmethod
+    async def _send(self, message: Message) -> Any: ...
+
+    @abstractmethod
+    async def _send_forward(self, messages: list[_ForwardMessageNode]) -> Any: ...
+
     async def getMessage(self) -> UniMessage[Segment]:
         return cast(
             UniMessage[Segment],
@@ -131,6 +194,45 @@ class OnebotContext(UniMessageContext[OnebotReceipt], Generic[TE]):
         info = await self.bot.call_api("get_stranger_info", user_id=self.getSenderId())
         return info["nick"]
 
+    async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
+        message = UniMessage(message)
+        msg_out = export_msg(message)
+        msg_info = await self._send(message=msg_out)
+
+        return OnebotReceipt(self.bot, msg_info["message_id"])
+
+    async def sendCompact(
+        self, *messages: _ForwardMessageData | Message | str | Iterable[Any]
+    ):
+        """合并转发消息。直接往这个函数里面输入需要合并转发的消息就好了。例如：
+
+        ```python
+        await ctx.sendCompact("消息1", "消息2")
+        await ctx.sendCompact(
+            UniMessage().image(...).text("这里是我的一些话"), 
+            "还有呢……"
+        )
+        ```
+
+        不知道为什么，这个接口发送消息的速度不是很快。
+
+        Returns:
+            Any: 根据 Onebot V11 协议返回的内容
+        """
+
+        nodes: list[_ForwardMessageNode] = []
+
+        for message in messages:
+            if (
+                isinstance(message, Message)
+                or isinstance(message, str)
+                or isinstance(message, Iterable)
+            ):
+                message = forwardMessage(message)
+            nodes.append({"type": "node", "data": message})
+
+        return await self._send_forward(nodes)
+
 
 class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
     async def getSenderNameInGroup(self):
@@ -142,14 +244,15 @@ class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
         name = info["card"] or name
         return name
 
-    async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
-        message = UniMessage(message)
-        msg_out = export_msg(message)
-        msg_info = await self.bot.call_api(
-            "send_group_msg", group_id=self.event.group_id, message=msg_out
+    async def _send(self, message: Message):
+        return await self.bot.call_api(
+            "send_group_msg", group_id=self.event.group_id, message=message
         )
 
-        return OnebotReceipt(self.bot, msg_info["message_id"])
+    async def _send_forward(self, messages: list[_ForwardMessageNode]) -> Any:
+        return await self.bot.call_api(
+            "send_group_forward_msg", group_id=self.event.group_id, messages=messages
+        )
 
     async def reply(self, message: Iterable[Any] | str):
         return await self.send(
@@ -175,14 +278,15 @@ class GroupContext(OnebotContext[OnebotGroupEventProtocol]):
 
 
 class PrivateContext(OnebotContext[OnebotEventProtocol]):
-    async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
-        message = UniMessage(message)
-        msg_out = export_msg(message)
-        msg_info = await self.bot.call_api(
-            "send_private_msg", user_id=self.event.user_id, message=msg_out
+    async def _send(self, message: Message):
+        return await self.bot.call_api(
+            "send_private_msg", user_id=self.event.user_id, message=message
         )
 
-        return OnebotReceipt(self.bot, msg_info["message_id"])
+    async def _send_forward(self, messages: list[_ForwardMessageNode]) -> Any:
+        return await self.bot.call_api(
+            "send_private_forward_msg", group_id=self.event.user_id, messages=messages
+        )
 
 
 @dataclass
@@ -216,4 +320,5 @@ __all__ = [
     "Context",
     "UniMessageContext",
     "PublicContext",
+    "forwardMessage",
 ]
