@@ -31,6 +31,7 @@ from src.base.onebot_basic import (
     OnebotBotProtocol,
     OnebotEventProtocol,
     OnebotGroupEventProtocol,
+    Recallable,
     export_msg,
 )
 from src.base.onebot_enum import QQEmoji
@@ -83,7 +84,7 @@ def forwardMessage(
     return {"name": name, "uin": str(uin), "content": content}
 
 
-TRECEIPT = TypeVar("TRECEIPT")
+TRECEIPT = TypeVar("TRECEIPT", bound=Recallable)
 TE = TypeVar("TE", bound="OnebotEventProtocol")
 
 
