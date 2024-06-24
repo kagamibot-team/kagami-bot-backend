@@ -28,7 +28,14 @@ def mix_color(
 
 
 def imageToBytes(img: PIL.Image.Image):
-    _, im = cv2.imencode('.png', cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR))
+    arr = np.array(img)
+
+    if arr.shape[2] == 3:
+        arr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+    else:
+        arr = cv2.cvtColor(arr, cv2.COLOR_BGRA2RGBA)
+
+    _, im = cv2.imencode('.png', arr)
 
     return im.tobytes()
 
