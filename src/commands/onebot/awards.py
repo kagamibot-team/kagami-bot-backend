@@ -43,7 +43,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
 
 
 async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
-    return await combineABunchOfImage(
+    return await pileImages(
         paddingX=0,
         paddingY=0,
         images=imgs,
@@ -245,7 +245,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     area_title = await drawASingleLineClassic(
         f"{name} 的抓小哥库存：", "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 80, 0, 30
     )
-    area_box = await combineABunchOfImage(
+    area_box = await pileImages(
         paddingX=0,
         paddingY=0,
         images=imgs,

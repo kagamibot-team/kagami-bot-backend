@@ -4,6 +4,7 @@ import os
 from typing import Literal
 
 from dataclasses import dataclass
+from typing_extensions import deprecated
 
 import PIL
 import PIL.Image
@@ -67,6 +68,7 @@ def textFont(fontEnum: Fonts, fontSize: int):
 DEFAULT_FONT = textFont(Fonts.HARMONYOS_SANS, 12)
 
 
+@deprecated("你说的对，但是我们现在有 textv2 了")
 @make_async
 def drawText(
     draw: PIL.ImageDraw.ImageDraw,
@@ -91,12 +93,14 @@ def drawText(
     )
 
 
+@deprecated("你说的对，但是我们现在有 textv2 了")
 def _getBoxOfText(text: str, font: PIL.ImageFont.FreeTypeFont = DEFAULT_FONT):
     left, top, right, bottom = font.getbbox(text)
 
     return TextBox(left, top, right, bottom)
 
 
+@deprecated("你说的对，但是我们现在有 textv2 了")
 def getBoxOfText(text: str, font: Fonts, fontSize: int):
     if font == Fonts.VONWAON_BITMAP_16 or font == Fonts.VONWAON_BITMAP_12:
         width = 0
@@ -110,6 +114,7 @@ def getBoxOfText(text: str, font: Fonts, fontSize: int):
         return _getBoxOfText(text, textFont(font, fontSize))
 
 
+@deprecated("你说的对，但是我们现在有 textv2 了")
 async def drawABoxOfText(
     text: str,
     color: str,
@@ -144,6 +149,7 @@ async def drawABoxOfText(
     return image
 
 
+@deprecated("你说的对，但是我们现在有 textv2 了")
 async def drawSingleLine(
     text: str,
     maxWidth: int,
@@ -201,6 +207,7 @@ async def drawSingleLine(
     return base
 
 
+@deprecated("你说的对，但是我们现在有 textv2 了")
 async def drawASingleLineClassic(
     text: str,
     color: str,
@@ -236,6 +243,7 @@ async def drawASingleLineClassic(
     return image
 
 
+@deprecated("你说的对，但是我们现在有 textv2 了")
 async def drawLimitedBoxOfTextClassic(
     *,
     text: str,
@@ -322,6 +330,7 @@ async def drawLimitedBoxOfTextClassic(
     return base
 
 
+@deprecated("你说的对，但是我们现在有 textv2 了")
 async def drawLimitedBoxOfText(
     text: str,
     maxWidth: int,
@@ -401,6 +410,7 @@ async def drawLimitedBoxOfText(
     return base
 
 
+@deprecated("你说的对，但是我们现在有 textv2 了")
 async def drawLimitedBoxOfTextWithScalar(
     text: str,
     maxWidth: int,

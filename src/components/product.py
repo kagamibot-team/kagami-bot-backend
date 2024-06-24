@@ -1,23 +1,22 @@
 import PIL
 import PIL.Image
+from imagetext_py import TextAlign
 from src.common.dataclasses.shop_data import ProductData
 from src.common.draw.texts import Fonts, HorizontalAnchor, drawLimitedBoxOfTextClassic, drawLimitedBoxOfTextWithScalar
+from src.common.draw.textv2 import getTextImage
 from src.common.lang.zh import la
 from src.components.display_box import display_box
 
 
 async def product_box(product: ProductData):
     display = await display_box(product.background_color, product.image, False)
-    title = await drawLimitedBoxOfTextWithScalar(
-        product.title,
-        180,
-        "center",
-        "center",
-        24,
-        "#FFFFFF",
-        Fonts.HARMONYOS_SANS_BLACK,
-        20,
-        scalar=2,
+    title = await getTextImage(
+        text=product.title,
+        width=180,
+        align=TextAlign.Center,
+        color="#FFFFFF",
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        fontSize=26,
     )
     title2 = await drawLimitedBoxOfTextWithScalar(
         product.description,
@@ -28,7 +27,6 @@ async def product_box(product: ProductData):
         "#C4BEBD",
         Fonts.HARMONYOS_SANS_BLACK,
         20,
-        scalar=2,
     )
 
     if product.sold_out:
@@ -45,21 +43,16 @@ async def product_box(product: ProductData):
     if not product.sold_out:
         notation = str(product.price) + la.unit.money
         
-        notationBox = await drawLimitedBoxOfTextClassic(
+        notationBox = await getTextImage(
             text=notation,
-            maxWidth=170,
-            lineHeight=57,
-            color="white",
+            width=170,
+            color="#FFFFFF",
             font=Fonts.MARU_MONICA,
             fontSize=36,
-            strokeWidth=2,
-            expandInnerBottom=5,
-            expandBottom=5,
-            expandInnerLeft=5,
-            expandInnerRight=5,
-            expandLeft=5,
-            align=HorizontalAnchor.left,
+            stroke=4,
+            marginBottom=5,
+            marginLeft=5,
         )
-        block.paste(notationBox, (26, 107), notationBox)
+        block.paste(notationBox, (26, 117), notationBox)
 
     return block
