@@ -85,21 +85,21 @@ def getTextImage(
         x = marginLeft + _width / 2
 
     draw_text_multiline(
-        canvas,
-        lines,
-        x,
-        marginTop,
-        ax,
-        0.0,
-        _width + marginRight,
-        fontSize,
-        font,
-        color,
-        line_spacing,
-        align,
-        stroke,
-        stroke_color,
-        drawEmoji,
+        canvas=canvas,
+        lines=lines,
+        x=x,
+        y=marginTop,
+        ax=ax,
+        ay=0.0,
+        width=_width + marginRight,
+        size=fontSize,
+        font=font,
+        fill=color,
+        line_spacing=line_spacing,
+        align=align,
+        stroke=stroke,
+        stroke_color=stroke_color,
+        draw_emojis=drawEmoji,
     )
 
     return canvas.to_image()
