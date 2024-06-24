@@ -4,6 +4,7 @@
 """
 
 from pathlib import Path
+import subprocess
 from src.common.save_file_handler import pack_save
 from src.imports import *
 
@@ -30,4 +31,5 @@ async def _(ctx: GroupContext, _):
 async def _(ctx: PublicContext):
     await ctx.reply("服务器即将重启")
 
-    os.system(Path("./linux/upgrade.sh"))
+    # os.system(Path("./linux/upgrade.sh"))
+    subprocess.call(["sh", Path("./linux/upgrade.sh")])
