@@ -21,6 +21,27 @@ async def give_skin(session: AsyncSession, uid: int, sid: int):
         await session.flush()
 
 
+async def have_skin(session: AsyncSession, uid: int, sid: int):
+    query = select(OwnedSkin.data_id).filter(
+        OwnedSkin.user_id == uid, OwnedSkin.skin_id == sid
+    )
+    result = await session.execute(query)
+
+    return result.scalar() is not None
+
+
+async def using_skin(session: AsyncSession, uid: int, aid: int):
+    query = (
+        select(Skin.data_id)
+        .join(UsedSkin, Skin.data_id == UsedSkin.skin_id)
+        .filter(UsedSkin.user_id == uid)
+        .filter(Skin.applied_award_id == aid)
+    )
+    result = await session.execute(query)
+
+    return result.scalar_one_or_none()
+
+
 async def set_skin(session: AsyncSession, uid: int, sid: int):
     query = select(Skin.applied_award_id).filter(Skin.data_id == sid)
     _aid = (await session.execute(query)).scalar_one()
