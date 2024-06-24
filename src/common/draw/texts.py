@@ -61,6 +61,30 @@ def getTextImage(
     drawEmoji: bool = True,
     scalar: float = 2,
 ):
+    """获取一段文本的图像，图像的大小会随着文本占的空间变化
+
+    Args:
+        text (str): 输入的文本
+        fontSize (float): 字体大小
+        font (Font | Fonts | str | Iterable[Fonts]): 字体文件，最好从 Fonts 枚举中获得。可以输入一个 Fonts 元组或列表，以支持字体 Fallback。
+        color (Paint | str): 颜色，使用井号开头的十六进制色号，或者使用 imagetext_py 中的 Paint 对象。
+        width (int | None, optional): 文本框的宽度。如果不设定，文本会尽可能地长，而如果设定了，则会在宽度范围之内断行。
+        line_spacing (float, optional): 行间距，默认是一倍行间距。
+        align (TextAlign, optional): 字体对齐，请使用 TextAlign 枚举类。
+        stroke (float, optional): 描边宽度。
+        stroke_color (Paint | str, optional): 描边颜色。
+        wrap_style (WrapStyle, optional): 断行方式，默认是 WrapStyle.Character。
+        marginLeft (float, optional): 字体框左边扩展的像素大小。
+        marginRight (float, optional): 字体框右边扩展的像素大小。
+        marginTop (float, optional): 字体框上面扩展的像素大小。
+        marginBottom (float, optional): 字体框下面扩展的像素大小。
+        drawEmoji (bool, optional): 是否绘制 Emoji 图像。
+        scalar (float, optional): 绘制时使用的抗锯齿缩放倍数。
+
+    Returns:
+        PIL.Image.Image: PIL 库的 Image 对象
+    """
+
     # 最开始，先处理一些抗锯齿缩放的问题
     marginLeft *= scalar
     marginRight *= scalar
