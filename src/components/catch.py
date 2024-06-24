@@ -3,6 +3,7 @@ import PIL.Image
 from imagetext_py import TextAlign
 
 
+from src.common.draw.images import imagePaste
 from src.common.draw.texts import Fonts, getTextImage
 from src.components.display_box import display_box
 
@@ -21,7 +22,7 @@ async def catch(
         text=description,
         width=567,
         color="#ffffff",
-        font=Fonts.VONWAON_BITMAP_16,
+        font=[Fonts.VONWAON_BITMAP_16, Fonts.MAPLE_UI],
         fontSize=16,
     )
     rightTitle = await getTextImage(
@@ -60,11 +61,11 @@ async def catch(
     block = PIL.Image.new(
         "RGB", (800, max(180, rightDescription.height + 89)), "#9B9690"
     )
-    block.paste(left_display, (18, 18), left_display)
-    block.paste(rightTitle, (212, 18), rightTitle)
-    block.paste(rightDescription, (212, 75), rightDescription)
-    block.paste(rightStar, (379, 14), rightStar)
-    block.paste(leftNotationShadow, (26, 107), leftNotationShadow)
-    block.paste(leftNotation, (26, 107), leftNotation)
+    await imagePaste(block, left_display, 18, 18)
+    await imagePaste(block, rightTitle, 212, 18)
+    await imagePaste(block, rightDescription, 212, 75)
+    await imagePaste(block, rightStar, 379, 14)
+    await imagePaste(block, leftNotationShadow, 26, 107)
+    await imagePaste(block, leftNotation, 26, 107)
 
     return block

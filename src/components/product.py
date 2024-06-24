@@ -3,6 +3,7 @@ import PIL.Image
 from imagetext_py import TextAlign
 
 from src.common.dataclasses.shop_data import ProductData
+from src.common.draw.images import imagePaste
 from src.common.draw.texts import Fonts, getTextImage
 from src.common.lang.zh import la
 from src.components.display_box import display_box
@@ -31,12 +32,12 @@ async def product_box(product: ProductData):
         image_new = PIL.Image.open("./res/sold_out.png")
         image_new = image_new.convert("RGBA")
 
-        display.paste(image_new, (0, 0), image_new)
+        await imagePaste(display, image_new, 0, 0)
 
     block = PIL.Image.new("RGB", (216, 234), "#9B9690")
-    block.paste(display, (18, 18), display)
-    block.paste(title, (18, 170), title)
-    block.paste(title2, (18, 194), title2)
+    await imagePaste(block, display, 18, 18)
+    await imagePaste(block, title, 18, 170)
+    await imagePaste(block, title2, 18, 194)
 
     if not product.sold_out:
         notation = str(product.price) + la.unit.money
@@ -51,6 +52,6 @@ async def product_box(product: ProductData):
             marginBottom=5,
             marginLeft=5,
         )
-        block.paste(notationBox, (26, 117), notationBox)
+        await imagePaste(block, notationBox, 26, 117)
 
     return block

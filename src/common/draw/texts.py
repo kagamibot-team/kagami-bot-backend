@@ -51,15 +51,24 @@ def getTextImage(
     width: int | None = None,
     line_spacing: float = 1,
     align: TextAlign = TextAlign.Left,
-    stroke: float | None = None,
-    stroke_color: Paint | str | None = None,
+    stroke: float = 0.0,
+    stroke_color: Paint | str = "#00000000",
     wrap_style: WrapStyle = WrapStyle.Character,
     marginLeft: float = 0,
     marginRight: float = 0,
     marginTop: float = 0,
     marginBottom: float = 0,
     drawEmoji: bool = True,
+    scalar: float = 2,
 ):
+    # 最开始，先处理一些抗锯齿缩放的问题
+    marginLeft *= scalar
+    marginRight *= scalar
+    marginTop *= scalar
+    marginBottom *= scalar
+    stroke *= scalar
+    fontSize *= scalar
+
     # 先预处理一些量，这些量需要同时适配旧接口
     if isinstance(font, Fonts):
         font = FontDB.Query(font.name)
@@ -80,6 +89,8 @@ def getTextImage(
         _width, _height = text_size(text, fontSize, font, drawEmoji)
     else:
         # 这种情况就是多行文本了
+        width = int(width * scalar)
+
         lines = text_wrap(text, width, fontSize, font, drawEmoji, wrap_style)
         _width, _height = text_size_multiline(
             lines, fontSize, font, line_spacing, drawEmoji
@@ -120,7 +131,13 @@ def getTextImage(
         draw_emojis=drawEmoji,
     )
 
-    return canvas.to_image()
+    img = canvas.to_image()
+    return img.resize(
+        (
+            int(img.width / scalar),
+            int(img.height / scalar),
+        )
+    )
 
 
 __all__ = ["Fonts", "getTextImage", "TextAlign"]

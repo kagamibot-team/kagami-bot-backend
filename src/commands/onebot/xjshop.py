@@ -136,7 +136,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     )
 
     base = PIL.Image.new("RGB", image.size, "#FFFFFF")
-    base.paste(image, (0, 0), image)
+    await imagePaste(base, image, 0, 0)
 
     qrc = qrcode.main.QRCode(
         version=1,

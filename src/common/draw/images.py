@@ -23,7 +23,7 @@ def loadImage(fp: str):
 
 
 @make_async
-def addUponPaste(raw: PIL.Image.Image, src: PIL.Image.Image, x: int, y: int):
+def imagePaste(raw: PIL.Image.Image, src: PIL.Image.Image, x: int, y: int):
     raw.paste(src, (x, y), src.convert("RGBA"))
 
 
@@ -72,7 +72,7 @@ async def horizontalPile(
         else:
             top = (maxHeight - image.height) // 2
 
-        await addUponPaste(base, image, leftPointer + marginLeft, top + marginTop)
+        await imagePaste(base, image, leftPointer + marginLeft, top + marginTop)
         leftPointer += image.width + paddingX
 
     return base
@@ -105,7 +105,7 @@ async def verticalPile(
         else:
             left = (maxWidth - image.width) // 2
 
-        await addUponPaste(base, image, left + marginLeft, topPointer + marginTop)
+        await imagePaste(base, image, left + marginLeft, topPointer + marginTop)
         topPointer += image.height + paddingY
 
     return base
@@ -152,7 +152,7 @@ async def pileImages(
 __all__ = [
     "newImage",
     "loadImage",
-    "addUponPaste",
+    "imagePaste",
     "horizontalPile",
     "verticalPile",
     "pileImages",
