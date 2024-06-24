@@ -32,7 +32,7 @@ class CatchHistoryContainer(BaseModel):
             try:
                 self.dicts = self.model_validate_json(f.read()).dicts
             except ValidationError as e:
-                logger.warning(f"在试图从硬盘持久话取喜报历史记录的时候发生了问题 {e}")
+                logger.warning(f"在试图从硬盘持久化取喜报历史记录的时候发生了问题 {e}")
 
     def get_records(self, group_id: int) -> list[CatchHistory]:
         self._update()

@@ -101,6 +101,9 @@ def pack_save_task(fp: pathlib.Path):
     with zf.open("data/catch_history.json", "w") as f:
         f.write(pathlib.Path("./data/catch_history.json").read_bytes())
 
+    with zf.open("data/sign_in_history.json", "w") as f:
+        f.write(pathlib.Path("./data/sign_in_history.json").read_bytes())
+
     with zf.open("data/log.log", "w") as f:
         f.write(pathlib.Path("./data/log.log").read_bytes())
 
