@@ -1,3 +1,4 @@
+import datetime
 import os
 from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -95,7 +96,9 @@ class Award(Base, BaseMixin):
     description: Mapped[str] = mapped_column(default="")
     sorting_priority: Mapped[int] = mapped_column(default=0)
 
-    level_id = Column(Integer, ForeignKey("catch_level.data_id", ondelete="CASCADE"), index=True)
+    level_id = Column(
+        Integer, ForeignKey("catch_level.data_id", ondelete="CASCADE"), index=True
+    )
     level: Mapped[Level] = relationship(back_populates="awards", lazy="subquery")
 
     storage_stats: Mapped[list["StorageStats"]] = relationship(
@@ -110,7 +113,13 @@ class Award(Base, BaseMixin):
         back_populates="award", lazy="subquery"
     )
 
-    tags: Mapped[list["AwardTagRelation"]] = relationship(back_populates="award", lazy="subquery")
+    tags: Mapped[list["AwardTagRelation"]] = relationship(
+        back_populates="award", lazy="subquery"
+    )
+
+    catch_group = Column(
+        Integer, ForeignKey("catch_catch_group.data_id", ondelete="SET NULL"), index=True, nullable=True
+    )
 
 
 class AwardAltName(Base, BaseMixin, AltNameMixin):
@@ -120,7 +129,9 @@ class AwardAltName(Base, BaseMixin, AltNameMixin):
 
     __tablename__ = "catch_award_alt_name"
 
-    award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"), index=True)
+    award_id = Column(
+        Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"), index=True
+    )
     award: Mapped[Award] = relationship(back_populates="alt_names", lazy="subquery")
 
 
@@ -145,8 +156,12 @@ class StorageStats(Base, BaseMixin):
         Index("storage_stat_index", "target_user_id", "target_award_id", unique=True),
     )
 
-    target_user_id = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
-    target_award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+    target_user_id = Column(
+        Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE")
+    )
+    target_award_id = Column(
+        Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE")
+    )
     count: Mapped[int] = mapped_column(default=0)
 
     user: Mapped["User"] = relationship(back_populates="storage_stats", lazy="subquery")
@@ -156,8 +171,12 @@ class StorageStats(Base, BaseMixin):
 class UsedStats(Base, BaseMixin):
     __tablename__ = "catch_award_stats"
 
-    target_user_id = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
-    target_award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+    target_user_id = Column(
+        Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE")
+    )
+    target_award_id = Column(
+        Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE")
+    )
     count: Mapped[int] = mapped_column(default=0)
 
     user: Mapped["User"] = relationship(back_populates="used_stats", lazy="subquery")
@@ -225,7 +244,9 @@ class Skin(Base, BaseMixin):
     extra_description: Mapped[str] = mapped_column(default="")
     image: Mapped[str] = mapped_column(default=DEFAULT_IMG)
     price: Mapped[float] = mapped_column(default=-1.0)
-    applied_award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+    applied_award_id = Column(
+        Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE")
+    )
 
     award: Mapped[Award] = relationship(back_populates="skins", lazy="subquery")
     used_skins: Mapped[list[UsedSkin]] = relationship(
@@ -264,6 +285,69 @@ class SkinAltName(Base, BaseMixin, AltNameMixin):
     skin: Mapped[Skin] = relationship(back_populates="alt_names", lazy="subquery")
 
 
+class CatchGroup(Base, BaseMixin):
+    """
+    抓小哥时所应用的概率组，将在未来启用
+    """
+
+    __tablename__ = "catch_catch_group"
+
+    weight: Mapped[float] = mapped_column(default=0.0, server_default="0")
+    time_limit_rule: Mapped[str] = mapped_column(default="* * * * * * *")
+
+    @staticmethod
+    def validate_single_simple(rule: str, val: int) -> bool:
+        if rule == "*":
+            return True
+
+        if "-" not in rule:
+            return str(val) == rule
+
+        rs = rule.split("-")
+        if len(rs) != 2:
+            return False
+
+        l, r = rs
+        if not l.isdigit() or not r.isdigit():
+            return False
+        return int(l) <= val <= int(r)
+
+    @staticmethod
+    def validate_single(rule: str, val: int) -> bool:
+        rs = rule.split(",")
+
+        for r in rs:
+            if CatchGroup.validate_single_simple(r, val):
+                return True
+
+        return False
+
+    @staticmethod
+    def validate(rule: str, time: datetime.datetime) -> bool:
+        rs = rule.split(" ")
+        if len(rs) != 7:
+            return False
+
+        Y, M, D, d, h, m, s = rs
+
+        if not CatchGroup.validate_single(Y, time.year):
+            return False
+        if not CatchGroup.validate_single(M, time.month):
+            return False
+        if not CatchGroup.validate_single(D, time.day):
+            return False
+        if not CatchGroup.validate_single(d, time.weekday()):
+            return False
+        if not CatchGroup.validate_single(h, time.hour):
+            return False
+        if not CatchGroup.validate_single(m, time.minute):
+            return False
+        if not CatchGroup.validate_single(s, time.second):
+            return False
+
+        return True
+
+
 __all__ = [
     "Base",
     "Global",
@@ -282,4 +366,5 @@ __all__ = [
     "SkinTagRelation",
     "LevelTagRelation",
     "AwardTagRelation",
+    "CatchGroup",
 ]

@@ -17,4 +17,5 @@ class TestEvents(SQLTestCase):
         ctx = MockUniMessageContext(UniMessage().text("小镜 我讨厌你"))
         self.assertIsInstance(ctx, UniMessageContext)
         await root.emit(ctx)
+        logger.info(ctx.sent)
         self.assertEqual(len(ctx.sent), 0)

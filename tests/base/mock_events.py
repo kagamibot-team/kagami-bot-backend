@@ -1,7 +1,7 @@
 from typing import Any, Iterable
 from nonebot_plugin_alconna import Segment
 from nonebot_plugin_alconna.uniseg.message import UniMessage
-from src.base.command_events import Recallable
+from src.base.onebot_basic import Recallable
 from src.imports import *
 
 from nonebot.adapters.onebot.v11 import Message
@@ -15,12 +15,12 @@ class MockReceipt(Recallable):
 class MockUniMessageContext(UniMessageContext):
     message: UniMessage[Any]
     sender: int = 0
+    sent: list[UniMessage[Any]]
 
     def __init__(self, message: UniMessage[Any], sender: int = 0) -> None:
         self.message = message
         self.sender = sender
-
-    sent: list[UniMessage[Any]] = []
+        self.sent = []
 
     async def getMessage(self) -> UniMessage[Segment]:
         return self.message

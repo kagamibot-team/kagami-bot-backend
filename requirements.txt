@@ -13,3 +13,4 @@ aiosqlite
 pytz
 qrcode
 freezegun
+imagetext-py

@@ -6,12 +6,11 @@ from src.logic.catch import pickAwards
 from src.logic.catch_time import calculateTime, updateUserTime
 
 
-async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
+async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
     pickDisplay = e.displays
     userTime = e.userTime
     timeToNextPick = userTime.pickLastUpdated + userTime.interval
 
-    counts = sum([p.pick.delta for _, p in pickDisplay.items()])
     money = e.picks.money
 
     deltaTime = int(timeToNextPick - time.time())
@@ -30,36 +29,39 @@ async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
         await ctx.reply(UniMessage().text(la.err.catch_not_available.format(timeStr)))
         return
 
-    msg = UniMessage(
-        la.msg.catch_top.format(
-            userTime.pickRemain,
-            userTime.pickMax,
-            timeStr,
-            counts,
-            f"{int(money)}{la.unit.money}",
-            f"{int(e.moneyUpdated)}{la.unit.money}",
-        )
-    )
-
     titles: list[PIL.Image.Image] = []
     boxes: list[PIL.Image.Image] = []
 
     name = await ctx.getSenderName()
+
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderNameInGroup()
+
     titles.append(
-            await drawASingleLineClassic(
-                f"{name} 的一抓！", "#63605C", Fonts.ALIMAMA_SHU_HEI, 80, 0
-            )
+        await getTextImage(
+            text=f"{name} 的一抓！",
+            color="#63605C",
+            font=Fonts.JINGNAN_JUNJUN,
+            fontSize=80,
+            width=800,
         )
+    )
     titles.append(
-            await drawLimitedBoxOfTextClassic(
-                text=f"本次获得{int(money)}{la.unit.money}，目前共有{int(e.moneyUpdated)}{la.unit.money}。\n剩余次数：{userTime.pickRemain}/{userTime.pickMax}，距下次次数恢复还要{timeStr}。",
-                maxWidth=800,
-                lineHeight=26,
-                color="#9B9690",
-                font=Fonts.JINGNAN_BOBO_HEI,
-                fontSize=24,
-            )
+        await getTextImage(
+            text=(
+                f"本次获得{int(money)}{la.unit.money}，"
+                f"目前共有{int(e.moneyUpdated)}{la.unit.money}。\n"
+                f"剩余次数：{userTime.pickRemain}/{userTime.pickMax}，"
+                f"距下次次数恢复还要{timeStr}。"
+            ),
+            width=800,
+            color="#9B9690",
+            font=Fonts.JINGNAN_BOBO_HEI,
+            fontSize=36,
+            marginTop=20,
+            marginBottom=30,
         )
+    )
 
     for display in pickDisplay.values():
         image = await catch(
@@ -75,7 +77,9 @@ async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
 
     area_title = await verticalPile(titles, 2, "left", "#EEEBE3", 0, 0, 0, 0)
     area_box = await verticalPile(boxes, 33, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile([area_title, area_box], 20, "left", "#EEEBE3", 60, 80, 80, 80)
+    img = await verticalPile(
+        [area_title, area_box], 20, "left", "#EEEBE3", 60, 80, 80, 80
+    )
     # await ctx.reply(msg + UniMessage().image(raw=imageToBytes(img)))
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
@@ -143,7 +147,7 @@ async def save_picks(
 
 
 async def picks(
-    ctx: OnebotContext, session: AsyncSession, uid: int, count: int | None = None
+    ctx: OnebotMessageContext, session: AsyncSession, uid: int, count: int | None = None
 ):
     """
     进行一次抓小哥。抓小哥的流程如下：
@@ -156,7 +160,7 @@ async def picks(
     - 生成图片，发送回复
 
     Args:
-        ctx (OnebotContext): 抓小哥的上下文
+        ctx (OnebotMessageContext): 抓小哥的上下文
         session (AsyncSession): 所开启的数据库会话，将会在中途关闭
         uid (int): 数据库中的用户 ID
         count (int | None, optional): 抓的次数，如果为 None，则尽可能多抓
@@ -205,7 +209,7 @@ async def picks(
 )
 @withLoading(la.loading.zhua)
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
     # logger.info(result.query[int]("count"))
     count = result.query[int]("count")
 
@@ -220,6 +224,6 @@ async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
 @matchRegex("^(狂抓|kz|狂抓小哥)$")
 @withLoading(la.loading.kz)
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, _):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
     user = await get_uid_by_qqid(session, ctx.getSenderId())
     await picks(ctx, session, user)

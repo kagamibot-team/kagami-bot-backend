@@ -4,7 +4,7 @@ from src.imports import *
 @listenOnebot()
 @matchRegex("^(mysp|我有多少薯片)$")
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, _):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
     res = await session.execute(
         select(User.money).filter(User.qq_id == ctx.getSenderId())
     )

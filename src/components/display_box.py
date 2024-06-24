@@ -2,7 +2,7 @@ import PIL
 import PIL.Image
 
 
-from src.common.draw.images import loadImage
+from src.common.draw.images import imagePaste, loadImage
 from src.common.draw.shapes import applyMask, roundedRectangleMask, drawRoundedRectangleWithScalar
 from src.common.draw.tools import hex_to_rgb, rgb_to_hex, mix_color
 
@@ -19,9 +19,9 @@ async def _display_box(color: str, central_image: str) -> PIL.Image.Image:
     )
     innerRect = await drawRoundedRectangleWithScalar(176, 140, 8, color)
 
-    canvas.paste(outerRect, (0, 0), outerRect)
-    canvas.paste(innerRect, (2, 2), innerRect)
-    canvas.paste(image, (0, 0), image)
+    await imagePaste(canvas, outerRect, 0, 0)
+    await imagePaste(canvas, innerRect, 2, 2)
+    await imagePaste(canvas, image, 0, 0)
 
     return canvas
 
@@ -42,6 +42,6 @@ async def display_box(
         image_new = PIL.Image.open("./res/new.png")
         image_new = image_new.convert("RGBA")
 
-        image.paste(image_new, (88, 0), image_new)
+        await imagePaste(image, image_new, 88, 0)
 
     return image

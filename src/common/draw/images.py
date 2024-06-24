@@ -1,20 +1,18 @@
 import os
+import pathlib
 from typing import Literal
+import uuid
 import PIL
 import PIL.Image
 import PIL.ImageTransform
 import PIL.ImageFilter
-
-import numpy as np
-import cv2
-import cv2.typing
 
 from src.common.decorators.threading import make_async
 
 
 @make_async
 def newImage(size: tuple[int, int] = (500, 500), color: str = "white"):
-    img = PIL.Image.new("RGB", size, color)
+    img = PIL.Image.new("RGBA", size, color)
     return img
 
 
@@ -25,58 +23,8 @@ def loadImage(fp: str):
 
 
 @make_async
-def addUponPaste(raw: PIL.Image.Image, src: PIL.Image.Image, x: int, y: int):
+def imagePaste(raw: PIL.Image.Image, src: PIL.Image.Image, x: int, y: int):
     raw.paste(src, (x, y), src.convert("RGBA"))
-
-
-@make_async
-def toOpenCVImage(raw: PIL.Image.Image):
-    return cv2.cvtColor(np.array(raw), cv2.COLOR_RGB2BGR)
-
-
-@make_async
-def fromOpenCVImage(raw: cv2.typing.MatLike):
-    return PIL.Image.fromarray(cv2.cvtColor(raw, cv2.COLOR_BGR2RGB))
-
-
-@make_async
-def fastPaste(raw: cv2.typing.MatLike, src: cv2.typing.MatLike, x: int, y: int):
-    raw[y : y + src.shape[0], x : x + src.shape[1]] = src
-
-
-@make_async
-def addUpon(
-    raw: PIL.Image.Image,
-    src: PIL.Image.Image,
-    x: float,
-    y: float,
-    anchorX: float = 0.5,
-    anchorY: float = 0.5,
-    scaleX: float = 1,
-    scaleY: float = 1,
-):
-    transform = PIL.ImageTransform.AffineTransform(
-        (
-            1 / scaleX,
-            0,
-            (anchorX * src.size[0] - x) / scaleX,
-            0,
-            1 / scaleY,
-            (anchorY * src.size[1] - y) / scaleY,
-        )
-    )
-
-    src = src.convert("RGBA")
-
-    _src = src.convert("RGB").transform(
-        raw.size, transform.method, transform.data, PIL.Image.Resampling.BILINEAR, 0
-    )
-
-    _srcMask = src.split()[3].transform(
-        raw.size, transform.method, transform.data, PIL.Image.Resampling.BILINEAR, 0
-    )
-
-    raw.paste(_src, (0, 0), _srcMask)
 
 
 @make_async
@@ -85,8 +33,8 @@ def resize(img: PIL.Image.Image, width: int, height: int):
 
 
 async def blurred(fp: str, radius: int):
-    filename = os.path.basename(fp)
-    fpo = os.path.join(os.path.dirname(fp), f"blurred_{radius}_{filename}")
+    filename = uuid.uuid5(uuid.NAMESPACE_URL, fp).hex
+    fpo = os.path.join(pathlib.Path("./data/temp/"), f"blurred_{radius}_{filename}.png")
 
     if os.path.exists(fpo):
         return fpo
@@ -101,7 +49,7 @@ async def horizontalPile(
     images: list[PIL.Image.Image],
     paddingX: int,
     align: Literal["top", "bottom", "center"],
-    background: str,
+    background: str = "#00000000",
     marginTop: int = 0,
     marginLeft: int = 0,
     marginRight: int = 0,
@@ -124,7 +72,7 @@ async def horizontalPile(
         else:
             top = (maxHeight - image.height) // 2
 
-        await addUponPaste(base, image, leftPointer + marginLeft, top + marginTop)
+        await imagePaste(base, image, leftPointer + marginLeft, top + marginTop)
         leftPointer += image.width + paddingX
 
     return base
@@ -134,7 +82,7 @@ async def verticalPile(
     images: list[PIL.Image.Image],
     paddingY: int,
     align: Literal["left", "center", "right"],
-    background: str,
+    background: str = "#00000000",
     marginTop: int = 0,
     marginLeft: int = 0,
     marginRight: int = 0,
@@ -157,13 +105,13 @@ async def verticalPile(
         else:
             left = (maxWidth - image.width) // 2
 
-        await addUponPaste(base, image, left + marginLeft, topPointer + marginTop)
+        await imagePaste(base, image, left + marginLeft, topPointer + marginTop)
         topPointer += image.height + paddingY
 
     return base
 
 
-async def combineABunchOfImage(
+async def pileImages(
     paddingX: int,
     paddingY: int,
     images: list[PIL.Image.Image],
@@ -204,14 +152,10 @@ async def combineABunchOfImage(
 __all__ = [
     "newImage",
     "loadImage",
-    "addUponPaste",
-    "toOpenCVImage",
-    "fromOpenCVImage",
-    "fastPaste",
-    "addUpon",
+    "imagePaste",
     "horizontalPile",
     "verticalPile",
-    "combineABunchOfImage",
+    "pileImages",
     "resize",
     "blurred",
 ]

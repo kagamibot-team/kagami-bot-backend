@@ -5,13 +5,16 @@ import PIL.Image
 from src.imports import *
 
 
-async def send_shop_message(ctx: OnebotContext, shop: ShopData):
+async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
     boxes: list[PILImage] = []
 
     for group, products in shop.products.items():
         boxes.append(
-            await drawASingleLineClassic(
-                group, "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 60
+            await getTextImage(
+                text=group,
+                color="#FFFFFF",
+                font=Fonts.HARMONYOS_SANS_BLACK,
+                fontSize=60,
             )
         )
 
@@ -19,7 +22,7 @@ async def send_shop_message(ctx: OnebotContext, shop: ShopData):
         for product in products:
             subs.append(await product_box(product))
         boxes.append(
-            await combineABunchOfImage(
+            await pileImages(
                 0, 0, subs, 3, "#9B9690", "center", "left", marginBottom=30
             )
         )
@@ -45,7 +48,7 @@ async def send_shop_message(ctx: OnebotContext, shop: ShopData):
 )
 @withLoading()
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     buys = res.query[list[str]]("商品名列表")
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
     shop_data = ShopData()
@@ -56,11 +59,16 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
         await send_shop_message(ctx, shop_data)
         return
 
+    name = await ctx.getSenderName()
+
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderNameInGroup()
+
     buy_result = "小镜的 Shop 销售小票\n"
     buy_result += "--------------------\n"
     buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
     buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
-    buy_result += f"客户：{await ctx.getSenderName()}\n"
+    buy_result += f"客户：{name}\n"
     buy_result += f"编号：{ctx.getSenderId()}\n"
     buy_result += "--------------------\n\n"
 
@@ -91,9 +99,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
             await root.emit(evt)
 
     money_update_query = (
-        update(User)
-        .where(User.data_id == uid)
-        .values(money=money_left - money_sum)
+        update(User).where(User.data_id == uid).values(money=money_left - money_sum)
     )
     await session.execute(money_update_query)
 
@@ -116,22 +122,21 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
         buy_result += "  欢迎下次光临\n"
         buy_result += "--------------------\n"
 
-    image = await drawLimitedBoxOfTextClassic(
+    image = await getTextImage(
         text=buy_result,
-        maxWidth=336,
+        width=336,
         color="#000000",
-        lineHeight=28,
         font=Fonts.VONWAON_BITMAP_12,
         fontSize=24,
-        expandTop=60,
-        expandBottom=220,
-        align=HorizontalAnchor.left,
-        expandLeft=20,
-        expandRight=20,
+        marginTop=60,
+        marginBottom=248,
+        marginLeft=20,
+        marginRight=20,
+        drawEmoji=False,
     )
 
     base = PIL.Image.new("RGB", image.size, "#FFFFFF")
-    base.paste(image, (0, 0), image)
+    await imagePaste(base, image, 0, 0)
 
     qrc = qrcode.main.QRCode(
         version=1,

@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from nonebot import get_plugin_config
+from pydantic import BaseModel
 
 
 class Config(BaseModel):
@@ -28,5 +28,6 @@ class Config(BaseModel):
 
     # 白名单群聊
     white_list_groups: list[int] = []
+
 
 config = get_plugin_config(Config)

@@ -9,5 +9,5 @@ from src.common.download import *
 from src.common.lang.zh import la
 from src.common.times import *
 from src.common.localize_image import localize_image
-from src.common.qq_emoji_enum import QQEmoji
+from src.base.onebot_enum import QQEmoji
 from pydantic import BaseModel

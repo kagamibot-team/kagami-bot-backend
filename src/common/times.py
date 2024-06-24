@@ -7,11 +7,14 @@ def now_datetime():
 
 
 def to_utc8(dt: datetime.datetime):
-    return dt.astimezone(pytz.timezone("Asia/Shanghai"))
+    tz = pytz.timezone("Asia/Shanghai")
+    return dt.astimezone(tz)
 
 
 def timestamp_to_datetime(ts: float):
-    return datetime.datetime.fromtimestamp(ts)
+    return datetime.datetime.fromtimestamp(
+        ts, tz=datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
+    )
 
 
 __all__ = ["to_utc8", "timestamp_to_datetime", "now_datetime"]

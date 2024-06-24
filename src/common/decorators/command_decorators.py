@@ -129,10 +129,10 @@ def requireAdmin():
 def debugOnly():
     """限制只有 DEV 环境下才能执行该命令。"""
 
-    def wrapper(func: Callable[[TC], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC):
+    def wrapper(func: Callable[[*TA], Coroutine[Any, Any, T]]):
+        async def inner(*args: *TA):
             if get_driver().env == "dev":
-                return await func(ctx)
+                return await func(*args)
 
         return inner
 
