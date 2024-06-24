@@ -40,7 +40,7 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
 
     titles.append(
         await drawASingleLineClassic(
-            f"{name} 的一抓！", "#63605C", Fonts.ALIMAMA_SHU_HEI, 80, 0
+            f"{name} 的一抓！", "#63605C", Fonts.JINGNAN_JUNJUN, 80, 0
         )
     )
     titles.append(

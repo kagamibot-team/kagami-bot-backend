@@ -56,6 +56,7 @@ class Fonts(enum.Enum):
     VONWAON_BITMAP_12 = _res("VonwaonBitmap-12px.ttf")
     VONWAON_BITMAP_16 = _res("VonwaonBitmap-16px.ttf")
     MARU_MONICA = _res("莫妮卡像素圆体 x12y16pxMaruMonica.otf")
+    JINGNAN_JUNJUN = _res("JUNJUN.otf")
 
 
 @cache
