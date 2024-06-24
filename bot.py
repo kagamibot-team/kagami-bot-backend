@@ -16,7 +16,6 @@ os.makedirs(os.path.join(".", "data", "awards"), exist_ok=True)
 os.makedirs(os.path.join(".", "data", "skins"), exist_ok=True)
 os.makedirs(os.path.join(".", "data", "kagami"), exist_ok=True)
 os.makedirs(os.path.join(".", "data", "temp"), exist_ok=True)
-os.makedirs(os.path.join(".", "data", "logs"), exist_ok=True)
 
 
 # 注册日志管理器
