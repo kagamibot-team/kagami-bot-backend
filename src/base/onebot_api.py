@@ -11,6 +11,7 @@
 请保证调用的 API 在 NapNeko 中有相应实现
 """
 
+from pydantic import BaseModel
 from src.base.onebot_basic import handle_input_message, OnebotBotProtocol, MessageLike
 from src.common.qq_emoji_enum import QQEmoji
 
@@ -53,3 +54,15 @@ async def set_msg_emoji_like(
         message_id=message_id,
         emoji_id=str(emoji_id),
     )
+
+
+class GroupInfo(BaseModel):
+    group_id: int
+    group_name: str
+    member_count: int
+    max_member_count: int
+
+
+async def get_group_list(bot: OnebotBotProtocol) -> list[GroupInfo]:
+    res: list[dict] = await bot.call_api("get_group_list")
+    return [GroupInfo(**v) for v in res]

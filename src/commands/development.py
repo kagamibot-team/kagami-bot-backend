@@ -9,10 +9,10 @@ from src.imports import *
 
 @listenGroup()
 @requireAdmin()
-@withLoading()
 @matchRegex(
     "^:: ?(导出|输出|保存|发送|生成|构建|建造|吐出|献出) ?(你(自己)?的)? ?(存档|文件|心脏|大脑)$"
 )
+@withLoading()
 async def _(ctx: GroupContext, _):
     fp = await pack_save()
     await ctx.bot.call_api(

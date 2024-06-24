@@ -1,15 +1,20 @@
-from nonebot import logger, on_notice, on_type  # type: ignore
+from nonebot import on_notice, on_type  # type: ignore
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
     PrivateMessageEvent,
     NoticeEvent,
+    LifecycleMetaEvent,
 )
 from nonebot.adapters.console import Bot as ConsoleBot
 from nonebot.adapters.console import MessageEvent as ConsoleMessageEvent
 
 from src.base.event_manager import EventManager
-from src.base.onebot_events import GroupMessageEmojiLike, GroupStickEmojiContext
+from src.base.onebot_events import (
+    GroupMessageEmojiLike,
+    GroupStickEmojiContext,
+    OnebotStartedContext,
+)
 from .command_events import (
     ConsoleContext,
     GroupContext,
@@ -25,6 +30,7 @@ def activateRoot(root: EventManager):
     privateMessageHandler = on_type(PrivateMessageEvent)
 
     notice_group_msg_emoji_like_handler = on_notice()
+    onebot_startup_hander = on_type(LifecycleMetaEvent)
 
     @consoleHandler.handle()
     async def _(bot: ConsoleBot, event: ConsoleMessageEvent):
@@ -47,6 +53,11 @@ def activateRoot(root: EventManager):
             await root.throw(
                 GroupStickEmojiContext(GroupMessageEmojiLike(**event.model_dump()), bot)
             )
+
+    @onebot_startup_hander.handle()
+    async def _(bot: Bot, event: LifecycleMetaEvent):
+        if event.sub_type == "connect":
+            await root.throw(OnebotStartedContext(bot))
 
 
 root = EventManager()

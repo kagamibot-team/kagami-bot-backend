@@ -26,4 +26,11 @@ class GroupStickEmojiContext:
         self.bot = bot
 
 
-__all__ = ["GroupEmoji", "GroupMessageEmojiLike", "GroupStickEmojiContext"]
+class OnebotStartedContext:
+    bot: OnebotBotProtocol
+
+    def __init__(self, bot: OnebotBotProtocol) -> None:
+        self.bot = bot
+
+
+__all__ = ["GroupEmoji", "GroupMessageEmojiLike", "GroupStickEmojiContext", "OnebotStartedContext"]
