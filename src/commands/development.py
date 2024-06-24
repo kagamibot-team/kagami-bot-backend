@@ -3,6 +3,7 @@
 如果有一些需要方便开发的指令，就写到这里吧！
 """
 
+from pathlib import Path
 from src.common.save_file_handler import pack_save
 from src.imports import *
 
@@ -21,3 +22,12 @@ async def _(ctx: GroupContext, _):
         file=str(fp.absolute()),
         name=fp.name,
     )
+
+
+@listenPublic()
+@requireAdmin()
+@matchLiteral("::reload-script")
+async def _(ctx: PublicContext):
+    await ctx.reply("服务器即将重启")
+
+    os.system(Path("./linux/upgrade.sh"))

@@ -23,6 +23,7 @@ nonebot.logger.add(
     "./data/log.log",
     format="{time:YYYY-MM-DD HH:mm:ss} [{level}] {message}",
     rotation="10 MB",
+    level="INFO",
 )
 
 

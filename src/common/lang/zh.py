@@ -1,3 +1,6 @@
+from packaging.version import Version
+
+
 class Messages:
     catch_top = """剩余抓小哥的次数：{0}/{1}\n下次次数恢复还需要{2}\n你刚刚一共抓了{3}只小哥，并得到了{4}\n现在，你一共有{5}"""
     mysp = "你有{}"
@@ -216,6 +219,9 @@ class About:
             "榆木华：在抓进度界面增加了筛选等级功能，例如 zhuajd -l 5 就可以筛选查看五级的小哥进度",
             "榆木华：修复了小票二维码错位的问题",
         ],
+        "0.5.13.1": [
+            "试图修正了 zhuajd 过程中可能出现的 max() arg 为空的问题",
+        ]
     }
     update_dev: dict[str, list[str]] = {
         "0.4.5": [
@@ -315,3 +321,11 @@ class La:
 
 
 la = La()
+
+
+def get_latest_version() -> str:
+    return sorted(la.about.update.keys(), reverse=True, key=Version)[0]
+
+
+def get_latest_versions(count: int=3) -> list[str]:
+    return sorted(la.about.update.keys(), reverse=True, key=Version)[:count]

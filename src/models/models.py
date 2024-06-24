@@ -1,10 +1,10 @@
 import datetime
 import os
+
 from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import *
-
 
 DEFAULT_IMG = os.path.join(".", "res", "default.png")
 
@@ -17,6 +17,7 @@ class Global(Base, BaseMixin):
     __tablename__ = "catch_global"
 
     catch_interval: Mapped[float] = mapped_column(default=3600)
+    last_reported_version: Mapped[str] = mapped_column(default="", server_default="")
 
 
 class Level(Base, BaseMixin):
