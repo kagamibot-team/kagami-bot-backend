@@ -1,5 +1,7 @@
 import os
+import pathlib
 from typing import Literal
+import uuid
 import PIL
 import PIL.Image
 import PIL.ImageTransform
@@ -85,8 +87,8 @@ def resize(img: PIL.Image.Image, width: int, height: int):
 
 
 async def blurred(fp: str, radius: int):
-    filename = os.path.basename(fp)
-    fpo = os.path.join(os.path.dirname(fp), f"blurred_{radius}_{filename}")
+    filename = uuid.uuid5(uuid.NAMESPACE_URL, fp).hex
+    fpo = os.path.join(pathlib.Path("./data/temp/"), f"blurred_{radius}_{filename}.png")
 
     if os.path.exists(fpo):
         return fpo
