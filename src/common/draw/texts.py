@@ -2,6 +2,8 @@ import enum
 import os
 from typing import Iterable
 
+import PIL
+import PIL.Image
 from imagetext_py import (
     Canvas,
     Color,
@@ -156,6 +158,9 @@ def getTextImage(
     )
 
     img = canvas.to_image()
+    if img.width <= 0 or img.height <= 0:
+        return PIL.Image.new("RGBA", (1, 1), "#00000000")
+    
     return img.resize(
         (
             int(img.width / scalar),
