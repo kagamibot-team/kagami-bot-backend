@@ -1,6 +1,7 @@
 import time
 
 
+from src.common.draw.textv2 import getTextImage
 from src.imports import *
 from src.logic.catch import pickAwards
 from src.logic.catch_time import calculateTime, updateUserTime
@@ -11,7 +12,6 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
     userTime = e.userTime
     timeToNextPick = userTime.pickLastUpdated + userTime.interval
 
-    counts = sum([p.pick.delta for _, p in pickDisplay.items()])
     money = e.picks.money
 
     deltaTime = int(timeToNextPick - time.time())
@@ -38,9 +38,19 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
     if isinstance(ctx, GroupContext):
         name = await ctx.getSenderNameInGroup()
 
+    # titles.append(
+    #     await drawASingleLineClassic(
+    #         f"{name} 的一抓！", "#63605C", Fonts.JINGNAN_JUNJUN, 80, 0
+    #     )
+    # )
     titles.append(
-        await drawASingleLineClassic(
-            f"{name} 的一抓！", "#63605C", Fonts.JINGNAN_JUNJUN, 80, 0
+        await getTextImage(
+            text=f"{name} 的一抓！",
+            fill="#63605C",
+            font=Fonts.JINGNAN_JUNJUN,
+            fontSize=80,
+            width=800,
+            height=100,
         )
     )
     titles.append(
