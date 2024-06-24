@@ -130,10 +130,20 @@ def calc_progress(
 
 
 @listenOnebot()
-@matchAlconna(Alconna("re:(zhuajd|抓进度|抓小哥进度)"))
+@matchAlconna(
+    Alconna(
+        "re:(zhuajd|抓进度|抓小哥进度)",
+        Option(
+            "等级",
+            Arg("等级名字", str),
+            alias=["--level", "级别", "-l", "-L"],
+            compact=True,
+        )
+    )
+)
 @withLoading(la.loading.zhuajd)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
     if uid is None:
         return
@@ -162,18 +172,37 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     if isinstance(ctx, GroupContext):
         name = await ctx.getSenderNameInGroup()
 
-    percent_progress: float = calc_progress(levels, met_sums, awards)
-    baseImgs.append(
-        await getTextImage(
-            text=f"{name} 的抓小哥进度：{str(round(percent_progress*100, 2))}%",
-            color="#FFFFFF",
-            font=Fonts.HARMONYOS_SANS_BLACK,
-            fontSize=80,
-            marginBottom=30,
+    levelName = res.query[str]("等级名字")
+    levelId = None
+    if levelName is not None:
+        levelId = await get_lid_by_name(session, levelName)
+
+    if levelId is not None:
+        baseImgs.append(
+            await getTextImage(
+                text=f"{name} 的{levelName}进度：",
+                color="#FFFFFF",
+                font=Fonts.HARMONYOS_SANS_BLACK,
+                fontSize=80,
+                marginBottom=30,
+            )
         )
-    )
+
+    else:
+        percent_progress: float = calc_progress(levels, met_sums, awards)
+        baseImgs.append(
+            await getTextImage(
+                text=f"{name} 的抓小哥进度：{str(round(percent_progress*100, 2))}%",
+                color="#FFFFFF",
+                font=Fonts.HARMONYOS_SANS_BLACK,
+                fontSize=80,
+                marginBottom=30,
+            )
+        )
 
     for lid, lname, lcolor, lweight in levels:
+        if levelId is not None and lid != levelId:
+            continue
         if len(awards[lid]) == 0:
             continue
         imgs: list[PILImage] = []
@@ -196,7 +225,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
             )
 
         baseImgs.append(
-            await _title(f"{lname} {met_sums[lid]}/{len(awards[lid])}", lcolor)
+            await _title(f"{lname} {met_sums[lid]}/{len(awards[lid]) if lweight else 1}", lcolor)
         )
         baseImgs.append(await _combine_cells(imgs))
 
@@ -267,14 +296,42 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
 
 @listenOnebot()
 @requireAdmin()
-@matchAlconna(Alconna("re:(所有|全部)小哥", ["::"]))
+@matchAlconna(
+    Alconna(
+        "re:(所有|全部)小哥",
+        ["::"],
+        Option(
+            "等级",
+            Arg("等级名字", str),
+            alias=["--level", "级别", "-l", "-L"],
+            compact=True,
+        )
+    )
+)
 @withLoading(la.loading.all_xg)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
+async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     levels = await _get_levels(session)
 
+    levelName = res.query[str]("等级名字")
+    levelId = None
+    if levelName is not None:
+        levelId = await get_lid_by_name(session, levelName)
+
     baseImgs: list[PILImage] = []
+    baseImgs.append(
+        await getTextImage(
+            text=f"全部{"" if levelId is None else levelName}小哥：",
+            color="#FFFFFF",
+            font=Fonts.HARMONYOS_SANS_BLACK,
+            fontSize=80,
+            marginBottom=30,
+        )
+    )
+
     for lid, lname, lcolor, _ in levels:
+        if levelId is not None and lid != levelId:
+            continue
         awards = await _get_awards(session, lid)
 
         if len(awards) == 0:
@@ -287,5 +344,5 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
         baseImgs.append(await _title(lname, lcolor))
         baseImgs.append(await _combine_cells(imgs))
 
-    img = await verticalPile(baseImgs, 15, "left", "#9B9690", 120, 60, 60, 60)
+    img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
     await ctx.reply(UniMessage().image(raw=imageToBytes(img)))
