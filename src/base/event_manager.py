@@ -74,11 +74,8 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
         begin = time.time()
         for key in self.keys():
             if _isinstance(evt, key):
-                try:
-                    for l in self[key]:
-                        await l(evt)
-                except StopIteration:
-                    pass
+                for l in self[key]:
+                    await l(evt)
         logger.debug(f"Event {repr(evt)} emitted in {time.time() - begin}s")
 
     async def throw(self, evt: Any):
@@ -90,13 +87,10 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
 
         for key in self.keys():
             if _isinstance(evt, key):
-                try:
-                    for l in self[key]:
-                        task = asyncio.create_task(l(evt))
-                        tasks.add(task)
-                        task.add_done_callback(tasks.discard)
-                except StopIteration:
-                    pass
+                for l in self[key]:
+                    task = asyncio.create_task(l(evt))
+                    tasks.add(task)
+                    task.add_done_callback(tasks.discard)
 
 
 __all__ = ["EventManager", "Listener"]

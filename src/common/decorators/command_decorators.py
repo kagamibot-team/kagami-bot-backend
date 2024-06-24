@@ -287,8 +287,6 @@ def withLoading(text: str = "请稍候……"):
             try:
                 msg = await func(ctx, *args)
                 return msg
-            except StopIteration as e:
-                raise e from e
             except ActionFailed as e:
                 logger.warning("又遇到了，那久违的「ActionFailed」")
             except Exception as e:
@@ -298,7 +296,7 @@ def withLoading(text: str = "请稍候……"):
                     )
                 )
 
-                raise e from e
+                logger.opt(exception=e, colors=True).error(e)
             finally:
                 await receipt.recall()
 
