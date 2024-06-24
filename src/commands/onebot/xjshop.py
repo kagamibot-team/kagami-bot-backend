@@ -56,11 +56,16 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         await send_shop_message(ctx, shop_data)
         return
 
+    name = await ctx.getSenderName()
+
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderNameInGroup()
+
     buy_result = "小镜的 Shop 销售小票\n"
     buy_result += "--------------------\n"
     buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
     buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
-    buy_result += f"客户：{await ctx.getSenderName()}\n"
+    buy_result += f"客户：{name}\n"
     buy_result += f"编号：{ctx.getSenderId()}\n"
     buy_result += "--------------------\n\n"
 
@@ -91,9 +96,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
             await root.emit(evt)
 
     money_update_query = (
-        update(User)
-        .where(User.data_id == uid)
-        .values(money=money_left - money_sum)
+        update(User).where(User.data_id == uid).values(money=money_left - money_sum)
     )
     await session.execute(money_update_query)
 

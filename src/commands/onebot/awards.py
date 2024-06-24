@@ -28,7 +28,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
     info = await get_award_info(session, user, award)
 
     if info.skinName is not None:
-        nameDisplay = la.disp.award_display_with_skin.format(info.awardName, info.skinName, info.levelName)
+        nameDisplay = la.disp.award_display_with_skin.format(
+            info.awardName, info.skinName, info.levelName
+        )
     else:
         nameDisplay = la.disp.award_display.format(info.awardName, info.levelName)
 
@@ -101,21 +103,28 @@ async def _get_others(session: AsyncSession, uid: int):
     return skins, storages, used
 
 
-def calc_progress(levels: Sequence[tuple[int, str, str, float]], met_sums: dict[int, int], awards: dict[int, Sequence[tuple[int, str, str]]]):
+def calc_progress(
+    levels: Sequence[tuple[int, str, str, float]],
+    met_sums: dict[int, int],
+    awards: dict[int, Sequence[tuple[int, str, str]]],
+):
     param: int = 10
     denominator: float = 0
     for _, name, _, lweight in levels:
         if lweight == 0:
             continue
-        logger.info("%s: %f ^ %f = %f" % (name, lweight, 1.0/param, math.pow(lweight, 1.0/param)))
-        denominator += 1.0/math.pow(lweight, 1.0/param)
-    
+        logger.info(
+            "%s: %f ^ %f = %f"
+            % (name, lweight, 1.0 / param, math.pow(lweight, 1.0 / param))
+        )
+        denominator += 1.0 / math.pow(lweight, 1.0 / param)
+
     progress: float = 0
     for lid, _, _, lweight in levels:
         if lweight == 0:
             continue
-        numerator: float = 1.0/math.pow(lweight, 1.0/param)
-        progress += numerator/denominator * (1.0*met_sums[lid]/len(awards[lid]))
+        numerator: float = 1.0 / math.pow(lweight, 1.0 / param)
+        progress += numerator / denominator * (1.0 * met_sums[lid] / len(awards[lid]))
 
     return progress
 
@@ -128,12 +137,12 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
     if uid is None:
         return
-    
+
     levels = await _get_levels(session)
     skins, storages, used = await _get_others(session, uid)
     awards: dict[int, Sequence[tuple[int, str, str]]] = {}
     met_sums: dict[int, int] = {}
-    
+
     for lid, _, _, _ in levels:
         awards[lid] = await _get_awards(session, lid)
         met_sums[lid] = 0
@@ -149,13 +158,22 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     baseImgs: list[PILImage] = []
 
     name = await ctx.getSenderName()
+
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderNameInGroup()
+
     percent_progress: float = calc_progress(levels, met_sums, awards)
     baseImgs.append(
-            await drawASingleLineClassic(
-                f"{name} 的抓小哥进度：{str(round(percent_progress*100, 2))}%", "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 80, 0, 30
-            )
+        await drawASingleLineClassic(
+            f"{name} 的抓小哥进度：{str(round(percent_progress*100, 2))}%",
+            "#FFFFFF",
+            Fonts.HARMONYOS_SANS_BLACK,
+            80,
+            0,
+            30,
         )
-    
+    )
+
     for lid, lname, lcolor, _ in levels:
         if len(awards[lid]) == 0:
             continue
@@ -172,9 +190,13 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
             elif aid in skins.keys():
                 img = skins[aid]
 
-            imgs.append(await ref_book_box(name, str(sto) if (sto + use) else "", color, img))
+            imgs.append(
+                await ref_book_box(name, str(sto) if (sto + use) else "", color, img)
+            )
 
-        baseImgs.append(await _title(f"{lname} {met_sums[lid]}/{len(awards[lid])}", lcolor))
+        baseImgs.append(
+            await _title(f"{lname} {met_sums[lid]}/{len(awards[lid])}", lcolor)
+        )
         baseImgs.append(await _combine_cells(imgs))
 
     img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
@@ -211,11 +233,15 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
                 img = skins[aid]
 
             _imgs.append((sto, await ref_book_box(name, str(sto), color, img)))
-        
+
         _imgs.sort(key=lambda x: -x[0])
         imgs += [i[1] for i in _imgs]
 
     name = await ctx.getSenderName()
+
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderNameInGroup()
+
     area_title = await drawASingleLineClassic(
         f"{name} 的抓小哥库存：", "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 80, 0, 30
     )
@@ -228,7 +254,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
         horizontalAlign="top",
         verticalAlign="left",
     )
-    img = await verticalPile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
+    img = await verticalPile(
+        [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
+    )
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
