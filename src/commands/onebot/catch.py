@@ -11,7 +11,6 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
     userTime = e.userTime
     timeToNextPick = userTime.pickLastUpdated + userTime.interval
 
-    counts = sum([p.pick.delta for _, p in pickDisplay.items()])
     money = e.picks.money
 
     deltaTime = int(timeToNextPick - time.time())
@@ -39,18 +38,28 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
         name = await ctx.getSenderNameInGroup()
 
     titles.append(
-        await drawASingleLineClassic(
-            f"{name} 的一抓！", "#63605C", Fonts.ALIMAMA_SHU_HEI, 80, 0
+        await getTextImage(
+            text=f"{name} 的一抓！",
+            color="#63605C",
+            font=Fonts.JINGNAN_JUNJUN,
+            fontSize=80,
+            width=800,
         )
     )
     titles.append(
-        await drawLimitedBoxOfTextClassic(
-            text=f"本次获得{int(money)}{la.unit.money}，目前共有{int(e.moneyUpdated)}{la.unit.money}。\n剩余次数：{userTime.pickRemain}/{userTime.pickMax}，距下次次数恢复还要{timeStr}。",
-            maxWidth=800,
-            lineHeight=26,
+        await getTextImage(
+            text=(
+                f"本次获得{int(money)}{la.unit.money}，"
+                f"目前共有{int(e.moneyUpdated)}{la.unit.money}。\n"
+                f"剩余次数：{userTime.pickRemain}/{userTime.pickMax}，"
+                f"距下次次数恢复还要{timeStr}。"
+            ),
+            width=800,
             color="#9B9690",
             font=Fonts.JINGNAN_BOBO_HEI,
-            fontSize=24,
+            fontSize=36,
+            marginTop=20,
+            marginBottom=30,
         )
     )
 

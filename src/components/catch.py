@@ -1,8 +1,10 @@
 import PIL
 import PIL.Image
+from imagetext_py import TextAlign
 
 
-from src.common.draw.texts import Fonts, drawASingleLineClassic, drawLimitedBoxOfTextClassic, drawLimitedBoxOfTextWithScalar
+from src.common.draw.images import imagePaste
+from src.common.draw.texts import Fonts, getTextImage
 from src.components.display_box import display_box
 
 
@@ -16,57 +18,54 @@ async def catch(
     notation: str,
 ) -> PIL.Image.Image:
     left_display = await display_box(color, image, new)
-    rightDescription = await drawLimitedBoxOfTextClassic(
+    rightDescription = await getTextImage(
         text=description,
-        maxWidth=567,
-        lineHeight=19,
+        width=567,
         color="#ffffff",
-        font=Fonts.VONWAON_BITMAP_16,
+        font=[Fonts.VONWAON_BITMAP_16, Fonts.MAPLE_UI],
         fontSize=16,
     )
-    rightTitle = await drawASingleLineClassic(
+    rightTitle = await getTextImage(
         text=title,
         fontSize=43,
         color="#ffffff",
-        font=Fonts.HARMONYOS_SANS_BLACK,
+        font=Fonts.JINGNAN_JUNJUN,
     )
-    rightStar = await drawLimitedBoxOfTextWithScalar(
-        stars,
-        400,
-        "right",
-        "right",
-        43,
-        color,
-        Fonts.HARMONYOS_SANS,
-        28,
+    rightStar = await getTextImage(
+        text=stars,
+        width=400,
+        fontSize=43,
+        align=TextAlign.Right,
+        color=color,
+        font=Fonts.MAPLE_UI,
     )
-    leftNotation = await drawASingleLineClassic(
+    leftNotation = await getTextImage(
         text=notation,
         color="#FFFFFF",
         font=Fonts.MARU_MONICA,
         fontSize=48,
-        expandBottom=5,
-        expandTop=0,
-        expandLeft=0,
+        marginBottom=5,
+        marginTop=0,
+        marginLeft=0,
     )
-    leftNotationShadow = await drawASingleLineClassic(
+    leftNotationShadow = await getTextImage(
         text=notation,
         color="#000000",
         font=Fonts.MARU_MONICA,
         fontSize=48,
-        expandBottom=5,
-        expandTop=3,
-        expandLeft=3,
+        marginBottom=5,
+        marginTop=3,
+        marginLeft=3,
     )
 
     block = PIL.Image.new(
         "RGB", (800, max(180, rightDescription.height + 89)), "#9B9690"
     )
-    block.paste(left_display, (18, 18), left_display)
-    block.paste(rightTitle, (212, 18), rightTitle)
-    block.paste(rightDescription, (212, 75), rightDescription)
-    block.paste(rightStar, (379, 18), rightStar)
-    block.paste(leftNotationShadow, (26, 107), leftNotationShadow)
-    block.paste(leftNotation, (26, 107), leftNotation)
+    await imagePaste(block, left_display, 18, 18)
+    await imagePaste(block, rightTitle, 212, 18)
+    await imagePaste(block, rightDescription, 212, 75)
+    await imagePaste(block, rightStar, 379, 14)
+    await imagePaste(block, leftNotationShadow, 26, 107)
+    await imagePaste(block, leftNotation, 26, 107)
 
     return block

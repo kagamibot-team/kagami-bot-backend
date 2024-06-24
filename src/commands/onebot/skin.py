@@ -89,7 +89,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
     for box in _boxes:
         boxes.append(await skin_book(*box))
 
-    imgout = await combineABunchOfImage(
+    imgout = await pileImages(
         paddingX=0,
         paddingY=0,
         images=boxes,
@@ -146,7 +146,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     for box in skins:
         boxes.append(await skin_book(box[0], box[1], str(box[2]), box[3], box[4]))
 
-    imgout = await combineABunchOfImage(
+    imgout = await pileImages(
         paddingX=0,
         paddingY=0,
         images=boxes,
