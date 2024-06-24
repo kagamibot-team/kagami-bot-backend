@@ -138,7 +138,7 @@ def calc_progress(
             Arg("等级名字", str),
             alias=["--level", "级别", "-l", "-L"],
             compact=True,
-        )
+        ),
     )
 )
 @withLoading(la.loading.zhuajd)
@@ -225,7 +225,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
             )
 
         baseImgs.append(
-            await _title(f"{lname} {met_sums[lid]}/{len(awards[lid]) if lweight else 1}", lcolor)
+            await _title(
+                f"{lname} {met_sums[lid]}/{len(awards[lid]) if lweight else 1}", lcolor
+            )
         )
         baseImgs.append(await _combine_cells(imgs))
 
@@ -305,7 +307,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
             Arg("等级名字", str),
             alias=["--level", "级别", "-l", "-L"],
             compact=True,
-        )
+        ),
     )
 )
 @withLoading(la.loading.all_xg)
@@ -319,9 +321,10 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         levelId = await get_lid_by_name(session, levelName)
 
     baseImgs: list[PILImage] = []
+    _level_name_display = "" if levelId is None else levelName
     baseImgs.append(
         await getTextImage(
-            text=f"全部{"" if levelId is None else levelName}小哥：",
+            text=f"全部{_level_name_display}小哥：",
             color="#FFFFFF",
             font=Fonts.HARMONYOS_SANS_BLACK,
             fontSize=80,
