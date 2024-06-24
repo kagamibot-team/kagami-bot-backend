@@ -15,12 +15,12 @@ class MockReceipt(Recallable):
 class MockUniMessageContext(UniMessageContext):
     message: UniMessage[Any]
     sender: int = 0
+    sent: list[UniMessage[Any]]
 
     def __init__(self, message: UniMessage[Any], sender: int = 0) -> None:
         self.message = message
         self.sender = sender
-
-    sent: list[UniMessage[Any]] = []
+        self.sent = []
 
     async def getMessage(self) -> UniMessage[Segment]:
         return self.message
