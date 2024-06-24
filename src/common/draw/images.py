@@ -55,7 +55,7 @@ async def horizontalPile(
     marginRight: int = 0,
     marginBottom: int = 0,
 ) -> PIL.Image.Image:
-    maxHeight = max([i.height for i in images])
+    maxHeight = max([i.height for i in images] + [1])
     width = sum([i.width for i in images]) + paddingX * len(images)
 
     base = await newImage(
@@ -88,7 +88,7 @@ async def verticalPile(
     marginRight: int = 0,
     marginBottom: int = 0,
 ) -> PIL.Image.Image:
-    maxWidth = max([i.width for i in images])
+    maxWidth = max([i.width for i in images] + [1])
     height = sum([i.height for i in images]) + paddingY * (len(images) - 1)
 
     base = await newImage(
