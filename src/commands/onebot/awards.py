@@ -173,7 +173,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
         )
     )
 
-    for lid, lname, lcolor, _ in levels:
+    for lid, lname, lcolor, lweight in levels:
         if len(awards[lid]) == 0:
             continue
         imgs: list[PILImage] = []
@@ -183,6 +183,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
             use = used[aid] if aid in used.keys() else 0
 
             if sto + use == 0:
+                if lweight == 0:
+                    continue
                 img = "./res/blank_placeholder.png"
                 name = la.disp.award_unknown_name
                 color = "#696361"
