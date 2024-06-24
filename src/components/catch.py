@@ -37,7 +37,7 @@ async def catch(
         fontSize=43,
         align=TextAlign.Right,
         color=color,
-        font=Fonts.HARMONYOS_SANS,
+        font=Fonts.MAPLE_UI,
     )
     leftNotation = await getTextImage(
         text=notation,
@@ -64,7 +64,7 @@ async def catch(
     block.paste(left_display, (18, 18), left_display)
     block.paste(rightTitle, (212, 18), rightTitle)
     block.paste(rightDescription, (212, 75), rightDescription)
-    block.paste(rightStar, (379, 18), rightStar)
+    block.paste(rightStar, (379, 14), rightStar)
     block.paste(leftNotationShadow, (26, 107), leftNotationShadow)
     block.paste(leftNotation, (26, 107), leftNotation)
 

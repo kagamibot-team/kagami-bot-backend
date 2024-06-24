@@ -48,7 +48,7 @@ def _res(fn: str):
 
 
 class Fonts(enum.Enum):
-    HARMONYOS_SANS = _res("HarmonyOS_Sans_SC_Regular.ttf")
+    MAPLE_UI = _res("Maple UI.ttf")
     HARMONYOS_SANS_BLACK = _res("HarmonyOS_Sans_SC_Black.ttf")
     ALIMAMA_SHU_HEI = _res("AlimamaShuHeiTi-Bold.ttf")
     JINGNAN_BOBO_HEI = _res("荆南波波黑-Bold.ttf")
@@ -65,7 +65,7 @@ def textFont(fontEnum: Fonts, fontSize: int):
     return PIL.ImageFont.FreeTypeFont(fontEnum.value, fontSize)
 
 
-DEFAULT_FONT = textFont(Fonts.HARMONYOS_SANS, 12)
+DEFAULT_FONT = textFont(Fonts.MAPLE_UI, 12)
 
 
 @deprecated("你说的对，但是我们现在有 textv2 了")
@@ -155,7 +155,7 @@ async def drawSingleLine(
     maxWidth: int,
     color: str,
     align: Literal["left", "right", "center", "expand"],
-    font: Fonts = Fonts.HARMONYOS_SANS,
+    font: Fonts = Fonts.MAPLE_UI,
     fontSize: int = 12,
     expandTop: int = 0,
     expandBottom: int = 0,
@@ -211,7 +211,7 @@ async def drawSingleLine(
 async def drawASingleLineClassic(
     text: str,
     color: str,
-    font: Fonts = Fonts.HARMONYOS_SANS,
+    font: Fonts = Fonts.MAPLE_UI,
     fontSize: int = 12,
     expandTop: int = 0,
     expandBottom: int = 0,
@@ -248,7 +248,7 @@ async def drawLimitedBoxOfTextClassic(
     *,
     text: str,
     maxWidth: int,
-    font: Fonts = Fonts.HARMONYOS_SANS,
+    font: Fonts = Fonts.MAPLE_UI,
     fontSize: int = 12,
     color: str,
     lineHeight: int,
@@ -338,7 +338,7 @@ async def drawLimitedBoxOfText(
     alignLastLine: Literal["left", "right", "center", "expand"],
     lineHeight: int,
     color: str = "#000000",
-    font: Fonts = Fonts.HARMONYOS_SANS,
+    font: Fonts = Fonts.MAPLE_UI,
     fontSize: int = 16,
     expandTop: int = 0,
     expandBottom: int = 0,
@@ -418,7 +418,7 @@ async def drawLimitedBoxOfTextWithScalar(
     alignLastLine: Literal["left", "right", "center", "expand"],
     lineHeight: int,
     color: str = "#000000",
-    font: Fonts = Fonts.HARMONYOS_SANS,
+    font: Fonts = Fonts.MAPLE_UI,
     fontSize: int = 16,
     expandTop: int = 0,
     expandBottom: int = 0,
