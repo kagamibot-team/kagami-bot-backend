@@ -13,7 +13,7 @@ async def __title(text: str, color: str = "#FFFFFF"):
         width=180,
         color=color,
         font=Fonts.HARMONYOS_SANS_BLACK,
-        fontSize=20,
+        fontSize=24,
         align=TextAlign.Center,
     )
 
@@ -30,6 +30,7 @@ async def ref_book_box(title: str, notation: str, color: str, imgUrl: str):
         font=Fonts.MARU_MONICA,
         fontSize=48,
         stroke=2,
+        stroke_color="#000000",
         marginBottom=5,
         marginLeft=5,
     )
@@ -55,6 +56,7 @@ async def skin_book(title: str, title2: str, notation: str, color: str, imgUrl: 
         font=Fonts.MARU_MONICA,
         fontSize=36,
         stroke=2,
+        stroke_color="#000000",
         marginBottom=5,
         marginLeft=5,
     )
