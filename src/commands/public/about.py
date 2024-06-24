@@ -2,6 +2,7 @@
 显示更新信息
 """
 
+from src.common.lang.zh import get_latest_versions
 from src.imports import *
 from packaging.version import Version
 
@@ -19,12 +20,8 @@ def constructUpdateMessage(updates: dict[str, list[str]], count: int = 3) -> Uni
 
     text = f"{la.about.update_header}\n"
 
-    for key in sorted(updates.keys(), reverse=True, key=Version):
-        if count == 0:
-            break
-
-        count -= 1
-        text += f"{key}:\n"
+    for key in get_latest_versions(count):
+        text += f"版本 {key} 更新推送:\n"
         for item in updates[key]:
             text += f"- {item}\n"
 

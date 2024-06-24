@@ -233,15 +233,9 @@ class OnebotMessageContext(UniMessageContext[OnebotReceipt], Generic[TE]):
                     "send_private_msg", user_id=self.bot.self_id, message=message
                 )
                 message_id = info["message_id"]
-
                 rid_info = await self.bot.call_api("get_msg", message_id=message_id)
 
-                logger.info(info)
-                logger.info(rid_info)
-
                 nodes.append({"data": {"id": int(rid_info["real_id"])}, "type": "node"})
-
-        logger.info(nodes)
 
         return await self._send_forward(nodes)
 
