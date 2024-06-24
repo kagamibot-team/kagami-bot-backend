@@ -1,26 +1,19 @@
 import PIL
 import PIL.Image
+from imagetext_py import TextAlign
 
-from src.common.draw.texts import (
-    Fonts,
-    HorizontalAnchor,
-    drawLimitedBoxOfTextClassic,
-    drawLimitedBoxOfTextWithScalar,
-)
+from src.common.draw.texts import Fonts, getTextImage
 from src.components.display_box import display_box
 
 
 async def __title(text: str, color: str = "#FFFFFF"):
-    return await drawLimitedBoxOfTextWithScalar(
-        text,
-        180,
-        "center",
-        "center",
-        24,
-        color,
-        Fonts.HARMONYOS_SANS_BLACK,
-        20,
-        scalar=2,
+    return await getTextImage(
+        text=text,
+        width=180,
+        color=color,
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        fontSize=20,
+        align=TextAlign.Center,
     )
 
 
@@ -29,20 +22,15 @@ async def ref_book_box(title: str, notation: str, color: str, imgUrl: str):
 
     bottomTitle = await __title(title)
 
-    bottomNotation = await drawLimitedBoxOfTextClassic(
+    bottomNotation = await getTextImage(
         text=notation,
-        maxWidth=170,
-        lineHeight=57,
-        color="white",
+        width=170,
+        color="#FFFFFF",
         font=Fonts.MARU_MONICA,
         fontSize=48,
-        strokeWidth=2,
-        expandInnerBottom=5,
-        expandBottom=5,
-        expandInnerLeft=5,
-        expandInnerRight=5,
-        expandLeft=5,
-        align=HorizontalAnchor.left,
+        stroke=2,
+        marginBottom=5,
+        marginLeft=5,
     )
 
     block = PIL.Image.new("RGB", (216, 210), "#9B9690")
@@ -59,20 +47,15 @@ async def skin_book(title: str, title2: str, notation: str, color: str, imgUrl: 
     bottomTitle = await __title(title)
     bottomTitle2 = await __title(title2, "#C4BEBD")
 
-    bottomNotation = await drawLimitedBoxOfTextClassic(
+    bottomNotation = await getTextImage(
         text=notation,
-        maxWidth=170,
-        lineHeight=57,
-        color="white",
+        width=170,
+        color="#FFFFFF",
         font=Fonts.MARU_MONICA,
         fontSize=36,
-        strokeWidth=2,
-        expandInnerBottom=5,
-        expandBottom=5,
-        expandInnerLeft=5,
-        expandInnerRight=5,
-        expandLeft=5,
-        align=HorizontalAnchor.left,
+        stroke=2,
+        marginBottom=5,
+        marginLeft=5,
     )
 
     block = PIL.Image.new("RGB", (216, 234), "#9B9690")

@@ -1,9 +1,9 @@
 import PIL
 import PIL.Image
 from imagetext_py import TextAlign
+
 from src.common.dataclasses.shop_data import ProductData
-from src.common.draw.texts import Fonts, HorizontalAnchor, drawLimitedBoxOfTextClassic, drawLimitedBoxOfTextWithScalar
-from src.common.draw.textv2 import getTextImage
+from src.common.draw.texts import Fonts, getTextImage
 from src.common.lang.zh import la
 from src.components.display_box import display_box
 
@@ -18,15 +18,13 @@ async def product_box(product: ProductData):
         font=Fonts.HARMONYOS_SANS_BLACK,
         fontSize=26,
     )
-    title2 = await drawLimitedBoxOfTextWithScalar(
-        product.description,
-        180,
-        "center",
-        "center",
-        24,
-        "#C4BEBD",
-        Fonts.HARMONYOS_SANS_BLACK,
-        20,
+    title2 = await getTextImage(
+        text=product.description,
+        width=180,
+        color="#C4BEBD",
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        fontSize=20,
+        align=TextAlign.Center,
     )
 
     if product.sold_out:
@@ -42,7 +40,7 @@ async def product_box(product: ProductData):
 
     if not product.sold_out:
         notation = str(product.price) + la.unit.money
-        
+
         notationBox = await getTextImage(
             text=notation,
             width=170,

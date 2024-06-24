@@ -1,7 +1,6 @@
 import time
 
 
-from src.common.draw.textv2 import getTextImage
 from src.imports import *
 from src.logic.catch import pickAwards
 from src.logic.catch_time import calculateTime, updateUserTime

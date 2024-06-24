@@ -2,7 +2,6 @@ import qrcode
 import qrcode.main
 import qrcode.constants
 import PIL.Image
-from src.common.draw.textv2 import getTextImage
 from src.imports import *
 
 

@@ -3,8 +3,7 @@ import PIL.Image
 from imagetext_py import TextAlign
 
 
-from src.common.draw.texts import Fonts
-from src.common.draw.textv2 import getTextImage
+from src.common.draw.texts import Fonts, getTextImage
 from src.components.display_box import display_box
 
 
@@ -29,7 +28,7 @@ async def catch(
         text=title,
         fontSize=43,
         color="#ffffff",
-        font=Fonts.HARMONYOS_SANS_BLACK,
+        font=Fonts.JINGNAN_JUNJUN,
     )
     rightStar = await getTextImage(
         text=stars,

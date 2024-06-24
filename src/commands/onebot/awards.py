@@ -59,11 +59,11 @@ async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
 
 
 async def _title(lname: str, lcolor: str):
-    return await drawABoxOfText(
-        f"{lname}",
-        lcolor,
-        textFont(Fonts.HARMONYOS_SANS_BLACK, 60),
-        background="#9B9690",
+    return await getTextImage(
+        text=f"{lname}",
+        color=lcolor,
+        font=[Fonts.JINGNAN_JUNJUN, Fonts.MAPLE_UI],
+        fontSize=80,
     )
 
 
@@ -164,13 +164,12 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
 
     percent_progress: float = calc_progress(levels, met_sums, awards)
     baseImgs.append(
-        await drawASingleLineClassic(
-            f"{name} 的抓小哥进度：{str(round(percent_progress*100, 2))}%",
-            "#FFFFFF",
-            Fonts.HARMONYOS_SANS_BLACK,
-            80,
-            0,
-            30,
+        await getTextImage(
+            text=f"{name} 的抓小哥进度：{str(round(percent_progress*100, 2))}%",
+            color="#FFFFFF",
+            font=Fonts.HARMONYOS_SANS_BLACK,
+            fontSize=80,
+            marginBottom=30,
         )
     )
 
@@ -242,8 +241,12 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     if isinstance(ctx, GroupContext):
         name = await ctx.getSenderNameInGroup()
 
-    area_title = await drawASingleLineClassic(
-        f"{name} 的抓小哥库存：", "#FFFFFF", Fonts.HARMONYOS_SANS_BLACK, 80, 0, 30
+    area_title = await getTextImage(
+        text=f"{name} 的抓小哥库存：",
+        color="#FFFFFF",
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        fontSize=80,
+        marginBottom=30,
     )
     area_box = await pileImages(
         paddingX=0,
