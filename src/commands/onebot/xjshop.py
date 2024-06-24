@@ -127,7 +127,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         font=Fonts.VONWAON_BITMAP_12,
         fontSize=24,
         expandTop=60,
-        expandBottom=220,
+        expandBottom=248,
         align=HorizontalAnchor.left,
         expandLeft=20,
         expandRight=20,
