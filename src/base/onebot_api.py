@@ -13,7 +13,7 @@
 
 from pydantic import BaseModel
 from src.base.onebot_basic import handle_input_message, OnebotBotProtocol, MessageLike
-from src.common.qq_emoji_enum import QQEmoji
+from src.base.onebot_enum import QQEmoji, QQStatus
 
 
 async def send_group_msg(
@@ -66,3 +66,19 @@ class GroupInfo(BaseModel):
 async def get_group_list(bot: OnebotBotProtocol) -> list[GroupInfo]:
     res: list[dict] = await bot.call_api("get_group_list")
     return [GroupInfo(**v) for v in res]
+
+
+async def set_qq_status(
+    bot: OnebotBotProtocol,
+    status: QQStatus | tuple[int, int] = QQStatus.在线,
+    batteryStatus: int = 0,
+):
+    if isinstance(status, QQStatus):
+        status = status.value
+
+    await bot.call_api(
+        "set_online_status",
+        status=status[0],
+        extStatus=status[1],
+        batteryStatus=batteryStatus,
+    )

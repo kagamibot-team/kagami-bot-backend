@@ -33,7 +33,7 @@ from src.base.onebot_basic import (
     OnebotGroupEventProtocol,
     export_msg,
 )
-from src.common.qq_emoji_enum import QQEmoji
+from src.base.onebot_enum import QQEmoji
 
 
 class _ForwardMessageData(TypedDict):
