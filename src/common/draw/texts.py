@@ -17,7 +17,25 @@ from imagetext_py import (
 )
 
 from src.common.decorators.threading import make_async
-from src.common.draw.texts import Fonts
+
+
+FONT_BASE = os.path.join(".", "res", "fonts")
+
+
+def _res(fn: str):
+    return os.path.join(FONT_BASE, fn)
+
+
+class Fonts(enum.Enum):
+    MAPLE_UI = _res("Maple UI.ttf")
+    HARMONYOS_SANS_BLACK = _res("HarmonyOS_Sans_SC_Black.ttf")
+    ALIMAMA_SHU_HEI = _res("AlimamaShuHeiTi-Bold.ttf")
+    JINGNAN_BOBO_HEI = _res("荆南波波黑-Bold.ttf")
+    VONWAON_BITMAP_12 = _res("VonwaonBitmap-12px.ttf")
+    VONWAON_BITMAP_16 = _res("VonwaonBitmap-16px.ttf")
+    MARU_MONICA = _res("莫妮卡像素圆体 x12y16pxMaruMonica.otf")
+    JINGNAN_JUNJUN = _res("JUNJUN.otf")
+
 
 for font in Fonts:
     FontDB.LoadFromPath(font.name, font.value)
@@ -103,24 +121,6 @@ def getTextImage(
     )
 
     return canvas.to_image()
-
-
-FONT_BASE = os.path.join(".", "res", "fonts")
-
-
-def _res(fn: str):
-    return os.path.join(FONT_BASE, fn)
-
-
-class Fonts(enum.Enum):
-    MAPLE_UI = _res("Maple UI.ttf")
-    HARMONYOS_SANS_BLACK = _res("HarmonyOS_Sans_SC_Black.ttf")
-    ALIMAMA_SHU_HEI = _res("AlimamaShuHeiTi-Bold.ttf")
-    JINGNAN_BOBO_HEI = _res("荆南波波黑-Bold.ttf")
-    VONWAON_BITMAP_12 = _res("VonwaonBitmap-12px.ttf")
-    VONWAON_BITMAP_16 = _res("VonwaonBitmap-16px.ttf")
-    MARU_MONICA = _res("莫妮卡像素圆体 x12y16pxMaruMonica.otf")
-    JINGNAN_JUNJUN = _res("JUNJUN.otf")
 
 
 __all__ = ["Fonts", "getTextImage", "TextAlign"]
