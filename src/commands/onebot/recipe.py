@@ -15,6 +15,10 @@ from src.imports import *
 async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
 
+    if not await do_user_have_flag(session, uid, "合成"):
+        await ctx.reply(f"先去小镜商店买了机器使用凭证，你才能碰这台机器。")
+        return
+
     n1 = res.query[str]("name1")
     n2 = res.query[str]("name2")
     n3 = res.query[str]("name3")

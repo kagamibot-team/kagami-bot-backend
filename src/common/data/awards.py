@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import select, update
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.download import download, writeData
@@ -120,11 +120,25 @@ async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
     await session.execute(query)
 
     if count < 0:
-        query = (
-            update(UsedStats)
-            .where(UsedStats.target_award_id == aid, UsedStats.target_user_id == uid)
-            .values(count=UsedStats.count - count)
+        query2 = select(UsedStats.count).filter(
+            UsedStats.target_user_id == uid, UsedStats.target_award_id == aid
         )
+        sta = (await session.execute(query2)).scalar_one_or_none()
+        if sta is None:
+            query = insert(UsedStats).values(
+                target_award_id=aid,
+                target_user_id=uid,
+                count=-count,
+            )
+        else:
+            query = (
+                update(UsedStats)
+                .where(
+                    UsedStats.target_award_id == aid, UsedStats.target_user_id == uid
+                )
+                .values(count=UsedStats.count - count)
+            )
+        await session.execute(query)
 
     return res
 
