@@ -98,10 +98,10 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
             evt = ShopBuyEvent(product, ctx.getSenderId(), uid, session)
             await root.emit(evt)
 
-    money_update_query = (
-        update(User).where(User.data_id == uid).values(money=money_left - money_sum)
-    )
-    await session.execute(money_update_query)
+        money_update_query = (
+            update(User).where(User.data_id == uid).values(money=money_left - money_sum)
+        )
+        await session.execute(money_update_query)
 
     await session.commit()
 
