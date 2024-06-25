@@ -23,7 +23,7 @@ class Error:
 
     award_not_encountered_yet = "你还没有遇到过叫做 {} 的小哥"
     catch_not_available = "小哥还没长成，请再等{}吧！"
-    
+
     data_missing = "数据库不支持本事件发生。"
     data_not_satisfied = "数据未达到本事件发生的条件。"
 
@@ -80,7 +80,7 @@ class About:
         "狂抓(kz)：一次抓完所有可用次数",
         "喜报(xb)：最近 24 小时内群里有谁抓到了四/五星",
         "库存(kc)：展示个人仓库中的存量",
-        "抓小哥进度(zhuajd)：展示目前收集的进度\n（可加参数\"-l {等级名}\"以限定等级）",
+        '抓小哥进度(zhuajd)：展示目前收集的进度\n（可加参数"-l {等级名}"以限定等级）',
         "切换皮肤 小哥名字：切换一个小哥的皮肤",
         "小镜的shop(xjshop)：进入小镜的商店",
         "我有多少薯片(mysp)：告诉你你有多少薯片",
@@ -226,7 +226,12 @@ class About:
         ],
         "0.5.13.1": [
             "试图修正了 zhuajd 过程中可能出现的 max() arg 为空的问题",
-        ]
+        ],
+        "0.5.14": [
+            "榆木华：调整了全部小哥界面和抓小哥界面的排版等",
+            "榆木华：优化签到和jrrp指令，优化帮助信息",
+            "榆木华：商店价格加阴影，以防难以辨认",
+        ],
     }
     update_dev: dict[str, list[str]] = {
         "0.4.5": [
@@ -313,7 +318,13 @@ class About:
         ],
         "0.5.13.1": [
             "添加了更新时的广播",
-        ]
+        ],
+        "0.5.14": [
+            "添加了一些和图像有关的单元测试",
+            "添加了定时任务 addInterval 和 addTimeout 函数，可以用于定时执行任务",
+            "榆木华：新增展示条目指令",
+            "榆木华：更新隐藏指令，统一隐藏指令代码格式",
+        ],
     }
 
 
@@ -335,5 +346,5 @@ def get_latest_version() -> str:
     return sorted(la.about.update.keys(), reverse=True, key=Version)[0]
 
 
-def get_latest_versions(count: int=3) -> list[str]:
+def get_latest_versions(count: int = 3) -> list[str]:
     return sorted(la.about.update.keys(), reverse=True, key=Version)[:count]
