@@ -7,21 +7,27 @@ async def _(ctx: OnebotStartedContext):
     try:
         await set_qq_status(ctx.bot, QQStatus.在线)
     except ActionFailed as e:
-        logger.info(f"在设置在线状态时发生了问题，可能是现在正在使用 LLOnebot 环境而不支持此 API：{e}")
-    
+        logger.info(
+            f"在设置在线状态时发生了问题，可能是现在正在使用 LLOnebot 环境而不支持此 API：{e}"
+        )
+
     session = get_session()
 
     async with session.begin():
         try:
-            glob = (await session.execute(select(Global.last_reported_version))).scalar_one()
+            glob = (
+                await session.execute(select(Global.last_reported_version))
+            ).scalar_one()
         except Exception as e:
             logger.warning(e)
             await session.execute(delete(Global))
             await session.execute(insert(Global))
             await session.flush()
 
-            glob = (await session.execute(select(Global.last_reported_version))).scalar_one()
-        
+            glob = (
+                await session.execute(select(Global.last_reported_version))
+            ).scalar_one()
+
         if glob != (lv := get_latest_version()):
             await session.execute(update(Global).values(last_reported_version=lv))
             await session.commit()
@@ -32,6 +38,6 @@ async def _(ctx: OnebotStartedContext):
                 msg += "\n -" + upd_msg
 
             await broadcast(ctx.bot, msg)
-        else:
+        elif get_driver().env != "dev":
             for group in config.admin_groups:
                 await send_group_msg(ctx.bot, group, "服务器重启好了")

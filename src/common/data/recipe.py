@@ -6,8 +6,11 @@ import itertools
 import math
 import random
 import statistics
-from sqlalchemy import func, insert, select
+
+from nonebot import logger
+from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.models.models import Award, Level, Recipe
 
 
@@ -41,11 +44,17 @@ async def generate_random_result(
     """
 
     # 获得所有的 Level 的信息
+    # 拿到的数据应该是
+    #   - 1: 65.0
+    #   - 2: 24.5
+    #   - 3: 8.0
+    #   - 4: 2.0
+    #   - 5: 0.5
     query = (
         select(Level.data_id, Level.weight)
         .filter(Level.weight > 0)
         .join(Award, Award.level_id == Level.data_id)
-        .filter(func.count(Award.data_id) > 0)
+        .group_by(Level.data_id)
         .order_by(-Level.weight)
     )
     levels = (await session.execute(query)).tuples().all()
@@ -56,6 +65,10 @@ async def generate_random_result(
     lid2, w2 = await _get_lid(session, a2)
     lid3, w3 = await _get_lid(session, a3)
 
+    _id1 = -1 if lid1 not in levels_qr.keys() else levels_qr[lid1]
+    _id2 = -1 if lid2 not in levels_qr.keys() else levels_qr[lid2]
+    _id3 = -1 if lid3 not in levels_qr.keys() else levels_qr[lid3]
+
     # 计算各等级的聚合频率
     # 在当前的数据库中，聚合频率为：
     #   - 一星 0.650
@@ -64,12 +77,12 @@ async def generate_random_result(
     #   - 四星 0.995
     #   - 五星 1.000
     weight_sum = sum([r[1] for r in levels])
-    acc_possibility = [0] + list(
+    acc_possibility = list(
         itertools.accumulate([r[1] / weight_sum for r in levels])
-    )
-    fall1 = 1 - acc_possibility[levels_qr.get(lid1) or -1]
-    fall2 = 1 - acc_possibility[levels_qr.get(lid2) or -1]
-    fall3 = 1 - acc_possibility[levels_qr.get(lid3) or -1]
+    ) + [0]
+    fall1 = acc_possibility[_id1]
+    fall2 = acc_possibility[_id2]
+    fall3 = acc_possibility[_id3]
 
     # 成功率偏执，也就是里面最高星的那个的聚合频率的相反数加上其等级本身的
     # 权重的结果，也同时作为整个合成的期望。其实就是抽到高于或等于该等级小
@@ -119,23 +132,27 @@ async def generate_random_result(
     # 这时候，111 合成成功时，期望是 0.267
     # 211 合成成功时，期望是 0.839
     # 311 合成成功时，期望是 0.871（这时候已经需要玩家去拿高等级一点的去砸了）
-    b0 = (1 - bias * 0.9) / poss
-    b0 = math.atan(b0 * 4) / math.pi * 2
-    a0 = 1 - b0
+    a0 = (1 - bias * 0.9) / poss
+    a0 = math.atan(a0 * 8) / math.pi * 2
+    b0 = 1 - a0
 
     # 根据标准差确定 a0 和 b0 的系数，越分散，结果的分散程度越要大，那么系
     # 数就要小。
     scalar = statistics.pvariance([fall1, fall2, fall3])
-    scalar = 1 / (1 + scalar)
+    scalar = 1 / (1 + scalar * 0.2) * 20
 
     # 最后，抽取一个等级
     r = Recipe.get_random_object(a1, a2, a3).betavariate(a0 * scalar, b0 * scalar)
     lid: int | None = None
 
+    logger.info(r)
+    logger.info(poss)
+
     for i, p in enumerate(acc_possibility):
         # 若当前的汇聚概率大于抽取到的值，则离开
         if p > r:
             lid = levels[i][0]
+            break
 
     if lid is None:
         # 极其罕见事件之 r == 1
@@ -184,6 +201,10 @@ async def get_merge_result(
         )
     )
     return result, possibility
+
+
+async def clear_all_recipe(session: AsyncSession):
+    await session.execute(delete(Recipe))
 
 
 async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) -> int:

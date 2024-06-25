@@ -377,7 +377,7 @@ class Recipe(Base, BaseMixin):
             a3 (int): 第三个小哥
         """
 
-        return random.Random(struct.pack("iii", *sorted([a1, a2, a3])))
+        return random.Random(hash(str([a1, a2, a3])))
 
 
 __all__ = [
