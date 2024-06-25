@@ -6,8 +6,8 @@ from src.imports import *
 
 
 @listenPublic()
-@matchLiteral("小镜jrrp")
-async def _(ctx: PublicContext):
+@matchRegex("^(小镜|xj)(今日人品|jrrp)$")
+async def _(ctx: PublicContext, _):
     qqid = ctx.getSenderId()
     dt = now_datetime()
 
@@ -41,9 +41,9 @@ async def _(ctx: PublicContext):
 
 
 @listenGroup()
-@matchLiteral("签到")
+@matchRegex("^(小镜|xj)(签到|qd)$")
 @withSessionLock()
-async def _(ctx: GroupContext, session: AsyncSession):
+async def _(ctx: GroupContext, session: AsyncSession, _):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
 
     query = select(User.last_sign_in_time, User.sign_in_count, User.money).filter(
