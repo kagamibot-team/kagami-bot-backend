@@ -1,8 +1,8 @@
-import pathlib
 import math
+import pathlib
+from typing import Sequence
 
 from src.imports import *
-from typing import Sequence
 
 
 @listenOnebot()
@@ -80,6 +80,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
     )
 
     await ctx.send(UniMessage().image(raw=imageToBytes(image)))
+
 
 # admin 没修，寄人篱下
 @listenOnebot()
@@ -262,6 +263,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 font=Fonts.HARMONYOS_SANS_BLACK,
                 fontSize=80,
                 marginBottom=30,
+                width=216 * 8,
             )
         )
 
@@ -274,6 +276,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 font=Fonts.HARMONYOS_SANS_BLACK,
                 fontSize=80,
                 marginBottom=30,
+                width=216 * 8,
             )
         )
 
@@ -301,11 +304,19 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 await ref_book_box(name, str(sto) if (sto + use) else "", color, img)
             )
 
+        lAwardCount = len(awards[lid]) if lweight else 1
+        title = f"{lname} {met_sums[lid]}/{lAwardCount}"
+
         baseImgs.append(
-            await _title(
-                f"{lname} {met_sums[lid]}/{len(awards[lid]) if lweight else 1}", lcolor
+            await getTextImage(
+                text=title,
+                color=lcolor,
+                font=[Fonts.JINGNAN_JUNJUN, Fonts.MAPLE_UI],
+                fontSize=80,
+                width=216 * 8,
             )
         )
+
         baseImgs.append(await _combine_cells(imgs))
 
     img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
@@ -357,6 +368,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
         font=Fonts.HARMONYOS_SANS_BLACK,
         fontSize=80,
         marginBottom=30,
+        width=216 * 8,
     )
     area_box = await pileImages(
         paddingX=0,
@@ -406,13 +418,15 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         total += len(awards[lid])
 
     baseImgs: list[PILImage] = []
+    lNameDisplay = f" {levelName} " if levelId is not None else ""
     baseImgs.append(
         await getTextImage(
-            text=f"全部 {total} 只{f" {levelName} " if levelId is not None else ""}小哥：",
+            text=f"全部 {total} 只{lNameDisplay}小哥：",
             color="#FFFFFF",
             font=Fonts.HARMONYOS_SANS_BLACK,
             fontSize=80,
             marginBottom=30,
+            width=216 * 8,
         )
     )
 
@@ -427,7 +441,18 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
             color = lcolor
             imgs.append(await ref_book_box(name, "", color, img))
 
-        baseImgs.append(await _title(f"{lname} 共 {len(awards[lid])} 只", lcolor))
+        title = f"{lname} 共 {len(awards[lid])} 只"
+
+        baseImgs.append(
+            await getTextImage(
+                text=title,
+                color=lcolor,
+                font=[Fonts.JINGNAN_JUNJUN, Fonts.MAPLE_UI],
+                fontSize=80,
+                width=216 * 8,
+            )
+        )
+
         baseImgs.append(await _combine_cells(imgs))
 
     img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
