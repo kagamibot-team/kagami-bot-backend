@@ -42,6 +42,83 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
     )
 
 
+@listenOnebot()
+@matchAlconna(Alconna("re:(展示|zhanshi|zs)条目", Arg("name", str)))
+@withSessionLock()
+async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
+    name = result.query[str]("name")
+    user = await get_uid_by_qqid(session, ctx.getSenderId())
+
+    if name is None:
+        return
+
+    award = await get_aid_by_name(session, name)
+
+    if award is None:
+        await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
+        return
+
+    if await get_statistics(session, user, award) <= 0:
+        await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
+        return
+
+    info = await get_award_info(session, user, award)
+
+    if info.skinName is not None:
+        nameDisplay = "{0}[{1}]".format(info.awardName, info.skinName)
+    else:
+        nameDisplay = info.awardName
+
+    image = await catch(
+        title=nameDisplay,
+        description=info.awardDescription,
+        image=info.awardImg,
+        stars=info.levelName,
+        color=info.color,
+        new=False,
+        notation=str(await get_statistics(session, user, award)),
+    )
+
+    await ctx.send(UniMessage().image(raw=imageToBytes(image)))
+
+# admin 没修，寄人篱下
+@listenOnebot()
+@requireAdmin()
+@matchAlconna(Alconna("re:(展示|zhanshi|zs)条目", ["::"], Arg("name", str)))
+@withSessionLock()
+async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
+    name = result.query[str]("name")
+    user = await get_uid_by_qqid(session, ctx.getSenderId())
+
+    if name is None:
+        return
+
+    award = await get_aid_by_name(session, name)
+
+    if award is None:
+        await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
+        return
+
+    info = await get_award_info(session, user, award)
+
+    if info.skinName is not None:
+        nameDisplay = "{0}[{1}]".format(info.awardName, info.skinName)
+    else:
+        nameDisplay = info.awardName
+
+    image = await catch(
+        title=nameDisplay,
+        description=info.awardDescription,
+        image=info.awardImg,
+        stars=info.levelName,
+        color=info.color,
+        new=False,
+        notation="",
+    )
+
+    await ctx.send(UniMessage().image(raw=imageToBytes(image)))
+
+
 async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
     return await pileImages(
         paddingX=0,
