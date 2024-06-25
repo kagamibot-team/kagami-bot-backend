@@ -158,13 +158,9 @@ async def generate_random_result(
         # 极其罕见事件之 r == 1
         lid = levels[-1][0]
 
-    query = (
-        select(Award.data_id)
-        .filter(Award.level_id == lid)
-        .order_by(func.random())
-        .limit(1)
-    )
-    aid = (await session.execute(query)).scalar_one()
+    query = select(Award.data_id).filter(Award.level_id == lid)
+    aids = (await session.execute(query)).scalars().all()
+    aid = Recipe.get_random_object(a1, a2, a3).choice(aids)
 
     return aid, poss
 
@@ -225,6 +221,14 @@ async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) 
 
     if random.random() <= possibility:
         return result
+
+    if random.random() <= 0.9:
+        # 粑粑小哥
+        return 89
+    
+    if random.random() <= 0.1:
+        # 对此时有特殊情况，是乱码小哥
+        return -1
 
     query = (
         select(Award.data_id)

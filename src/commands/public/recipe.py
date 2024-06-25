@@ -2,6 +2,7 @@ from src.imports import *
 
 
 @listenPublic()
+@requireAdmin()
 @matchAlconna(
     Alconna(
         "re:(查配方|cpf|pf)",

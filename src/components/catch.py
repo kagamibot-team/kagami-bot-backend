@@ -11,7 +11,7 @@ from src.components.display_box import display_box
 async def catch(
     title: str,
     description: str,
-    image: str,
+    image: str | bytes,
     stars: str,
     color: str,
     new: bool,

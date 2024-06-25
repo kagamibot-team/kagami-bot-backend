@@ -51,6 +51,16 @@ async def get_award_info(session: AsyncSession, uid: int, aid: int):
 
 
 async def get_storage(session: AsyncSession, uid: int, aid: int):
+    """返回用户库存里有多少小哥
+
+    Args:
+        session (AsyncSession): 数据库会话
+        uid (int): 用户 uid
+        aid (int): 小哥 id
+
+    Returns:
+        int: 库存小哥的数量
+    """
     query = select(StorageStats.count).filter(
         StorageStats.target_user_id == uid, StorageStats.target_award_id == aid
     )
@@ -87,7 +97,7 @@ async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
         session (AsyncSession): 数据库会话
         uid (int): 用户 ID
         aid (int): 小哥 ID
-        count (int): 增减数量
+        count (int): 增减数量。如果值小于 0，会记录使用的量。
 
     Returns:
         int: 在调整库存之前，用户的库存值
@@ -108,6 +118,14 @@ async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
         .values(count=res + count)
     )
     await session.execute(query)
+
+    if count < 0:
+        query = (
+            update(UsedStats)
+            .where(UsedStats.target_award_id == aid, UsedStats.target_user_id == uid)
+            .values(count=UsedStats.count - count)
+        )
+
     return res
 
 

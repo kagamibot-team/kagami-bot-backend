@@ -38,6 +38,31 @@ async def _(e: ShopBuyEvent):
 
 @root.listen(ShopBuildingEvent)
 async def _(e: ShopBuildingEvent):
+    """小哥合成器凭证"""
+
+    u = do_user_have_flag(e.session, e.uid, "合成")
+    pd = ProductData(
+        image="./res/add1.png",
+        title=f"小哥合成凭证",
+        description="购买合成小哥机器的使用权",
+        price=1200,
+        sold_out=False,
+        alias=["合成小哥凭证", "合成凭证", "合成"],
+        background_color="#9e9d95",
+    )
+    e.data.push(pd, "道具")
+
+
+@root.listen(ShopBuyEvent)
+async def _(e: ShopBuyEvent):
+    """小哥合成器凭证"""
+
+    if e.product.title == "小哥合成凭证":
+        await add_user_flag(e.session, e.uid, "合成")
+
+
+@root.listen(ShopBuildingEvent)
+async def _(e: ShopBuildingEvent):
     """增加小哥皮肤商品"""
 
     query = (

@@ -49,3 +49,13 @@ async def add_user_flag(session: AsyncSession, uid: int, flag: str):
     await session.execute(
         update(User).where(User.data_id == uid).values(feature_flag=",".join(flags))
     )
+
+
+async def get_user_money(session: AsyncSession, uid: int) -> float:
+    return (
+        await session.execute(select(User.money).filter(User.data_id == uid))
+    ).scalar_one()
+
+
+async def set_user_money(session: AsyncSession, uid: int, money: float):
+    await session.execute(update(User).where(User.data_id == uid).values(money=money))
