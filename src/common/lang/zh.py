@@ -22,10 +22,12 @@ class Error:
 
     award_not_encountered_yet = "你还没有遇到过叫做 {} 的小哥"
     catch_not_available = "小哥还没长成，请再等{}吧！"
-    log_no_gei = "这个世界没有给小哥"
+    
+    data_missing = "数据库不支持本事件发生。"
+    data_not_satisfied = "数据未达到本事件发生的条件。"
 
-    not_found = "你说的 {} 不存在"
-    not_own = "你还没有 {}"
+    not_found = "你说的 {} 不存在。"
+    not_own = "你还没有 {} 。"
 
     invalid_catch_count = "你想让我抓 {} 个小哥，你让我怎么抓嘛！"
 
