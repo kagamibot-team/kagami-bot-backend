@@ -18,8 +18,25 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
     award = await get_aid_by_name(session, name)
 
     if award is None:
-        await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
-        return
+        # 有可能是打成了皮肤的名字，试着匹配一下有没有皮肤有这个名字的
+
+        sid = await get_sid_by_name(session, name)
+        if sid is None:
+            await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
+            return
+
+        award = (
+            await session.execute(
+                select(Skin.applied_award_id)
+                .filter(Skin.data_id == sid)
+                .join(Award, Award.data_id == Skin.applied_award_id)
+                .join(UsedSkin, UsedSkin.skin_id == sid)
+                .filter(UsedSkin.user_id == user)
+            )
+        ).scalar_one_or_none()
+        if award is None:
+            await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
+            return
 
     if await get_statistics(session, user, award) <= 0:
         await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
