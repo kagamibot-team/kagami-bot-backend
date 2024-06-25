@@ -41,8 +41,8 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
         await getTextImage(
             text=f"{name} 的一抓！",
             color="#63605C",
-            font=Fonts.JINGNAN_JUNJUN,
-            fontSize=80,
+            font=Fonts.JINGNAN_BOBO_HEI,
+            fontSize=96,
             width=800,
         )
     )
@@ -51,15 +51,13 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
             text=(
                 f"本次获得{int(money)}{la.unit.money}，"
                 f"目前共有{int(e.moneyUpdated)}{la.unit.money}。\n"
-                f"剩余次数：{userTime.pickRemain}/{userTime.pickMax}，"
+                f"剩余次数： {userTime.pickRemain}/{userTime.pickMax}，"
                 f"距下次次数恢复还要{timeStr}。"
             ),
             width=800,
             color="#9B9690",
-            font=Fonts.JINGNAN_BOBO_HEI,
-            fontSize=36,
-            marginTop=20,
-            marginBottom=30,
+            font=Fonts.JINGNAN_JUNJUN,
+            fontSize=28,
         )
     )
 
@@ -75,12 +73,11 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
         )
         boxes.append(image)
 
-    area_title = await verticalPile(titles, 2, "left", "#EEEBE3", 0, 0, 0, 0)
-    area_box = await verticalPile(boxes, 33, "left", "#EEEBE3", 0, 0, 0, 0)
+    area_title = await verticalPile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
+    area_box = await verticalPile(boxes, 30, "left", "#EEEBE3", 0, 0, 0, 0)
     img = await verticalPile(
-        [area_title, area_box], 20, "left", "#EEEBE3", 60, 80, 80, 80
+        [area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80
     )
-    # await ctx.reply(msg + UniMessage().image(raw=imageToBytes(img)))
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 

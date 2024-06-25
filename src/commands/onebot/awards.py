@@ -397,11 +397,18 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     if levelName is not None:
         levelId = await get_lid_by_name(session, levelName)
 
+    awards: dict[int, Sequence[tuple[int, str, str]]] = {}
+    total: int = 0
+    for lid, lname, lcolor, _ in levels:
+        if levelId is not None and lid != levelId:
+            continue
+        awards[lid] = await _get_awards(session, lid)
+        total += len(awards[lid])
+
     baseImgs: list[PILImage] = []
-    _level_name_display = "" if levelId is None else levelName
     baseImgs.append(
         await getTextImage(
-            text=f"全部{_level_name_display}小哥：",
+            text=f"全部 {total} 只{f" {levelName} " if levelId is not None else ""}小哥：",
             color="#FFFFFF",
             font=Fonts.HARMONYOS_SANS_BLACK,
             fontSize=80,
@@ -412,17 +419,16 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     for lid, lname, lcolor, _ in levels:
         if levelId is not None and lid != levelId:
             continue
-        awards = await _get_awards(session, lid)
 
-        if len(awards) == 0:
+        if len(awards[lid]) == 0:
             continue
         imgs: list[PILImage] = []
-        for _, name, img in awards:
+        for _, name, img in awards[lid]:
             color = lcolor
             imgs.append(await ref_book_box(name, "", color, img))
 
-        baseImgs.append(await _title(lname, lcolor))
+        baseImgs.append(await _title(f"{lname} 共 {len(awards[lid])} 只", lcolor))
         baseImgs.append(await _combine_cells(imgs))
 
     img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
-    await ctx.reply(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
