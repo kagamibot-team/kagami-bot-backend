@@ -52,6 +52,18 @@ async def product_box(product: ProductData):
             marginBottom=5,
             marginLeft=5,
         )
+        notationBoxShadow = await getTextImage(
+            text=notation,
+            width=170,
+            color="#000000",
+            font=Fonts.MARU_MONICA,
+            fontSize=36,
+            stroke=4,
+            marginTop=2,
+            marginBottom=5,
+            marginLeft=7,
+        )
+        await imagePaste(block, notationBoxShadow, 26, 117)
         await imagePaste(block, notationBox, 26, 117)
 
     return block
