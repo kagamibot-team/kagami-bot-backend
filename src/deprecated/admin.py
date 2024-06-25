@@ -258,47 +258,6 @@ class CatchAddSkin(Command):
 
 
 @requireAdmin
-@dataclass
-class CatchAdminDisplay(Command):
-    commandPattern: str = f"^:: ?{KEYWORD_DISPLAY}"
-    argsPattern: str = " (\\S+)( \\S+)?$"
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message([at(env.sender), text("MSG_DISPLAY_ADMIN_WRONG_FORMAT")])
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        award = await getAwardByName(env.session, result.group(2))
-
-        if award is None:
-            return self.notExists(env, result.group(2))
-
-        imgUrl = award.img_path
-        desc = award.description
-
-        if result.group(3) is not None:
-            skin = await getSkinByName(env.session, result.group(3)[1:])
-
-            if skin is None or skin.award != award:
-                return self.notExists(env, result.group(3)[1:])
-
-            imgUrl = skin.image
-
-            if len(skin.extra_description) > 0:
-                desc = skin.extra_description
-
-        return Message(
-            [
-                at(env.sender),
-                text("MSG_ADMIN_DISPLAY"),
-                await localImage(imgUrl),
-                text(f"\n\n{desc}"),
-            ]
-        )
-
-
-@requireAdmin
 @databaseIO()
 @dataclass
 class CatchAdminObtainSkin(Command):

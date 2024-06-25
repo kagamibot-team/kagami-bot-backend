@@ -82,7 +82,61 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
     await ctx.send(UniMessage().image(raw=imageToBytes(image)))
 
 
-# admin 没修，寄人篱下
+@listenOnebot()
+@requireAdmin()
+@matchAlconna(
+    Alconna(
+        "re:(展示|zhanshi|zs)",
+        ["::"],
+        Arg("name", str),
+        Arg("sname", str, flags=[ArgFlag.OPTIONAL]),
+    )
+)
+@withSessionLock()
+async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
+    name = result.query[str]("name")
+    sname = result.query[str]("sname")
+
+    if name is None:
+        return
+
+    aid = await get_aid_by_name(session, name)
+
+    if aid is None:
+        await ctx.reply(la.err.award_not_found.format(name))
+        return
+
+    query = select(Award.name, Award.description, Award.img_path).filter(
+        Award.data_id == aid
+    )
+    dname, description, img_path = (await session.execute(query)).tuples().one()
+
+    if sname is not None:
+        sid = await get_sid_by_name(session, sname)
+        if sid is None:
+            await ctx.reply(la.err.skin_not_found.format(name))
+            return
+
+        query = select(Skin.name, Skin.extra_description, Skin.image).filter(
+            Skin.data_id == sid, Skin.applied_award_id == aid
+        )
+        res = (await session.execute(query)).tuples().one_or_none()
+
+        if res is None:
+            await ctx.reply(la.err.invalid_skin_award_pair.format(name, sname))
+            return
+
+        dname, edesc, img_path = res
+        description = edesc or description
+
+    await ctx.reply(
+        UniMessage()
+        .text(dname)
+        .image(path=pathlib.Path(img_path))
+        .text(f"\n{description}")
+    )
+
+
 @listenOnebot()
 @requireAdmin()
 @matchAlconna(Alconna("re:(展示|zhanshi|zs)条目", ["::"], Arg("name", str)))
@@ -133,15 +187,6 @@ async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
         marginRight=30,
         marginBottom=30,
         marginTop=marginTop,
-    )
-
-
-async def _title(lname: str, lcolor: str):
-    return await getTextImage(
-        text=f"{lname}",
-        color=lcolor,
-        font=[Fonts.JINGNAN_JUNJUN, Fonts.MAPLE_UI],
-        fontSize=80,
     )
 
 

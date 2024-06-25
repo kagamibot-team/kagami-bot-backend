@@ -16,6 +16,7 @@ class Messages:
 
 class Error:
     award_not_found = "没有叫 {} 的小哥。"
+    skin_not_found = "没有叫 {} 的皮肤。"
     award_exists = "名字叫 {} 的小哥已存在。"
 
     level_not_found = "等级 {} 不存在。"
@@ -28,6 +29,8 @@ class Error:
 
     not_found = "你说的 {} 不存在。"
     not_own = "你还没有 {} 。"
+
+    invalid_skin_award_pair = "小哥 {0} 和皮肤 {1} 之间没有关系。"
 
     invalid_catch_count = "你想让我抓 {} 个小哥，你让我怎么抓嘛！"
 
