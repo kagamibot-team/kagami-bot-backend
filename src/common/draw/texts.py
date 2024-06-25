@@ -75,7 +75,7 @@ def getTextImage(
         align (TextAlign, optional): 字体对齐，请使用 TextAlign 枚举类。
         stroke (float, optional): 描边宽度。
         stroke_color (Paint | str, optional): 描边颜色。
-        wrap_style (WrapStyle, optional): 断行方式，默认是 WrapStyle.Character。
+        wrap_style (WrapStyle, optional): 断行方式，默认是 WrapStyle.Character。不知道为什么，感觉两个选项之间好像没有影响？
         marginLeft (float, optional): 字体框左边扩展的像素大小。
         marginRight (float, optional): 字体框右边扩展的像素大小。
         marginTop (float, optional): 字体框上面扩展的像素大小。

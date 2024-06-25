@@ -48,7 +48,7 @@ async def blurred(fp: str, radius: int):
 async def horizontalPile(
     images: list[PIL.Image.Image],
     paddingX: int,
-    align: Literal["top", "bottom", "center"],
+    align: Literal["top", "bottom", "center"] = "top",
     background: str = "#00000000",
     marginTop: int = 0,
     marginLeft: int = 0,
@@ -56,7 +56,7 @@ async def horizontalPile(
     marginBottom: int = 0,
 ) -> PIL.Image.Image:
     maxHeight = max([i.height for i in images] + [1])
-    width = sum([i.width for i in images]) + paddingX * len(images)
+    width = sum([i.width for i in images]) + paddingX * (len(images) - 1)
 
     base = await newImage(
         (width + marginLeft + marginRight, maxHeight + marginTop + marginBottom),
@@ -81,7 +81,7 @@ async def horizontalPile(
 async def verticalPile(
     images: list[PIL.Image.Image],
     paddingY: int,
-    align: Literal["left", "center", "right"],
+    align: Literal["left", "center", "right"] = "left",
     background: str = "#00000000",
     marginTop: int = 0,
     marginLeft: int = 0,
@@ -117,8 +117,8 @@ async def pileImages(
     images: list[PIL.Image.Image],
     rowMaxNumber: int,
     background: str,
-    horizontalAlign: Literal["top", "center", "bottom"],
-    verticalAlign: Literal["left", "center", "right"],
+    horizontalAlign: Literal["top", "center", "bottom"] = "top",
+    verticalAlign: Literal["left", "center", "right"] = "left",
     marginLeft: int = 0,
     marginRight: int = 0,
     marginTop: int = 0,

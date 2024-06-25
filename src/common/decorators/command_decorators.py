@@ -1,4 +1,5 @@
 import asyncio
+from functools import partial
 import pathlib
 import re
 import time
@@ -20,6 +21,8 @@ from src.base.command_events import (
 from src.base.db import get_session
 from src.base.event_manager import EventManager
 from src.base.event_root import root
+from src.base.event_timer import addInterval, addTimeout
+from src.base.onebot_events import OnebotStartedContext
 from src.logic.admin import isAdmin
 
 T = TypeVar("T")
@@ -305,6 +308,37 @@ def withLoading(text: str = "请稍候……"):
     return wrapper
 
 
+def interval_at_start(interval: float, skip_first: bool = True):
+    """在 Bot 上线时创建定时任务
+
+    Args:
+        interval (float): 周期
+        skip_first (bool, optional): 是否跳过第一次执行. Defaults to True.
+    """
+
+    def deco(func: Callable[[OnebotStartedContext], Any]):
+        @root.listen(OnebotStartedContext)
+        async def _(ctx: OnebotStartedContext):
+            addInterval(interval, partial(func, ctx), skip_first)
+
+    return deco
+
+
+def timeout_at_start(timeout: float):
+    """在 Bot 上线时创建延时任务
+
+    Args:
+        timeout (float): 延时时长
+    """
+
+    def deco(func: Callable[[OnebotStartedContext], Any]):
+        @root.listen(OnebotStartedContext)
+        async def _(ctx: OnebotStartedContext):
+            addTimeout(timeout, partial(func, ctx))
+
+    return deco
+
+
 __all__ = [
     "matchAlconna",
     "matchRegex",
@@ -321,4 +355,6 @@ __all__ = [
     "computeTime",
     "withLoading",
     "withAlconna",
+    "interval_at_start",
+    "timeout_at_start",
 ]

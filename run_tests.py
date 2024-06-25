@@ -2,16 +2,27 @@ import importlib
 import os
 import pathlib
 import pkgutil
-from types import ModuleType
-import nonebot
 import unittest
+from types import ModuleType
 
-from nonebot.adapters.onebot.v11 import Adapter as OneBotV11Adapter
+import nonebot
 from nonebot.adapters.console.adapter import Adapter as ConsoleAdapter
+from nonebot.adapters.onebot.v11 import Adapter as OneBotV11Adapter
 
+from bot import pre_init
+
+pre_init()
+
+
+if not os.path.exists("./data/temp/db.sqlite3"):
+    with open("./data/temp/db.sqlite3", "wb") as f:
+        pass
+
+
+# 初始化 Nonebot 环境
 nonebot.init(
     _env_file=(),
-    sqlalchemy_database_url="sqlite+aiosqlite:///:memory:",
+    sqlalchemy_database_url="sqlite+aiosqlite:///data/temp/db.sqlite3",
     enable_white_list=True,
     white_list_groups=[1, 2],
     admin_id=3,
@@ -27,6 +38,7 @@ driver.register_adapter(ConsoleAdapter)  # type: ignore
 import src as _
 
 
+# 导入所有的测试用例
 def _import(name: str, *parents: str):
     nonebot.logger.info(f"importing {name}")
     _name = ".".join([*parents, name])

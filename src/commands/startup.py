@@ -32,3 +32,6 @@ async def _(ctx: OnebotStartedContext):
                 msg += "\n -" + upd_msg
 
             await broadcast(ctx.bot, msg)
+        else:
+            for group in config.admin_groups:
+                await send_group_msg(ctx.bot, group, "服务器重启好了")

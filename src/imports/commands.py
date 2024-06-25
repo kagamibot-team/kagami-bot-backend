@@ -15,6 +15,7 @@ from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import At, Emoji, Image, Text, UniMessage
 
 from src.base.command_events import *
+from src.base.event_timer import *
 from src.base.onebot_api import *
 from src.base.onebot_events import *
 from src.base.onebot_tools import *

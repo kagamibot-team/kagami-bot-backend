@@ -30,6 +30,4 @@ async def _(ctx: GroupContext, _):
 @matchLiteral("::reload-script")
 async def _(ctx: PublicContext):
     await ctx.reply("服务器即将重启")
-
-    # os.system(Path("./linux/upgrade.sh"))
     subprocess.call(["sh", Path("./linux/upgrade.sh")])
