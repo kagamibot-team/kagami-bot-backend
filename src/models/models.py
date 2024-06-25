@@ -1,5 +1,7 @@
 import datetime
 import os
+import random
+import struct
 
 from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -349,6 +351,35 @@ class CatchGroup(Base, BaseMixin):
         return True
 
 
+class Recipe(Base, BaseMixin):
+    """已经被记录下来的合成配方，是一个无序配方"""
+    __tablename__ = "catch_recipe"
+
+    __table_args__ = (
+        Index("catch_recipe_index", "award1", "award2", "award3", unique=True),
+    )
+
+    award1 = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+    award2 = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+    award3 = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+
+    possibility: Mapped[float] = mapped_column()
+
+    result = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"), index=True)
+
+    @staticmethod
+    def get_random_object(a1: int, a2: int, a3: int) -> random.Random:
+        """获得一个合成配方组的 Random 对象
+
+        Args:
+            a1 (int): 第一个小哥
+            a2 (int): 第二个小哥
+            a3 (int): 第三个小哥
+        """
+
+        return random.Random(struct.pack("iii", *sorted([a1, a2, a3])))
+
+
 __all__ = [
     "Base",
     "Global",
@@ -368,4 +399,5 @@ __all__ = [
     "LevelTagRelation",
     "AwardTagRelation",
     "CatchGroup",
+    "Recipe",
 ]
