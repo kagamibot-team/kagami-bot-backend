@@ -5,19 +5,76 @@ from src.common.dataclasses.sign_in_history import signInHistor
 from src.imports import *
 
 
-@listenPublic()
+@listenGroup()
 @matchRegex("^(小镜|xj)(今日人品|jrrp)$")
-async def _(ctx: PublicContext, _):
+@withSessionLock()
+async def _(ctx: GroupContext, session: AsyncSession, _):
     qqid = ctx.getSenderId()
     dt = now_datetime()
 
     if qqid is None:
         qqid = 0
 
-    random.seed(str(qqid) + "-" + str(dt.date()))
-    jrrp = random.randint(1, 100)
+    today_user: random.Random = random.Random(str(qqid) + "-" + str(dt.date()))
+    today: random.Random = random.Random(str(dt.date()))
 
-    await ctx.reply(UniMessage().text("你的今日人品是：" + str(jrrp)))
+    jrrp = today_user.randint(1, 100)
+
+    query = select(Level.data_id, Level.weight, Level.price).filter(Level.weight > 0)
+    levels = (await session.execute(query)).tuples().all()
+    level = today.choices(levels, [l[1] for l in levels])[0]
+    query = select(Award.data_id).filter(Award.level_id == level[0])
+    awards = (await session.execute(query)).tuples().all()
+    aid = today.choice(awards)[0]
+    display = await get_award_info(session, -1, aid)
+
+    name = await ctx.getSenderName()
+
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderNameInGroup()
+
+    titles: list[PIL.Image.Image] = []
+    titles.append(
+        await getTextImage(
+            text=(
+                f"玩家 {name} ："
+            ),
+            color="#9B9690",
+            font=Fonts.JINGNAN_JUNJUN,
+            fontSize=48,
+        )
+    )
+    titles.append(
+        await getTextImage(
+            text=f"您的今日人品是： {str(jrrp)}！",
+            color="#63605C",
+            font=Fonts.JINGNAN_BOBO_HEI,
+            fontSize=80,
+        )
+    )
+    titles.append(
+        await getTextImage(
+            text=f"本次今日小哥是：",
+            color="#63605C",
+            font=Fonts.JINGNAN_BOBO_HEI,
+            fontSize=80,
+        )
+    )
+
+    area_box = await catch(
+        title=display.awardName,
+        description=display.awardDescription,
+        image=display.awardImg,
+        stars=display.levelName,
+        color=display.color,
+        new=False,
+        notation="",
+    )
+    
+    area_title = await verticalPile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
+    img = await verticalPile([area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80)
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    # await ctx.reply(UniMessage().text(f"你的今日人品是：{str(jrrp)}。\n本次今日小哥是：{diplay.awardName}。"))
 
     if isinstance(ctx, GroupContext):
         if jrrp == 100:
@@ -27,11 +84,11 @@ async def _(ctx: PublicContext, _):
         elif jrrp >= 80:
             await ctx.stickEmoji(QQEmoji.赞)
         elif jrrp >= 60:
-            await ctx.stickEmoji(QQEmoji.OK)
+            await ctx.stickEmoji(QQEmoji.棒棒糖)
         elif jrrp >= 40:
             await ctx.stickEmoji(QQEmoji.托腮)
         elif jrrp >= 20:
-            await ctx.stickEmoji(QQEmoji.辣眼睛)
+            await ctx.stickEmoji(QQEmoji.糗大了)
         elif jrrp >= 10:
             await ctx.stickEmoji(QQEmoji.笑哭)
         elif jrrp > 1:

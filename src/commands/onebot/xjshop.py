@@ -23,7 +23,11 @@ async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
             subs.append(await product_box(product))
         boxes.append(
             await pileImages(
-                0, 0, subs, 3, "#9B9690", "center", "left", marginBottom=30
+                images=subs,
+                rowMaxNumber=3,
+                background="#9B9690",
+                horizontalAlign="center",
+                marginBottom=30,
             )
         )
 
@@ -98,10 +102,10 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
             evt = ShopBuyEvent(product, ctx.getSenderId(), uid, session)
             await root.emit(evt)
 
-    money_update_query = (
-        update(User).where(User.data_id == uid).values(money=money_left - money_sum)
-    )
-    await session.execute(money_update_query)
+        money_update_query = (
+            update(User).where(User.data_id == uid).values(money=money_left - money_sum)
+        )
+        await session.execute(money_update_query)
 
     await session.commit()
 

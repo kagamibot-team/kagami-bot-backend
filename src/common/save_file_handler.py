@@ -13,6 +13,26 @@ from src.common.times import now_datetime
 from src.models.models import Award, Skin
 
 
+def move_file(src: pathlib.Path, dst: pathlib.Path):
+    """
+    移动文件，如果目标文件夹不存在则创建
+    """
+
+    if not os.path.exists(dst.parent):
+        os.mkdir(dst.parent)
+    
+    # 使用文件读写
+    with open(src, "rb") as f:
+        with open(dst, "wb") as f2:
+            f2.write(f.read())
+    
+    # 删除源文件
+    try:
+        os.remove(src)
+    except PermissionError:
+        pass
+
+
 async def collect_images():
     """
     将图像资源文件整理并置放到对应的文件夹，并将先前的图片文件备份到 Backup 中
@@ -47,7 +67,8 @@ async def collect_images():
 
         for fp in folder.iterdir():
             if fp not in applied:
-                shutil.move(fp, backup_dir)
+                target_path = backup_dir / fp.name
+                move_file(fp, target_path)
 
         query2 = select(Skin.data_id, Skin.image)
         skins = (await session.execute(query2)).tuples()
@@ -74,7 +95,8 @@ async def collect_images():
 
         for fp in folder.iterdir():
             if fp not in applied:
-                shutil.move(fp, backup_dir)
+                target_path = backup_dir / fp.name
+                move_file(fp, target_path)
 
         await session.commit()
 
