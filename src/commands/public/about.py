@@ -9,7 +9,7 @@ from packaging.version import Version
 
 updateHistory: dict[str, list[str]] = la.about.update
 updateHistoryDev: dict[str, list[str]] = la.about.update_dev
-help: list[str] = la.about.help
+help: list[tuple[str, list[str]]] = la.about.help
 helpAdmin: list[str] = la.about.help_admin
 
 
@@ -56,7 +56,33 @@ async def _(ctx: PublicContext, *_):
 @listenPublic()
 @matchRegex("^(抓小哥|zhua) ?(帮助|help)$")
 async def _(ctx: PublicContext, *_):
-    await ctx.send(constructHelpMessage(help))
+    sections: list[PIL.Image.Image] = []
+
+    for section in help:
+        titles: list[PIL.Image.Image] = []
+        titles.append(
+            await getTextImage(
+                text=section[0],
+                color="#63605C",
+                font=Fonts.JINGNAN_BOBO_HEI,
+                fontSize=80,
+                marginBottom=6,
+            )
+        )
+        for commmand in section[1]:
+            titles.append(
+                await getTextImage(
+                    text=commmand,
+                    color="#9B9690",
+                    font=Fonts.JINGNAN_JUNJUN,
+                    fontSize=32,
+                )
+            )
+        sections.append(await verticalPile(titles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
+
+    area_section = await verticalPile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
+    img = await verticalPile([area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60)
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
 @listenPublic()
