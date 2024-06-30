@@ -54,7 +54,7 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
             ),
             width=800,
             color="#9B9690",
-            font=Fonts.JINGNAN_JUNJUN,
+            font=Fonts.ALIMAMA_SHU_HEI,
             fontSize=28,
         )
     )
@@ -66,7 +66,7 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
             ),
             width=800,
             color="#9B9690",
-            font=Fonts.JINGNAN_JUNJUN,
+            font=Fonts.ALIMAMA_SHU_HEI,
             fontSize=28,
         )
     )

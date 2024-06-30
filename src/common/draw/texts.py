@@ -29,14 +29,14 @@ def _res(fn: str):
 
 
 class Fonts(enum.Enum):
+    JINGNAN_BOBO_HEI = _res("荆南波波黑-Bold.ttf") # 界面标题
+    JINGNAN_JUNJUN = _res("JUNJUN.otf") # 界面次级标题
+    ALIMAMA_SHU_HEI = _res("AlimamaShuHeiTi-Bold.ttf") # 界面小文字
     MAPLE_UI = _res("Maple UI.ttf")
     HARMONYOS_SANS_BLACK = _res("HarmonyOS_Sans_SC_Black.ttf")
-    ALIMAMA_SHU_HEI = _res("AlimamaShuHeiTi-Bold.ttf")
-    JINGNAN_BOBO_HEI = _res("荆南波波黑-Bold.ttf")
     VONWAON_BITMAP_12 = _res("VonwaonBitmap-12px.ttf")
     VONWAON_BITMAP_16 = _res("VonwaonBitmap-16px.ttf")
     MARU_MONICA = _res("莫妮卡像素圆体 x12y16pxMaruMonica.otf")
-    JINGNAN_JUNJUN = _res("JUNJUN.otf")
 
 
 for font in Fonts:
