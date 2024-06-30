@@ -21,7 +21,15 @@ async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
         subs: list[PILImage] = []
         for product in products:
             subs.append(await product_box(product))
-        boxes.append(await pileImages(subs, 3, "#9B9690", 0, 0, "center", "left", marginBottom=30))
+        boxes.append(
+            await pileImages(
+                images=subs,
+                rowMaxNumber=3,
+                background="#9B9690",
+                horizontalAlign="center",
+                marginBottom=30,
+            )
+        )
 
     image = await verticalPile(boxes, 0, "left", "#9B9690", 484, 80, 80, 80)
     image.paste(PIL.Image.open("./res/kagami_shop.png"), (0, 0))
