@@ -50,7 +50,17 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
         await getTextImage(
             text=(
                 f"本次获得{int(money)}{la.unit.money}，"
-                f"目前共有{int(e.moneyUpdated)}{la.unit.money}。\n"
+                f"目前共有{int(e.moneyUpdated)}{la.unit.money}。"
+            ),
+            width=800,
+            color="#9B9690",
+            font=Fonts.JINGNAN_JUNJUN,
+            fontSize=28,
+        )
+    )
+    titles.append(
+        await getTextImage(
+            text=(
                 f"剩余次数： {userTime.pickRemain}/{userTime.pickMax}，"
                 f"距下次次数恢复还要{timeStr}。"
             ),

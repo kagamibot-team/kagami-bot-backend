@@ -23,7 +23,11 @@ async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
             subs.append(await product_box(product))
         boxes.append(
             await pileImages(
-                0, 0, subs, 3, "#9B9690", "center", "left", marginBottom=30
+                images=subs,
+                rowMaxNumber=3,
+                background="#9B9690",
+                horizontalAlign="center",
+                marginBottom=30,
             )
         )
 
