@@ -40,7 +40,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
                 f"玩家 {name} ："
             ),
             color="#9B9690",
-            font=Fonts.JINGNAN_JUNJUN,
+            font=Fonts.ALIMAMA_SHU_HEI,
             fontSize=48,
         )
     )

@@ -426,24 +426,14 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
 
     area_title = await getTextImage(
         text=f"{name} 的抓小哥库存：",
-        color="#FFFFFF",
-        font=Fonts.HARMONYOS_SANS_BLACK,
         fontSize=80,
-        marginBottom=30,
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        color="#FFFFFF",
         width=216 * 8,
+        marginBottom=30,
     )
-    area_box = await pileImages(
-        paddingX=0,
-        paddingY=0,
-        images=imgs,
-        rowMaxNumber=8,
-        background="#9B9690",
-        horizontalAlign="top",
-        verticalAlign="left",
-    )
-    img = await verticalPile(
-        [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
-    )
+    area_box = await pileImages(images=imgs, rowMaxNumber=8, background="#9B9690")
+    img = await verticalPile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 

@@ -9,7 +9,7 @@ from packaging.version import Version
 
 updateHistory: dict[str, list[str]] = la.about.update
 updateHistoryDev: dict[str, list[str]] = la.about.update_dev
-help: list[str] = la.about.help
+help: dict[str, list[str]] = la.about.help
 helpAdmin: list[str] = la.about.help_admin
 
 
@@ -44,7 +44,42 @@ def constructHelpMessage(helps: list[str]) -> UniMessage:
 @listenPublic()
 @matchRegex("^(抓小哥|zhua) ?(更新|gx|upd|update)$")
 async def _(ctx: PublicContext, *_):
-    await ctx.send(constructUpdateMessage(updateHistory))
+    count = 3
+    shortHistory = get_latest_versions(count)
+    sections: list[PIL.Image.Image] = []
+
+    title = await getTextImage(
+        text="更新历史（近三次）",
+        color="#63605C",
+        font=Fonts.JINGNAN_BOBO_HEI,
+        fontSize=80,
+    )
+
+    for subtitle in shortHistory:
+        subtitles: list[PIL.Image.Image] = []
+        subtitles.append(
+            await getTextImage(
+                text=subtitle,
+                color="#63605C",
+                font=Fonts.JINGNAN_JUNJUN,
+                fontSize=48,
+                marginBottom=6,
+            )
+        )
+        for commmand in updateHistory[subtitle]:
+            subtitles.append(
+                await getTextImage(
+                    text=commmand,
+                    color="#9B9690",
+                    font=Fonts.ALIMAMA_SHU_HEI,
+                    fontSize=24,
+                )
+            )
+        sections.append(await verticalPile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
+
+    area_section = await verticalPile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
+    img = await verticalPile([title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60)
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
 @listenPublic()
@@ -56,7 +91,40 @@ async def _(ctx: PublicContext, *_):
 @listenPublic()
 @matchRegex("^(抓小哥|zhua) ?(帮助|help)$")
 async def _(ctx: PublicContext, *_):
-    await ctx.send(constructHelpMessage(help))
+    sections: list[PIL.Image.Image] = []
+
+    title = await getTextImage(
+        text="指令列表",
+        color="#63605C",
+        font=Fonts.JINGNAN_BOBO_HEI,
+        fontSize=80,
+    )
+
+    for subtitle, commands in help.items():
+        subtitles: list[PIL.Image.Image] = []
+        subtitles.append(
+            await getTextImage(
+                text=subtitle,
+                color="#63605C",
+                font=Fonts.JINGNAN_JUNJUN,
+                fontSize=48,
+                marginBottom=6,
+            )
+        )
+        for commmand in commands:
+            subtitles.append(
+                await getTextImage(
+                    text=commmand,
+                    color="#9B9690",
+                    font=Fonts.ALIMAMA_SHU_HEI,
+                    fontSize=24,
+                )
+            )
+        sections.append(await verticalPile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
+
+    area_section = await verticalPile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
+    img = await verticalPile([title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60)
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
 @listenPublic()
