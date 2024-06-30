@@ -5,7 +5,7 @@ from src.imports import *
 @requireAdmin()
 @matchAlconna(
     Alconna(
-        "re:(查配方|cpf|pf)",
+        "re:(查配方|查询配方|查找配方|cpf|pf)",
         ["::"],
         Arg("name1", str),
         Arg("name2", str),
@@ -40,7 +40,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
 @requireAdmin()
 @matchAlconna(
     Alconna(
-        "re:(更改|改变)(合成)?配方",
+        "re:(更改|改变|设置|调整|添加|新增|增加)(合成)?配方",
         ["::"],
         Arg("name1", str),
         Arg("name2", str),
