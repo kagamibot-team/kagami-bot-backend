@@ -40,13 +40,13 @@ async def _(e: ShopBuyEvent):
 async def _(e: ShopBuildingEvent):
     """小哥合成器凭证"""
 
-    u = do_user_have_flag(e.session, e.uid, "合成")
+    u = await do_user_have_flag(e.session, e.uid, "合成")
     pd = ProductData(
         image="./res/merge_machine.png",
         title=f"小哥合成凭证",
         description="购买合成小哥机器的使用权",
         price=1200,
-        sold_out=False,
+        sold_out=u,
         alias=["合成小哥凭证", "合成凭证", "合成"],
         background_color="#9e9d95",
     )
