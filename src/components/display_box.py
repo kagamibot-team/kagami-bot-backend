@@ -1,3 +1,4 @@
+import io
 import PIL
 import PIL.Image
 
@@ -7,8 +8,11 @@ from src.common.draw.shapes import applyMask, roundedRectangleMask, drawRoundedR
 from src.common.draw.tools import hex_to_rgb, rgb_to_hex, mix_color
 
 
-async def _display_box(color: str, central_image: str) -> PIL.Image.Image:
-    image = await loadImage(central_image)
+async def _display_box(color: str, central_image: str | bytes) -> PIL.Image.Image:
+    if not isinstance(central_image, str):
+        image = PIL.Image.open(io.BytesIO(central_image))
+    else:
+        image = await loadImage(central_image)
     image = image.resize((180, 144), PIL.Image.ADAPTIVE)
     image = await applyMask(image, await roundedRectangleMask(180, 144, 10))
 
@@ -30,9 +34,9 @@ display_box_cache: dict[str, PIL.Image.Image] = {}
 
 
 async def display_box(
-    color: str, central_image: str, new: bool = False
+    color: str, central_image: str | bytes, new: bool = False
 ) -> PIL.Image.Image:
-    key = f"{color}-{central_image}"
+    key = f"{color}-{hash(central_image)}"
     if key not in display_box_cache:
         display_box_cache[key] = await _display_box(color, central_image)
 

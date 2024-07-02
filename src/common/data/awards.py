@@ -1,10 +1,12 @@
 import os
-from sqlalchemy import select, update
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.common.dataclasses.data_changed_events import PlayerStorageChangedEvent
 from src.common.download import download, writeData
 from src.models.models import *
 from src.common.dataclasses.award_info import AwardInfo
+from src.base.event_root import root
 
 
 async def get_award_info(session: AsyncSession, uid: int, aid: int):
@@ -51,6 +53,16 @@ async def get_award_info(session: AsyncSession, uid: int, aid: int):
 
 
 async def get_storage(session: AsyncSession, uid: int, aid: int):
+    """返回用户库存里有多少小哥
+
+    Args:
+        session (AsyncSession): 数据库会话
+        uid (int): 用户 uid
+        aid (int): 小哥 id
+
+    Returns:
+        int: 库存小哥的数量
+    """
     query = select(StorageStats.count).filter(
         StorageStats.target_user_id == uid, StorageStats.target_award_id == aid
     )
@@ -87,7 +99,7 @@ async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
         session (AsyncSession): 数据库会话
         uid (int): 用户 ID
         aid (int): 小哥 ID
-        count (int): 增减数量
+        count (int): 增减数量。如果值小于 0，会记录使用的量。
 
     Returns:
         int: 在调整库存之前，用户的库存值
@@ -108,6 +120,31 @@ async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
         .values(count=res + count)
     )
     await session.execute(query)
+
+    if count < 0:
+        query2 = select(UsedStats.count).filter(
+            UsedStats.target_user_id == uid, UsedStats.target_award_id == aid
+        )
+        sta = (await session.execute(query2)).scalar_one_or_none()
+        if sta is None:
+            query = insert(UsedStats).values(
+                target_award_id=aid,
+                target_user_id=uid,
+                count=-count,
+            )
+        else:
+            query = (
+                update(UsedStats)
+                .where(
+                    UsedStats.target_award_id == aid, UsedStats.target_user_id == uid
+                )
+                .values(count=UsedStats.count - count)
+            )
+        await session.execute(query)
+
+    # 释放相关的事件
+    await root.emit(PlayerStorageChangedEvent(uid, aid, count, res, res + count))
+
     return res
 
 

@@ -133,5 +133,31 @@ class TestCatch(SQLTestCase):
             self.assertIsNotNone(kagami)
 
 
+class TestCatchBan(SQLTestCase):
+    async def createData(self, session: AsyncSession) -> None:
+        level = Level(name="一星", weight=1)
+
+        award1 = Award(name="可以抽得到", level=level, data_id=1)
+        award2 = Award(name="不可以抽到", level=level, data_id=100, is_special_get_only=True)
+
+        session.add_all([level, award1, award2])
+        await session.commit()
+    
+    async def test_catch_ban(self):
+        session = get_session()
+
+        async with session.begin():
+            uid = await get_uid_by_qqid(session, 123)
+            await updateUserTime(session, uid, 20, time.time())
+            await session.commit()
+
+        async with session.begin():
+            pickResult = await pickAwards(session, uid, 1)
+
+            for aid, _ in pickResult.awards.items():
+                self.assertNotEqual(aid, 100)
+
+
+
 if __name__ == "__main__":
     unittest.main()

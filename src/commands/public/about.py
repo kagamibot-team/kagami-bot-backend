@@ -52,7 +52,7 @@ async def _(ctx: PublicContext, *_):
         text="更新历史（近三次）",
         color="#63605C",
         font=Fonts.JINGNAN_BOBO_HEI,
-        fontSize=80,
+        font_size=80,
     )
 
     for subtitle in shortHistory:
@@ -62,8 +62,8 @@ async def _(ctx: PublicContext, *_):
                 text=subtitle,
                 color="#63605C",
                 font=Fonts.JINGNAN_JUNJUN,
-                fontSize=48,
-                marginBottom=6,
+                font_size=48,
+                margin_bottom=6,
             )
         )
         for commmand in updateHistory[subtitle]:
@@ -72,7 +72,7 @@ async def _(ctx: PublicContext, *_):
                     text=commmand,
                     color="#9B9690",
                     font=Fonts.ALIMAMA_SHU_HEI,
-                    fontSize=24,
+                    font_size=24,
                 )
             )
         sections.append(await verticalPile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
@@ -97,7 +97,7 @@ async def _(ctx: PublicContext, *_):
         text="指令列表",
         color="#63605C",
         font=Fonts.JINGNAN_BOBO_HEI,
-        fontSize=80,
+        font_size=80,
     )
 
     for subtitle, commands in help.items():
@@ -107,8 +107,8 @@ async def _(ctx: PublicContext, *_):
                 text=subtitle,
                 color="#63605C",
                 font=Fonts.JINGNAN_JUNJUN,
-                fontSize=48,
-                marginBottom=6,
+                font_size=48,
+                margin_bottom=6,
             )
         )
         for commmand in commands:
@@ -117,7 +117,7 @@ async def _(ctx: PublicContext, *_):
                     text=commmand,
                     color="#9B9690",
                     font=Fonts.ALIMAMA_SHU_HEI,
-                    fontSize=24,
+                    font_size=24,
                 )
             )
         sections.append(await verticalPile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
