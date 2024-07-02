@@ -2,6 +2,7 @@
 和小哥合成有关的各种东西
 """
 
+from dataclasses import dataclass
 import itertools
 import math
 import random
@@ -203,7 +204,7 @@ async def clear_all_recipe(session: AsyncSession):
     await session.execute(delete(Recipe))
 
 
-async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) -> int:
+async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) -> tuple[int, bool]:
     """进行一次小哥合成，并返回合成的结果
 
     Args:
@@ -220,15 +221,15 @@ async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) 
     result, possibility = await get_merge_result(session, a1, a2, a3)
 
     if random.random() <= possibility:
-        return result
+        return result, True
 
     if random.random() <= 0.6:
         # 粑粑小哥
-        return 89
+        return 89, False
     
     if random.random() <= 0.1:
         # 对此时有特殊情况，是乱码小哥
-        return -1
+        return -1, False
 
     query = (
         select(Award.data_id)
@@ -238,4 +239,4 @@ async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) 
     )
     result = (await session.execute(query)).scalar_one()
 
-    return result
+    return result, False

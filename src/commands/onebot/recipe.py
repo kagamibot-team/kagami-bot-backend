@@ -71,7 +71,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         return
     await set_user_money(session, uid, m - 50)
 
-    aid = await try_merge(session, uid, a1, a2, a3)
+    aid, succeed = await try_merge(session, uid, a1, a2, a3)
 
     if aid == -1:
         rlen = random.randint(2, 4)
@@ -97,6 +97,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         color = info.color
 
         await add_storage(session, uid, aid, 1)
+
+    await root.emit(PlayerMergeEvent(uid, (a1, a2, a3), aid, succeed))
 
     rimage = await catch(
         title=title,
