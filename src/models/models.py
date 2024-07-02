@@ -124,6 +124,8 @@ class Award(Base, BaseMixin):
         Integer, ForeignKey("catch_catch_group.data_id", ondelete="SET NULL"), index=True, nullable=True
     )
 
+    is_special_get_only: Mapped[bool] = mapped_column(default=False, server_default="0")
+
 
 class AwardAltName(Base, BaseMixin, AltNameMixin):
     """

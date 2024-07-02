@@ -12,7 +12,7 @@ from nonebot import logger
 from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.models import Award, Level, Recipe
+from src.models.models import Award, AwardTagRelation, Level, Recipe, Tag
 
 
 async def _get_lid(session: AsyncSession, a: int):
@@ -107,7 +107,7 @@ async def generate_random_result(
     #   - 422: 0.927
     #   - 511: 0.750（例如，把五星扔回炉子里再造）
     succ = fall1 * fall2 * fall3
-    succ = succ ** (1 / 3)
+    succ: float = succ ** (1 / 3)
 
     # 珍贵程度乘以成功率偏执，再进行变换，就是成功率了，结果示例：
     #   - 111: 0.898
@@ -159,7 +159,7 @@ async def generate_random_result(
         # 极其罕见事件之 r == 1
         lid = levels[-1][0]
 
-    query = select(Award.data_id).filter(Award.level_id == lid)
+    query = select(Award.data_id).filter(Award.level_id == lid, Award.is_special_get_only == False)
     aids = (await session.execute(query)).scalars().all()
     aid = Recipe.get_random_object(a1, a2, a3).choice(aids)
 
@@ -204,7 +204,9 @@ async def clear_all_recipe(session: AsyncSession):
     await session.execute(delete(Recipe))
 
 
-async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) -> tuple[int, bool]:
+async def try_merge(
+    session: AsyncSession, uid: int, a1: int, a2: int, a3: int
+) -> tuple[int, bool]:
     """进行一次小哥合成，并返回合成的结果
 
     Args:
@@ -226,7 +228,7 @@ async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) 
     if random.random() <= 0.6:
         # 粑粑小哥
         return 89, False
-    
+
     if random.random() <= 0.1:
         # 对此时有特殊情况，是乱码小哥
         return -1, False

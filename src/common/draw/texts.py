@@ -150,11 +150,11 @@ def getTextImage(
 
     # 段落与段落之间添加一个这个空隙
     height += paragraph_spacing * (len(paragraphs) - 1)
-    top_pointer: float = 0
+    top_pointer: float = margin_top
 
     canvas = Canvas(
-        int(width + margin_left + margin_right),
-        int(height + margin_top + margin_bottom),
+        max(int(width + margin_left + margin_right), 1),
+        max(int(height + margin_top + margin_bottom), 1),
         Color(0, 0, 0, 0),
     )
 
