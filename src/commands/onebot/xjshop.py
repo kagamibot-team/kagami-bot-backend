@@ -136,7 +136,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         margin_bottom=248,
         margin_left=20,
         margin_right=20,
-        drawEmoji=False,
+        draw_emoji=False,
     )
 
     base = PIL.Image.new("RGB", image.size, "#FFFFFF")
