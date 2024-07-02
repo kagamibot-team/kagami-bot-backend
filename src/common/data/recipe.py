@@ -222,7 +222,7 @@ async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) 
     if random.random() <= possibility:
         return result
 
-    if random.random() <= 0.9:
+    if random.random() <= 0.6:
         # 粑粑小哥
         return 89
     
@@ -232,8 +232,7 @@ async def try_merge(session: AsyncSession, uid: int, a1: int, a2: int, a3: int) 
 
     query = (
         select(Award.data_id)
-        .join(Level, Level.data_id == Award.level_id)
-        .filter(Level.name == "☆")
+        .filter(Award.level_id == 7)
         .order_by(func.random())
         .limit(1)
     )
