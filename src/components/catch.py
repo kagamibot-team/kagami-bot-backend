@@ -23,18 +23,18 @@ async def catch(
         width=567,
         color="#ffffff",
         font=[Fonts.VONWAON_BITMAP_16, Fonts.MAPLE_UI],
-        fontSize=16,
+        font_size=16,
     )
     rightTitle = await getTextImage(
         text=title,
-        fontSize=43,
+        font_size=43,
         color="#ffffff",
         font=Fonts.JINGNAN_JUNJUN,
     )
     rightStar = await getTextImage(
         text=stars,
         width=400,
-        fontSize=43,
+        font_size=43,
         align=TextAlign.Right,
         color=color,
         font=Fonts.MAPLE_UI,
@@ -43,19 +43,19 @@ async def catch(
         text=notation,
         color="#FFFFFF",
         font=Fonts.MARU_MONICA,
-        fontSize=48,
-        marginBottom=5,
-        marginTop=0,
-        marginLeft=0,
+        font_size=48,
+        margin_bottom=5,
+        margin_top=0,
+        margin_left=0,
     )
     leftNotationShadow = await getTextImage(
         text=notation,
         color="#000000",
         font=Fonts.MARU_MONICA,
-        fontSize=48,
-        marginBottom=5,
-        marginTop=3,
-        marginLeft=3,
+        font_size=48,
+        margin_bottom=5,
+        margin_top=3,
+        margin_left=3,
     )
 
     block = PIL.Image.new(

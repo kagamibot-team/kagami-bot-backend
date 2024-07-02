@@ -47,7 +47,7 @@ for font in Fonts:
 def getTextImage(
     *,
     text: str,
-    fontSize: float,
+    font_size: float,
     font: Font | Fonts | str | Iterable[Fonts],
     color: Paint | str,
     width: int | None = None,
@@ -56,10 +56,10 @@ def getTextImage(
     stroke: float = 0.0,
     stroke_color: Paint | str = "#00000000",
     wrap_style: WrapStyle = WrapStyle.Character,
-    marginLeft: float = 0,
-    marginRight: float = 0,
-    marginTop: float = 0,
-    marginBottom: float = 0,
+    margin_left: float = 0,
+    margin_right: float = 0,
+    margin_top: float = 0,
+    margin_bottom: float = 0,
     drawEmoji: bool = True,
     scalar: float = 2,
 ):
@@ -67,7 +67,7 @@ def getTextImage(
 
     Args:
         text (str): 输入的文本
-        fontSize (float): 字体大小
+        font_size (float): 字体大小
         font (Font | Fonts | str | Iterable[Fonts]): 字体文件，最好从 Fonts 枚举中获得。可以输入一个 Fonts 元组或列表，以支持字体 Fallback。
         color (Paint | str): 颜色，使用井号开头的十六进制色号，或者使用 imagetext_py 中的 Paint 对象。
         width (int | None, optional): 文本框的宽度。如果不设定，文本会尽可能地长，而如果设定了，则会在宽度范围之内断行。
@@ -88,12 +88,12 @@ def getTextImage(
     """
 
     # 最开始，先处理一些抗锯齿缩放的问题
-    marginLeft *= scalar
-    marginRight *= scalar
-    marginTop *= scalar
-    marginBottom *= scalar
+    margin_left *= scalar
+    margin_right *= scalar
+    margin_top *= scalar
+    margin_bottom *= scalar
     stroke *= scalar
-    fontSize *= scalar
+    font_size *= scalar
 
     # 先预处理一些量，这些量需要同时适配旧接口
     if isinstance(font, Fonts):
@@ -112,42 +112,42 @@ def getTextImage(
     if width is None:
         # 这种情况表示绘制单行文本
         lines = [text]
-        _width, _height = text_size(text, fontSize, font, drawEmoji)
+        _width, _height = text_size(text, font_size, font, drawEmoji)
     else:
         # 这种情况就是多行文本了
         width = int(width * scalar)
 
-        lines = text_wrap(text, width, fontSize, font, drawEmoji, wrap_style)
+        lines = text_wrap(text, width, font_size, font, drawEmoji, wrap_style)
         _width, _height = text_size_multiline(
-            lines, fontSize, font, line_spacing, drawEmoji
+            lines, font_size, font, line_spacing, drawEmoji
         )
         _width = width
 
     canvas = Canvas(
-        int(_width + marginLeft + marginRight),
-        int(_height + marginTop + marginBottom),
+        int(_width + margin_left + margin_right),
+        int(_height + margin_top + margin_bottom),
         Color(0, 0, 0, 0),
     )
 
     if align == TextAlign.Left:
         ax = 0.0
-        x = marginLeft
+        x = margin_left
     elif align == TextAlign.Right:
         ax = 1.0
-        x = marginLeft + _width
+        x = margin_left + _width
     else:
         ax = 0.5
-        x = marginLeft + _width / 2
+        x = margin_left + _width / 2
 
     draw_text_multiline(
         canvas=canvas,
         lines=lines,
         x=x,
-        y=marginTop,
+        y=margin_top,
         ax=ax,
         ay=0.0,
-        width=_width + marginRight,
-        size=fontSize,
+        width=_width + margin_right,
+        size=font_size,
         font=font,
         fill=color,
         line_spacing=line_spacing,

@@ -13,7 +13,7 @@ async def __title(text: str, color: str = "#FFFFFF"):
         width=180,
         color=color,
         font=Fonts.HARMONYOS_SANS_BLACK,
-        fontSize=24,
+        font_size=24,
         align=TextAlign.Center,
     )
 
@@ -28,11 +28,11 @@ async def ref_book_box(title: str, notation: str, color: str, imgUrl: str):
         width=170,
         color="#FFFFFF",
         font=Fonts.MARU_MONICA,
-        fontSize=48,
+        font_size=48,
         stroke=2,
         stroke_color="#000000",
-        marginBottom=5,
-        marginLeft=5,
+        margin_bottom=5,
+        margin_left=5,
     )
 
     block = PIL.Image.new("RGB", (216, 210), "#9B9690")
@@ -54,11 +54,11 @@ async def skin_book(title: str, title2: str, notation: str, color: str, imgUrl: 
         width=170,
         color="#FFFFFF",
         font=Fonts.MARU_MONICA,
-        fontSize=36,
+        font_size=36,
         stroke=2,
         stroke_color="#000000",
-        marginBottom=5,
-        marginLeft=5,
+        margin_bottom=5,
+        margin_left=5,
     )
 
     block = PIL.Image.new("RGB", (216, 234), "#9B9690")
