@@ -2,9 +2,11 @@ import os
 from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.common.dataclasses.data_changed_events import PlayerStorageChangedEvent
 from src.common.download import download, writeData
 from src.models.models import *
 from src.common.dataclasses.award_info import AwardInfo
+from src.base.event_root import root
 
 
 async def get_award_info(session: AsyncSession, uid: int, aid: int):
@@ -139,6 +141,9 @@ async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
                 .values(count=UsedStats.count - count)
             )
         await session.execute(query)
+
+    # 释放相关的事件
+    await root.emit(PlayerStorageChangedEvent(uid, aid, count, res, res + count))
 
     return res
 
