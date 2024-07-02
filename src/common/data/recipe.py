@@ -225,11 +225,11 @@ async def try_merge(
     if random.random() <= possibility:
         return result, True
 
-    if random.random() <= 0.6:
+    if random.random() <= 0.8:
         # 粑粑小哥
         return 89, False
 
-    if random.random() <= 0.1:
+    if random.random() <= 0.75:
         # 对此时有特殊情况，是乱码小哥
         return -1, False
 

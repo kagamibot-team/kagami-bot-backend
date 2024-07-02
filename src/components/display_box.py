@@ -1,3 +1,4 @@
+import io
 import PIL
 import PIL.Image
 
@@ -9,7 +10,7 @@ from src.common.draw.tools import hex_to_rgb, rgb_to_hex, mix_color
 
 async def _display_box(color: str, central_image: str | bytes) -> PIL.Image.Image:
     if not isinstance(central_image, str):
-        image = PIL.Image.open(central_image)
+        image = PIL.Image.open(io.BytesIO(central_image))
     else:
         image = await loadImage(central_image)
     image = image.resize((180, 144), PIL.Image.ADAPTIVE)
