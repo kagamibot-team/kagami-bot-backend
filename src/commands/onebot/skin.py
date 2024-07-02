@@ -86,8 +86,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
         text=f"{name} 的皮肤进度：",
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
-        fontSize=80,
-        marginBottom=30,
+        font_size=80,
+        margin_bottom=30,
         width=216 * 6,
     )
 
@@ -105,9 +105,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
 
     area_box = await pileImages(images=boxes, rowMaxNumber=6, background="#9B9690")
 
-    img = await verticalPile(
-        [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
-    )
+    img = await verticalPile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
     await ctx.reply(UniMessage().image(raw=imageToBytes(img)))
 
 
@@ -155,14 +153,12 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
         text=f"全部 {len(skins)} 种皮肤：",
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
-        fontSize=80,
-        marginBottom=30,
+        font_size=80,
+        margin_bottom=30,
         width=216 * 6,
     )
 
     area_box = await pileImages(images=boxes, rowMaxNumber=6, background="#9B9690")
 
-    img = await verticalPile(
-        [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
-    )
+    img = await verticalPile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))

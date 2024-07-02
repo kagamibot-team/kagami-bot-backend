@@ -17,14 +17,14 @@ async def product_box(product: ProductData):
         align=TextAlign.Center,
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
-        fontSize=26,
+        font_size=26,
     )
     title2 = await getTextImage(
         text=product.description,
         width=180,
         color="#C4BEBD",
         font=Fonts.HARMONYOS_SANS_BLACK,
-        fontSize=20,
+        font_size=20,
         align=TextAlign.Center,
     )
 
@@ -47,21 +47,21 @@ async def product_box(product: ProductData):
             width=170,
             color="#FFFFFF",
             font=Fonts.MARU_MONICA,
-            fontSize=36,
+            font_size=36,
             stroke=4,
-            marginBottom=5,
-            marginLeft=5,
+            margin_bottom=5,
+            margin_left=5,
         )
         notationBoxShadow = await getTextImage(
             text=notation,
             width=170,
             color="#000000",
             font=Fonts.MARU_MONICA,
-            fontSize=36,
+            font_size=36,
             stroke=4,
-            marginTop=2,
-            marginBottom=5,
-            marginLeft=7,
+            margin_top=2,
+            margin_bottom=5,
+            margin_left=7,
         )
         await imagePaste(block, notationBoxShadow, 26, 117)
         await imagePaste(block, notationBox, 26, 117)

@@ -5,7 +5,6 @@ from nonebot.adapters.onebot.v11 import Message
 from .old_version import (
     CheckEnvironment,
     at,
-    localImage,
     text,
     Command,
     databaseIO

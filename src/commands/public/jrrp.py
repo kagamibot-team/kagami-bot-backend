@@ -40,8 +40,8 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
                 f"玩家 {name} ："
             ),
             color="#9B9690",
-            font=Fonts.JINGNAN_JUNJUN,
-            fontSize=48,
+            font=Fonts.ALIMAMA_SHU_HEI,
+            font_size=48,
         )
     )
     titles.append(
@@ -49,7 +49,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
             text=f"您的今日人品是： {str(jrrp)}！",
             color="#63605C",
             font=Fonts.JINGNAN_BOBO_HEI,
-            fontSize=80,
+            font_size=80,
         )
     )
     titles.append(
@@ -57,7 +57,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
             text=f"本次今日小哥是：",
             color="#63605C",
             font=Fonts.JINGNAN_BOBO_HEI,
-            fontSize=80,
+            font_size=80,
         )
     )
 

@@ -323,8 +323,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 text=f"{name} 的{levelName}进度：",
                 color="#FFFFFF",
                 font=Fonts.HARMONYOS_SANS_BLACK,
-                fontSize=80,
-                marginBottom=30,
+                font_size=80,
+                margin_bottom=30,
                 width=216 * 8,
             )
         )
@@ -336,8 +336,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 text=f"{name} 的抓小哥进度：{str(round(percent_progress*100, 2))}%",
                 color="#FFFFFF",
                 font=Fonts.HARMONYOS_SANS_BLACK,
-                fontSize=80,
-                marginBottom=30,
+                font_size=80,
+                margin_bottom=30,
                 width=216 * 8,
             )
         )
@@ -374,7 +374,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 text=title,
                 color=lcolor,
                 font=[Fonts.JINGNAN_JUNJUN, Fonts.MAPLE_UI],
-                fontSize=80,
+                font_size=80,
                 width=216 * 8,
             )
         )
@@ -426,24 +426,14 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
 
     area_title = await getTextImage(
         text=f"{name} 的抓小哥库存：",
-        color="#FFFFFF",
+        font_size=80,
         font=Fonts.HARMONYOS_SANS_BLACK,
-        fontSize=80,
-        marginBottom=30,
+        color="#FFFFFF",
         width=216 * 8,
+        margin_bottom=30,
     )
-    area_box = await pileImages(
-        paddingX=0,
-        paddingY=0,
-        images=imgs,
-        rowMaxNumber=8,
-        background="#9B9690",
-        horizontalAlign="top",
-        verticalAlign="left",
-    )
-    img = await verticalPile(
-        [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
-    )
+    area_box = await pileImages(images=imgs, rowMaxNumber=8, background="#9B9690")
+    img = await verticalPile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
@@ -486,8 +476,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
             text=f"全部 {total} 只{lNameDisplay}小哥：",
             color="#FFFFFF",
             font=Fonts.HARMONYOS_SANS_BLACK,
-            fontSize=80,
-            marginBottom=30,
+            font_size=80,
+            margin_bottom=30,
             width=216 * 8,
         )
     )
@@ -510,7 +500,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 text=title,
                 color=lcolor,
                 font=[Fonts.JINGNAN_JUNJUN, Fonts.MAPLE_UI],
-                fontSize=80,
+                font_size=80,
                 width=216 * 8,
             )
         )

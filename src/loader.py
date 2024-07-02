@@ -19,6 +19,7 @@ to_load_parents = (
     ("commands",),
     ("events",),
     ("logic",),
+    ("imports",),
 )
 
 

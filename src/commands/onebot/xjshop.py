@@ -14,7 +14,7 @@ async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
                 text=group,
                 color="#FFFFFF",
                 font=Fonts.HARMONYOS_SANS_BLACK,
-                fontSize=60,
+                font_size=60,
             )
         )
 
@@ -131,12 +131,12 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         width=336,
         color="#000000",
         font=Fonts.VONWAON_BITMAP_12,
-        fontSize=24,
-        marginTop=60,
-        marginBottom=248,
-        marginLeft=20,
-        marginRight=20,
-        drawEmoji=False,
+        font_size=24,
+        margin_top=60,
+        margin_bottom=248,
+        margin_left=20,
+        margin_right=20,
+        draw_emoji=False,
     )
 
     base = PIL.Image.new("RGB", image.size, "#FFFFFF")

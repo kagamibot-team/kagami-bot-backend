@@ -42,7 +42,7 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
             text=f"{name} 的一抓！",
             color="#63605C",
             font=Fonts.JINGNAN_BOBO_HEI,
-            fontSize=96,
+            font_size=96,
             width=800,
         )
     )
@@ -54,8 +54,8 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
             ),
             width=800,
             color="#9B9690",
-            font=Fonts.JINGNAN_JUNJUN,
-            fontSize=28,
+            font=Fonts.ALIMAMA_SHU_HEI,
+            font_size=28,
         )
     )
     titles.append(
@@ -66,8 +66,8 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
             ),
             width=800,
             color="#9B9690",
-            font=Fonts.JINGNAN_JUNJUN,
-            fontSize=28,
+            font=Fonts.ALIMAMA_SHU_HEI,
+            font_size=28,
         )
     )
 
@@ -85,9 +85,7 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
 
     area_title = await verticalPile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
     area_box = await verticalPile(boxes, 30, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile(
-        [area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80
-    )
+    img = await verticalPile([area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80)
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
