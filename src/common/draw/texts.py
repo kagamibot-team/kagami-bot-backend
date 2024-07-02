@@ -196,8 +196,8 @@ def getTextImage(
 
     return img.resize(
         (
-            int(img.width / scalar),
-            int(img.height / scalar),
+            max(int(img.width / scalar), 1),
+            max(int(img.height / scalar), 1),
         )
     )
 
