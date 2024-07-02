@@ -13,11 +13,11 @@ from src.base.event_root import activateRoot, root
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
     # ("common",),
-    ("imports",),
     ("components",),
     ("commands",),
     ("events",),
     ("logic",),
+    ("imports",),
 )
 
 

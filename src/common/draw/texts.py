@@ -18,7 +18,6 @@ from imagetext_py import (
     text_size_multiline,
     text_wrap,
 )
-from nonebot import logger
 
 from src.common.decorators.threading import make_async
 

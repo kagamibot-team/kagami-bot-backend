@@ -17,6 +17,21 @@ async def catch(
     new: bool,
     notation: str,
 ) -> PIL.Image.Image:
+    """在 Figma 中声明的抓到小哥的一个条目的对象
+
+    Args:
+        title (str): 一个小哥
+        description (str): 小哥的描述
+        image (str): 小哥的图片
+        stars (str): 小哥星级的标注
+        color (str): 星级的颜色，同时作为图片的背景色
+        new (bool): 是否是新小哥，效果是在右上角显示一个 NEW
+        notation (str): 小哥的名字左下角要显示什么批注文本
+
+    Returns:
+        PIL.Image.Image: 图片
+    """
+
     left_display = await display_box(color, image, new)
     rightDescription = await getTextImage(
         text=description,
@@ -24,6 +39,8 @@ async def catch(
         color="#ffffff",
         font=[Fonts.VONWAON_BITMAP_16, Fonts.MAPLE_UI],
         font_size=16,
+        line_spacing=1.5,
+        paragraph_spacing=10,
     )
     rightTitle = await getTextImage(
         text=title,
