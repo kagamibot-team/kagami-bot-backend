@@ -39,8 +39,8 @@ async def catch(
         color="#ffffff",
         font=[Fonts.VONWAON_BITMAP_16, Fonts.MAPLE_UI],
         font_size=16,
-        line_spacing=1.5,
-        paragraph_spacing=10,
+        line_spacing=1.25,
+        paragraph_spacing=15,
     )
     rightTitle = await getTextImage(
         text=title,
