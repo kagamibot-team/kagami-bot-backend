@@ -16,7 +16,6 @@ from src.models import *
 from .crud import *
 
 
-
 Session = AsyncSession
 
 
@@ -187,7 +186,7 @@ async def GetAwardInfo(session: Session, user: User, award: Award):
 
     if record is not None and len(desc.strip()) > 0:
         desc = record.skin.extra_description
-    
+
     if record is not None:
         img = record.skin.image
         sName = record.skin.name
@@ -201,7 +200,7 @@ async def GetAwardInfo(session: Session, user: User, award: Award):
         color=award.level.color_code,
         skinName=sName,
     )
-    
+
 
 async def buy(session: AsyncSession, user: User, code: str, price: float):
     user.money -= price

@@ -120,13 +120,13 @@ async def _(ctx: ConsoleContext):
 
 def _backup():
     with tarfile.open(f"data/backup/backup-{int(time.time())}.tar.gz", "w:gz") as tar:
-        tar.add('data/skins')
-        tar.add('data/awards')
-        tar.add('data/kagami')
-        tar.add('data/db.sqlite3')
+        tar.add("data/skins")
+        tar.add("data/awards")
+        tar.add("data/kagami")
+        tar.add("data/db.sqlite3")
 
-        if os.path.exists('data/catch/'):
-            tar.add('data/catch')
+        if os.path.exists("data/catch/"):
+            tar.add("data/catch")
 
 
 @listenConsole()

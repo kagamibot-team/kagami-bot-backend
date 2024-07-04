@@ -99,7 +99,10 @@ async def is_group_operator(bot: OnebotBotProtocol, group_id: int, user_id: int)
 
 
 async def set_group_ban(
-    bot: OnebotBotProtocol, group_id: int, user_id: int, duration: int | datetime.timedelta
+    bot: OnebotBotProtocol,
+    group_id: int,
+    user_id: int,
+    duration: int | datetime.timedelta,
 ):
     """设置禁言
 

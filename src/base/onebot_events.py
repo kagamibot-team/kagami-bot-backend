@@ -33,4 +33,9 @@ class OnebotStartedContext:
         self.bot = bot
 
 
-__all__ = ["GroupEmoji", "GroupMessageEmojiLike", "GroupStickEmojiContext", "OnebotStartedContext"]
+__all__ = [
+    "GroupEmoji",
+    "GroupMessageEmojiLike",
+    "GroupStickEmojiContext",
+    "OnebotStartedContext",
+]

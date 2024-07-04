@@ -2,7 +2,6 @@
 所有在 Onebot V11 协议下的指令
 """
 
-
 from src.base.db import get_session
 from .old_version import CommandBase
 from nonebot import on_type
@@ -77,7 +76,9 @@ async def _(bot: Bot, event: GroupMessageEvent):
 
         text = event.get_plaintext()
 
-        env = CheckEnvironment(sender, text, event.message_id, event.message, session, bot, event.group_id)
+        env = CheckEnvironment(
+            sender, text, event.message_id, event.message, session, bot, event.group_id
+        )
 
         callback = getCallbacks(sender)
         if callback != None:

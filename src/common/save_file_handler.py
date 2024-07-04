@@ -20,12 +20,12 @@ def move_file(src: pathlib.Path, dst: pathlib.Path):
 
     if not os.path.exists(dst.parent):
         os.mkdir(dst.parent)
-    
+
     # 使用文件读写
     with open(src, "rb") as f:
         with open(dst, "wb") as f2:
             f2.write(f.read())
-    
+
     # 删除源文件
     try:
         os.remove(src)

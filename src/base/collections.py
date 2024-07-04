@@ -26,7 +26,7 @@ class PriorityList(Generic[T]):
 
     def __getitem__(self, index: int):
         return self.ls[index][1]
-    
+
     def __str__(self) -> str:
         return f"PriorityList({self.ls})"
 

@@ -31,14 +31,22 @@ async def preDrawEverything():
 
     for ind, award in enumerate(awards):
         bg = award.level.color_code
-        tasks.add(asyncio.create_task(_predraw(bg, award.img_path, ind + 1, len(awards), award.name)))
+        tasks.add(
+            asyncio.create_task(
+                _predraw(bg, award.img_path, ind + 1, len(awards), award.name)
+            )
+        )
 
     skins = await getAllSkins(session)
 
     for ind, skin in enumerate(skins):
         bg = skin.award.level.color_code
-        tasks.add(asyncio.create_task(_predraw(bg, skin.image, ind + 1, len(skins), skin.name)))
-    
+        tasks.add(
+            asyncio.create_task(
+                _predraw(bg, skin.image, ind + 1, len(skins), skin.name)
+            )
+        )
+
     for task in tasks:
         await task
 

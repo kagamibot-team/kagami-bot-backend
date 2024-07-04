@@ -49,7 +49,7 @@ def init():
     nonebot.logger.info("检查数据库状态")
     config = Config("./alembic.ini")
     command.upgrade(config, "head")
-    
+
     nonebot.logger.info("正在检测数据表的更改")
     command.check(config)
 

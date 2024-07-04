@@ -48,7 +48,7 @@ class CatchHistoryContainer(BaseModel):
             self.dicts[group_id].append(record)
         else:
             self.dicts[group_id] = [record]
-        
+
         self.save()
 
     def _update(self):

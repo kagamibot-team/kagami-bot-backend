@@ -8,6 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 if TYPE_CHECKING:
+
     class Base(DeclarativeBase):
         pass
 

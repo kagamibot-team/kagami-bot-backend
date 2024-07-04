@@ -121,7 +121,10 @@ class Award(Base, BaseMixin):
     )
 
     catch_group = Column(
-        Integer, ForeignKey("catch_catch_group.data_id", ondelete="SET NULL"), index=True, nullable=True
+        Integer,
+        ForeignKey("catch_catch_group.data_id", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
     )
 
     is_special_get_only: Mapped[bool] = mapped_column(default=False, server_default="0")
@@ -360,6 +363,7 @@ class CatchGroup(Base, BaseMixin):
 
 class Recipe(Base, BaseMixin):
     """已经被记录下来的合成配方，是一个无序配方"""
+
     __tablename__ = "catch_recipe"
 
     __table_args__ = (
@@ -372,7 +376,9 @@ class Recipe(Base, BaseMixin):
 
     possibility: Mapped[float] = mapped_column()
 
-    result = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"), index=True)
+    result = Column(
+        Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"), index=True
+    )
 
     @staticmethod
     def get_random_object(a1: int, a2: int, a3: int) -> random.Random:

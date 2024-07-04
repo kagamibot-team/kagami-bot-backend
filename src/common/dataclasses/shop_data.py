@@ -55,10 +55,9 @@ class ShopBuyEvent:
     uid: int
     session: AsyncSession
 
-    def __init__(self, product: ProductData,
-    qqid: int,
-    uid: int,
-    session: AsyncSession) -> None:
+    def __init__(
+        self, product: ProductData, qqid: int, uid: int, session: AsyncSession
+    ) -> None:
         self.product = product
         self.qqid = qqid
         self.uid = uid

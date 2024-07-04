@@ -85,7 +85,9 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
 
     area_title = await verticalPile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
     area_box = await verticalPile(boxes, 30, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile([area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80)
+    img = await verticalPile(
+        [area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80
+    )
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
