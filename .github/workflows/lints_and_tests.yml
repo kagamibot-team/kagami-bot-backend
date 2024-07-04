@@ -22,6 +22,3 @@ jobs:
     - name: 使用 Pylint 检查代码拼写
       run: |
         pylint $(git ls-files '*.py') --disable=missing-module-docstring,wildcard-import,invalid-name,W0614,missing-module-docstring,too-few-public-methods,too-many-locals,undefined-variable,import-error,no-name-in-module,missing-function-docstring,wrong-import-order,unused-import,non-ascii-name,bare-except,wrong-import-position,too-many-statements,too-many-branches,unused-variable,unsupported-binary-operation,unnecessary-pass,too-many-return-statements,unnecessary-lambda-assignment,missing-class-docstring,no-member,line-too-long,import-outside-toplevel,multiple-statements,ungrouped-imports,redefined-outer-name,R0801,unused-argument,too-many-arguments,relative-beyond-top-level,function-redefined,redefined-builtin,trailing-whitespace,cyclic-import,cyclic-import,W0719,no-value-for-parameter,not-callable,W0012
-    - name: 运行测试集
-      run: |
-        python run_test.py

@@ -1,3 +1,4 @@
+from typing import Generator
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,7 +24,7 @@ class ShopData(BaseModel):
         """将商品添加到商店中。"""
         self.products.setdefault(ptype, []).append(product)
 
-    def iterate(self):
+    def iterate(self) -> Generator[ProductData, None, None]:
         """迭代商店中的商品。"""
         for product_list in self.products.values():
             yield from product_list
