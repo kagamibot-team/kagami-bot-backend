@@ -107,7 +107,7 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
                 target_hour = GET_UP_TIME_PRESETS[ma]
             else:
                 target_hour = 8
-            
+
             if target_hour > 10:
                 await ctx.reply("真能睡懒觉，要不早点起来吧", ref=True)
                 return

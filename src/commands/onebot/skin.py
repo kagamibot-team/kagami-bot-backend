@@ -105,7 +105,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
 
     area_box = await pileImages(images=boxes, rowMaxNumber=6, background="#9B9690")
 
-    img = await verticalPile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
+    img = await verticalPile(
+        [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
+    )
     await ctx.reply(UniMessage().image(raw=imageToBytes(img)))
 
 
@@ -160,5 +162,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
 
     area_box = await pileImages(images=boxes, rowMaxNumber=6, background="#9B9690")
 
-    img = await verticalPile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
+    img = await verticalPile(
+        [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
+    )
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))

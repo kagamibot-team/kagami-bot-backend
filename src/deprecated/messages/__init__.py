@@ -4,7 +4,6 @@
 该模块正在考虑废弃
 """
 
-
 from .texts import (
     modifyOk,
     setIntervalWrongFormat,

@@ -140,7 +140,9 @@ def getTextImage(
         height = 0
 
         for paragraph in text.split(paragraph_split_text):
-            paragraph_list = text_wrap(paragraph, width, font_size, font, draw_emoji, wrap_style)
+            paragraph_list = text_wrap(
+                paragraph, width, font_size, font, draw_emoji, wrap_style
+            )
 
             _p_width, _p_height = text_size_multiline(
                 paragraph_list, font_size, font, line_spacing, draw_emoji

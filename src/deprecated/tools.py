@@ -7,7 +7,6 @@ from .old_version import CheckEnvironment, CommandBase
 from src.common.config import config
 
 
-
 async def getSender(env: CheckEnvironment):
     return await getUser(env.session, env.sender)
 
@@ -26,7 +25,10 @@ def isValidColorCode(raw: str):
 def requireAdmin(cls: Type[CommandBase]):
     class _cls(cls):
         async def check(self, env: CheckEnvironment) -> Message | None:
-            if env.group_id not in config.admin_groups and env.sender != config.admin_id:
+            if (
+                env.group_id not in config.admin_groups
+                and env.sender != config.admin_id
+            ):
                 return None
 
             return await super().check(env)

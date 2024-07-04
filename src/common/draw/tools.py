@@ -35,9 +35,9 @@ def imageToBytes(img: PIL.Image.Image):
     else:
         arr = cv2.cvtColor(arr, cv2.COLOR_BGRA2RGBA)
 
-    _, im = cv2.imencode('.png', arr)
+    _, im = cv2.imencode(".png", arr)
 
     return im.tobytes()
 
 
-__all__ = ['hex_to_rgb', 'rgb_to_hex', 'mix_color', 'imageToBytes']
+__all__ = ["hex_to_rgb", "rgb_to_hex", "mix_color", "imageToBytes"]

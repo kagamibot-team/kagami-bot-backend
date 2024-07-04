@@ -4,7 +4,11 @@ import PIL.Image
 
 
 from src.common.draw.images import imagePaste, loadImage
-from src.common.draw.shapes import applyMask, roundedRectangleMask, drawRoundedRectangleWithScalar
+from src.common.draw.shapes import (
+    applyMask,
+    roundedRectangleMask,
+    drawRoundedRectangleWithScalar,
+)
 from src.common.draw.tools import hex_to_rgb, rgb_to_hex, mix_color
 
 

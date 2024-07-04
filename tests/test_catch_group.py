@@ -5,14 +5,14 @@ from .base.basic_test_case import SQLTestCase
 
 
 class TestCatchGroup(SQLTestCase):
-    def assertValidateTrue(self, rule: str, dt: datetime):
+    def assertValidateTrue(self, rule: str, dt: datetime.datetime):
         self.assertTrue(CatchGroup.validate(rule, dt))
 
-    def assertValidateFalse(self, rule: str, dt: datetime):
+    def assertValidateFalse(self, rule: str, dt: datetime.datetime):
         self.assertFalse(CatchGroup.validate(rule, dt))
 
     async def test_catch_group_validate(self):
-        dt = datetime(2010, 1, 2, 1, 3, 5)
+        dt = datetime.datetime(2010, 1, 2, 1, 3, 5)
 
         self.assertValidateTrue("* * * * * * *", dt)
         self.assertValidateTrue("2000-2020 * * * * * *", dt)

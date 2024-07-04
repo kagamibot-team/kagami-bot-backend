@@ -7,7 +7,9 @@ def now_datetime():
     return to_utc8(datetime.datetime.now())
 
 
-def replace_tz(dt: datetime.datetime, tz: datetime.tzinfo = pytz.timezone("Asia/Shanghai")):
+def replace_tz(
+    dt: datetime.datetime, tz: datetime.tzinfo = pytz.timezone("Asia/Shanghai")
+):
     return dt.replace(tzinfo=tz)
 
 

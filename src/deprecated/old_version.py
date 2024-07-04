@@ -166,7 +166,7 @@ class Command(CommandBase):
     async def check(self, env: CheckEnvironment) -> Message | None:
         if config.enable_white_list and env.group_id not in config.white_list_groups:
             return
-        
+
         if len(env.message.exclude("text")) > 0:
             return None
 

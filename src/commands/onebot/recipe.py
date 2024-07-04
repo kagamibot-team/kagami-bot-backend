@@ -123,10 +123,19 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     box1 = await display_box(info1.color, info1.awardImg, False)
     box2 = await display_box(info2.color, info2.awardImg, False)
     box3 = await display_box(info3.color, info3.awardImg, False)
-    area_material_box = await pileImages(images=[box1, box2, box3], background="#8A8580", paddingX=24, marginLeft=18, marginBottom=24)
+    area_material_box = await pileImages(
+        images=[box1, box2, box3],
+        background="#8A8580",
+        paddingX=24,
+        marginLeft=18,
+        marginBottom=24,
+    )
+
+    succeeded = "成功" if succeed else "失败"
+    succeeded_sign = "！" if succeed or aid == 89 or aid == -1 else "？"
 
     area_title_2 = await getTextImage(
-        text=f"合成结果：{"成功" if succeed else "失败"}{"！" if succeed or aid == 89 or aid == -1 else "？"}",
+        text=f"合成结果：{succeeded}{succeeded_sign}",
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
         font_size=60,
@@ -151,6 +160,21 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         margin_top=12,
     )
 
-    img = await verticalPile([area_title_1, area_material_box, area_title_2, area_product_entry, area_title_3], 15, "left", "#8A8580", 60, 60, 60, 60)
+    img = await verticalPile(
+        [
+            area_title_1,
+            area_material_box,
+            area_title_2,
+            area_product_entry,
+            area_title_3,
+        ],
+        15,
+        "left",
+        "#8A8580",
+        60,
+        60,
+        60,
+        60,
+    )
     await ctx.send(UniMessage.image(raw=imageToBytes(img)))
     await session.commit()

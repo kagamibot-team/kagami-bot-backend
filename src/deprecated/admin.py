@@ -2,13 +2,7 @@ import re
 from typing import Callable
 from nonebot.adapters.onebot.v11 import Message
 
-from .old_version import (
-    CheckEnvironment,
-    at,
-    text,
-    Command,
-    databaseIO
-)
+from .old_version import CheckEnvironment, at, text, Command, databaseIO
 from .db import *
 from .messages import *
 
@@ -401,10 +395,14 @@ class RemoveAltName(Command):
 @databaseIO()
 @dataclass
 class AddTags(Command):
-    commandPattern: str = f"^:: ?{KEYWORD_CREATE}({KEYWORD_AWARDS}|{KEYWORD_LEVEL}|{KEYWORD_SKIN}){KEYWORD_TAG} (\\S+) (\\S+) (\\S+)"
+    commandPattern: str = (
+        f"^:: ?{KEYWORD_CREATE}({KEYWORD_AWARDS}|{KEYWORD_LEVEL}|{KEYWORD_SKIN}){KEYWORD_TAG} (\\S+) (\\S+) (\\S+)"
+    )
     argsPattern: str = "$"
 
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+    async def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
         ty = result.group(2)
         name = result.group(7)
         tag_name = result.group(8)
@@ -416,7 +414,7 @@ class AddTags(Command):
             award = await getAwardByName(env.session, name)
             if award is None:
                 return self.notExists(env, name)
-            
+
             await addAwardTag(env.session, award, tag)
             return Message([at(env.sender), text("MSG_ADD_TAG_OK")])
 
@@ -424,7 +422,7 @@ class AddTags(Command):
             level = await getLevelByName(env.session, name)
             if level is None:
                 return self.notExists(env, name)
-            
+
             await addLevelTag(env.session, level, tag)
             return Message([at(env.sender), text("MSG_ADD_TAG_OK")])
 
@@ -432,10 +430,10 @@ class AddTags(Command):
             skin = await getSkinByName(env.session, name)
             if skin is None:
                 return self.notExists(env, name)
-            
+
             await addSkinTag(env.session, skin, tag)
             return Message([at(env.sender), text("MSG_ADD_TAG_OK")])
-        
+
         return Message([at(env.sender), text("MSG_ADD_TAG_WRONG_TYPE")])
 
 
@@ -443,22 +441,26 @@ class AddTags(Command):
 @databaseIO()
 @dataclass
 class RemoveTags(Command):
-    commandPattern: str = f"^:: ?{KEYWORD_REMOVE}({KEYWORD_AWARDS}|{KEYWORD_LEVEL}|{KEYWORD_SKIN}){KEYWORD_TAG} (\\S+) (\\S+) (\\S+)"
+    commandPattern: str = (
+        f"^:: ?{KEYWORD_REMOVE}({KEYWORD_AWARDS}|{KEYWORD_LEVEL}|{KEYWORD_SKIN}){KEYWORD_TAG} (\\S+) (\\S+) (\\S+)"
+    )
     argsPattern: str = "$"
 
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]) -> Message | None:
+    async def handleCommand(
+        self, env: CheckEnvironment, result: re.Match[str]
+    ) -> Message | None:
         ty = result.group(2)
         name = result.group(7)
         tag_name = result.group(8)
         tag_args = result.group(9)
-        
+
         tag = await getTag(env.session, tag_name, tag_args)
 
         if re.match(KEYWORD_AWARDS, ty):
             award = await getAwardByName(env.session, name)
             if award is None:
                 return self.notExists(env, name)
-            
+
             await removeAwardTag(env.session, award, tag)
             return Message([at(env.sender), text("MSG_REMOVE_TAG_OK")])
 
@@ -466,16 +468,16 @@ class RemoveTags(Command):
             level = await getLevelByName(env.session, name)
             if level is None:
                 return self.notExists(env, name)
-            
+
             await removeLevelTag(env.session, level, tag)
             return Message([at(env.sender), text("MSG_REMOVE_TAG_OK")])
-        
+
         if re.match(KEYWORD_SKIN, ty):
             skin = await getSkinByName(env.session, name)
             if skin is None:
                 return self.notExists(env, name)
-            
+
             await removeSkinTag(env.session, skin, tag)
             return Message([at(env.sender), text("MSG_REMOVE_TAG_OK")])
-        
+
         return Message([at(env.sender), text("MSG_REMOVE_TAG_WRONG_TYPE")])

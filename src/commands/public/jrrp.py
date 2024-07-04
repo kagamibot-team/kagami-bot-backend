@@ -36,9 +36,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
     titles: list[PIL.Image.Image] = []
     titles.append(
         await getTextImage(
-            text=(
-                f"玩家 {name} ："
-            ),
+            text=(f"玩家 {name} ："),
             color="#9B9690",
             font=Fonts.ALIMAMA_SHU_HEI,
             font_size=48,
@@ -70,9 +68,11 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
         new=False,
         notation="",
     )
-    
+
     area_title = await verticalPile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile([area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80)
+    img = await verticalPile(
+        [area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80
+    )
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
     # await ctx.reply(UniMessage().text(f"你的今日人品是：{str(jrrp)}。\n本次今日小哥是：{diplay.awardName}。"))
 

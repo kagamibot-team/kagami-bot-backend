@@ -78,7 +78,9 @@ async def _(ctx: PublicContext, *_):
         sections.append(await verticalPile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
 
     area_section = await verticalPile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile([title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60)
+    img = await verticalPile(
+        [title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60
+    )
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
@@ -123,7 +125,9 @@ async def _(ctx: PublicContext, *_):
         sections.append(await verticalPile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
 
     area_section = await verticalPile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile([title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60)
+    img = await verticalPile(
+        [title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60
+    )
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 

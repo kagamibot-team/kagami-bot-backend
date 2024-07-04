@@ -72,26 +72,31 @@ async def generate_random_result(
         return 5, 0.0
 
     a0 = max(lid1, lid2, lid3)
-    b0 = 7 - ((lid1**2 + lid2**2 + lid3**2)/3)**(1/2) - a0/10 # b0越小越赚，先减去综合实力，再减去最高等级增益
+    b0 = (
+        7 - ((lid1**2 + lid2**2 + lid3**2) / 3) ** (1 / 2) - a0 / 10
+    )  # b0越小越赚，先减去综合实力，再减去最高等级增益
 
     # 抽取一个等级
     r = Recipe.get_random_object(a1, a2, a3).betavariate(a0, b0)
     lid: int | None = None
-    lid = math.ceil(r*5)
+    lid = math.ceil(r * 5)
 
     logger.info(f"{lid1}+{lid2}+{lid3}={lid} ({r}, [{a0}, {b0}])")
 
+    rms = ((lid1**2 + lid2**2 + lid3**2) / 3) ** 0.5  # 三个等级的平方平均数
+    fvi = (rms / 5) ** (1 / 10)  # 变换为配方珍贵指数(0.851~1)
 
-    rms = ((lid1**2 + lid2**2 + lid3**2)/3) ** 0.5 # 三个等级的平方平均数
-    fvi = (rms/5)**(1/10) # 变换为配方珍贵指数(0.851~1)
-
-    poss = 1 - lid/8 # 基础概率，由产物等级决定 (0.875, 0.75, 0.625, 0.5, 0.375)
-    poss = poss ** (1 + (lid - max(lid1, lid2, lid3))/5) # 综合概率，由产物等级与材料最高级之差影响，升级则降低概率
-    poss = poss * fvi # 最终概率，由配方珍贵程度影响，影响程度较小
+    poss = 1 - lid / 8  # 基础概率，由产物等级决定 (0.875, 0.75, 0.625, 0.5, 0.375)
+    poss = poss ** (
+        1 + (lid - max(lid1, lid2, lid3)) / 5
+    )  # 综合概率，由产物等级与材料最高级之差影响，升级则降低概率
+    poss = poss * fvi  # 最终概率，由配方珍贵程度影响，影响程度较小
 
     logger.info(f"{1 - lid/8}^(1 + {lid - max(lid1, lid2, lid3)}/5)*{fvi} = {poss}")
 
-    query = select(Award.data_id).filter(Award.level_id == lid, Award.is_special_get_only == False)
+    query = select(Award.data_id).filter(
+        Award.level_id == lid, Award.is_special_get_only == False
+    )
     aids = (await session.execute(query)).scalars().all()
     aid = Recipe.get_random_object(a1, a2, a3).choice(aids)
 

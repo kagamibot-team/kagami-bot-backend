@@ -37,7 +37,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
     if gei_aid is None:
         logger.error(la.err.data_missing)
         return
-    
+
     if await using_skin(session, uid, gei_aid) != None:
         await ctx.send(UniMessage().text("切换成功！"))
     await clear_skin(session, uid, gei_aid)
@@ -67,7 +67,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
     if hkr_sta == 0 or nzm_sta == 0:
         logger.info(la.err.data_not_satisfied)
         return
-    
+
     if await have_skin(session, uid, ye_sid) == False:
         await ctx.send(UniMessage().text("获取成功！"))
     if await using_skin(session, uid, ye_sid) != ye_sid:
@@ -94,10 +94,16 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
     query = select(Award.data_id).filter(Award.name == "小真寻&小美波里")
     sex_aid = (await session.execute(query)).scalar_one_or_none()
 
-    if kbs_sid is None or thr_aid is None or kin_aid is None or bou_aid is None or sex_aid is None:
+    if (
+        kbs_sid is None
+        or thr_aid is None
+        or kin_aid is None
+        or bou_aid is None
+        or sex_aid is None
+    ):
         logger.error(la.err.data_missing)
         return
-    
+
     kin_sta = await get_statistics(session, uid, kin_aid)
     bou_sta = await get_statistics(session, uid, bou_aid)
     sex_sta = await get_statistics(session, uid, sex_aid)

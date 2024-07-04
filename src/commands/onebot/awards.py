@@ -433,7 +433,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
         margin_bottom=30,
     )
     area_box = await pileImages(images=imgs, rowMaxNumber=8, background="#9B9690")
-    img = await verticalPile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
+    img = await verticalPile(
+        [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
+    )
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 

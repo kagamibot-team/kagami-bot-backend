@@ -94,7 +94,11 @@ async def _(ctx: PublicContext, res: Arparma):
             compact=True,
         ),
         Option("图片", Arg("图片", Image), alias=["--image", "照片", "-i", "-I"]),
-        Option("特殊性", Arg("特殊性", str), alias=["--special", "特殊", "-s", "-S", "是否特殊"]),
+        Option(
+            "特殊性",
+            Arg("特殊性", str),
+            alias=["--special", "特殊", "-s", "-S", "是否特殊"],
+        ),
     )
 )
 @withFreeSession()
@@ -163,16 +167,20 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
             except Exception as e:
                 logger.warning(f"名字叫 {name} 的小哥的图片下载失败。")
                 logger.exception(e)
-    
+
     if special is not None and len(special) > 0:
         if special[0] in "yYtT":
             await session.execute(
-                update(Award).where(Award.data_id == aid).values(is_special_get_only=True)
+                update(Award)
+                .where(Award.data_id == aid)
+                .values(is_special_get_only=True)
             )
             messages += f"成功将名字叫 {name} 的小哥更改为抽不到，不能被随机合成出来\n"
         elif special[0] in "nNfF":
             await session.execute(
-                update(Award).where(Award.data_id == aid).values(is_special_get_only=False)
+                update(Award)
+                .where(Award.data_id == aid)
+                .values(is_special_get_only=False)
             )
             messages += f"成功将名字叫 {name} 的小哥更改为抽得到，可以被随机合成出来\n"
 

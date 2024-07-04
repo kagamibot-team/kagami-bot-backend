@@ -111,7 +111,11 @@ class TestCatch(SQLTestCase):
             self.assertIsNone(kagami)
 
             pev = await save_picks(
-                pickResult=pickResult, group_id=None, uid=uid, session=session, userTime=userTime
+                pickResult=pickResult,
+                group_id=None,
+                uid=uid,
+                session=session,
+                userTime=userTime,
             )
             self.assertAlmostEqual(pev.moneyUpdated, 20)
             await session.commit()
@@ -138,11 +142,13 @@ class TestCatchBan(SQLTestCase):
         level = Level(name="一星", weight=1)
 
         award1 = Award(name="可以抽得到", level=level, data_id=1)
-        award2 = Award(name="不可以抽到", level=level, data_id=100, is_special_get_only=True)
+        award2 = Award(
+            name="不可以抽到", level=level, data_id=100, is_special_get_only=True
+        )
 
         session.add_all([level, award1, award2])
         await session.commit()
-    
+
     async def test_catch_ban(self):
         session = get_session()
 
@@ -156,7 +162,6 @@ class TestCatchBan(SQLTestCase):
 
             for aid, _ in pickResult.awards.items():
                 self.assertNotEqual(aid, 100)
-
 
 
 if __name__ == "__main__":
