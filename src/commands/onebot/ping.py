@@ -56,7 +56,7 @@ GET_UP_TIME_PRESETS = {
 @listenGroup()
 @matchAlconna(
     Alconna(
-        "晚安",
+        "小镜晚安",
         Arg("getup_time", MultiVar(str, "*"), seps=" "),
     )
 )
