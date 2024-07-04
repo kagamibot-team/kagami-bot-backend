@@ -5,6 +5,7 @@
 
 from pathlib import Path
 import subprocess
+from src.base.db import manual_checkpoint
 from src.common.save_file_handler import pack_save
 from src.imports import *
 
@@ -16,6 +17,7 @@ from src.imports import *
 )
 @withLoading()
 async def _(ctx: GroupContext, _):
+    await manual_checkpoint()
     fp = await pack_save()
     await ctx.bot.call_api(
         "upload_group_file",
