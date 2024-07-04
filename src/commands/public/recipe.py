@@ -138,3 +138,12 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     await session.commit()
     await ctx.reply("ok.")
     return
+
+
+@listenPublic()
+@requireAdmin()
+@matchAlconna(Alconna("re:(删除所有配方)", ["::"]))
+@withFreeSession()
+async def _(session: AsyncSession, ctx: PublicContext, __: Arparma):
+    await session.execute(delete(Recipe))
+    await ctx.send("删除成功！")
