@@ -1,6 +1,7 @@
 import asyncio
 import os
 import random
+import time
 
 from src.imports import *
 
@@ -10,21 +11,25 @@ def randomKagami():
 
     if not os.path.exists(rootPath):
         return None
-    
+
     files = os.listdir(rootPath)
     if len(files) == 0:
         return None
-    
+
     return os.path.join(rootPath, random.choice(files))
 
 
 @listenGroup()
 async def ping(ctx: GroupContext):
-    if ctx.event.to_me and len(await ctx.getMessage()) == 1 and (await ctx.getMessage())[0].data['text'] == '':
+    if (
+        ctx.event.to_me
+        and len(await ctx.getMessage()) == 1
+        and (await ctx.getMessage())[0].data["text"] == ""
+    ):
         kagami = randomKagami()
         if kagami is None:
             return
-        
+
         await ctx.reply(UniMessage().image(path=kagami))
 
 
@@ -33,3 +38,117 @@ async def ping(ctx: GroupContext):
 @withLoading("")
 async def _(ctx: PublicContext, _: Match[str]):
     await asyncio.sleep(5)
+
+
+@listenGroup()
+@matchLiteral("晚安")
+@requireOperatorInGroup()
+@withSessionLock()
+async def goodnight(ctx: GroupContext, session: AsyncSession):
+    info = await get_group_member_info(ctx.bot, ctx.event.group_id, ctx.getSenderId())
+    self_info = await get_group_member_info(
+        ctx.bot, ctx.event.group_id, int(ctx.bot.self_id)
+    )
+    if self_info["role"] == "admin" and info["role"] != "member":
+        await send_private_msg(
+            ctx.bot,
+            ctx.getSenderId(),
+            UniMessage("诶……好像没办法给群里的管理员或者群主禁言……")
+            .emoji(id="106")
+            .emoji(id="106")
+            .text("所以这个晚安没法生效了……"),
+        )
+        await asyncio.sleep(random.random() + 0.5)
+        await send_private_msg(
+            ctx.bot,
+            ctx.getSenderId(),
+            "所以……如果你不是管理员，你可能就能获得这个晚安的奖励了",
+        )
+        return
+
+    dt = now_datetime()
+    target_time: datetime.datetime | None = None
+    awards: int = -1
+    count: int = -1
+
+    if dt.hour >= 21:
+        target_time = (dt + datetime.timedelta(days=1)).replace(
+            hour=8, minute=0, second=0
+        )
+
+    if dt.hour <= 5:
+        target_time = dt.replace(hour=8, minute=0, second=0)
+
+    if dt.hour >= 21 and dt.hour < 23:
+        uid = await get_uid_by_qqid(session, ctx.getSenderId())
+        query = select(User.last_sleep_early_time, User.sleep_early_count).filter(
+            User.data_id == uid
+        )
+        last_sleep_time, sleep_count = (await session.execute(query)).tuples().one()
+        last_sleep_date = timestamp_to_datetime(last_sleep_time).date()
+        if (dt.date() - last_sleep_date).days < 1:
+            awards = -2
+        else:
+            awards = random.randint(50, 100)
+            await session.execute(
+                update(User)
+                .where(User.data_id == uid)
+                .values(
+                    last_sleep_early_time=time.time(),
+                    sleep_early_count=sleep_count + 1,
+                )
+            )
+            money = await get_user_money(session, uid)
+            await set_user_money(session, uid, money + awards)
+            await session.commit()
+        count = sleep_count + 1
+
+    if target_time is None:
+        await ctx.reply("现在不是睡觉的时候吧……", ref=True, at=False)
+        return
+
+    delta = target_time - dt
+    await set_group_ban(ctx.bot, ctx.event.group_id, ctx.getSenderId(), delta)
+
+    rep_name = ""
+    sender = ctx.getSenderId()
+    custom_replies = config.custom_replies
+    if (k := str(sender)) in custom_replies.keys():
+        rep_name = custom_replies[k] + "！"
+
+    await ctx.reply(
+        UniMessage(f"晚安！{rep_name}")
+        + random.choice(
+            [
+                "明早见哦！",
+                "明早早八再见~",
+                "睡个好觉哦！",
+                "呼呼——",
+                "zzz……",
+                "放下手机睡觉吧！",
+                "做个好梦！",
+                "明天见！",
+                UniMessage().emoji(id="202").emoji(id="202").emoji(id="202"),
+                UniMessage().emoji(id="75").emoji(id="75"),
+                UniMessage().emoji(id="8"),
+            ]
+        ),
+        ref=True,
+        at=False,
+    )
+    await asyncio.sleep(random.random() + 0.5)
+    if awards <= 0:
+        if awards == -1:
+            await ctx.reply(
+                UniMessage("明天别睡太晚了！早睡早起身体好！")
+                .emoji(id="30")
+                .emoji(id="30")
+            )
+        elif awards == -2:
+            await ctx.reply(UniMessage("别贪心啊！今天我已经给过你薯片了！"))
+    else:
+        await ctx.reply(
+            UniMessage(
+                f"奖励早睡的孩子 {awards} 薯片哦，你已经坚持早睡了 {count} 天了！"
+            )
+        )

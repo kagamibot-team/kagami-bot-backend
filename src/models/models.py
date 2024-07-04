@@ -221,6 +221,11 @@ class User(Base, BaseMixin):
     # Feature flag: 未来可能会启用的若干项，现在先开个字段
     feature_flag: Mapped[str] = mapped_column(default="", server_default="")
 
+    # 20240704 追加
+    # 和早睡有关的两个字段
+    last_sleep_early_time: Mapped[float] = mapped_column(default=0, server_default="0")
+    sleep_early_count: Mapped[int] = mapped_column(default=0, server_default="0")
+
 
 class UsedSkin(Base, BaseMixin):
     __tablename__ = "catch_skin_record"
