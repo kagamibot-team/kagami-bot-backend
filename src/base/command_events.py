@@ -216,7 +216,7 @@ class OnebotMessageContext(UniMessageContext[OnebotReceipt], Generic[TE]):
         nodes: list[_ForwardMessageNode] = []
 
         for message in messages:
-            if isinstance(message, str) or isinstance(message, dict):
+            if isinstance(message, (str, dict)):
                 message = forwardMessage(message)
                 nodes.append({"type": "node", "data": message})
             else:

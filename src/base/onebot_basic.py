@@ -12,7 +12,7 @@ class Recallable(Protocol):
 
 
 class NoRecall(Recallable):
-    async def recall(self) -> None:
+    async def recall(self, *args: Any, **kwargs: Any) -> None:
         return None
 
 
@@ -66,9 +66,11 @@ def export_msg(msg: UniMessage[Any]) -> Message:
 def handle_input_message(msg: MessageLike) -> Message:
     if isinstance(msg, Message):
         return msg
-    elif isinstance(msg, MessageSegment):
+
+    if isinstance(msg, MessageSegment):
         return Message(msg)
-    elif isinstance(msg, str):
+
+    if isinstance(msg, str):
         return Message(MessageSegment.text(msg))
-    else:
-        return export_msg(msg)
+
+    return export_msg(msg)

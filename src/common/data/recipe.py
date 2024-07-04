@@ -95,7 +95,8 @@ async def generate_random_result(
     logger.info(f"{1 - lid/8}^(1 + {lid - max(lid1, lid2, lid3)}/5)*{fvi} = {poss}")
 
     query = select(Award.data_id).filter(
-        Award.level_id == lid, Award.is_special_get_only == False
+        Award.level_id == lid,
+        Award.is_special_get_only == False,  # pylint: disable=singleton-comparison
     )
     aids = (await session.execute(query)).scalars().all()
     aid = Recipe.get_random_object(a1, a2, a3).choice(aids)

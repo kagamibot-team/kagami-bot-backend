@@ -101,35 +101,32 @@ async def collect_images():
         await session.commit()
 
 
-def pack_save_task(fp: pathlib.Path):
-    zf = zipfile.ZipFile(fp, "w")
+def pack_save_task(zfp: pathlib.Path):
+    with zipfile.ZipFile(zfp, "w") as zf:
+        zf.mkdir("data/")
+        zf.mkdir("data/awards/")
+        for fp in pathlib.Path("./data/awards/").iterdir():
+            fn = fp.name
+            with zf.open(f"data/awards/{fn}", "w") as f:
+                f.write(fp.read_bytes())
 
-    zf.mkdir("data/")
-    zf.mkdir("data/awards/")
-    for fp in pathlib.Path("./data/awards/").iterdir():
-        fn = fp.name
-        with zf.open(f"data/awards/{fn}", "w") as f:
-            f.write(fp.read_bytes())
+        zf.mkdir("data/skins/")
+        for fp in pathlib.Path("./data/skins/").iterdir():
+            fn = fp.name
+            with zf.open(f"data/skins/{fn}", "w") as f:
+                f.write(fp.read_bytes())
 
-    zf.mkdir("data/skins/")
-    for fp in pathlib.Path("./data/skins/").iterdir():
-        fn = fp.name
-        with zf.open(f"data/skins/{fn}", "w") as f:
-            f.write(fp.read_bytes())
+        with zf.open("data/db.sqlite3", "w") as f:
+            f.write(pathlib.Path("./data/db.sqlite3").read_bytes())
 
-    with zf.open("data/db.sqlite3", "w") as f:
-        f.write(pathlib.Path("./data/db.sqlite3").read_bytes())
+        with zf.open("data/catch_history.json", "w") as f:
+            f.write(pathlib.Path("./data/catch_history.json").read_bytes())
 
-    with zf.open("data/catch_history.json", "w") as f:
-        f.write(pathlib.Path("./data/catch_history.json").read_bytes())
+        with zf.open("data/sign_in_history.json", "w") as f:
+            f.write(pathlib.Path("./data/sign_in_history.json").read_bytes())
 
-    with zf.open("data/sign_in_history.json", "w") as f:
-        f.write(pathlib.Path("./data/sign_in_history.json").read_bytes())
-
-    with zf.open("data/log.log", "w") as f:
-        f.write(pathlib.Path("./data/log.log").read_bytes())
-
-    zf.close()
+        with zf.open("data/log.log", "w") as f:
+            f.write(pathlib.Path("./data/log.log").read_bytes())
 
 
 async def pack_save(filename: str | None = None):

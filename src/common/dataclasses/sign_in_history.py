@@ -17,7 +17,7 @@ class SignInHistory(BaseModel):
 
     def weak_load(self, fp: str | Path = Path("./data/sign_in_history.json")):
         if not os.path.exists(fp):
-            return None
+            return
 
         with open(fp, "r", encoding="utf-8") as f:
             try:

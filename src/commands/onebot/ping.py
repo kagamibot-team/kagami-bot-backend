@@ -103,8 +103,8 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
             ma = match.group(4)
             if ma.isdigit():
                 target_hour = int(ma)
-            elif ma in GET_UP_TIME_PRESETS.keys():
-                target_hour = GET_UP_TIME_PRESETS[ma]
+            elif (ta := GET_UP_TIME_PRESETS.get(ma)):
+                target_hour = ta
             else:
                 target_hour = 8
 

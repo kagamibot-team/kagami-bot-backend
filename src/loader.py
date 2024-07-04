@@ -48,7 +48,7 @@ def load_packages():
         loaded_modules.extend(
             _walk_load(os.path.join(package_dir, *to_import), *to_import)
         )
-    logger.info("载入完成，一共载入了%d个模块" % len(loaded_modules))
+    logger.info(f"载入完成，一共载入了 {len(loaded_modules)} 个模块")
 
 
 def reload():
@@ -57,9 +57,10 @@ def reload():
     for p in loaded_modules:
         try:
             importlib.reload(p)
-        except Exception as e:
-            logger.error(f"重载模块 {p.__name__} 失败，原因：{e}")
-    logger.info("重载了%d个模块" % len(loaded_modules))
+        except Exception as e:    # pylint: disable=broad-except
+            logger.error(f"重载模块 {p.__name__} 失败，原因：")
+            logger.exception(e)
+    logger.info(f"重载了 {len(loaded_modules)} 个模块")
 
     while loaded_modules:
         loaded_modules.pop()

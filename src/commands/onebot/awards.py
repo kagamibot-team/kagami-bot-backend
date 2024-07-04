@@ -82,7 +82,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
     info = await get_award_info(session, user, award)
 
     if info.skinName is not None:
-        nameDisplay = "{0}[{1}]".format(info.awardName, info.skinName)
+        nameDisplay = f"{info.awardName}[{info.skinName}]"
     else:
         nameDisplay = info.awardName
 
@@ -174,7 +174,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
     info = await get_award_info(session, user, award)
 
     if info.skinName is not None:
-        nameDisplay = "{0}[{1}]".format(info.awardName, info.skinName)
+        nameDisplay = f"{info.awardName}[{info.skinName}]"
     else:
         nameDisplay = info.awardName
 
@@ -226,19 +226,19 @@ async def _get_others(session: AsyncSession, uid: int):
         Skin.owned_skins.any(OwnedSkin.user_id == uid)
     )
     skins = (await session.execute(query)).tuples().all()
-    skins = {_id: img for _id, img in skins}
+    skins = dict(skins)
 
     query = select(StorageStats.target_award_id, StorageStats.count).filter(
         StorageStats.target_user_id == uid
     )
     storages = (await session.execute(query)).tuples().all()
-    storages = {_id: count for _id, count in storages}
+    storages = dict(storages)
 
     query = select(UsedStats.target_award_id, UsedStats.count).filter(
         UsedStats.target_user_id == uid
     )
     used = (await session.execute(query)).tuples().all()
-    used = {_id: count for _id, count in used}
+    used = dict(used)
 
     return skins, storages, used
 
@@ -254,8 +254,7 @@ def calc_progress(
         if lweight == 0:
             continue
         logger.info(
-            "%s: %f ^ %f = %f"
-            % (name, lweight, 1.0 / param, math.pow(lweight, 1.0 / param))
+            f"{name}: {lweight} ^ {1.0 / param} = {math.pow(lweight, 1.0 / param)}"
         )
         denominator += 1.0 / math.pow(lweight, 1.0 / param)
 

@@ -14,7 +14,7 @@ def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
 
 
 def rgb_to_hex(rgb: tuple[int, int, int]) -> str:
-    return "#%02x%02x%02x" % rgb
+    return "#%02x%02x%02x" % rgb  # pylint: disable=consider-using-f-string
 
 
 def mix_color(

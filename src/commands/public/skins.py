@@ -88,14 +88,10 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
         if imageUrl is None:
             logger.warning(f"名字叫 {name} 的皮肤的图片地址为空。")
         else:
-            try:
-                fp = await downloadSkinImage(sid, imageUrl)
-                await session.execute(
-                    update(Skin).where(Skin.data_id == sid).values(image=fp)
-                )
-                messages += f"成功将名字叫 {name} 的皮肤的图片改为 {fp}。\n"
-            except Exception as e:
-                logger.warning(f"名字叫 {name} 的皮肤的图片下载失败。")
-                logger.exception(e)
+            fp = await downloadSkinImage(sid, imageUrl)
+            await session.execute(
+                update(Skin).where(Skin.data_id == sid).values(image=fp)
+            )
+            messages += f"成功将名字叫 {name} 的皮肤的图片改为 {fp}。\n"
 
     await ctx.reply(messages)

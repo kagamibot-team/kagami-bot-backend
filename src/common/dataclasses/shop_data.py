@@ -19,9 +19,9 @@ class ShopData(BaseModel):
 
     products: dict[str, list[ProductData]] = {}
 
-    def push(self, product: ProductData, type: str):
+    def push(self, product: ProductData, ptype: str):
         """将商品添加到商店中。"""
-        self.products.setdefault(type, []).append(product)
+        self.products.setdefault(ptype, []).append(product)
 
     def iterate(self):
         """迭代商店中的商品。"""

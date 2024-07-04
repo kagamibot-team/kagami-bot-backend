@@ -164,7 +164,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
                     update(Award).where(Award.data_id == aid).values(img_path=fp)
                 )
                 messages += f"成功将名字叫 {name} 的小哥的图片改为 {fp}。\n"
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 logger.warning(f"名字叫 {name} 的小哥的图片下载失败。")
                 logger.exception(e)
 

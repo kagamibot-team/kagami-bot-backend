@@ -52,7 +52,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
     )
     titles.append(
         await getTextImage(
-            text=f"本次今日小哥是：",
+            text="本次今日小哥是：",
             color="#63605C",
             font=Fonts.JINGNAN_BOBO_HEI,
             font_size=80,

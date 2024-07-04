@@ -56,7 +56,7 @@ def getTextImage(
     *,
     text: str,
     font_size: float,
-    font: Font | Fonts | str | Iterable[Fonts],
+    font: Font | Fonts | str | list[Fonts],
     color: Paint | str,
     width: int | None = None,
     line_spacing: float = 1,
@@ -78,7 +78,7 @@ def getTextImage(
     Args:
         text (str): 输入的文本
         font_size (float): 字体大小
-        font (Font | Fonts | str | Iterable[Fonts]): 字体文件，最好从 Fonts 枚举中获得。可以输入一个 Fonts 元组或列表，以支持字体 Fallback。
+        font (Font | Fonts | str | list[Fonts]): 字体文件，最好从 Fonts 枚举中获得。可以输入一个 Fonts 元组或列表，以支持字体 Fallback。
         color (Paint | str): 颜色，使用井号开头的十六进制色号，或者使用 imagetext_py 中的 Paint 对象。
         width (int | None, optional): 文本框的宽度。如果不设定，文本会尽可能地长，而如果设定了，则会在宽度范围之内断行。
         line_spacing (float, optional): 行间距，默认是一倍行间距。
@@ -117,8 +117,9 @@ def getTextImage(
         font = FontDB.Query(font.name)
     elif isinstance(font, str):
         font = FontDB.Query(font)
-    elif isinstance(font, Iterable):
+    elif isinstance(font, list):
         font = FontDB.Query(" ".join((f.name for f in font)))
+
     if isinstance(color, str):
         color = Paint.Color(Color.from_hex(color[1:]))
     if isinstance(stroke_color, str):

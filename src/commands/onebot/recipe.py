@@ -17,7 +17,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     cost = 40
 
     if not await do_user_have_flag(session, uid, "合成"):
-        await ctx.reply(f"先去小镜商店买了机器使用凭证，你才能碰这台机器。")
+        await ctx.reply("先去小镜商店买了机器使用凭证，你才能碰这台机器。")
         return
 
     n1 = res.query[str]("name1")
@@ -46,10 +46,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     using: dict[int, int] = {}
 
     for aid in (a1, a2, a3):
-        if aid in using.keys():
-            using[aid] += 1
-        else:
-            using[aid] = 1
+        using.setdefault(aid, 0)
+        using[aid] += 1
 
     for aid, v in using.items():
         st = await get_storage(session, uid, aid) or 0
@@ -90,7 +88,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         info = await get_award_info(session, uid, aid)
 
         if info.skinName is not None:
-            title = "{0}[{1}]".format(info.awardName, info.skinName)
+            title = f"{info.awardName}[{info.skinName}]"
         else:
             title = info.awardName
 
