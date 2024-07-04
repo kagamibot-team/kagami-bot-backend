@@ -52,6 +52,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
 
     for aid, v in using.items():
         st = await get_storage(session, uid, aid) or 0
+        logger.info(f"{aid} {st} {v}")
 
         if st < v:
             if aid == a1:
@@ -83,6 +84,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         image = imageToBytes(await make_strange())
         stars = "☆"
         color = "#FF00FF"
+        beforeStats = -1
     else:
         info = await get_award_info(session, uid, aid)
 
@@ -96,8 +98,10 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         stars = info.levelName
         color = info.color
 
+        beforeStats = await get_statistics(session, uid, aid)
         await add_storage(session, uid, aid, 1)
 
+    logger.info(f"has: {beforeStats}")
     await root.emit(PlayerMergeEvent(uid, (a1, a2, a3), aid, succeed))
 
     rimage = await catch(
@@ -106,7 +110,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         image=image,
         stars=stars,
         color=color,
-        new=False,
+        new=(beforeStats == 0),
         notation="",
     )
 
