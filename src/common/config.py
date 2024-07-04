@@ -29,5 +29,8 @@ class Config(BaseModel):
     # 白名单群聊
     white_list_groups: list[int] = []
 
+    # 数据库自动保存间隔，在 SQLite 数据库时启用，为负数时不自动保存
+    autosave_interval: float = 600
+
 
 config = get_plugin_config(Config)

@@ -11,6 +11,7 @@
 请保证调用的 API 在 NapNeko 中有相应实现
 """
 
+import datetime
 from pydantic import BaseModel
 from src.base.onebot_basic import handle_input_message, OnebotBotProtocol, MessageLike
 from src.base.onebot_enum import QQEmoji, QQStatus
@@ -81,4 +82,40 @@ async def set_qq_status(
         status=status[0],
         extStatus=status[1],
         batteryStatus=batteryStatus,
+    )
+
+
+async def get_group_member_info(bot: OnebotBotProtocol, group_id: int, user_id: int):
+    return await bot.call_api(
+        "get_group_member_info",
+        group_id=group_id,
+        user_id=user_id,
+    )
+
+
+async def is_group_operator(bot: OnebotBotProtocol, group_id: int, user_id: int):
+    info = await get_group_member_info(bot, group_id, user_id)
+    return info["role"] == "owner" or info["role"] == "admin"
+
+
+async def set_group_ban(
+    bot: OnebotBotProtocol, group_id: int, user_id: int, duration: int | datetime.timedelta
+):
+    """设置禁言
+
+    Args:
+        bot (OnebotBotProtocol): Bot
+        group_id (int): 群 ID
+        user_id (int): 用户名
+        duration (int): 禁言时长，单位为秒
+    """
+
+    if isinstance(duration, datetime.timedelta):
+        duration = duration.seconds
+
+    await bot.call_api(
+        "set_group_ban",
+        group_id=group_id,
+        user_id=user_id,
+        duration=duration,
     )

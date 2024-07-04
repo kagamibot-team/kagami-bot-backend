@@ -93,7 +93,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
         stars=info.levelName,
         color=info.color,
         new=False,
-        notation=str(await get_statistics(session, user, award)),
+        notation=str(await get_storage(session, user, award)),
     )
 
     await ctx.send(UniMessage().image(raw=imageToBytes(image)))
@@ -366,7 +366,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 await ref_book_box(name, str(sto) if (sto + use) else "", color, img)
             )
 
-        lAwardCount = len(awards[lid]) if lweight else 1
+        lAwardCount = len(awards[lid]) if (lweight or met_sums[lid] > 1) else 1
         title = f"{lname} {met_sums[lid]}/{lAwardCount}"
 
         baseImgs.append(

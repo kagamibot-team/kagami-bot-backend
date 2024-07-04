@@ -14,6 +14,7 @@ from src.imports import *
 @withSessionLock()
 async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
+    cost = 40
 
     if not await do_user_have_flag(session, uid, "合成"):
         await ctx.reply(f"先去小镜商店买了机器使用凭证，你才能碰这台机器。")
@@ -52,6 +53,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
 
     for aid, v in using.items():
         st = await get_storage(session, uid, aid) or 0
+        logger.info(f"{aid} {st} {v}")
 
         if st < v:
             if aid == a1:
@@ -66,10 +68,10 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         await add_storage(session, uid, aid, -v)
 
     m = await get_user_money(session, uid)
-    if m < 50:
-        await ctx.reply(f"合成一次小哥要花 50 薯片，你的薯片不够了哟")
+    if m < cost:
+        await ctx.reply(f"合成一次小哥要花 {cost} 薯片，你的薯片不够了哟")
         return
-    await set_user_money(session, uid, m - 50)
+    await set_user_money(session, uid, m - cost)
 
     aid, succeed = await try_merge(session, uid, a1, a2, a3)
 
@@ -83,6 +85,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         image = imageToBytes(await make_strange())
         stars = "☆"
         color = "#FF00FF"
+        beforeStats = -1
     else:
         info = await get_award_info(session, uid, aid)
 
@@ -96,23 +99,58 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         stars = info.levelName
         color = info.color
 
+        beforeStats = await get_statistics(session, uid, aid)
         await add_storage(session, uid, aid, 1)
 
+    logger.info(f"has: {beforeStats}")
     await root.emit(PlayerMergeEvent(uid, (a1, a2, a3), aid, succeed))
 
-    rimage = await catch(
+    name = await ctx.getSenderName()
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderNameInGroup()
+
+    area_title_1 = await getTextImage(
+        text=f"{name} 的合成材料：",
+        color="#FFFFFF",
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        font_size=80,
+        margin_bottom=30,
+    )
+
+    info1 = await get_award_info(session, uid, a1)
+    info2 = await get_award_info(session, uid, a2)
+    info3 = await get_award_info(session, uid, a3)
+    box1 = await display_box(info1.color, info1.awardImg, False)
+    box2 = await display_box(info2.color, info2.awardImg, False)
+    box3 = await display_box(info3.color, info3.awardImg, False)
+    area_material_box = await pileImages(images=[box1, box2, box3], background="#8A8580", paddingX=24, marginLeft=18, marginBottom=24)
+
+    area_title_2 = await getTextImage(
+        text=f"合成结果：{"成功" if succeed else "失败"}{"！" if succeed or aid == 89 or aid == -1 else "？"}",
+        color="#FFFFFF",
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        font_size=60,
+        margin_bottom=18,
+    )
+
+    area_product_entry = await catch(
         title=title,
         description=desc,
         image=image,
         stars=stars,
         color=color,
-        new=False,
+        new=(beforeStats == 0),
         notation="",
     )
 
-    await ctx.reply(
-        UniMessage.text(
-            f"本次合成花费了你 50 薯片，你还有 {m - 50} 薯片。本次合成结果："
-        ).image(raw=imageToBytes(rimage))
+    area_title_3 = await getTextImage(
+        text=f"本次合成花费了你 {cost} 薯片，你还有 {m - cost} 薯片。",
+        color="#FFFFFF",
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        font_size=24,
+        margin_top=12,
     )
+
+    img = await verticalPile([area_title_1, area_material_box, area_title_2, area_product_entry, area_title_3], 15, "left", "#8A8580", 60, 60, 60, 60)
+    await ctx.send(UniMessage.image(raw=imageToBytes(img)))
     await session.commit()

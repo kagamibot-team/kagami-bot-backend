@@ -129,6 +129,19 @@ def requireAdmin():
     return wrapper
 
 
+def requireOperatorInGroup():
+    """限制只有小镜是管理员的群才能执行该命令。"""
+
+    def wrapper(func: Callable[[GroupContext, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: GroupContext, *args: *TA):
+            if await ctx.is_group_admin():
+                return await func(ctx, *args)
+
+        return inner
+
+    return wrapper
+
+
 def debugOnly():
     """限制只有 DEV 环境下才能执行该命令。"""
 
@@ -344,6 +357,7 @@ __all__ = [
     "matchRegex",
     "matchLiteral",
     "requireAdmin",
+    "requireOperatorInGroup",
     "debugOnly",
     "listenGroup",
     "listenPrivate",
