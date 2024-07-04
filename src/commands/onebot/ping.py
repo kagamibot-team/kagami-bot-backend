@@ -1,6 +1,7 @@
 import asyncio
 import os
 import random
+import re
 import time
 
 from src.imports import *
@@ -40,11 +41,28 @@ async def _(ctx: PublicContext, _: Match[str]):
     await asyncio.sleep(5)
 
 
+GET_UP_TIME_PRESETS = {
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+    "十": 10,
+    "十一": 11,
+    "十二": 12,
+}
+
+
 @listenGroup()
-@matchLiteral("晚安")
+@matchAlconna(
+    Alconna(
+        "晚安",
+        Arg("getup_time", MultiVar(str, "*"), seps=" "),
+    )
+)
 @requireOperatorInGroup()
 @withSessionLock()
-async def goodnight(ctx: GroupContext, session: AsyncSession):
+async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
     info = await get_group_member_info(ctx.bot, ctx.event.group_id, ctx.getSenderId())
     self_info = await get_group_member_info(
         ctx.bot, ctx.event.group_id, int(ctx.bot.self_id)
@@ -66,6 +84,37 @@ async def goodnight(ctx: GroupContext, session: AsyncSession):
         )
         return
 
+    target_hour = 8
+
+    arg = res.query[tuple[str]]("getup_time")
+
+    if arg is not None and len(arg) != 0:
+        arg = " ".join(arg)
+        if match := re.match(
+            (
+                "^(明天?|明儿?)?"
+                "(大?早上?)?[，, ]?"
+                "(我?想?要?) ?"
+                "(五|六|七|八|九|十|十一|十二|5|6|7|8|9|10|11|12) ?点钟?"
+                "再?(起床?来?|醒来?)$"
+            ),
+            arg,
+        ):
+            ma = match.group(4)
+            if ma.isdigit():
+                target_hour = int(ma)
+            elif ma in GET_UP_TIME_PRESETS.keys():
+                target_hour = GET_UP_TIME_PRESETS[ma]
+            else:
+                target_hour = 8
+            
+            if target_hour > 10:
+                await ctx.reply("真能睡懒觉，要不早点起来吧", ref=True)
+                return
+        else:
+            await ctx.reply(f"我好像没搞懂你说 {arg} 是什么意思……", ref=True)
+            return
+
     dt = now_datetime()
     target_time: datetime.datetime | None = None
     awards: int = -1
@@ -73,11 +122,11 @@ async def goodnight(ctx: GroupContext, session: AsyncSession):
 
     if dt.hour >= 21:
         target_time = (dt + datetime.timedelta(days=1)).replace(
-            hour=8, minute=0, second=0
+            hour=target_hour, minute=0, second=0
         )
 
-    if dt.hour <= 5:
-        target_time = dt.replace(hour=8, minute=0, second=0)
+    if dt.hour < target_hour:
+        target_time = dt.replace(hour=target_hour, minute=0, second=0)
 
     if dt.hour >= 21 and dt.hour < 23:
         uid = await get_uid_by_qqid(session, ctx.getSenderId())
