@@ -104,7 +104,35 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     logger.info(f"has: {beforeStats}")
     await root.emit(PlayerMergeEvent(uid, (a1, a2, a3), aid, succeed))
 
-    rimage = await catch(
+    name = await ctx.getSenderName()
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderNameInGroup()
+
+    area_title_1 = await getTextImage(
+        text=f"{name} 的合成材料：",
+        color="#FFFFFF",
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        font_size=80,
+        margin_bottom=30,
+    )
+
+    info1 = await get_award_info(session, uid, a1)
+    info2 = await get_award_info(session, uid, a2)
+    info3 = await get_award_info(session, uid, a3)
+    box1 = await display_box(info1.color, info1.awardImg, False)
+    box2 = await display_box(info2.color, info2.awardImg, False)
+    box3 = await display_box(info3.color, info3.awardImg, False)
+    area_material_box = await pileImages(images=[box1, box2, box3], background="#8A8580", paddingX=24, marginLeft=18, marginBottom=24)
+
+    area_title_2 = await getTextImage(
+        text=f"合成结果：{"成功" if succeed else "失败"}{"！" if succeed or aid == 89 or aid == -1 else "？"}",
+        color="#FFFFFF",
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        font_size=60,
+        margin_bottom=18,
+    )
+
+    area_product_entry = await catch(
         title=title,
         description=desc,
         image=image,
@@ -114,9 +142,14 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         notation="",
     )
 
-    await ctx.reply(
-        UniMessage.text(
-            f"本次合成花费了你 50 薯片，你还有 {m - 50} 薯片。本次合成结果："
-        ).image(raw=imageToBytes(rimage))
+    area_title_3 = await getTextImage(
+        text=f"本次合成花费了你 50 薯片，你还有 {m - 50} 薯片。",
+        color="#FFFFFF",
+        font=Fonts.HARMONYOS_SANS_BLACK,
+        font_size=24,
+        margin_top=12,
     )
+
+    img = await verticalPile([area_title_1, area_material_box, area_title_2, area_product_entry, area_title_3], 15, "left", "#8A8580", 60, 60, 60, 60)
+    await ctx.send(UniMessage.image(raw=imageToBytes(img)))
     await session.commit()

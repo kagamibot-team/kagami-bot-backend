@@ -203,7 +203,7 @@ async def try_merge(
         # 粑粑小哥
         return 89, False
 
-    if random.random() <= 0.75:
+    if random.random() <= 0.5:
         # 对此时有特殊情况，是乱码小哥
         return -1, False
 
