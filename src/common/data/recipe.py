@@ -66,6 +66,17 @@ async def generate_random_result(
     lid2, w2 = await _get_lid(session, a2)
     lid3, w3 = await _get_lid(session, a3)
 
+    a0 = max(lid1, lid2, lid3)
+    b0 = 7 - ((lid1**2 + lid2**2 + lid3**2)/3)**(1/2) - a0/10 # b0越小越赚，先减去综合实力，再减去最高等级增益
+
+    # 抽取一个等级
+    r = Recipe.get_random_object(a1, a2, a3).betavariate(a0, b0)
+    lid: int | None = None
+    lid = math.ceil(r*5)
+
+    logger.info(f"{lid1}+{lid2}+{lid3}={lid} ({r}, [{a0}, {b0}])")
+
+
     _id1 = -1 if lid1 not in levels_qr.keys() else levels_qr[lid1]
     _id2 = -1 if lid2 not in levels_qr.keys() else levels_qr[lid2]
     _id3 = -1 if lid3 not in levels_qr.keys() else levels_qr[lid3]
@@ -85,9 +96,7 @@ async def generate_random_result(
     fall2 = acc_possibility[_id2]
     fall3 = acc_possibility[_id3]
 
-    # 成功率偏执，也就是里面最高星的那个的聚合频率的相反数加上其等级本身的
-    # 权重的结果，也同时作为整个合成的期望。其实就是抽到高于或等于该等级小
-    # 哥的概率。
+    # 成功率偏执，也就是抽到高于或等于该等级小哥的概率。
     # 在当前数据库中的值：
     #   - 一星 1.000
     #   - 二星 0.350
@@ -106,17 +115,15 @@ async def generate_random_result(
     #   - 411: 0.749
     #   - 422: 0.927
     #   - 511: 0.750（例如，把五星扔回炉子里再造）
-    succ = fall1 * fall2 * fall3
-    succ: float = succ ** (1 / 3)
+    succ = (fall1 * fall2 * fall3) ** (1 / 3)
 
-    # 珍贵程度乘以成功率偏执，再进行变换，就是成功率了，结果示例：
+    # 珍贵程度乘以成功率偏执，再根据结果等级进行变换，就是成功率了，结果示例：
     #   - 111: 0.898
-    #   - 211: 0.709
-    #   - 311: 0.529
-    #   - 411: 0.370
-    #   - 511: 0.247
-    poss = succ * bias
-    poss = poss**0.25
+    #   - 211: 0.760
+    #   - 311: 0.601
+    #   - 411: 0.451
+    #   - 511: 0.327
+    poss = (succ * bias)**((7 + lid - max(lid1, lid2, lid3))/25) # 指数越大越难，材料里最高级越高越简单，合成出来的等级越高越难
 
     # 如果 poss 为 0，那么合成产物一定是零星小哥，我们对于「成功」产物，就
     # 随机生成一个值返回吧。
@@ -124,40 +131,7 @@ async def generate_random_result(
         # 小哥的 data_id 是 5
         return 5, 0.0
 
-    # 在成功合成时，其期望需要经过修正。因为我们希望最终的期望是刚好等于
-    # bias 的，所以在这里，我们需要修正等下进行贝塔分布的计算时，期望的值。
-    # 但是，其实这里存在一个问题，就是当我们的 bias 本身就很高的时候，通过
-    # 修正期望已经做不到将全局期望修正回留级的值了，没办法，这个期望会大于
-    # 1，所以我们用一个 arctan 函数进行压缩。
-
-    # 这时候，111 合成成功时，期望是 0.267
-    # 211 合成成功时，期望是 0.839
-    # 311 合成成功时，期望是 0.871（这时候已经需要玩家去拿高等级一点的去砸了）
-    a0 = (1 - bias * 0.9) / poss
-    a0 = math.atan(a0 * 8) / math.pi * 2
-    b0 = 1 - a0
-
-    # 根据标准差确定 a0 和 b0 的系数，越分散，结果的分散程度越要大，那么系
-    # 数就要小。
-    scalar = statistics.pvariance([fall1, fall2, fall3])
-    scalar = 1 / (1 + scalar * 0.2) * 20
-
-    # 最后，抽取一个等级
-    r = Recipe.get_random_object(a1, a2, a3).betavariate(a0 * scalar, b0 * scalar)
-    lid: int | None = None
-
-    logger.info(r)
-    logger.info(poss)
-
-    for i, p in enumerate(acc_possibility):
-        # 若当前的汇聚概率大于抽取到的值，则离开
-        if p > r:
-            lid = levels[i][0]
-            break
-
-    if lid is None:
-        # 极其罕见事件之 r == 1
-        lid = levels[-1][0]
+    logger.info(f"{succ * bias}^({7 + lid - max(lid1, lid2, lid3)}/25) = {poss}")
 
     query = select(Award.data_id).filter(Award.level_id == lid, Award.is_special_get_only == False)
     aids = (await session.execute(query)).scalars().all()

@@ -409,7 +409,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
             sto = storages[aid] if aid in storages.keys() else 0
             use = used[aid] if aid in used.keys() else 0
 
-            if sto + use == 0:
+            if sto == 0:
                 continue
             if aid in skins.keys():
                 img = skins[aid]
