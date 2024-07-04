@@ -1,7 +1,8 @@
+import sqlite3
 import sqlalchemy
 import sqlalchemy.event
-from sqlalchemy import PoolProxiedConnection
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import PoolProxiedConnection, text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine, AsyncEngine
 
 from src.common.config import config
 
@@ -20,6 +21,12 @@ def set_sqlite_pragma(dbapi_connection: PoolProxiedConnection, _):
     cursor.execute("PRAGMA busy_timeout = 30000;")
     cursor.execute("PRAGMA journal_mode=WAL;")
     cursor.close()
+
+
+async def manual_checkpoint(engine: AsyncEngine=sqlEngine):
+    async with engine.connect() as conn:
+        await conn.execute(text("PRAGMA wal_checkpoint(FULL);"))
+        await conn.commit()
 
 
 def get_session():
