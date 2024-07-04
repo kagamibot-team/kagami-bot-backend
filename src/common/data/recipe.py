@@ -66,6 +66,11 @@ async def generate_random_result(
     lid2, w2 = await _get_lid(session, a2)
     lid3, w3 = await _get_lid(session, a3)
 
+    # 如果含有零星小哥，那么合成产物一定是零星小哥（lid=7），我们对于「成功」产物，就随机生成一个值返回吧。
+    if lid1 == 7 or lid2 == 7 or lid3 == 7:
+        # 小哥的 data_id 是 5
+        return 5, 0.0
+
     a0 = max(lid1, lid2, lid3)
     b0 = 7 - ((lid1**2 + lid2**2 + lid3**2)/3)**(1/2) - a0/10 # b0越小越赚，先减去综合实力，再减去最高等级增益
 
@@ -77,61 +82,14 @@ async def generate_random_result(
     logger.info(f"{lid1}+{lid2}+{lid3}={lid} ({r}, [{a0}, {b0}])")
 
 
-    _id1 = -1 if lid1 not in levels_qr.keys() else levels_qr[lid1]
-    _id2 = -1 if lid2 not in levels_qr.keys() else levels_qr[lid2]
-    _id3 = -1 if lid3 not in levels_qr.keys() else levels_qr[lid3]
+    rms = ((lid1**2 + lid2**2 + lid3**2)/3) ** 0.5 # 三个等级的平方平均数
+    fvi = (rms/5)**(1/10) # 变换为配方珍贵指数(0.851~1)
 
-    # 计算各等级的聚合频率
-    # 在当前的数据库中，聚合频率为：
-    #   - 一星 0.650
-    #   - 二星 0.895
-    #   - 三星 0.975
-    #   - 四星 0.995
-    #   - 五星 1.000
-    weight_sum = sum([r[1] for r in levels])
-    acc_possibility = list(
-        itertools.accumulate([r[1] / weight_sum for r in levels])
-    ) + [0]
-    fall1 = acc_possibility[_id1]
-    fall2 = acc_possibility[_id2]
-    fall3 = acc_possibility[_id3]
+    poss = 1 - lid/8 # 基础概率，由产物等级决定 (0.875, 0.75, 0.625, 0.5, 0.375)
+    poss = poss ** (1 + (lid - max(lid1, lid2, lid3))/5) # 综合概率，由产物等级与材料最高级之差影响，升级则降低概率
+    poss = poss * fvi # 最终概率，由配方珍贵程度影响，影响程度较小
 
-    # 成功率偏执，也就是抽到高于或等于该等级小哥的概率。
-    # 在当前数据库中的值：
-    #   - 一星 1.000
-    #   - 二星 0.350
-    #   - 三星 0.105
-    #   - 四星 0.025
-    #   - 五星 0.005
-    bias = 1 - max(fall1, fall2, fall3) + min(w1, w2, w3) / weight_sum
-
-    # 将成功因子相乘，并进行变换，得到珍贵程度。只要出现了零星小哥，它的值
-    # 就会是 0。
-    # 珍贵程度是三个成功因子的几何平均值，例如这些值：
-    #   - 111: 0.650
-    #   - 211: 0.723
-    #   - 221: 0.804
-    #   - 311: 0.744
-    #   - 411: 0.749
-    #   - 422: 0.927
-    #   - 511: 0.750（例如，把五星扔回炉子里再造）
-    succ = (fall1 * fall2 * fall3) ** (1 / 3)
-
-    # 珍贵程度乘以成功率偏执，再根据结果等级进行变换，就是成功率了，结果示例：
-    #   - 111: 0.898
-    #   - 211: 0.760
-    #   - 311: 0.601
-    #   - 411: 0.451
-    #   - 511: 0.327
-    poss = (succ * bias)**((7 + lid - max(lid1, lid2, lid3))/25) # 指数越大越难，材料里最高级越高越简单，合成出来的等级越高越难
-
-    # 如果 poss 为 0，那么合成产物一定是零星小哥，我们对于「成功」产物，就
-    # 随机生成一个值返回吧。
-    if poss == 0:
-        # 小哥的 data_id 是 5
-        return 5, 0.0
-
-    logger.info(f"{succ * bias}^({7 + lid - max(lid1, lid2, lid3)}/25) = {poss}")
+    logger.info(f"{1 - lid/8}^(1 + {lid - max(lid1, lid2, lid3)}/5)*{fvi} = {poss}")
 
     query = select(Award.data_id).filter(Award.level_id == lid, Award.is_special_get_only == False)
     aids = (await session.execute(query)).scalars().all()

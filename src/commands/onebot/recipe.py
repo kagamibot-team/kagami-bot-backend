@@ -14,6 +14,7 @@ from src.imports import *
 @withSessionLock()
 async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
+    cost = 40
 
     if not await do_user_have_flag(session, uid, "合成"):
         await ctx.reply(f"先去小镜商店买了机器使用凭证，你才能碰这台机器。")
@@ -67,10 +68,10 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         await add_storage(session, uid, aid, -v)
 
     m = await get_user_money(session, uid)
-    if m < 50:
-        await ctx.reply(f"合成一次小哥要花 50 薯片，你的薯片不够了哟")
+    if m < cost:
+        await ctx.reply(f"合成一次小哥要花 {cost} 薯片，你的薯片不够了哟")
         return
-    await set_user_money(session, uid, m - 50)
+    await set_user_money(session, uid, m - cost)
 
     aid, succeed = await try_merge(session, uid, a1, a2, a3)
 
@@ -143,7 +144,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     )
 
     area_title_3 = await getTextImage(
-        text=f"本次合成花费了你 50 薯片，你还有 {m - 50} 薯片。",
+        text=f"本次合成花费了你 {cost} 薯片，你还有 {m - cost} 薯片。",
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
         font_size=24,
