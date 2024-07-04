@@ -77,7 +77,7 @@ def forwardMessage(
     elif isinstance(content, Message):
         pass
     else:
-        raise Exception(
+        raise ValueError(
             f"暂时不支持处理 {content}，如果遇到这个错误，请联系 Passthem。"
         )
 

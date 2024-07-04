@@ -26,8 +26,7 @@ class ShopData(BaseModel):
     def iterate(self):
         """迭代商店中的商品。"""
         for product_list in self.products.values():
-            for product in product_list:
-                yield product
+            yield from product_list
 
 
 class ShopBuildingEvent:
