@@ -3,7 +3,7 @@ from functools import partial
 import pathlib
 import re
 import time
-from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple
+from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple, Unpack
 
 from arclet.alconna import Alconna, Arparma
 from nonebot import get_driver, logger
@@ -26,8 +26,8 @@ from src.base.onebot_events import OnebotStartedContext
 from src.logic.admin import isAdmin
 
 T = TypeVar("T")
-TC = TypeVar("TC", bound=Context, covariant=True)
-TCU = TypeVar("TCU", bound=UniMessageContext, covariant=True)
+TC_co = TypeVar("TC_co", bound=Context, covariant=True)
+TCU_co = TypeVar("TCU_co", bound=UniMessageContext, covariant=True)
 TA = TypeVarTuple("TA")
 
 
@@ -38,8 +38,8 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
         rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
     """
 
-    def wrapper(func: Callable[[TCU, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TCU):
+    def wrapper(func: Callable[[TCU_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TCU_co):
             result = rule.parse(await ctx.getMessage())
 
             if not result.matched:
@@ -59,8 +59,8 @@ def withAlconna(rule: Alconna[Sequence[Any]]):
         rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
     """
 
-    def wrapper(func: Callable[[TC, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC):
+    def wrapper(func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC_co):
             result = rule.parse(await ctx.getMessage())
 
             return await func(ctx, result)
@@ -77,8 +77,8 @@ def matchRegex(rule: str):
         rule (str): 正则表达式规则。
     """
 
-    def wrapper(func: Callable[[TC, re.Match[str]], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC):
+    def wrapper(func: Callable[[TC_co, re.Match[str]], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC_co):
             if not await ctx.isTextOnly():
                 return
 
@@ -101,8 +101,8 @@ def matchLiteral(text: str):
         text (str): 指定文本。
     """
 
-    def wrapper(func: Callable[[TC], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC):
+    def wrapper(func: Callable[[TC_co], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC_co):
             if not await ctx.isTextOnly():
                 return
 
@@ -119,8 +119,8 @@ def matchLiteral(text: str):
 def requireAdmin():
     """限制只有管理员才能执行该命令。"""
 
-    def wrapper(func: Callable[[TC, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC, *args: *TA):
+    def wrapper(func: Callable[[TC_co, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC_co, *args: Unpack[TA]):
             if isAdmin(ctx):
                 return await func(ctx, *args)
 
@@ -133,7 +133,7 @@ def requireOperatorInGroup():
     """限制只有小镜是管理员的群才能执行该命令。"""
 
     def wrapper(func: Callable[[GroupContext, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: GroupContext, *args: *TA):
+        async def inner(ctx: GroupContext, *args: Unpack[TA]):
             if await ctx.is_group_admin():
                 return await func(ctx, *args)
 
@@ -146,7 +146,7 @@ def debugOnly():
     """限制只有 DEV 环境下才能执行该命令。"""
 
     def wrapper(func: Callable[[*TA], Coroutine[Any, Any, T]]):
-        async def inner(*args: *TA):
+        async def inner(*args: Unpack[TA]):
             if get_driver().env == "dev":
                 return await func(*args)
 
@@ -241,8 +241,8 @@ globalSessionLockManager = SessionLockManager()
 def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
     """获得一个异步的 SQLAlchemy 会话，并使用锁来保证线程安全。"""
 
-    def wrapper(func: Callable[[TC, AsyncSession, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC, *args: *TA):
+    def wrapper(func: Callable[[TC_co, AsyncSession, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC_co, *args: Unpack[TA]):
             sender = ctx.getSenderId()
             if sender is None:
                 lock = manager[-1]
@@ -266,7 +266,7 @@ def withFreeSession():
     """随便获得一个异步的 SQLAlchemy 会话"""
 
     def wrapper(func: Callable[[AsyncSession, *TA], Coroutine[Any, Any, T]]):
-        async def inner(*args: *TA):
+        async def inner(*args: Unpack[TA]):
             session = get_session()
             async with session.begin():
                 return await func(session, *args)
@@ -279,7 +279,7 @@ def withFreeSession():
 def computeTime(func: Callable[[*TA], Coroutine[Any, Any, T]]):
     """计算命令执行的时间，并在日志中输出"""
 
-    async def wrapper(*args: *TA):
+    async def wrapper(*args: Unpack[TA]):
         start = time.time()
         msg = await func(*args)
         logger.debug(f"{func.__name__} 花费了 {time.time() - start} 秒")
@@ -295,8 +295,8 @@ def withLoading(text: str = "请稍候……"):
         text (str, optional): 附带的文本，默认是 "请稍候……"。
     """
 
-    def wrapper(func: Callable[[TCU, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TCU, *args: *TA):
+    def wrapper(func: Callable[[TCU_co, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TCU_co, *args: Unpack[TA]):
             receipt = await ctx.reply(
                 UniMessage().text(text).image(path=pathlib.Path("./res/科目三.gif"))
             )
@@ -305,7 +305,7 @@ def withLoading(text: str = "请稍候……"):
                 return msg
             except ActionFailed as e:
                 logger.warning("又遇到了，那久违的「ActionFailed」")
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 await ctx.reply(
                     UniMessage().text(
                         f"程序遇到了错误：{repr(e)}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！！"

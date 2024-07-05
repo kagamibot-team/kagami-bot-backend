@@ -10,11 +10,11 @@ async def _(e: ShopBuildingEvent):
     catchMax = userTime.pickMax + 1
     pd = ProductData(
         image="./res/add1.png",
-        title=f"增加卡槽上限",
-        description="增加卡槽上限至%d" % catchMax,
+        title="增加卡槽上限",
+        description=f"增加卡槽上限至{catchMax}",
         price=25 * (2 ** (catchMax - 1)),
         sold_out=False,
-        alias=["加上限", "增加上限", "增加卡槽上限", "增加上限至%d" % catchMax],
+        alias=["加上限", "增加上限", "增加卡槽上限", f"增加上限至{catchMax}"],
         background_color="#9e9d95",
     )
     if not "道具" in e.data.products.keys():
@@ -43,7 +43,7 @@ async def _(e: ShopBuildingEvent):
     u = await do_user_have_flag(e.session, e.uid, "合成")
     pd = ProductData(
         image="./res/merge_machine.png",
-        title=f"小哥合成凭证",
+        title="小哥合成凭证",
         description="购买合成小哥机器的使用权",
         price=1200,
         sold_out=u,

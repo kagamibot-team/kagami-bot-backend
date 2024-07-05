@@ -20,7 +20,7 @@ async def repeat(ctx: PublicContext):
         msg0o_ = msg0o_.replace(" ", "")
     if len(msg0o_) == 0 and len(message) == 1:
         return
-    elif len(msg0o_) == 0:
+    if len(msg0o_) == 0:
         msg0o_ = ""
 
     _output = UniMessage.text(msg0o_)

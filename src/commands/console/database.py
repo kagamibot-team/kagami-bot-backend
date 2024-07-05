@@ -41,7 +41,7 @@ async def _(session: AsyncSession, ctx: ConsoleContext):
 
     async def sel(cls: type[Base]):
         return list(
-            map(lambda x: asDict(x), (await session.execute(select(cls))).scalars())
+            map(asDict, (await session.execute(select(cls))).scalars())
         )
 
     output = {}

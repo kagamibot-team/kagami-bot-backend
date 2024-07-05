@@ -54,7 +54,7 @@ async def getPosibilities(session: Session, level: Level):
     begin = time.time()
     levels = (await session.execute(select(Level.weight))).scalars()
     weightSum = sum(levels)
-    logger.debug("获取所有等级耗时：%f" % (time.time() - begin))
+    logger.debug(f"获取所有等级耗时：{time.time() - begin}")
 
     return level.weight / weightSum
 
@@ -178,7 +178,7 @@ class AwardInfo(BaseModel):
 async def GetAwardInfo(session: Session, user: User, award: Award):
     begin = time.time()
     record = await getUsedSkin(session, user, award)
-    logger.debug("获取皮肤记录花了 %.3f 秒" % (time.time() - begin))
+    logger.debug("获取皮肤记录花了 %.3f 秒" % (time.time() - begin))  # pylint: disable=consider-using-f-string
 
     desc = award.description
     img = award.img_path

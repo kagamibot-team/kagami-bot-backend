@@ -43,15 +43,28 @@ async def _(ctx: GroupContext, _):
             message += f"- 玩家 {name}\n"
             for get_info in get_list:
                 message += f"在 {get_info[0]} 抓到了："
-                message += (
-                    "".join(
-                        [
-                            f"{display.name} ×{display.pick.delta} ，"
-                            for _, display in get_info[1].items()
-                        ]
-                    ).rstrip("，")
-                    + "；\n"
+
+                for _, display in get_info[1].items():
+                    if display.pick.beforeStats==0:
+                        message += (
+                        "".join(
+                            [
+                                f"{display.name} ×{display.pick.delta}（新），"
+                            ]
+                        ).rstrip("，")
+                        + "；\n"
+                 )
+                    else:
+                        message += (
+                         "".join(
+                             [
+                                f"{display.name} ×{display.pick.delta} ，"
+                             ]
+                        ).rstrip("，")
+                        + "；\n"
                 )
+
+
             message = message.rstrip("；\n") + "。\n\n"
 
     if len(message) > 0:

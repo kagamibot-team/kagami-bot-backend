@@ -1,3 +1,7 @@
+"""
+用于自动重载的模块
+"""
+
 import asyncio
 import importlib
 import os
@@ -6,9 +10,9 @@ import pkgutil
 from types import ModuleType
 
 from nonebot import get_driver, logger
-from src.base.collections import PriorityList
-from src.base.event_root import activateRoot, root
 
+from src.base.collections import PriorityList
+from src.base.event_root import activate_root, root
 
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
@@ -43,23 +47,32 @@ def _walk_load(path: str, *parents: str) -> list[ModuleType]:
 
 
 def load_packages():
+    """
+    加载所有需要的模块
+    """
+
     package_dir = pathlib.Path(__file__).resolve().parent
     for to_import in to_load_parents:
         loaded_modules.extend(
             _walk_load(os.path.join(package_dir, *to_import), *to_import)
         )
-    logger.info("载入完成，一共载入了%d个模块" % len(loaded_modules))
+    logger.info(f"载入完成，一共载入了 {len(loaded_modules)} 个模块")
 
 
 def reload():
+    """
+    重载所有需要的模块
+    """
+
     for key in root.keys():
         root[key] = PriorityList()
     for p in loaded_modules:
         try:
             importlib.reload(p)
-        except Exception as e:
-            logger.error(f"重载模块 {p.__name__} 失败，原因：{e}")
-    logger.info("重载了%d个模块" % len(loaded_modules))
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(f"重载模块 {p.__name__} 失败，原因：")
+            logger.exception(e)
+    logger.info(f"重载了 {len(loaded_modules)} 个模块")
 
     while loaded_modules:
         loaded_modules.pop()
@@ -73,17 +86,21 @@ def _tree():
     for pa in to_load_parents:
         base = os.path.join(package_dir, *pa)
 
-        for root, _, files in os.walk(base):
+        for folder_root, _, files in os.walk(base):
             for file in files:
                 if file.endswith(".py"):
                     # 获取文件内容的 Hash 值
-                    with open(os.path.join(root, file), "rb") as f:
-                        _tr.add((os.path.join(root, file), f.read().hex()))
+                    with open(os.path.join(folder_root, file), "rb") as f:
+                        _tr.add((os.path.join(folder_root, file), f.read().hex()))
 
     return _tr
 
 
 async def watchdog():
+    """
+    一个看门狗任务，这个任务会每秒检测一次是否有文件变化
+    """
+
     last_tree = _tree()
     while True:
         await asyncio.sleep(1)
@@ -105,5 +122,9 @@ async def _():
 
 
 def init():
-    activateRoot(root)
+    """
+    初始化加载器
+    """
+
+    activate_root(root)
     load_packages()

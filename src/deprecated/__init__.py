@@ -59,8 +59,7 @@ callbacks: dict[int, CallbackBase | None] = {}
 
 
 def getCallbacks(uid: int):
-    if uid not in callbacks.keys():
-        callbacks[uid] = None
+    callbacks.setdefault(uid, None)
 
     return callbacks[uid]
 
@@ -70,9 +69,9 @@ async def _(bot: Bot, event: GroupMessageEvent):
     sender = event.sender.user_id
     session = get_session()
     async with session.begin():
-        if sender == None:
+        if sender is None:
             return
-        assert type(sender) == int
+        assert isinstance(sender, int)
 
         text = event.get_plaintext()
 
@@ -81,14 +80,14 @@ async def _(bot: Bot, event: GroupMessageEvent):
         )
 
         callback = getCallbacks(sender)
-        if callback != None:
+        if callback is not None:
             try:
                 message = await callback.check(env)
             except WaitForMoreInformationException as e:
                 callbacks[sender] = e.callback
                 if e.message is not None:
                     await finish(e.message)
-                raise FinishedException()
+                raise FinishedException() from e
             finally:
                 await session.commit()
 
@@ -106,7 +105,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
                 callbacks[sender] = e.callback
                 if e.message is not None:
                     await finish(e.message)
-                raise FinishedException()
+                raise FinishedException() from e
 
             if message:
                 await finish(message)

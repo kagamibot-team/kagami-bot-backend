@@ -42,6 +42,7 @@ async def _(ctx: PublicContext, _: Match[str]):
 
 
 GET_UP_TIME_PRESETS = {
+    "四": 4,
     "五": 5,
     "六": 6,
     "七": 7,
@@ -56,7 +57,7 @@ GET_UP_TIME_PRESETS = {
 @listenGroup()
 @matchAlconna(
     Alconna(
-        "晚安",
+        "小镜晚安",
         Arg("getup_time", MultiVar(str, "*"), seps=" "),
     )
 )
@@ -85,6 +86,7 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
         return
 
     target_hour = 8
+    target_minute = 0
 
     arg = res.query[tuple[str]]("getup_time")
 
@@ -95,18 +97,22 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
                 "^(明天?|明儿?)?"
                 "(大?早上?)?[，, ]?"
                 "(我?想?要?) ?"
-                "(五|六|七|八|九|十|十一|十二|5|6|7|8|9|10|11|12) ?点钟?"
-                "再?(起床?来?|醒来?)$"
+                "(四|五|六|七|八|九|十|十一|十二|4|5|6|7|8|9|10|11|12) ?点(半)?钟?"
+                "再?(起床?来?|醒来?)?$"
             ),
             arg,
         ):
             ma = match.group(4)
             if ma.isdigit():
                 target_hour = int(ma)
-            elif ma in GET_UP_TIME_PRESETS.keys():
-                target_hour = GET_UP_TIME_PRESETS[ma]
+            elif (ta := GET_UP_TIME_PRESETS.get(ma)):
+                target_hour = ta
             else:
                 target_hour = 8
+            
+            ma2 = match.group(5)
+            if ma2 is not None:
+                target_minute = 30
 
             if target_hour > 10:
                 await ctx.reply("真能睡懒觉，要不早点起来吧", ref=True)
@@ -122,11 +128,11 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
 
     if dt.hour >= 21:
         target_time = (dt + datetime.timedelta(days=1)).replace(
-            hour=target_hour, minute=0, second=0
+            hour=target_hour, minute=target_minute, second=0
         )
 
     if dt.hour < target_hour:
-        target_time = dt.replace(hour=target_hour, minute=0, second=0)
+        target_time = dt.replace(hour=target_hour, minute=target_minute, second=0)
 
     if dt.hour >= 21 and dt.hour < 23:
         uid = await get_uid_by_qqid(session, ctx.getSenderId())

@@ -478,7 +478,7 @@ async def getAwardImage(session: Session, user: User, award: Award) -> str:
 
     record = await getUsedSkin(session, user, award)
 
-    if record == None:
+    if record is None:
         return award.img_path
 
     return record.skin.image
@@ -489,7 +489,7 @@ async def getAwardDescription(session: Session, user: User, award: Award) -> str
 
     record = await getUsedSkin(session, user, award)
 
-    if record == None or record.skin.extra_description == "":
+    if record is None or record.skin.extra_description == "":
         return award.description
 
     return record.skin.extra_description
@@ -546,7 +546,7 @@ async def getSkinTag(session: Session, skin: Skin, tag: Tag):
 async def addSkinTag(session: Session, skin: Skin, tag: Tag):
     "添加一个皮肤标签关系"
 
-    if await getSkinTag(session, skin, tag) == None:
+    if await getSkinTag(session, skin, tag) is None:
         session.add(SkinTagRelation(skin=skin, tag=tag))
         await session.flush()
 
@@ -554,7 +554,7 @@ async def addSkinTag(session: Session, skin: Skin, tag: Tag):
 async def removeSkinTag(session: Session, skin: Skin, tag: Tag):
     "删除一个皮肤标签关系"
 
-    if (rel := await getSkinTag(session, skin, tag)) != None:
+    if (rel := await getSkinTag(session, skin, tag)) is not None:
         await session.delete(rel)
         await session.flush()
 

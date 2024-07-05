@@ -7,10 +7,10 @@ from nonebot import logger
 
 
 T = TypeVar("T")
-TV = TypeVar("TV", contravariant=True)
+TV_contra = TypeVar("TV_contra", contravariant=True)
 
 
-Listener = Callable[[TV], Coroutine[Any, Any, Any]]
+Listener = Callable[[TV_contra], Coroutine[Any, Any, Any]]
 
 
 def _isinstance(obj: Any, typ: type):
@@ -43,24 +43,24 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
     如果想要触发事件而不等待处理函数执行完成，可以使用 `event.throw(event)` 方法。
     """
 
-    def listen(self, evtType: type[TV], *, priority: int = 0):
+    def listen(self, evtType: type[TV_contra], *, priority: int = 0):
         """
         监听事件，`evtType` 表示事件类型，`priority` 表示优先级，优先级高的函数会先执行。
         """
 
-        def decorator(func: Listener[TV]):
+        def decorator(func: Listener[TV_contra]):
             if evtType not in self.keys():
                 self[evtType] = PriorityList()
             self[evtType].add(priority, func)
 
         return decorator
 
-    def listens(self, *evtTypes: type[TV], priority: int = 0):
+    def listens(self, *evtTypes: type[TV_contra], priority: int = 0):
         """
         监听多个事件，`priority` 表示优先级，优先级高的函数会先执行。
         """
 
-        def decorator(func: Listener[TV]):
+        def decorator(func: Listener[TV_contra]):
             for evtType in evtTypes:
                 self.listen(evtType, priority=priority)(func)
 
@@ -72,9 +72,9 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
         """
 
         begin = time.time()
-        for key in self.keys():
+        for key, vals in self.items():
             if _isinstance(evt, key):
-                for l in self[key]:
+                for l in vals:
                     await l(evt)
         logger.debug(f"Event {repr(evt)} emitted in {time.time() - begin}s")
 
@@ -85,9 +85,9 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
 
         tasks: set[asyncio.Task[Any]] = set()
 
-        for key in self.keys():
+        for key, vals in self.items():
             if _isinstance(evt, key):
-                for l in self[key]:
+                for l in vals:
                     task = asyncio.create_task(l(evt))
                     tasks.add(task)
                     task.add_done_callback(tasks.discard)

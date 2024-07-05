@@ -109,14 +109,14 @@ class Clear(Command):
     async def handleCommand(
         self, env: CheckEnvironment, result: re.Match[str]
     ) -> Message | None:
-        if result.group(2) == None:
+        if result.group(2) is None:
             await clearUserStorage(env.session, await getSender(env))
 
-            return Message([at(env.sender), text(f" 清空了你的背包")])
+            return Message([at(env.sender), text(" 清空了你的背包")])
 
         user = await getUser(env.session, int(result.group(2)))
 
-        if result.group(4) == None:
+        if result.group(4) is None:
             await clearUserStorage(env.session, user)
 
             return Message(
@@ -164,27 +164,19 @@ class CatchLevelModify(Command):
         modifyElement = result.group(3)
         data = result.group(5)
 
-        if modifyElement == "名称" or modifyElement == "名称":
+        if modifyElement in ("名称", "名字"):
             level.name = data
         elif modifyElement == "权重":
             if not not_negative()(data):
                 return Message([at(env.sender), text("MSG_WEIGHT_INVALID")])
 
             level.weight = float(data)
-        elif (
-            modifyElement == "金钱"
-            or modifyElement == "获得"
-            or modifyElement == "奖励"
-        ):
+        elif modifyElement in ("金钱", "获得", "奖励"):
             if not not_negative()(data):
                 return Message([at(env.sender), text("MSG_MONEY_INVALID")])
 
             level.price = int(data)
-        elif (
-            modifyElement == "优先级"
-            or modifyElement == "优先度"
-            or modifyElement == "优先"
-        ):
+        elif modifyElement in ("优先级", "优先度", "优先"):
             if re.match("^-?\\d+$", data):
                 level.sorting_priority = int(data)
         else:

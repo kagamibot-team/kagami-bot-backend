@@ -1,10 +1,12 @@
 import asyncio
 import pathlib
 import re
-from typing import Type
-from nonebot.adapters.onebot.v11 import Message, MessageSegment, Bot
-from src.imports import *
 from dataclasses import dataclass
+from typing import Type
+
+from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
+
+from src.imports import *
 
 
 def at(sender: int):
@@ -31,7 +33,7 @@ def decorateWithLoadingMessage(_text: str = " 稍候，正在查询你的小哥�
     def _decorator(cls: Type[Command]):
         class _Command(cls):
             async def handleCommand(
-                self, env: CheckEnvironment, result: re.Match[str]
+                self, env: "CheckEnvironment", result: re.Match[str]
             ) -> Message | None:
                 msg = await env.bot.send_group_msg(
                     group_id=env.group_id,
@@ -80,7 +82,7 @@ def asyncLock():
     def _decorator(cls: Type[Command]):
         class _Command(cls):
             async def handleCommand(
-                self, env: CheckEnvironment, result: re.Match[str]
+                self, env: "CheckEnvironment", result: re.Match[str]
             ) -> Message | None:
                 async with getLock(env.sender):
                     msg = await super().handleCommand(env, result)
@@ -96,7 +98,7 @@ def databaseIO():
     def _decorator(cls: Type[Command]):
         class _Command(cls):
             async def handleCommand(
-                self, env: CheckEnvironment, result: re.Match[str]
+                self, env: "CheckEnvironment", result: re.Match[str]
             ) -> Message | None:
                 msg = await super().handleCommand(env, result)
                 await env.session.commit()
@@ -140,6 +142,8 @@ class WaitForMoreInformationException(Exception):
     def __init__(self, callback: CallbackBase, message: Message | None) -> None:
         self.callback = callback
         self.message = message
+
+        super().__init__()
 
 
 @dataclass

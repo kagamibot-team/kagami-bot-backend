@@ -37,7 +37,7 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
         # 据说有速度更快的写法……
         query = (
             select(Award.data_id)
-            .filter(Award.level_id == level[0], Award.is_special_get_only == False)
+            .filter(Award.level_id == level[0], Award.is_special_get_only == False) # pylint: disable=singleton-comparison
             .order_by(func.random())
             .limit(1)
         )

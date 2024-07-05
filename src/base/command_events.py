@@ -11,12 +11,11 @@ from typing import (
     cast,
 )
 
-from nonebot import logger
 from nonebot.adapters.console.bot import Bot as _ConsoleBot
 from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot_plugin_alconna import Segment, Text
-from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING
+from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING # type: ignore
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 
 from src.base.onebot_api import (
@@ -77,7 +76,7 @@ def forwardMessage(
     elif isinstance(content, Message):
         pass
     else:
-        raise Exception(
+        raise ValueError(
             f"暂时不支持处理 {content}，如果遇到这个错误，请联系 Passthem。"
         )
 
@@ -216,7 +215,7 @@ class OnebotMessageContext(UniMessageContext[OnebotReceipt], Generic[TE]):
         nodes: list[_ForwardMessageNode] = []
 
         for message in messages:
-            if isinstance(message, str) or isinstance(message, dict):
+            if isinstance(message, (str, dict)):
                 message = forwardMessage(message)
                 nodes.append({"type": "node", "data": message})
             else:

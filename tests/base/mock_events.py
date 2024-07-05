@@ -50,8 +50,7 @@ class MockOnebot:
     async def call_api(self, api: str, **data: Any) -> Any:
         self.called_apis.append((api, data))
 
-        if api == "send_private_msg" or api == "send_group_msg":
-            assert "message" in data.keys()
+        if api in ("send_private_msg", "send_group_msg"):
             self.sent_messages.append(data["message"])
             return {"message_id": 0}
 

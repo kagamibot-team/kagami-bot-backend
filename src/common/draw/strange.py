@@ -10,10 +10,10 @@ from src.imports.images import PILImage
 
 
 def load_sources(
-    base: Iterable[pathlib.Path] = [
+    base: Iterable[pathlib.Path] = (
         pathlib.Path("./data/awards/"),
         pathlib.Path("./data/skins/"),
-    ]
+    )
 ):
     available: list[pathlib.Path] = []
 

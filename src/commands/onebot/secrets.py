@@ -16,7 +16,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
         logger.error(la.err.data_missing)
         return
 
-    if await have_skin(session, uid, not_sid) == False:
+    if not await have_skin(session, uid, not_sid):
         await ctx.send(UniMessage().text("获取成功！"))
     if await using_skin(session, uid, gei_aid) != not_sid:
         await ctx.send(UniMessage().text("切换成功！"))
@@ -38,7 +38,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
         logger.error(la.err.data_missing)
         return
 
-    if await using_skin(session, uid, gei_aid) != None:
+    if await using_skin(session, uid, gei_aid) is not None:
         await ctx.send(UniMessage().text("切换成功！"))
     await clear_skin(session, uid, gei_aid)
     await session.commit()
@@ -68,7 +68,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
         logger.info(la.err.data_not_satisfied)
         return
 
-    if await have_skin(session, uid, ye_sid) == False:
+    if not await have_skin(session, uid, ye_sid):
         await ctx.send(UniMessage().text("获取成功！"))
     if await using_skin(session, uid, ye_sid) != ye_sid:
         await ctx.send(UniMessage().text("切换成功！"))
@@ -112,7 +112,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
         logger.info(la.err.data_not_satisfied)
         return
 
-    if await have_skin(session, uid, kbs_sid) == False:
+    if not await have_skin(session, uid, kbs_sid):
         await ctx.send(UniMessage().text("获取成功！"))
     if await using_skin(session, uid, thr_aid) != kbs_sid:
         await ctx.send(UniMessage().text("切换成功！"))

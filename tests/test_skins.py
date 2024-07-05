@@ -1,5 +1,4 @@
 from src.imports import *
-from src.imports import AsyncSession
 from .base.basic_test_case import SQLTestCase
 
 

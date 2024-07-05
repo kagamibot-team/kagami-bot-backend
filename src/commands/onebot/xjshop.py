@@ -115,16 +115,17 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     if money_sum > money_left:
         await ctx.reply("你什么也没买到……因为你薯片不够了")
         return
-    elif money_sum == 0:
+
+    if money_sum == 0:
         await ctx.reply("你什么也没买到……小镜找不到你要买的东西，或者它们都卖光了")
         return
-    else:
-        buy_result += f"实付：{money_sum}{la.unit.money}\n"
-        buy_result += f"余额：{money_left - money_sum}{la.unit.money}\n"
-        buy_result += "--------------------\n"
-        buy_result += "  本次消费已结帐\n"
-        buy_result += "  欢迎下次光临\n"
-        buy_result += "--------------------\n"
+
+    buy_result += f"实付：{money_sum}{la.unit.money}\n"
+    buy_result += f"余额：{money_left - money_sum}{la.unit.money}\n"
+    buy_result += "--------------------\n"
+    buy_result += "  本次消费已结帐\n"
+    buy_result += "  欢迎下次光临\n"
+    buy_result += "--------------------\n"
 
     image = await getTextImage(
         text=buy_result,

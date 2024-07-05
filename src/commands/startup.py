@@ -18,7 +18,7 @@ async def _(ctx: OnebotStartedContext):
             glob = (
                 await session.execute(select(Global.last_reported_version))
             ).scalar_one()
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-except
             logger.warning(e)
             await session.execute(delete(Global))
             await session.execute(insert(Global))
