@@ -1,7 +1,8 @@
+"""
+小镜 Bot 初始化的模块。当载入这个模块时，会自动开始初始化。
+"""
+
+from . import deprecated as _
 from .loader import init
 
 init()
-
-
-# 暂时导入旧版的指令集，因为还需要使用。等旧版的指令都迁移完了就删掉这两行
-from . import deprecated as _
