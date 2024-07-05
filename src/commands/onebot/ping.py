@@ -98,7 +98,7 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
                 "(大?早上?)?[，, ]?"
                 "(我?想?要?) ?"
                 "(四|五|六|七|八|九|十|十一|十二|4|5|6|7|8|9|10|11|12) ?点(半)?钟?"
-                "再?(起床?来?|醒来?)$"
+                "再?(起床?来?|醒来?)?$"
             ),
             arg,
         ):
