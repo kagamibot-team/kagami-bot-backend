@@ -31,6 +31,26 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
             logger.error("数据库中没有等级")
             break
 
+        flags = await get_user_flags(session, uid)
+        if "是" in flags:
+            flags.remove("是")
+            await set_user_flags(session, uid, flags)
+            have_shi = select(Award.data_id).filter(Award.name == "是小哥")
+            shi = (await session.execute(have_shi)).scalar_one_or_none()
+
+            if shi is None:
+                pass
+            elif shi in picks.awards.keys():
+                picks.awards[shi].delta += 1
+                continue
+            else:
+                picks.awards[shi] = Pick(
+                    beforeStats=await get_statistics(session, uid, shi),
+                    delta=1,
+                    level=0,
+                )
+                continue
+
         level = random.choices(levels, [l[1] for l in levels])[0]
 
         # 这里是在数据库中随机抽取该等级的小哥的操作

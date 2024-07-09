@@ -37,6 +37,12 @@ async def get_user_flags(session: AsyncSession, uid: int) -> set[str]:
     )
 
 
+async def set_user_flags(session: AsyncSession, uid: int, flags: set[str]):
+    await session.execute(
+        update(User).where(User.data_id == uid).values(feature_flag=",".join(flags))
+    )
+
+
 async def do_user_have_flag(session: AsyncSession, uid: int, flag: str) -> bool:
     flags = await get_user_flags(session, uid)
     return flag in flags
@@ -46,9 +52,7 @@ async def add_user_flag(session: AsyncSession, uid: int, flag: str):
     flags = await get_user_flags(session, uid)
     flags.add(flag)
 
-    await session.execute(
-        update(User).where(User.data_id == uid).values(feature_flag=",".join(flags))
-    )
+    await set_user_flags(session, uid, flags)
 
 
 async def get_user_money(session: AsyncSession, uid: int) -> float:

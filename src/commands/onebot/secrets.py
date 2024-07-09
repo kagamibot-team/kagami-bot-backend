@@ -1,4 +1,5 @@
 from src.imports import *
+import pathlib
 
 
 @listenOnebot()
@@ -17,9 +18,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
         return
 
     if not await have_skin(session, uid, not_sid):
-        await ctx.send(UniMessage().text("获取成功！"))
+        await ctx.reply(UniMessage().text("获取成功！"), ref=True, at=False)
     if await using_skin(session, uid, gei_aid) != not_sid:
-        await ctx.send(UniMessage().text("切换成功！"))
+        await ctx.reply(UniMessage().text("切换成功！"), ref=True, at=False)
     await give_skin(session, uid, not_sid)
     await set_skin(session, uid, not_sid)
     await session.commit()
@@ -39,7 +40,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
         return
 
     if await using_skin(session, uid, gei_aid) is not None:
-        await ctx.send(UniMessage().text("切换成功！"))
+        await ctx.reply(UniMessage().text("切换成功！"), ref=True, at=False)
     await clear_skin(session, uid, gei_aid)
     await session.commit()
 
@@ -69,9 +70,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
         return
 
     if not await have_skin(session, uid, ye_sid):
-        await ctx.send(UniMessage().text("获取成功！"))
+        await ctx.reply(UniMessage().text("获取成功！"), ref=True, at=False)
     if await using_skin(session, uid, ye_sid) != ye_sid:
-        await ctx.send(UniMessage().text("切换成功！"))
+        await ctx.reply(UniMessage().text("切换成功！"), ref=True, at=False)
     await give_skin(session, uid, ye_sid)
     await set_skin(session, uid, ye_sid)
     await session.commit()
@@ -83,8 +84,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
 async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
 
-    query = select(Skin.data_id).filter(Skin.name == "三要素")
-    kbs_sid = (await session.execute(query)).scalar_one_or_none()
+    query = select(Skin.data_id, Skin.image).filter(Skin.name == "三要素")
+    kbs_sid, kbs_img = (await session.execute(query)).tuples().one()
     query = select(Award.data_id).filter(Award.name == "三小哥")
     thr_aid = (await session.execute(query)).scalar_one_or_none()
     query = select(Award.data_id).filter(Award.name == "富哥")
@@ -113,9 +114,10 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
         return
 
     if not await have_skin(session, uid, kbs_sid):
-        await ctx.send(UniMessage().text("获取成功！"))
+        await ctx.reply(UniMessage().text("获取成功！"), ref=True, at=False)
     if await using_skin(session, uid, thr_aid) != kbs_sid:
-        await ctx.send(UniMessage().text("切换成功！"))
+        await ctx.reply(UniMessage().text("已装备！"), ref=True, at=False)
+    await ctx.send(UniMessage().text("发现关键词，三小哥登场！！").image(path=pathlib.Path(kbs_img)))
     await give_skin(session, uid, kbs_sid)
     await set_skin(session, uid, kbs_sid)
     await session.commit()
