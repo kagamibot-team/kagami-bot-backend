@@ -148,7 +148,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
 
     await ctx.reply(
         UniMessage()
-        .text(dname)
+        .text(f"[{aid}]{dname}")
         .image(path=pathlib.Path(img_path))
         .text(f"\n{description}")
     )

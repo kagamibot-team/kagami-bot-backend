@@ -234,3 +234,20 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
 async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
     user = await get_uid_by_qqid(session, ctx.getSenderId())
     await picks(ctx, session, user)
+
+
+@listenOnebot()
+@matchLiteral("是")
+@withSessionLock()
+async def _(ctx: OnebotMessageContext, session: AsyncSession):
+    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+    await add_user_flag(session, uid, "是")
+    await ctx.reply("你刚刚说了是，是吧。", ref=True, at=False)
+    utime = await calculateTime(session, uid)
+
+    if utime.pickRemain > 0:
+        await picks(ctx, session, uid, 1)    # 抓一次给他看
+    else:
+        await ctx.reply("我记下来了，下一次你会抓到是的。")
+
+    await session.commit()
