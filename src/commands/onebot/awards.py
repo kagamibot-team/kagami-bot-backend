@@ -223,7 +223,7 @@ async def _get_awards(session: AsyncSession, lid: int):
 
 async def _get_others(session: AsyncSession, uid: int):
     query = select(Skin.applied_award_id, Skin.image).filter(
-        Skin.owned_skins.any(OwnedSkin.user_id == uid)
+        Skin.used_skins.any(OwnedSkin.user_id == uid)
     )
     skins = (await session.execute(query)).tuples().all()
     skins = dict(skins)
