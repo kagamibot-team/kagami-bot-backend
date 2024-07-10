@@ -5,8 +5,31 @@ import PIL.Image
 from src.imports import *
 
 
-async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
+async def send_shop_message(ctx: OnebotMessageContext, session: AsyncSession, shop: ShopData):
+    titles: list[PILImage] = []
     boxes: list[PILImage] = []
+
+    name = await ctx.getSenderName()
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderNameInGroup()
+
+    res = await session.execute(
+        select(User.money).filter(User.qq_id == ctx.getSenderId())
+    )
+    res = res.scalar_one_or_none() or 0.0
+
+    titles.append(
+        await getTextImage(
+            text=(
+                f"欢迎来到小镜商店，{name}！您拥有{int(res)}{la.unit.money}。\n"
+                "输入“小镜商店 购买 {商品名}”就可以购买了。\n"
+            ),
+            width=808 - 80*2,
+            color="#FFFFFF",
+            font=Fonts.HARMONYOS_SANS_BLACK,
+            font_size=28,
+        )
+    )
 
     for group, products in shop.products.items():
         boxes.append(
@@ -31,12 +54,11 @@ async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
             )
         )
 
-    image = await verticalPile(boxes, 0, "left", "#9B9690", 484, 80, 80, 80)
+    area_title = await verticalPile(titles, 0, "left", "#9B9690", 0, 0, 0, 0)
+    area_box = await verticalPile(boxes, 0, "left", "#9B9690", 0, 0, 0, 0)
+    image = await verticalPile([area_title, area_box], 40, "left", "#9B9690", 464, 80, 80, 60)
     image.paste(PIL.Image.open("./res/kagami_shop.png"), (0, 0))
-    await ctx.reply(
-        "输入“小镜商店 购买 商品名”就可以购买了"
-        + UniMessage.image(raw=imageToBytes(image))
-    )
+    await ctx.send(UniMessage.image(raw=imageToBytes(image)))
 
 
 @listenOnebot()
@@ -60,7 +82,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     await root.emit(shop_data_evt)
 
     if buys is None:
-        await send_shop_message(ctx, shop_data)
+        await send_shop_message(ctx, session, shop_data)
         return
 
     name = await ctx.getSenderName()

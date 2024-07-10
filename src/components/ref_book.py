@@ -23,7 +23,7 @@ async def ref_book_box(title: str, notationSto: str, notationSta: str, color: st
 
     bottomTitle = await __title(title)
 
-    bottomNotationStorage = await getTextImage(
+    bottomLeftNotation = await getTextImage(
         text=notationSto,
         width=170,
         color="#FFFFFF",
@@ -35,7 +35,7 @@ async def ref_book_box(title: str, notationSto: str, notationSta: str, color: st
         margin_left=5,
     )
 
-    bottomNotationStat = await getTextImage(
+    topLeftNotation = await getTextImage(
         text=notationSta,
         width=170,
         color="#000000",
@@ -50,8 +50,8 @@ async def ref_book_box(title: str, notationSto: str, notationSta: str, color: st
     block = PIL.Image.new("RGB", (216, 210), "#9B9690")
     await imagePaste(block, box, 18, 18)
     await imagePaste(block, bottomTitle, 18, 170)
-    await imagePaste(block, bottomNotationStorage, 23, 105)
-    await imagePaste(block, bottomNotationStat, 23, 23)
+    await imagePaste(block, bottomLeftNotation, 23, 105)
+    await imagePaste(block, topLeftNotation, 23, 23)
 
     return block
 

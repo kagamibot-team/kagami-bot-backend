@@ -108,7 +108,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
     img = await verticalPile(
         [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
     )
-    await ctx.reply(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
 @listenOnebot()

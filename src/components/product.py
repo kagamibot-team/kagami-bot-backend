@@ -40,7 +40,7 @@ async def product_box(product: ProductData):
     await imagePaste(block, title2, 18, 194)
 
     if not product.sold_out:
-        notation = str(product.price) + la.unit.money
+        notation = str(int(product.price)) + la.unit.money
 
         notationBox = await getTextImage(
             text=notation,
