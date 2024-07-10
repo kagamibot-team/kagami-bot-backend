@@ -8,7 +8,7 @@ class SQLTestCase(unittest.IsolatedAsyncioTestCase):
         pass
 
     async def asyncSetUp(self) -> None:
-        async with sqlEngine.begin() as conn:
+        async with get_sql_engine().begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
 
@@ -18,7 +18,7 @@ class SQLTestCase(unittest.IsolatedAsyncioTestCase):
             await self.createData(session)
 
     async def asyncTearDown(self) -> None:
-        async with sqlEngine.begin() as conn:
+        async with get_sql_engine().begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
 
     def createCatchGroup(
