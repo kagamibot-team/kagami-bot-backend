@@ -362,7 +362,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 img = skins[aid]
 
             imgs.append(
-                await ref_book_box(name, str(sto) if (sto + use) else "", color, img)
+                await ref_book_box(name, str(sto) if (sto + use) else "", str(sto + use), color, img)
             )
 
         lAwardCount = len(awards[lid]) if (lweight or met_sums[lid] > 1) else 1
@@ -413,7 +413,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
             if aid in skins.keys():
                 img = skins[aid]
 
-            _imgs.append((sto, await ref_book_box(name, str(sto), color, img)))
+            _imgs.append((sto, await ref_book_box(name, str(sto), "", color, img)))
 
         _imgs.sort(key=lambda x: -x[0])
         imgs += [i[1] for i in _imgs]
@@ -492,7 +492,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         imgs: list[PILImage] = []
         for _, name, img in awards[lid]:
             color = lcolor
-            imgs.append(await ref_book_box(name, "", color, img))
+            imgs.append(await ref_book_box(name, "", "", color, img))
 
         title = f"{lname} 共 {len(awards[lid])} 只"
 
