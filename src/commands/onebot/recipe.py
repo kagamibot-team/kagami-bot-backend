@@ -73,6 +73,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     await set_user_money(session, uid, m - cost)
 
     aid, succeed = await try_merge(session, uid, a1, a2, a3)
+    add = random.randint(1, 3)
 
     if aid == -1:
         rlen = get_random().randint(2, 4)
@@ -99,7 +100,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         color = info.color
 
         beforeStats = await get_statistics(session, uid, aid)
-        await add_storage(session, uid, aid, 1)
+        await add_storage(session, uid, aid, add)
 
     logger.info(f"has: {beforeStats}")
     await root.emit(PlayerMergeEvent(uid, (a1, a2, a3), aid, succeed))
@@ -148,7 +149,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         stars=stars,
         color=color,
         new=(beforeStats == 0),
-        notation="",
+        notation=f"+{add}",
     )
 
     area_title_3 = await getTextImage(
