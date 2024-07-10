@@ -1,4 +1,5 @@
 from src.common.draw.strange import make_strange
+from src.common.random import get_random
 from src.imports import *
 
 
@@ -74,9 +75,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     aid, succeed = await try_merge(session, uid, a1, a2, a3)
 
     if aid == -1:
-        rlen = random.randint(2, 4)
-        rlen2 = random.randint(30, 90)
-        rchar = lambda: chr(random.randint(0x4E00, 0x9FFF))
+        rlen = get_random().randint(2, 4)
+        rlen2 = get_random().randint(30, 90)
+        rchar = lambda: chr(get_random().randint(0x4E00, 0x9FFF))
 
         title = "".join((rchar() for _ in range(rlen)))
         desc = "".join((rchar() for _ in range(rlen2)))

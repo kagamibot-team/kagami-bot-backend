@@ -12,6 +12,7 @@ from nonebot import logger
 from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.common.random import get_random
 from src.models.models import Award, AwardTagRelation, Level, Recipe, Tag
 
 
@@ -160,14 +161,14 @@ async def try_merge(
 
     result, possibility = await get_merge_result(session, a1, a2, a3)
 
-    if random.random() <= possibility:
+    if get_random().random() <= possibility:
         return result, True
 
-    if random.random() <= 0.8:
+    if get_random().random() <= 0.8:
         # 粑粑小哥
         return 89, False
 
-    if random.random() <= 0.5:
+    if get_random().random() <= 0.5:
         # 对此时有特殊情况，是乱码小哥
         return -1, False
 

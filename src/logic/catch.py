@@ -51,7 +51,7 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
                 )
                 continue
 
-        level = random.choices(levels, [l[1] for l in levels])[0]
+        level = get_random().choices(levels, [l[1] for l in levels])[0]
 
         # 这里是在数据库中随机抽取该等级的小哥的操作
         # 据说有速度更快的写法……

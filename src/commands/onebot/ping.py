@@ -4,6 +4,7 @@ import random
 import re
 import time
 
+from src.common.random import get_random
 from src.imports import *
 
 
@@ -17,7 +18,7 @@ def randomKagami():
     if len(files) == 0:
         return None
 
-    return os.path.join(rootPath, random.choice(files))
+    return os.path.join(rootPath, get_random().choice(files))
 
 
 @listenGroup()
@@ -77,7 +78,7 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
             .emoji(id="106")
             .text("所以这个晚安没法生效了……"),
         )
-        await asyncio.sleep(random.random() + 0.5)
+        await asyncio.sleep(get_random().random() + 0.5)
         await send_private_msg(
             ctx.bot,
             ctx.getSenderId(),
@@ -144,7 +145,7 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
         if (dt.date() - last_sleep_date).days < 1:
             awards = -2
         else:
-            awards = random.randint(50, 100)
+            awards = get_random().randint(50, 100)
             await session.execute(
                 update(User)
                 .where(User.data_id == uid)
@@ -173,7 +174,7 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
 
     await ctx.reply(
         UniMessage(f"晚安！{rep_name}")
-        + random.choice(
+        + get_random().choice(
             [
                 "明早见哦！",
                 "明早早八再见~",
@@ -191,7 +192,7 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
         ref=True,
         at=False,
     )
-    await asyncio.sleep(random.random() + 0.5)
+    await asyncio.sleep(get_random().random() + 0.5)
     if awards <= 0:
         if awards == -1:
             await ctx.reply(

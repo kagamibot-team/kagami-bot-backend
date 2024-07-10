@@ -37,7 +37,7 @@ async def _(e: PicksEvent):
         if len(skins) == 0:
             return
 
-        skin = random.choice(skins)
+        skin = get_random().choice(skins)
 
         await give_skin(session, e.uid, skin)
         await set_skin(session, e.uid, skin)

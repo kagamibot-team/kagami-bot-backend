@@ -2,6 +2,7 @@ import random
 import time
 
 from src.common.dataclasses.sign_in_history import signInHistor
+from src.common.random import get_random
 from src.imports import *
 
 
@@ -123,7 +124,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
     else:
         count += 1
 
-    moneydelta = (1 - random.random() ** ((count - 1) * 0.2 + 1)) * 90 + 10
+    moneydelta = (1 - get_random().random() ** ((count - 1) * 0.2 + 1)) * 90 + 10
     moneydelta = int(moneydelta)
 
     await session.execute(
