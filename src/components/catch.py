@@ -58,7 +58,7 @@ async def catch(
     )
     leftNotation = await getTextImage(
         text=notation,
-        color="#FFFFFF" if notation == "+1" else "#75FA61",
+        color="#FFFFFF" if notation == "+1" else "#FFFD55" if notation == "+2" else "#8BFA84",
         font=Fonts.MARU_MONICA,
         font_size=48,
         margin_bottom=5,
