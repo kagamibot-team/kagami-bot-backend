@@ -2,14 +2,12 @@
 和数据库有关的模块
 """
 
-from src.common.config import config
-
-
 import sqlalchemy
 import sqlalchemy.event
 from sqlalchemy import PoolProxiedConnection, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from src.common.config import config
 
 __all__ = ["get_session", "manual_checkpoint", "get_sql_engine", "DatabaseManager"]
 

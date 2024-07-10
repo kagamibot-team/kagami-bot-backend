@@ -12,8 +12,10 @@
 """
 
 import datetime
+
 from pydantic import BaseModel
-from src.base.onebot_basic import handle_input_message, OnebotBotProtocol, MessageLike
+
+from src.base.onebot_basic import MessageLike, OnebotBotProtocol, handle_input_message
 from src.base.onebot_enum import QQEmoji, QQStatus
 
 
