@@ -1,5 +1,5 @@
 from src.common.draw.strange import make_strange
-from src.common.random import get_random
+from src.common.rd import get_random
 from src.imports import *
 
 

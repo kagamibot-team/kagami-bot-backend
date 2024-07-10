@@ -2,7 +2,7 @@ import random
 import time
 
 from src.common.dataclasses.sign_in_history import signInHistor
-from src.common.random import get_random
+from src.common.rd import get_random
 from src.imports import *
 
 

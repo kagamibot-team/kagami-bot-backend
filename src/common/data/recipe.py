@@ -12,7 +12,7 @@ from nonebot import logger
 from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.common.random import get_random
+from src.common.rd import get_random
 from src.models.models import Award, AwardTagRelation, Level, Recipe, Tag
 
 

@@ -5,7 +5,7 @@ import PIL
 import PIL.Image
 
 from src.common.draw.images import imagePaste
-from src.common.random import get_random
+from src.common.rd import get_random
 from src.imports.images import PILImage
 
 

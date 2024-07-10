@@ -1,10 +1,9 @@
 import asyncio
 import os
-import random
 import re
 import time
 
-from src.common.random import get_random
+from src.common.rd import get_random
 from src.imports import *
 
 
