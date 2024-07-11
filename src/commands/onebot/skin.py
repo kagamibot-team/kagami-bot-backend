@@ -58,7 +58,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
     skins = sorted(skins, key=lambda s: level_repo.sorted_index[s[4]])
 
     query = select(SkinRecord.skin_id, SkinRecord.selected).filter(SkinRecord.user_id == uid)
-    owned = dict((await session.execute(query)).tuples())
+    owned = dict((await session.execute(query)).tuples().all())
 
     _boxes: list[tuple[str, str, str, str, str]] = []
     _un = (

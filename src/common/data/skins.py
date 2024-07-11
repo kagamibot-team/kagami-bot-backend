@@ -3,6 +3,7 @@ import os
 from nonebot import logger
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import MultipleResultsFound
 
 from src.common.download import download, writeData
 from src.common.lang.zh import la
@@ -58,15 +59,19 @@ async def get_using_skin(session: AsyncSession, uid: int, aid: int):
     Returns:
         int | None: 使用的皮肤的 ID
     """
-    query = (
-        select(Skin.data_id)
-        .join(SkinRecord, Skin.data_id == SkinRecord.skin_id)
-        .filter(SkinRecord.user_id == uid, SkinRecord.selected == 1)
-        .filter(Skin.award_id == aid)
-    )
-    result = await session.execute(query)
+    try:
+        query = (
+            select(Skin.data_id)
+            .join(SkinRecord, Skin.data_id == SkinRecord.skin_id)
+            .filter(SkinRecord.user_id == uid, SkinRecord.selected == 1)
+            .filter(Skin.award_id == aid)
+        )
+        result = await session.execute(query)
 
-    return result.scalar_one_or_none()
+        return result.scalar_one_or_none()
+    except MultipleResultsFound as e:
+        logger.warning(e)
+        return None
 
 
 async def use_skin(session: AsyncSession, uid: int, sid: int):

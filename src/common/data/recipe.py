@@ -38,8 +38,8 @@ async def generate_random_result(
     lid2 = await _get_lid(session, a2)
     lid3 = await _get_lid(session, a3)
 
-    # 如果含有零星小哥，那么合成产物一定是零星小哥（lid=7），我们对于「成功」产物，就随机生成一个值返回吧。
-    if lid1 == 7 or lid2 == 7 or lid3 == 7:
+    # 如果含有零星小哥，那么合成产物一定是零星小哥（lid=0），我们对于「成功」产物，就随机生成一个值返回吧。
+    if lid1 == 0 or lid2 == 0 or lid3 == 0:
         # 小哥的 data_id 是 5
         return 5, 0.0
 

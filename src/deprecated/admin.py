@@ -1,27 +1,13 @@
 import re
-from typing import Callable
-from nonebot.adapters.onebot.v11 import Message
+from dataclasses import dataclass
 
-from .old_version import CheckEnvironment, at, text, Command, databaseIO
-from .db import *
+from nonebot.adapters.onebot.v11 import Message
 
 from src.models import *
 
-from dataclasses import dataclass
-
-
-def combine(*rules: Callable[[str], bool]):
-    def inner(x: str):
-        for rule in rules:
-            if not rule(x):
-                return False
-
-        return True
-
-    return inner
-
-
+from .db import *
 from .keywords import *
+from .old_version import CheckEnvironment, Command, at, databaseIO, text
 from .tools import requireAdmin
 
 
