@@ -64,7 +64,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
             return
 
     for aid, v in using.items():
-        await add_storage(session, uid, aid, -v)
+        await give_award(session, uid, aid, -v)
 
     m = await get_user_money(session, uid)
     if m < cost:
@@ -73,7 +73,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     await set_user_money(session, uid, m - cost)
 
     aid, succeed = await try_merge(session, uid, a1, a2, a3)
-    add = random.randint(1, 3)
+    add = get_random().randint(1, 3)
 
     if aid == -1:
         rlen = get_random().randint(2, 4)
@@ -100,7 +100,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         color = info.color
 
         beforeStats = await get_statistics(session, uid, aid)
-        await add_storage(session, uid, aid, add)
+        await give_award(session, uid, aid, add)
 
     logger.info(f"has: {beforeStats}")
     await root.emit(PlayerMergeEvent(uid, (a1, a2, a3), aid, succeed))

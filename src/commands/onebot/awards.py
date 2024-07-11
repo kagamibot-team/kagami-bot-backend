@@ -27,11 +27,11 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
 
         award = (
             await session.execute(
-                select(Skin.applied_award_id)
+                select(Skin.award_id)
                 .filter(Skin.data_id == sid)
-                .join(Award, Award.data_id == Skin.applied_award_id)
-                .join(UsedSkin, UsedSkin.skin_id == sid)
-                .filter(UsedSkin.user_id == user)
+                .join(Award, Award.data_id == Skin.award_id)
+                .join(SkinRecord, SkinRecord.skin_id == sid)
+                .filter(SkinRecord.user_id == user)
             )
         ).scalar_one_or_none()
         if award is None:
@@ -123,7 +123,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
         await ctx.reply(la.err.award_not_found.format(name))
         return
 
-    query = select(Award.name, Award.description, Award.img_path).filter(
+    query = select(Award.name, Award.description, Award.image).filter(
         Award.data_id == aid
     )
     dname, description, img_path = (await session.execute(query)).tuples().one()
@@ -134,8 +134,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
             await ctx.reply(la.err.skin_not_found.format(name))
             return
 
-        query = select(Skin.name, Skin.extra_description, Skin.image).filter(
-            Skin.data_id == sid, Skin.applied_award_id == aid
+        query = select(Skin.name, Skin.description, Skin.image).filter(
+            Skin.data_id == sid, Skin.award_id == aid
         )
         res = (await session.execute(query)).tuples().one_or_none()
 
@@ -207,40 +207,36 @@ async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
     )
 
 
-async def _get_levels(session: AsyncSession):
-    query = select(Level.data_id, Level.name, Level.color_code, Level.weight).order_by(
-        -Level.sorting_priority, Level.weight
-    )
-    return (await session.execute(query)).tuples().all()
+async def _get_levels():
+    return [
+        (level.id, level.display_name, level.color, level.weight)
+        for level in level_repo.sorted
+    ]
 
 
 async def _get_awards(session: AsyncSession, lid: int):
-    query = select(Award.data_id, Award.name, Award.img_path).filter(
+    query = select(Award.data_id, Award.name, Award.image).filter(
         Award.level_id == lid
     )
     return (await session.execute(query)).tuples().all()
 
 
 async def _get_others(session: AsyncSession, uid: int):
-    query = select(Skin.applied_award_id, Skin.image).filter(
-        Skin.used_skins.any(OwnedSkin.user_id == uid)
+    query = (
+        select(Skin.award_id, Skin.image)
+        .join(SkinRecord, SkinRecord.skin_id == Skin.data_id)
+        .filter(SkinRecord.user_id == uid, SkinRecord.selected == 1)
     )
     skins = (await session.execute(query)).tuples().all()
     skins = dict(skins)
 
-    query = select(StorageStats.target_award_id, StorageStats.count).filter(
-        StorageStats.target_user_id == uid
+    query = select(Inventory.award_id, Inventory.storage, Inventory.used).filter(
+        Inventory.user_id == uid
     )
     storages = (await session.execute(query)).tuples().all()
-    storages = dict(storages)
+    storages = {aid: (sto, use) for aid, sto, use in storages}
 
-    query = select(UsedStats.target_award_id, UsedStats.count).filter(
-        UsedStats.target_user_id == uid
-    )
-    used = (await session.execute(query)).tuples().all()
-    used = dict(used)
-
-    return skins, storages, used
+    return skins, storages
 
 
 def calc_progress(
@@ -287,8 +283,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     if uid is None:
         return
 
-    levels = await _get_levels(session)
-    skins, storages, used = await _get_others(session, uid)
+    levels = await _get_levels()
+    skins, storages = await _get_others(session, uid)
     awards: dict[int, Sequence[tuple[int, str, str]]] = {}
     met_sums: dict[int, int] = {}
 
@@ -299,8 +295,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
             continue
         imgs: list[PILImage] = []
         for aid, _, _ in awards[lid]:
-            sto = storages[aid] if aid in storages.keys() else 0
-            use = used[aid] if aid in used.keys() else 0
+            sto, use = storages[aid] if aid in storages.keys() else (0, 0)
             if sto + use:
                 met_sums[lid] += 1
 
@@ -312,14 +307,14 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         name = await ctx.getSenderNameInGroup()
 
     levelName = res.query[str]("等级名字")
-    levelId = None
+    target_level = None
     if levelName is not None:
-        levelId = await get_lid_by_name(session, levelName)
+        target_level = level_repo.get_by_name(levelName)
 
-    if levelId is not None:
+    if target_level is not None:
         baseImgs.append(
             await getTextImage(
-                text=f"{name} 的{levelName}进度：",
+                text=f"{name} 的{target_level.display_name}进度：",
                 color="#FFFFFF",
                 font=Fonts.HARMONYOS_SANS_BLACK,
                 font_size=80,
@@ -342,15 +337,14 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         )
 
     for lid, lname, lcolor, lweight in levels:
-        if levelId is not None and lid != levelId:
+        if target_level is not None and lid != target_level.id:
             continue
         if len(awards[lid]) == 0:
             continue
         imgs: list[PILImage] = []
         for aid, name, img in awards[lid]:
             color = lcolor
-            sto = storages[aid] if aid in storages.keys() else 0
-            use = used[aid] if aid in used.keys() else 0
+            sto, use = storages[aid] if aid in storages.keys() else (0, 0)
 
             if sto + use == 0:
                 if lweight == 0:
@@ -362,7 +356,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 img = skins[aid]
 
             imgs.append(
-                await ref_book_box(name, str(sto) if (sto + use) else "", str(sto + use), color, img)
+                await ref_book_box(
+                    name, str(sto) if (sto + use) else "", str(sto + use), color, img
+                )
             )
 
         lAwardCount = len(awards[lid]) if (lweight or met_sums[lid] > 1) else 1
@@ -393,8 +389,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     if uid is None:
         return
 
-    levels = await _get_levels(session)
-    skins, storages, used = await _get_others(session, uid)
+    levels = await _get_levels()
+    skins, storages = await _get_others(session, uid)
 
     imgs: list[PILImage] = []
     for lid, _, lcolor, _ in levels:
@@ -405,8 +401,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
             continue
         for aid, name, img in awards:
             color = lcolor
-            sto = storages[aid] if aid in storages.keys() else 0
-            use = used[aid] if aid in used.keys() else 0
+            sto, _ = storages[aid] if aid in storages.keys() else (0, 0)
 
             if sto == 0:
                 continue
@@ -455,23 +450,23 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
 @withLoading(la.loading.all_xg)
 @withSessionLock()
 async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
-    levels = await _get_levels(session)
+    levels = await _get_levels()
 
     levelName = res.query[str]("等级名字")
-    levelId = None
+    target_level = None
     if levelName is not None:
-        levelId = await get_lid_by_name(session, levelName)
+        target_level = level_repo.get_by_name(levelName)
 
     awards: dict[int, Sequence[tuple[int, str, str]]] = {}
     total: int = 0
     for lid, lname, lcolor, _ in levels:
-        if levelId is not None and lid != levelId:
+        if target_level is not None and lid != target_level.id:
             continue
         awards[lid] = await _get_awards(session, lid)
         total += len(awards[lid])
 
     baseImgs: list[PILImage] = []
-    lNameDisplay = f" {levelName} " if levelId is not None else ""
+    lNameDisplay = f" {levelName} " if target_level is not None else ""
     baseImgs.append(
         await getTextImage(
             text=f"全部 {total} 只{lNameDisplay}小哥：",
@@ -484,7 +479,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     )
 
     for lid, lname, lcolor, _ in levels:
-        if levelId is not None and lid != levelId:
+        if target_level is not None and lid != target_level.id:
             continue
 
         if len(awards[lid]) == 0:

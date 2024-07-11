@@ -8,8 +8,7 @@ from nonebot.adapters.onebot.v11.message import Message, MessageSegment
 
 class TestAdminCrud(SQLTestCase):
     async def createData(self, session: AsyncSession) -> None:
-        await session.execute(insert(Level).values(name="一星", weight=1))
-        await session.commit()
+        self.createLevel("一星", 0.0, 1)
 
     async def test_add_level(self):
         bot = MockOnebot("0")

@@ -8,15 +8,11 @@ async def _(evt: PrePickMessageEvent):
     if evt.group_id is None:
         return
 
-    tag = await get_or_create_tag(evt.session, "记录", "喜报")
-    query = select(LevelTagRelation.level_id).filter(LevelTagRelation.tag_id == tag)
-    levels = (await evt.session.execute(query)).scalars().all()
-
     flag = False
     _event_picks: dict[int, PickDisplay] = {}
 
     for aid, pick in evt.picks.awards.items():
-        if pick.level in levels:
+        if pick.level in (4, 5):
             _event_picks[aid] = evt.displays[aid]
             flag = True
 

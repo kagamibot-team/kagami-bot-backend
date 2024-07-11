@@ -21,10 +21,8 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
 
     jrrp = today_user.randint(1, 100)
 
-    query = select(Level.data_id, Level.weight, Level.price).filter(Level.weight > 0)
-    levels = (await session.execute(query)).tuples().all()
-    level = today.choices(levels, [l[1] for l in levels])[0]
-    query = select(Award.data_id).filter(Award.level_id == level[0])
+    level = today.choices(level_repo.sorted, [l.weight for l in level_repo.sorted])[0]
+    query = select(Award.data_id).filter(Award.level_id == level.id)
     awards = (await session.execute(query)).tuples().all()
     aid = today.choice(awards)[0]
     display = await get_award_info(session, -1, aid)

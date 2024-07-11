@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.db import *
 from src.common.data.awards import *
-from src.common.data.levels import *
 from src.common.data.recipe import *
 from src.common.data.skins import *
 from src.common.data.tags import *

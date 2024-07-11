@@ -31,12 +31,12 @@ async def _(ctx: PublicContext, res: Arparma):
             await ctx.reply(UniMessage(la.err.award_exists.format(name)))
             return
 
-        level = await get_lid_by_name(session, levelName)
-        if level is None:
+        level_obj = level_repo.get_by_name(levelName)
+        if level_obj is None:
             await ctx.reply(UniMessage(la.err.level_not_found.format(levelName)))
             return
 
-        award = Award(level_id=level, name=name)
+        award = Award(level_id=level_obj.id, name=name)
         session.add(award)
         await session.commit()
 
@@ -62,7 +62,9 @@ async def _(ctx: PublicContext, res: Arparma):
     async with session.begin():
         await session.execute(delete(Award).filter(Award.name == name))
         await session.execute(
-            delete(Award).filter(Award.alt_names.any(AwardAltName.name == name))
+            delete(Award).where(
+                AwardAltName.award_id == Award.data_id, AwardAltName.name == name
+            )
         )
         await session.commit()
         await ctx.reply(UniMessage(la.msg.award_delete_success.format(name)))
@@ -136,13 +138,13 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
         messages += f"成功将名字叫 {name} 的小哥的名字改为 {newName}。\n"
 
     if levelName is not None:
-        lid = await get_lid_by_name(session, levelName)
+        level = level_repo.get_by_name(levelName)
 
-        if lid is None:
+        if level is None:
             messages += f"更改等级未成功，因为名字叫 {levelName} 的等级不存在。"
         else:
             await session.execute(
-                update(Award).where(Award.data_id == aid).values(level_id=lid)
+                update(Award).where(Award.data_id == aid).values(level_id=level.id)
             )
             messages += f"成功将名字叫 {name} 的小哥的等级改为 {levelName}。\n"
 

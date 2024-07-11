@@ -71,22 +71,21 @@ async def _(e: ShopBuildingEvent):
             Skin.price,
             Skin.image,
             Award.name,
-            Level.color_code,
+            Award.level_id,
         )
         .filter(Skin.price > 0)
-        .join(Award, Award.data_id == Skin.applied_award_id)
-        .join(Level, Level.data_id == Award.level_id)
+        .join(Award, Award.data_id == Skin.award_id)
     )
     skins = (await e.session.execute(query)).tuples().all()
 
     query = (
         select(Skin.name)
-        .join(OwnedSkin, OwnedSkin.skin_id == Skin.data_id)
-        .filter(OwnedSkin.user_id == e.uid)
+        .join(SkinRecord, SkinRecord.skin_id == Skin.data_id)
+        .filter(SkinRecord.user_id == e.uid)
     )
     owned = (await e.session.execute(query)).scalars().all()
 
-    for name, price, image, aname, color in skins:
+    for name, price, image, aname, lid in skins:
         pd = ProductData(
             image=await blurred(image, 100),
             title=f"皮肤{name}",
@@ -94,7 +93,7 @@ async def _(e: ShopBuildingEvent):
             price=price,
             sold_out=name in owned,
             alias=[],
-            background_color=color,
+            background_color=level_repo.levels[lid].color,
         )
         if not "皮肤" in e.data.products.keys():
             e.data.products["皮肤"] = []
@@ -111,5 +110,5 @@ async def _(e: ShopBuyEvent):
         skin_id = (await e.session.execute(query)).scalar_one()
 
         await e.session.execute(
-            insert(OwnedSkin).values(user_id=e.uid, skin_id=skin_id)
+            insert(SkinRecord).values(user_id=e.uid, skin_id=skin_id)
         )

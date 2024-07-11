@@ -1,5 +1,3 @@
-import asyncio
-import pathlib
 import re
 from dataclasses import dataclass
 from typing import Type
@@ -15,84 +13,6 @@ def at(sender: int):
 
 def text(text: str):
     return MessageSegment.text(text)
-
-
-async def image(image: PILImage):
-    return MessageSegment.image(imageToBytes(image))
-
-
-async def localImage(image: str):
-    return MessageSegment.image(pathlib.Path(image))
-
-
-async def 科目三():
-    return MessageSegment.image(pathlib.Path("./res/科目三.gif"))
-
-
-def decorateWithLoadingMessage(_text: str = " 稍候，正在查询你的小哥收集进度..."):
-    def _decorator(cls: Type[Command]):
-        class _Command(cls):
-            async def handleCommand(
-                self, env: "CheckEnvironment", result: re.Match[str]
-            ) -> Message | None:
-                msg = await env.bot.send_group_msg(
-                    group_id=env.group_id,
-                    message=Message(
-                        [
-                            at(env.sender),
-                            text(_text),
-                            await 科目三(),
-                        ]
-                    ),
-                )
-                try:
-                    res = await super().handleCommand(env, result)
-                    return res
-                except WaitForMoreInformationException as e:
-                    raise e
-                except Exception as e:
-                    await env.bot.send_group_msg(
-                        group_id=env.group_id,
-                        message=Message(
-                            [
-                                at(env.sender),
-                                text(
-                                    f" 程序遇到了错误：{repr(e)}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！"
-                                ),
-                            ]
-                        ),
-                    )
-                    raise e from e
-                finally:
-                    await env.bot.delete_msg(message_id=msg["message_id"])
-
-        return _Command
-
-    return _decorator
-
-
-def asyncLock():
-    locks: dict[int, asyncio.Lock] = {}
-
-    def getLock(sender: int):
-        if sender not in locks:
-            locks[sender] = asyncio.Lock()
-        return locks[sender]
-
-    def _decorator(cls: Type[Command]):
-        class _Command(cls):
-            async def handleCommand(
-                self, env: "CheckEnvironment", result: re.Match[str]
-            ) -> Message | None:
-                async with getLock(env.sender):
-                    msg = await super().handleCommand(env, result)
-
-                return msg
-
-        return _Command
-
-    return _decorator
-
 
 def databaseIO():
     def _decorator(cls: Type[Command]):
@@ -123,27 +43,6 @@ class CheckEnvironment:
 class CommandBase:
     async def check(self, env: CheckEnvironment) -> Message | None:
         return None
-
-
-class CallbackBase(CommandBase):
-    async def check(self, env: CheckEnvironment) -> Message | None:
-        if env.text.lower() == "::cancel":
-            return Message(
-                [MessageSegment.at(env.sender), MessageSegment.text(" 已取消")]
-            )
-
-        return await self.callback(env)
-
-    async def callback(self, env: CheckEnvironment) -> Message | None:
-        return None
-
-
-class WaitForMoreInformationException(Exception):
-    def __init__(self, callback: CallbackBase, message: Message | None) -> None:
-        self.callback = callback
-        self.message = message
-
-        super().__init__()
 
 
 @dataclass
@@ -188,14 +87,8 @@ class Command(CommandBase):
 __all__ = [
     "at",
     "text",
-    "image",
-    "localImage",
-    "decorateWithLoadingMessage",
     "CheckEnvironment",
     "CommandBase",
-    "CallbackBase",
-    "WaitForMoreInformationException",
     "Command",
-    "asyncLock",
     "databaseIO",
 ]

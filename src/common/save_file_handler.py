@@ -40,7 +40,7 @@ async def collect_images():
 
     session = get_session()
     async with session.begin():
-        query = select(Award.data_id, Award.img_path)
+        query = select(Award.data_id, Award.image)
         awards = (await session.execute(query)).tuples()
 
         folder = pathlib.Path("./data/awards/")

@@ -1,6 +1,7 @@
 import unittest
 
 from src.imports import *
+from src.models.statics import level_repo
 
 
 class SQLTestCase(unittest.IsolatedAsyncioTestCase):
@@ -17,39 +18,21 @@ class SQLTestCase(unittest.IsolatedAsyncioTestCase):
         async with session.begin():
             await self.createData(session)
 
+        # 清空 level_repo，在重构之后再删掉这里
+        level_repo.clear()
+
     async def asyncTearDown(self) -> None:
         async with get_sql_engine().begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
-
-    def createCatchGroup(
-        self,
-        session: AsyncSession,
-        weight: float,
-        time_limit_rule: str,
-        data_id: int,
-    ):
-        session.add(
-            CatchGroup(
-                time_limit_rule=time_limit_rule,
-                weight=weight,
-                data_id=data_id,
-            )
-        )
+        level_repo.clear()
 
     def createLevel(
         self,
-        session: AsyncSession,
         name: str,
         weight: float,
         data_id: int,
     ):
-        session.add(
-            Level(
-                name=name,
-                weight=weight,
-                data_id=data_id,
-            )
-        )
+        level_repo._register(data_id, [], name, weight, "#000000", 0)
 
     def createAward(
         self,

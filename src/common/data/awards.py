@@ -1,43 +1,44 @@
 import os
-from sqlalchemy import insert, select, update
+
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.base.event_root import root
+from src.common.data.skins import get_using_skin
+from src.common.dataclasses.award_info import AwardInfo
 from src.common.dataclasses.data_changed_events import PlayerStorageChangedEvent
 from src.common.download import download, writeData
 from src.models.models import *
-from src.common.dataclasses.award_info import AwardInfo
-from src.base.event_root import root
+from src.models.statics import level_repo
 
 
 async def get_award_info(session: AsyncSession, uid: int, aid: int):
-    query = (
-        select(
-            Award.data_id,
-            Award.img_path,
-            Award.name,
-            Award.description,
-            Level.name,
-            Level.color_code,
-        )
-        .filter(Award.data_id == aid)
-        .join(Level, Level.data_id == Award.level_id)
-    )
+    query = select(
+        Award.data_id,
+        Award.image,
+        Award.name,
+        Award.description,
+        Award.level_id,
+    ).filter(Award.data_id == aid)
     award = (await session.execute(query)).one().tuple()
 
-    skinQuery = (
-        select(Skin.name, Skin.extra_description, Skin.image)
-        .filter(Skin.applied_award_id == award[0])
-        .filter(Skin.used_skins.any(UsedSkin.user_id == uid))
-    )
-    skin = (await session.execute(skinQuery)).one_or_none()
+    using_skin = await get_using_skin(session, uid, aid)
+    skin = None
+    if using_skin is not None:
+        query = select(Skin.name, Skin.description, Skin.image).filter(
+            Skin.data_id == using_skin
+        )
+        skin = (await session.execute(query)).one_or_none()
+
+    level = level_repo.levels[award[4]]
 
     info = AwardInfo(
         awardId=award[0],
         awardImg=award[1],
         awardName=award[2],
         awardDescription=award[3],
-        levelName=award[4],
-        color=award[5],
+        levelName=level.display_name,
+        color=level.color,
         skinName=None,
     )
 
@@ -63,8 +64,8 @@ async def get_storage(session: AsyncSession, uid: int, aid: int):
     Returns:
         int: 库存小哥的数量
     """
-    query = select(StorageStats.count).filter(
-        StorageStats.target_user_id == uid, StorageStats.target_award_id == aid
+    query = select(Inventory.storage).filter(
+        Inventory.user_id == uid, Inventory.award_id == aid
     )
 
     return (await session.execute(query)).scalar_one_or_none()
@@ -79,20 +80,16 @@ async def get_statistics(session: AsyncSession, uid: int, aid: int):
         aid (int): 小哥在数据库中的 ID
     """
 
-    query1 = select(StorageStats.count).filter(
-        StorageStats.target_user_id == uid, StorageStats.target_award_id == aid
-    )
-    query2 = select(UsedStats.count).filter(
-        UsedStats.target_user_id == uid, UsedStats.target_award_id == aid
+    query = select(Inventory.storage, Inventory.used).filter(
+        Inventory.user_id == uid, Inventory.award_id == aid
     )
 
-    sto = (await session.execute(query1)).scalar_one_or_none() or 0
-    use = (await session.execute(query2)).scalar_one_or_none() or 0
+    sto, use = (await session.execute(query)).tuples().one_or_none() or (0, 0)
 
     return sto + use
 
 
-async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
+async def give_award(session: AsyncSession, uid: int, aid: int, count: int):
     """增减一个用户的小哥库存
 
     Args:
@@ -107,40 +104,24 @@ async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
     res = await get_storage(session, uid, aid)
 
     if res is None:
-        newStorage = StorageStats(target_user_id=uid, target_award_id=aid, count=count)
+        newStorage = Inventory(user_id=uid, award_id=aid, storage=count)
         session.add(newStorage)
+        await session.flush()
         return 0
 
     query = (
-        update(StorageStats)
-        .where(
-            StorageStats.target_user_id == uid,
-            StorageStats.target_award_id == aid,
-        )
-        .values(count=res + count)
+        update(Inventory)
+        .where(Inventory.user_id == uid, Inventory.award_id == aid)
+        .values(storage=res + count)
     )
     await session.execute(query)
 
     if count < 0:
-        query2 = select(UsedStats.count).filter(
-            UsedStats.target_user_id == uid, UsedStats.target_award_id == aid
+        query = (
+            update(Inventory)
+            .where(Inventory.user_id == uid, Inventory.award_id == aid)
+            .values(used=Inventory.used + count)
         )
-        sta = (await session.execute(query2)).scalar_one_or_none()
-        if sta is None:
-            query = insert(UsedStats).values(
-                target_award_id=aid,
-                target_user_id=uid,
-                count=-count,
-            )
-        else:
-            query = (
-                update(UsedStats)
-                .where(
-                    UsedStats.target_award_id == aid, UsedStats.target_user_id == uid
-                )
-                .values(count=UsedStats.count - count)
-            )
-        await session.execute(query)
 
     # 释放相关的事件
     await root.emit(PlayerStorageChangedEvent(uid, aid, count, res, res + count))
@@ -153,8 +134,10 @@ async def get_aid_by_name(session: AsyncSession, name: str):
     res = (await session.execute(query)).scalar_one_or_none()
 
     if res is None:
-        query = select(Award.data_id).filter(
-            Award.alt_names.any(AwardAltName.name == name)
+        query = (
+            select(Award.data_id)
+            .join(AwardAltName, AwardAltName.award_id == Award.data_id)
+            .filter(AwardAltName.name == name)
         )
         res = (await session.execute(query)).scalar_one_or_none()
 

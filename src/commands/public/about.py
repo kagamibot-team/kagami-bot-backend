@@ -4,7 +4,6 @@
 
 from src.common.lang.zh import get_latest_versions
 from src.imports import *
-from packaging.version import Version
 
 
 updateHistory: dict[str, list[str]] = la.about.update

@@ -47,29 +47,29 @@ async def save_picks(
     for aid in pickResult.awards.keys():
         pick = pickResult.awards[aid]
         spent_count += pick.delta
-        before = await add_storage(session, uid, aid, pick.delta)
+        before = await give_award(session, uid, aid, pick.delta)
 
         query = (
             select(
                 Award.name,
-                Award.img_path,
+                Award.image,
                 Award.description,
-                Level.name,
-                Level.color_code,
+                Award.level_id,
             )
             .filter(Award.data_id == aid)
-            .join(Level, Award.level_id == Level.data_id)
         )
-        name, image, description, level, color = (
+        name, image, description, lid = (
             (await session.execute(query)).tuples().one()
         )
+
+        level = level_repo.levels[lid]
 
         preEvent.displays[aid] = PickDisplay(
             name=name,
             image=image,
             description=description,
-            level=level,
-            color=color,
+            level=level.display_name,
+            color=level.color,
             beforeStorage=before,
             pick=pick,
         )

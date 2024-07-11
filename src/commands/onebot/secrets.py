@@ -17,12 +17,12 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
         logger.error(la.err.data_missing)
         return
 
-    if not await have_skin(session, uid, not_sid):
+    if not await do_user_have_skin(session, uid, not_sid):
         await ctx.reply(UniMessage().text("获取成功！"), ref=True, at=False)
-    if await using_skin(session, uid, gei_aid) != not_sid:
+    if await get_using_skin(session, uid, gei_aid) != not_sid:
         await ctx.reply(UniMessage().text("切换成功！"), ref=True, at=False)
     await give_skin(session, uid, not_sid)
-    await set_skin(session, uid, not_sid)
+    await use_skin(session, uid, not_sid)
     await session.commit()
 
 
@@ -39,9 +39,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
         logger.error(la.err.data_missing)
         return
 
-    if await using_skin(session, uid, gei_aid) is not None:
+    if await get_using_skin(session, uid, gei_aid) is not None:
         await ctx.reply(UniMessage().text("切换成功！"), ref=True, at=False)
-    await clear_skin(session, uid, gei_aid)
+    await unuse_all_skins(session, uid, gei_aid)
     await session.commit()
 
 
@@ -69,12 +69,12 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession):
         logger.info(la.err.data_not_satisfied)
         return
 
-    if not await have_skin(session, uid, ye_sid):
+    if not await do_user_have_skin(session, uid, ye_sid):
         await ctx.reply(UniMessage().text("获取成功！"), ref=True, at=False)
-    if await using_skin(session, uid, ye_sid) != ye_sid:
+    if await get_using_skin(session, uid, ye_sid) != ye_sid:
         await ctx.reply(UniMessage().text("切换成功！"), ref=True, at=False)
     await give_skin(session, uid, ye_sid)
-    await set_skin(session, uid, ye_sid)
+    await use_skin(session, uid, ye_sid)
     await session.commit()
 
 
@@ -113,11 +113,11 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
         logger.info(la.err.data_not_satisfied)
         return
 
-    if not await have_skin(session, uid, kbs_sid):
+    if not await do_user_have_skin(session, uid, kbs_sid):
         await ctx.reply(UniMessage().text("获取成功！"), ref=True, at=False)
-    if await using_skin(session, uid, thr_aid) != kbs_sid:
+    if await get_using_skin(session, uid, thr_aid) != kbs_sid:
         await ctx.reply(UniMessage().text("已装备！"), ref=True, at=False)
     await ctx.send(UniMessage().text("发现关键词，三小哥登场！！").image(path=pathlib.Path(kbs_img)))
     await give_skin(session, uid, kbs_sid)
-    await set_skin(session, uid, kbs_sid)
+    await use_skin(session, uid, kbs_sid)
     await session.commit()

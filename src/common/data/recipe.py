@@ -2,32 +2,20 @@
 和小哥合成有关的各种东西
 """
 
-from dataclasses import dataclass
-import itertools
 import math
-import random
-import statistics
 
 from nonebot import logger
 from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.rd import get_random
-from src.models.models import Award, AwardTagRelation, Level, Recipe, Tag
+from src.models.models import Award, Recipe
 
 
 async def _get_lid(session: AsyncSession, a: int):
     return (
-        (
-            await session.execute(
-                select(Award.level_id, Level.weight)
-                .join(Level, Award.level_id == Level.data_id)
-                .filter(Award.data_id == a)
-            )
-        )
-        .tuples()
-        .one()
-    )
+        await session.execute(select(Award.level_id).filter(Award.data_id == a))
+    ).scalar_one()
 
 
 async def generate_random_result(
@@ -45,27 +33,10 @@ async def generate_random_result(
         tuple[int, float]: 合成出来的小哥 aid 和合成概率
     """
 
-    # 获得所有的 Level 的信息
-    # 拿到的数据应该是
-    #   - 1: 65.0
-    #   - 2: 24.5
-    #   - 3: 8.0
-    #   - 4: 2.0
-    #   - 5: 0.5
-    query = (
-        select(Level.data_id, Level.weight)
-        .filter(Level.weight > 0)
-        .join(Award, Award.level_id == Level.data_id)
-        .group_by(Level.data_id)
-        .order_by(-Level.weight)
-    )
-    levels = (await session.execute(query)).tuples().all()
-    levels_qr = {lid: i for i, (lid, _) in enumerate(levels)}
-
     # 获得三个小哥的等级 ID
-    lid1, w1 = await _get_lid(session, a1)
-    lid2, w2 = await _get_lid(session, a2)
-    lid3, w3 = await _get_lid(session, a3)
+    lid1 = await _get_lid(session, a1)
+    lid2 = await _get_lid(session, a2)
+    lid3 = await _get_lid(session, a3)
 
     # 如果含有零星小哥，那么合成产物一定是零星小哥（lid=7），我们对于「成功」产物，就随机生成一个值返回吧。
     if lid1 == 7 or lid2 == 7 or lid3 == 7:

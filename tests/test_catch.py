@@ -13,12 +13,11 @@ from .base.basic_test_case import SQLTestCase
 
 class TestCatch(SQLTestCase):
     async def createData(self, session: AsyncSession) -> None:
-        level = Level(name="一星", weight=1)
-        award = Award(name="百变小哥", level=level, data_id=35)
-        skin = Skin(name="小境", applied_award_id=35)
+        award = Award(name="百变小哥", level=1, data_id=35)
+        skin = Skin(name="小境", applied_award_id=35, data_id=1)
         glob = Global(catch_interval=10)
 
-        session.add(level)
+        self.createLevel("一星", 1.0, 1)
         session.add(award)
         session.add(glob)
         session.add(skin)
@@ -100,15 +99,7 @@ class TestCatch(SQLTestCase):
             pickEvent = PicksEvent(uid, None, pickResult, session)
             await root.emit(pickEvent)
 
-            kagami = (
-                await session.execute(
-                    select(Skin.data_id).filter(
-                        Skin.name == "小境",
-                        Skin.owned_skins.any(OwnedSkin.user_id == uid),
-                    )
-                )
-            ).scalar_one_or_none()
-            self.assertIsNone(kagami)
+            self.assertFalse(await do_user_have_skin(session, uid, 1))
 
             pev = await save_picks(
                 pickResult=pickResult,
@@ -126,27 +117,19 @@ class TestCatch(SQLTestCase):
             pickEvent = PicksEvent(uid, None, pickResult, session)
             await root.emit(pickEvent)
 
-            kagami = (
-                await session.execute(
-                    select(Skin.data_id).filter(
-                        Skin.name == "小境",
-                        Skin.owned_skins.any(OwnedSkin.user_id == uid),
-                    )
-                )
-            ).scalar_one_or_none()
-            self.assertIsNotNone(kagami)
+            self.assertTrue(await do_user_have_skin(session, uid, 1))
 
 
 class TestCatchBan(SQLTestCase):
     async def createData(self, session: AsyncSession) -> None:
-        level = Level(name="一星", weight=1)
+        self.createLevel("一星", 0.0, 1)
 
-        award1 = Award(name="可以抽得到", level=level, data_id=1)
+        award1 = Award(name="可以抽得到", level=1, data_id=1)
         award2 = Award(
-            name="不可以抽到", level=level, data_id=100, is_special_get_only=True
+            name="不可以抽到", level=1, data_id=100, is_special_get_only=True
         )
 
-        session.add_all([level, award1, award2])
+        session.add_all([award1, award2])
         await session.commit()
 
     async def test_catch_ban(self):

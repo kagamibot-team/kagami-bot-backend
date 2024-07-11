@@ -29,7 +29,7 @@ class TestMultiThread(SQLTestCase):
         async def task(session: AsyncSession, delay: float, time: float):
             await asyncio.sleep(delay)
             async with session.begin():
-                await session.execute(insert(Level).values(name=str(delay)))
+                await session.execute(insert(Global).values())
                 await asyncio.sleep(time)
                 await session.commit()
 
@@ -50,13 +50,13 @@ class TestMultiThread(SQLTestCase):
         async def task(session: AsyncSession, delay: float, time: float):
             await asyncio.sleep(delay)
             async with session.begin():
-                await session.execute(insert(Level).values(name=str(delay)))
-                (await session.execute(select(Level.data_id))).scalars().all()
+                await session.execute(insert(Global).values())
+                (await session.execute(select(Global.data_id))).scalars().all()
                 await asyncio.sleep(time)
                 await session.flush()
-                (await session.execute(select(Level.data_id))).scalars().all()
+                (await session.execute(select(Global.data_id))).scalars().all()
                 await asyncio.sleep(time)
-                (await session.execute(select(Level.data_id))).scalars().all()
+                (await session.execute(select(Global.data_id))).scalars().all()
                 await session.commit()
 
         evt_loop = asyncio.get_event_loop()

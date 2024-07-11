@@ -5,4 +5,3 @@
 """
 
 from .crud import *
-from .data import *

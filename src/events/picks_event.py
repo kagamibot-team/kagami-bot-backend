@@ -1,4 +1,3 @@
-import random
 from src.imports import *
 
 
@@ -22,14 +21,14 @@ async def _(e: PicksEvent):
             # 第一次遇到百变小哥不给皮肤
             return
 
-        query = select(Skin.data_id).filter(Skin.applied_award_id == 35)
+        query = select(Skin.data_id).filter(Skin.award_id == 35)
         skins = (await session.execute(query)).scalars().all()
 
         query = (
-            select(OwnedSkin.skin_id)
-            .join(Skin, Skin.data_id == OwnedSkin.skin_id)
-            .filter(Skin.applied_award_id == 35)
-            .filter(OwnedSkin.user_id == e.uid)
+            select(SkinRecord.skin_id)
+            .join(Skin, Skin.data_id == SkinRecord.skin_id)
+            .filter(Skin.award_id == 35)
+            .filter(SkinRecord.user_id == e.uid)
         )
         skins2 = (await session.execute(query)).scalars().all()
         skins = [s for s in skins if s not in skins2]
@@ -40,7 +39,7 @@ async def _(e: PicksEvent):
         skin = get_random().choice(skins)
 
         await give_skin(session, e.uid, skin)
-        await set_skin(session, e.uid, skin)
+        await use_skin(session, e.uid, skin)
 
 
 # 将图片和描述改成皮肤的图片和描述
@@ -48,9 +47,10 @@ async def _(e: PicksEvent):
 async def _(e: PrePickMessageEvent):
     for aid, display in e.displays.items():
         query = (
-            select(Skin.name, Skin.extra_description, Skin.image)
-            .filter(Skin.applied_award_id == aid)
-            .filter(Skin.used_skins.any(UsedSkin.user_id == e.uid))
+            select(Skin.name, Skin.description, Skin.image)
+            .filter(Skin.award_id == aid)
+            .join(SkinRecord, SkinRecord.skin_id == Skin.data_id)
+            .filter(SkinRecord.user_id == e.uid, SkinRecord.selected == 1)
         )
         skin = (await e.session.execute(query)).one_or_none()
         if skin:

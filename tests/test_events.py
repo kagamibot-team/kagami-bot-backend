@@ -24,10 +24,8 @@ class TestEvents(SQLTestCase):
     async def test_commands(self):
         session = get_session()
         async with session.begin():
-            l = Level(data_id=1, name="1", weight=1)
+            self.createLevel("1", 1.0, 1)
             a = Award(level_id=1, name="2")
-
-            session.add(l)
             session.add(a)
 
             await session.commit()
