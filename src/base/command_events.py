@@ -240,7 +240,7 @@ class OnebotMessageContext(UniMessageContext[OnebotReceipt], Generic[TE]):
 
 
 class GroupContext(OnebotMessageContext[OnebotGroupEventProtocol]):
-    async def getSenderNameInGroup(self):
+    async def getSenderName(self):
         sender = self.getSenderId()
         info = await self.bot.call_api(
             "get_group_member_info", group_id=self.event.group_id, user_id=sender

@@ -46,15 +46,10 @@ async def _(e: PicksEvent):
 @root.listen(PrePickMessageEvent)
 async def _(e: PrePickMessageEvent):
     for aid, display in e.displays.items():
-        query = (
-            select(Skin.name, Skin.description, Skin.image)
-            .filter(Skin.award_id == aid)
-            .join(SkinRecord, SkinRecord.skin_id == Skin.data_id)
-            .filter(SkinRecord.user_id == e.uid, SkinRecord.selected == 1)
-        )
-        skin = (await e.session.execute(query)).one_or_none()
-        if skin:
-            name, description, image = skin.tuple()
+        sid = await get_using_skin(e.session, e.uid, aid)
+        if sid:
+            query = select(Skin.name, Skin.description, Skin.image).filter(Skin.data_id == sid)
+            name, description, image = (await e.session.execute(query)).tuples().one()
             display.name += f"[{name}]"
             display.image = image
 

@@ -304,7 +304,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     levelName = res.query[str]("等级名字")
     target_level = None
@@ -416,7 +416,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     area_title = await getTextImage(
         text=f"{name} 的抓小哥库存：",

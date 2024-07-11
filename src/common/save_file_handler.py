@@ -119,11 +119,8 @@ def pack_save_task(zfp: pathlib.Path):
         with zf.open("data/db.sqlite3", "w") as f:
             f.write(pathlib.Path("./data/db.sqlite3").read_bytes())
 
-        with zf.open("data/catch_history.json", "w") as f:
-            f.write(pathlib.Path("./data/catch_history.json").read_bytes())
-
-        with zf.open("data/sign_in_history.json", "w") as f:
-            f.write(pathlib.Path("./data/sign_in_history.json").read_bytes())
+        with zf.open("data/localstorage.json", "w") as f:
+            f.write(pathlib.Path("./data/localstorage.json").read_bytes())
 
         with zf.open("data/log.log", "w") as f:
             f.write(pathlib.Path("./data/log.log").read_bytes())

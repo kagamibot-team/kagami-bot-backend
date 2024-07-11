@@ -11,7 +11,7 @@ async def send_shop_message(ctx: OnebotMessageContext, session: AsyncSession, sh
 
     name = await ctx.getSenderName()
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     res = await session.execute(
         select(User.money).filter(User.qq_id == ctx.getSenderId())
@@ -88,7 +88,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     buy_result = "小镜的 Shop 销售小票\n"
     buy_result += "--------------------\n"

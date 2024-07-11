@@ -95,6 +95,20 @@ async def get_group_member_info(bot: OnebotBotProtocol, group_id: int, user_id: 
     )
 
 
+async def get_name(bot: OnebotBotProtocol, qqid: int | str, group_id: int | None) -> str:
+    info = await bot.call_api("get_stranger_info", user_id=qqid)
+    name = info["nick"]
+
+    if group_id is not None:
+        info = await bot.call_api(
+            "get_group_member_info", group_id=group_id, user_id=qqid
+        )
+        name = info["nickname"]
+        name = info["card"] or name
+
+    return name
+
+
 async def is_group_operator(bot: OnebotBotProtocol, group_id: int, user_id: int):
     info = await get_group_member_info(bot, group_id, user_id)
     return info["role"] == "owner" or info["role"] == "admin"

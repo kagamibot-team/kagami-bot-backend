@@ -15,8 +15,9 @@ class PlayerStorageChangedEvent(PlayerDataChangedEvent):
 
 
 @dataclass
-class PlayerMergeEvent:
+class PlayerMergeEvent(PlayerDataChangedEvent):
     uid: int
     aids: tuple[int, int, int]
     result: int
     is_succeed: bool
+    count: int

@@ -72,7 +72,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     area_title = await getTextImage(
         text=f"{name} 的皮肤进度：",

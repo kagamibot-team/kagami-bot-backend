@@ -1,75 +1,34 @@
+from src.base.local_storage import LocalStorageManager
 from src.imports import *
 
 
 @listenGroup()
 @matchRegex("(zhua|抓|抓小哥)?(xb|喜报)")
 async def _(ctx: GroupContext, _):
-    history_list = catch_history_list.get_records(ctx.event.group_id)
+    _dates_message: dict[str, list[str]] = {}
 
-    message: str = ""
-    records: dict[str, dict[str, list[tuple[str, dict[int, PickDisplay]]]]] = {}
+    for qqid, xb in LocalStorageManager.instance().data.get_group_xb(ctx.event.group_id).items():
+        name = await get_name(ctx.bot, qqid, ctx.event.group_id)
+        _data: dict[str, list[str]] = {}
 
-    for history in history_list:
-        dt = timestamp_to_datetime(history.caught_time)
-        dt = to_utc8(dt)
+        for record in xb.records:
+            key = record.time.date().strftime("%Y年%m月%d日")
+            key = f"~ {key} ~"
+            _data.setdefault(key, [])
+            msg = record.time.strftime("%H:%M:%S")
+            msg = f"在 {msg} {record.action.value}：{record.data}"
+            _data[key].append(msg)
+        
+        for key, value in _data.items():
+            _dates_message.setdefault(key, [])
+            msg = f"- 玩家 {name}\n" + "；\n".join(value) + "。"
+            _dates_message[key].append(msg)
 
-        dt_str_day = dt.strftime(r"%Y年%m月%d日")
-        dt_str_time = dt.strftime(r"%H:%M:%S")
+    messages = [i + "\n" + "\n\n".join(v) for i, v in _dates_message.items()]
 
-        name: str = str(history.uid)
-
-        try:
-            info = await ctx.bot.call_api(
-                "get_group_member_info",
-                group_id=ctx.event.group_id,
-                user_id=history.qqid,
-                no_cache=True,
-            )
-            name: str = info["nickname"]
-            name = info["card"] or name
-        except ActionFailed as e:
-            logger.warning(e)
-
-        if dt_str_day not in records:
-            records[dt_str_day] = {}
-        if name not in records[dt_str_day]:
-            records[dt_str_day][name] = []
-        records[dt_str_day][name].append((dt_str_time, history.displays))
-
-    for day, datas in records.items():
-        message += f"~ {day} ~\n"
-
-        for name, get_list in datas.items():
-            message += f"- 玩家 {name}\n"
-            for get_info in get_list:
-                message += f"在 {get_info[0]} 抓到了："
-
-                for _, display in get_info[1].items():
-                    if display.pick.beforeStats==0:
-                        message += (
-                        "".join(
-                            [
-                                f"{display.name} ×{display.pick.delta}（新），"
-                            ]
-                        ).rstrip("，")
-                        + "；\n"
-                 )
-                    else:
-                        message += (
-                         "".join(
-                             [
-                                f"{display.name} ×{display.pick.delta} ，"
-                             ]
-                        ).rstrip("，")
-                        + "；\n"
-                )
-
-
-            message = message.rstrip("；\n") + "。\n\n"
-
-    if len(message) > 0:
+    if len(messages) > 0:
         await ctx.sendCompact(
-            UniMessage().text("===== 喜报 =====\n\n" + message.rstrip("\n"))
+            UniMessage().text("===== 喜报 =====\n\n" + "\n\n\n".join(messages))
         )
     else:
         await ctx.send(

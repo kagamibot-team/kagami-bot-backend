@@ -1,7 +1,7 @@
 import random
 import time
 
-from src.common.dataclasses.sign_in_history import signInHistor
+from src.base.local_storage import LocalStorageManager
 from src.common.rd import get_random
 from src.imports import *
 
@@ -30,7 +30,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     titles: list[PIL.Image.Image] = []
     titles.append(
@@ -136,7 +136,8 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
     await session.commit()
     await ctx.reply(f"签到成功！你已经连续签到 {count} 天了，得到了 {moneydelta} 薯片")
 
-    no = signInHistor.sign(ctx.event.group_id)
+    no = LocalStorageManager.instance().data.sign(ctx.event.group_id)
+    LocalStorageManager.instance().save()
     if no == 1:
         await ctx.stickEmoji(QQEmoji.NO)
     elif no == 2:

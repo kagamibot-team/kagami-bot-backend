@@ -1,3 +1,4 @@
+from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.draw.strange import make_strange
 from src.common.rd import get_random
 from src.imports import *
@@ -106,11 +107,11 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         await give_award(session, uid, aid, add)
 
     logger.info(f"has: {beforeStats}")
-    await root.emit(PlayerMergeEvent(uid, (a1, a2, a3), aid, succeed))
+    await root.emit(PlayerMergeEvent(uid, (a1, a2, a3), aid, succeed, add))
 
     name = await ctx.getSenderName()
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     area_title_1 = await getTextImage(
         text=f"{name} 的合成材料：",
@@ -181,3 +182,10 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     )
     await ctx.send(UniMessage.image(raw=imageToBytes(img)))
     await session.commit()
+
+    if isinstance(ctx, GroupContext):
+        get_localdata().add_xb(ctx.event.group_id, ctx.getSenderId(), XBRecord(
+            time=now_datetime(),
+            action=Action.merged,
+            data=f"{title} ×{add}"
+        ))
