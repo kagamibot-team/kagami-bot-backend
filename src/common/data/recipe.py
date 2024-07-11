@@ -128,7 +128,7 @@ async def try_merge(
         a3 (int): 第三个小哥 aid
 
     Returns:
-        int: 合成出来的小哥的 aid
+        tuple[int, bool]: 合成出来的小哥的 aid，以及是否成功了
     """
 
     result, possibility = await get_merge_result(session, a1, a2, a3)

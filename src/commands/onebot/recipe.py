@@ -73,7 +73,10 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     await set_user_money(session, uid, m - cost)
 
     aid, succeed = await try_merge(session, uid, a1, a2, a3)
-    add = get_random().randint(1, 3)
+    if not succeed:
+        add = get_random().randint(1, 3)
+    else:
+        add = 1
 
     if aid == -1:
         rlen = get_random().randint(2, 4)
