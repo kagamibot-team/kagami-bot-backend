@@ -1,94 +1,34 @@
 import time
 
-
+from interfaces.nonebot.views.catch import render_catch_failed_message, render_catch_result_mesage
 from src.imports import *
 from src.logic.catch import pickAwards
 from src.logic.catch_time import calculateTime, updateUserTime
+from src.views.catch import AwardDetail, CatchMesssage, CatchResultMessage
 
 
 async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
-    pickDisplay = e.displays
-    userTime = e.userTime
-    timeToNextPick = userTime.pickLastUpdated + userTime.interval
-
-    money = e.picks.money
-
-    deltaTime = int(timeToNextPick - time.time())
-
-    seconds = deltaTime % 60
-    minutes = int(deltaTime / 60) % 60
-    hours = int(deltaTime / 3600)
-
-    timeStr = f"{seconds}{la.unit.second}"
-    if hours > 0:
-        timeStr = f"{minutes}{la.unit.minute}" + timeStr
-    elif minutes > 0:
-        timeStr = f"{hours}{la.unit.hour}{minutes}{la.unit.minute}" + timeStr
-
-    if len(pickDisplay) == 0:
-        await ctx.reply(UniMessage().text(la.err.catch_not_available.format(timeStr)))
-        return
-
-    titles: list[PIL.Image.Image] = []
-    boxes: list[PIL.Image.Image] = []
-
-    name = await ctx.getSenderName()
-
-    if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
-
-    titles.append(
-        await getTextImage(
-            text=f"{name} 的一抓！",
-            color="#63605C",
-            font=Fonts.JINGNAN_BOBO_HEI,
-            font_size=96,
-            width=800,
-        )
+    message = CatchResultMessage(
+        username=await ctx.getSenderName(),
+        money_changed=int(e.picks.money),
+        money_sum=int(e.moneyUpdated),
+        slot_remain=e.userTime.pickRemain,
+        slot_sum=e.userTime.pickMax,
+        next_time=e.userTime.pickLastUpdated + e.userTime.interval - time.time(),
+        catchs=[
+            AwardDetail(
+                title=display.name,
+                description=display.description,
+                image=display.image,
+                stars=display.level,
+                color=display.color,
+                new=display.pick.beforeStats == 0,
+                notation=f"+{display.pick.delta}",
+            )
+            for display in e.displays.values()
+        ],
     )
-    titles.append(
-        await getTextImage(
-            text=(
-                f"本次获得{int(money)}{la.unit.money}，"
-                f"目前共有{int(e.moneyUpdated)}{la.unit.money}。"
-            ),
-            width=800,
-            color="#9B9690",
-            font=Fonts.ALIMAMA_SHU_HEI,
-            font_size=28,
-        )
-    )
-    titles.append(
-        await getTextImage(
-            text=(
-                f"剩余次数： {userTime.pickRemain}/{userTime.pickMax}，"
-                f"距下次次数恢复还要{timeStr}。"
-            ),
-            width=800,
-            color="#9B9690",
-            font=Fonts.ALIMAMA_SHU_HEI,
-            font_size=28,
-        )
-    )
-
-    for display in pickDisplay.values():
-        image = await catch(
-            title=display.name,
-            description=display.description,
-            image=display.image,
-            stars=display.level,
-            color=display.color,
-            new=display.pick.beforeStats == 0,
-            notation=f"+{display.pick.delta}",
-        )
-        boxes.append(image)
-
-    area_title = await verticalPile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
-    area_box = await verticalPile(boxes, 30, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile(
-        [area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80
-    )
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(await render_catch_result_mesage(message))
 
 
 async def save_picks(
@@ -207,7 +147,16 @@ async def picks(
     await session.commit()
 
     # 此后数据库被关闭，发送数据
-    await sendPickMessage(ctx, preEvent)
+    if len(preEvent.picks.awards) > 0:
+        await sendPickMessage(ctx, preEvent)
+    else:
+        await ctx.reply(await render_catch_failed_message(CatchMesssage(
+            username=await ctx.getSenderName(),
+            slot_remain=userTime.pickRemain,
+            slot_sum=userTime.pickMax,
+            next_time=userTime.pickLastUpdated + userTime.interval - time.time()
+        )))
+    return preEvent
 
 
 @listenOnebot()
