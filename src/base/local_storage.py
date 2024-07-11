@@ -84,6 +84,7 @@ class LocalStorageData(BaseModel):
 
     def sign(self, group: int | str):
         self.update()
+        self.get_group_signin_count(str(group))
         self.group_sign_in_data[str(group)].count += 1
         return self.group_sign_in_data[str(group)].count
 
