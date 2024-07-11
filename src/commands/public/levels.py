@@ -12,7 +12,7 @@ async def _(session: AsyncSession, ctx: PublicContext, _):
         )
         .group_by(Award.level_id)
     )
-    counts = dict((await session.execute(query)).tuples())
+    counts = dict((await session.execute(query)).tuples().all())
     levels = [(level.id, level.display_name, level.weight, level.color, level.awarding) for level in level_repo.sorted]
 
     weight_sum = sum((l[2] for l in levels))

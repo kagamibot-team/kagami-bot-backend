@@ -107,6 +107,7 @@ async def get_merge_result(
             award1=a1, award2=a2, award3=a3, result=result, possibility=possibility
         )
     )
+    await session.flush()
     return result, possibility
 
 
@@ -145,7 +146,7 @@ async def try_merge(
 
     query = (
         select(Award.data_id)
-        .filter(Award.level_id == 7)
+        .filter(Award.level_id == 0)
         .order_by(func.random())
         .limit(1)
     )

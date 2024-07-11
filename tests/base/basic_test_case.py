@@ -32,7 +32,7 @@ class SQLTestCase(unittest.IsolatedAsyncioTestCase):
         weight: float,
         data_id: int,
     ):
-        level_repo._register(data_id, [], name, weight, "#000000", 0)
+        level_repo.register(data_id, [], name, weight, "#000000", 0)
 
     def createAward(
         self,
