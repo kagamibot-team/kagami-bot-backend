@@ -1,4 +1,4 @@
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -37,30 +37,7 @@ MessageLike = Message | MessageSegment | str | UniMessage[Any]
 
 
 def export_msg(msg: UniMessage[Any]) -> Message:
-    result = Message()
-
-    for seg in msg:
-        if isinstance(seg, Text):
-            result.append(MessageSegment.text(seg.text))
-        elif isinstance(seg, Image):
-            if seg.raw is not None:
-                result.append(MessageSegment.image(file=seg.raw))
-            elif seg.path is not None:
-                result.append(MessageSegment.image(file=seg.path))
-            else:
-                raise Exception("需要输出的 Image 节点请指定其 raw 或 path 属性")
-        elif isinstance(seg, At):
-            result.append(MessageSegment.at(seg.target))
-        elif isinstance(seg, Emoji):
-            result.append(MessageSegment.face(int(seg.id)))
-        elif isinstance(seg, Reply):
-            result.append(MessageSegment.reply(int(seg.id)))
-        else:
-            raise Exception(
-                f"暂时不支持处理 {seg}，请联系 Passthem 添加对这种消息的支持"
-            )
-
-    return result
+    return cast(Message, msg.export_sync(adapter="OneBot V11"))
 
 
 def handle_input_message(msg: MessageLike) -> Message:

@@ -9,7 +9,6 @@
 import os
 
 import nonebot
-from nonebot.adapters.console.adapter import Adapter as ConsoleAdapter
 from nonebot.adapters.onebot.v11 import Adapter as OneBotV11Adapter
 
 from alembic import command
@@ -51,9 +50,6 @@ def init():
     # 加载驱动器
     driver = nonebot.get_driver()
     driver.register_adapter(OneBotV11Adapter)  # type: ignore
-
-    if driver.env == "dev":
-        driver.register_adapter(ConsoleAdapter)  # type: ignore
 
     if not os.path.exists("./data/db.sqlite3"):
         with open("./data/db.sqlite3", "wb") as _:

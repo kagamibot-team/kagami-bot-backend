@@ -505,3 +505,12 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
 
     img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+
+
+@listenGroup()
+async def _(ctx: GroupContext):
+    """
+    赤石
+    """
+
+    msg = await ctx.getMessage()
