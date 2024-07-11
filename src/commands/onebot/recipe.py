@@ -4,6 +4,12 @@ from src.common.rd import get_random
 from src.imports import *
 
 
+async def _get_lid(session: AsyncSession, a: int):
+    return (
+        await session.execute(select(Award.level_id).filter(Award.data_id == a))
+    ).scalar_one()
+
+
 @listenOnebot()
 @matchAlconna(
     Alconna(
@@ -16,7 +22,7 @@ from src.imports import *
 @withSessionLock()
 async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     uid = await get_uid_by_qqid(session, ctx.getSenderId())
-    cost = 40
+    costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
 
     if not await do_user_have_flag(session, uid, "合成"):
         await ctx.reply("先去小镜商店买了机器使用凭证，你才能碰这台机器。")
@@ -45,6 +51,15 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         await ctx.reply(f"啊啊——{n3} 是什么小哥？")
         return
 
+    info1 = await get_award_info(session, uid, a1)
+    info2 = await get_award_info(session, uid, a2)
+    info3 = await get_award_info(session, uid, a3)
+
+    lid1 = await _get_lid(session, a1)
+    lid2 = await _get_lid(session, a2)
+    lid3 = await _get_lid(session, a3)
+    cost = costs[lid1] + costs[lid2] + costs[lid3]
+
     using: dict[int, int] = {}
 
     for aid in (a1, a2, a3):
@@ -69,15 +84,11 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
 
     m = await get_user_money(session, uid)
     if m < cost:
-        await ctx.reply(f"合成一次小哥要花 {cost} 薯片，你的薯片不够了哟")
+        await ctx.reply(f"本次合成要花 {cost} 薯片，你的薯片不够了哟")
         return
     await set_user_money(session, uid, m - cost)
 
     aid, succeed = await try_merge(session, uid, a1, a2, a3)
-    if not succeed:
-        add = get_random().randint(1, 3)
-    else:
-        add = 1
 
     if aid == -1:
         rlen = get_random().randint(2, 4)
@@ -89,6 +100,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         image = imageToBytes(await make_strange())
         stars = "☆"
         color = "#FF00FF"
+        add = get_random().randint(1, 100)
         beforeStats = -1
     else:
         info = await get_award_info(session, uid, aid)
@@ -104,6 +116,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         color = info.color
 
         beforeStats = await get_statistics(session, uid, aid)
+        add = get_random().randint(1, 3)
         await give_award(session, uid, aid, add)
 
     logger.info(f"has: {beforeStats}")
@@ -121,9 +134,6 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         margin_bottom=30,
     )
 
-    info1 = await get_award_info(session, uid, a1)
-    info2 = await get_award_info(session, uid, a2)
-    info3 = await get_award_info(session, uid, a3)
     box1 = await display_box(info1.color, info1.awardImg, False)
     box2 = await display_box(info2.color, info2.awardImg, False)
     box3 = await display_box(info3.color, info3.awardImg, False)
