@@ -3,20 +3,118 @@
 """
 
 import os
-from typing_extensions import deprecated
+from pathlib import Path
 
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing_extensions import deprecated
 
+from src.base.exceptions import LackException
 from src.common.data.skins import get_using_skin
 from src.common.dataclasses.award_info import AwardInfo
 from src.common.download import download, writeData
+from src.common.draw.strange import make_strange
+from src.common.draw.tools import imageToBytes
+from src.common.rd import get_random
+from src.core.unit_of_work import UnitOfWork
 from src.models.models import *
-from src.models.statics import level_repo
+from src.models.statics import Level, level_repo
 from src.repositories.inventory_repository import InventoryRepository
 
 
-async def get_award_info(session: AsyncSession, uid: int, aid: int):
+class TempAwardInfo(BaseModel):
+    aid: int
+    name: str
+    description: str
+    level: Level
+    image: Path | str | bytes
+
+    sid: int | None
+    skin_name: str | None
+
+    new: bool
+
+    @property
+    def display_name(self):
+        if self.skin_name is not None:
+            return f"{self.name}[{self.skin_name}]"
+        return self.name
+
+
+async def uow_get_award_info(uow: UnitOfWork, aid: int, uid: int | None = None):
+    """在大规模重构之前提供的临时方法，用来获取一个小哥的基础信息
+
+    Args:
+        uow (UnitOfWork): 工作单元
+        aid (int): 小哥 ID
+        uid (int | None, optional): 用户 ID，可留空，用来获取皮肤的信息. Defaults to None.
+    """
+    aname, desc, lid, img = await uow.awards.get_info(aid)
+    level = uow.levels.get_by_id(lid)
+    sname = None
+    sid = None
+
+    if uid:
+        sid = await uow.skin_inventory.get_using(uid, aid)
+        if sid:
+            sname, sdesc, img = await uow.skins.get_info(sid)
+            sdesc = sdesc.strip()
+            desc = sdesc or desc
+        new = await uow.inventories.get_stats(uid, aid) > 0
+    else:
+        new = False
+
+    return TempAwardInfo(
+        aid=aid,
+        name=aname,
+        description=desc,
+        level=level,
+        image=Path(img),
+        sid=sid,
+        skin_name=sname,
+        new=new,
+    )
+
+
+async def generate_random_info():
+    """
+    生成一个合成失败时的乱码小哥信息
+    """
+
+    rlen = get_random().randint(2, 4)
+    rlen2 = get_random().randint(30, 90)
+    rchar = lambda: chr(get_random().randint(0x4E00, 0x9FFF))
+
+    return TempAwardInfo(
+        aid=-1,
+        name="".join((rchar() for _ in range(rlen))),
+        description="".join((rchar() for _ in range(rlen2))),
+        image=imageToBytes(await make_strange()),
+        level=level_repo.levels[0],
+        sid=None,
+        skin_name=None,
+        new=False,
+    )
+
+
+async def uow_use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
+    """在大规模重构之前提供的临时方法，用来让用户使用小哥，如果数量不够则报错
+
+    Args:
+        uow (UnitOfWork): 工作单元
+        uid (int): 用户 ID
+        aid (int): 小哥 ID
+        count (int): 数量
+    """
+    sto, _ = await uow.inventories.give(uid, aid, -count)
+    if sto < 0:
+        raise LackException(
+            (await uow_get_award_info(uow, aid)).name, count, sto + count
+        )
+
+
+async def get_award_info_deprecated(session: AsyncSession, uid: int, aid: int):
     query = select(
         Award.data_id,
         Award.image,
@@ -57,7 +155,7 @@ async def get_award_info(session: AsyncSession, uid: int, aid: int):
     return info
 
 
-# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
+@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def set_inventory(
     session: AsyncSession, uid: int, aid: int, storage: int, used: int
 ):
@@ -74,7 +172,7 @@ async def set_inventory(
     await InventoryRepository(session).set_inventory(uid, aid, storage, used)
 
 
-# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
+@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def get_inventory(session: AsyncSession, uid: int, aid: int) -> tuple[int, int]:
     """获得小哥物品栏的原始信息
 
@@ -90,7 +188,7 @@ async def get_inventory(session: AsyncSession, uid: int, aid: int) -> tuple[int,
     return await InventoryRepository(session).get_inventory(uid, aid)
 
 
-# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
+@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def get_storage(session: AsyncSession, uid: int, aid: int):
     """返回用户库存里有多少小哥
 
@@ -105,7 +203,7 @@ async def get_storage(session: AsyncSession, uid: int, aid: int):
     return await InventoryRepository(session).get_storage(uid, aid)
 
 
-# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
+@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def get_statistics(session: AsyncSession, uid: int, aid: int):
     """获得迄今为止一共抓到了多少小哥
 
@@ -120,8 +218,10 @@ async def get_statistics(session: AsyncSession, uid: int, aid: int):
     return await InventoryRepository(session).get_stats(uid, aid)
 
 
-# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
-async def give_award(session: AsyncSession, uid: int, aid: int, count: int):
+@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
+async def give_award(
+    session: AsyncSession, uid: int, aid: int, count: int, report_lack: bool = True
+):
     """增减一个用户的小哥库存
 
     Args:
@@ -129,11 +229,15 @@ async def give_award(session: AsyncSession, uid: int, aid: int, count: int):
         uid (int): 用户 ID
         aid (int): 小哥 ID
         count (int): 增减数量。如果值小于 0，会记录使用的量。
-
-    Returns:
-        int: 在调整库存之前，用户的库存值
+        report_lack (bool): 是否在小哥数量不够时抛出异常，默认为 True
     """
-    await InventoryRepository(session).give(uid, aid, count)
+    sto, _ = await InventoryRepository(session).give(uid, aid, count)
+    if sto < 0 and count < 0 and report_lack:
+        raise LackException(
+            (await get_award_info_deprecated(session, uid, aid)).awardName,
+            -count,
+            sto - count,
+        )
 
 
 async def get_aid_by_name(session: AsyncSession, name: str):

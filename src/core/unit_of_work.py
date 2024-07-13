@@ -22,6 +22,9 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.models.statics import level_repo
+from src.repositories.skin_inventory_repository import SkinInventoryRepository
+
 from ..base.db import DatabaseManager
 from ..repositories import (
     AwardRepository,
@@ -80,63 +83,52 @@ class UnitOfWork:
 
     @property
     def users(self):
-        """获取用户仓库。
-
-        Returns:
-            UserRepository: 用户仓库。
-        """
+        """用户信息仓库"""
 
         return UserRepository(self.session)
 
     @property
     def inventories(self):
-        """获取库存仓库。
-
-        Returns:
-            InventoryRepository: 库存仓库。
-        """
+        """库存仓库"""
 
         return InventoryRepository(self.session)
 
     @property
     def settings(self):
-        """获取设置仓库。
-
-        Returns:
-            SettingRepository: 设置仓库。
-        """
+        """设置仓库"""
 
         return SettingRepository(self.session)
 
     @property
     def recipes(self):
-        """获取合成配方仓库。
-
-        Returns:
-            RecipeRepository: 合成配方仓库。
-        """
+        """合成配方仓库"""
 
         return RecipeRepository(self.session)
 
     @property
     def awards(self):
-        """获取奖励仓库。
-
-        Returns:
-            AwardRepository: 奖励仓库。
-        """
+        """奖励仓库"""
 
         return AwardRepository(self.session)
 
     @property
     def skins(self):
-        """获取皮肤仓库。
-
-        Returns:
-            SkinRepository: 皮肤仓库。
-        """
+        """皮肤仓库"""
 
         return SkinRepository(self.session)
+    
+    @property
+    def levels(self):
+        """等级仓库"""
+
+        # return LevelRepository()
+        return level_repo
+    
+    @property
+    def skin_inventory(self):
+        """皮肤记录仓库"""
+
+        return SkinInventoryRepository(self.session)
 
 
 __all__ = ["UnitOfWork"]

@@ -1,8 +1,25 @@
 from dataclasses import dataclass
 
+from pydantic import BaseModel
+
 
 @dataclass
-class _CatchLevel:
+class Level(BaseModel):
+    """
+    抓小哥中小哥的等级
+    """
+
+    __pydantic_fields_set__ = {
+        "lid",
+        "search_names",
+        "display_name",
+        "weight",
+        "color",
+        "awarding",
+        "sorting_priority",
+    }
+
+    lid: int = -1
     search_names: list[str]
     display_name: str
     weight: float
@@ -11,21 +28,12 @@ class _CatchLevel:
     sorting_priority: int = 0
 
 
-@dataclass
-class CatchLevel(_CatchLevel):
-    """
-    抓小哥中小哥的等级
-    """
-
-    id: int = -1
-
-
 class LevelRepository:
     """
     管理小哥等级数据的数据管理器，在生产环境中应保持只读
     """
 
-    _LEVELS: dict[int, _CatchLevel] = {}
+    _LEVELS: dict[int, Level] = {}
 
     def register(
         self,
@@ -37,7 +45,8 @@ class LevelRepository:
         awarding: int,
         sorting_priority: int = 0,
     ):
-        self._LEVELS[id] = _CatchLevel(
+        self._LEVELS[id] = Level(
+            lid=id,
             search_names=search_names,
             display_name=display_name,
             weight=weight,
@@ -59,20 +68,17 @@ class LevelRepository:
 
     @property
     def levels(self):
-        return {
-            lid: CatchLevel(**(level.__dict__), id=lid)
-            for lid, level in self._LEVELS.items()
-        }
+        return self._LEVELS
 
     @property
     def sorted(self):
         return sorted(
             self.levels.values(), key=lambda l: (-l.sorting_priority, l.weight)
         )
-    
+
     @property
     def sorted_index(self):
-        return {v.id: i for i, v in enumerate(self.sorted)}
+        return {v.lid: i for i, v in enumerate(self.sorted)}
 
     @property
     def name_index(self):
@@ -84,6 +90,9 @@ class LevelRepository:
     def get_by_name(self, name: str):
         return self.name_index.get(name)
 
+    def get_by_id(self, id: int):
+        return self.levels[id]
+
 
 # 目前暂时以单例模式运作
 level_repo = LevelRepository()
@@ -92,4 +101,4 @@ level_repo = LevelRepository()
 level_repo.register_basics()
 
 
-__all__ = ["LevelRepository", "level_repo"]
+__all__ = ["Level", "LevelRepository", "level_repo"]

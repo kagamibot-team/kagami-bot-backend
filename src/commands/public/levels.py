@@ -6,14 +6,15 @@ from src.imports import *
 @matchRegex("^:: ?(所有|全部) ?(等级|级别) ?$")
 @withFreeSession()
 async def _(session: AsyncSession, ctx: PublicContext, _):
-    query = (
-        select(
-            Award.level_id, func.count(Award.data_id),
-        )
-        .group_by(Award.level_id)
-    )
+    query = select(
+        Award.level_id,
+        func.count(Award.data_id),
+    ).group_by(Award.level_id)
     counts = dict((await session.execute(query)).tuples().all())
-    levels = [(level.id, level.display_name, level.weight, level.color, level.awarding) for level in level_repo.sorted]
+    levels = [
+        (level.lid, level.display_name, level.weight, level.color, level.awarding)
+        for level in level_repo.sorted
+    ]
 
     weight_sum = sum((l[2] for l in levels))
 

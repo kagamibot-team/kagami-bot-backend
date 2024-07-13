@@ -36,7 +36,7 @@ async def _(ctx: PublicContext, res: Arparma):
             await ctx.reply(UniMessage(la.err.level_not_found.format(levelName)))
             return
 
-        award = Award(level_id=level_obj.id, name=name)
+        award = Award(level_id=level_obj.lid, name=name)
         session.add(award)
         await session.commit()
 
@@ -144,7 +144,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
             messages += f"更改等级未成功，因为名字叫 {levelName} 的等级不存在。"
         else:
             await session.execute(
-                update(Award).where(Award.data_id == aid).values(level_id=level.id)
+                update(Award).where(Award.data_id == aid).values(level_id=level.lid)
             )
             messages += f"成功将名字叫 {name} 的小哥的等级改为 {levelName}。\n"
 

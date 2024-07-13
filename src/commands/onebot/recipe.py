@@ -1,6 +1,7 @@
 from src.base.local_storage import Action, XBRecord, get_localdata
-from src.common.draw.strange import make_strange
+from src.common.decorators.command_decorators import kagami_exception_handler
 from src.common.rd import get_random
+from src.core.unit_of_work import UnitOfWork
 from src.imports import *
 
 
@@ -11,6 +12,7 @@ async def _get_lid(session: AsyncSession, a: int):
 
 
 @listenOnebot()
+@kagami_exception_handler()
 @matchAlconna(
     Alconna(
         "re:(合成|hc)(小哥|xg)?",
@@ -19,123 +21,65 @@ async def _get_lid(session: AsyncSession, a: int):
         Arg("name3", str),
     )
 )
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+async def _(ctx: OnebotMessageContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
-
-    if not await do_user_have_flag(session, uid, "合成"):
-        await ctx.reply("先去小镜商店买了机器使用凭证，你才能碰这台机器。")
-        return
 
     n1 = res.query[str]("name1")
     n2 = res.query[str]("name2")
     n3 = res.query[str]("name3")
-
     if n1 is None or n2 is None or n3 is None:
         return
 
-    a1 = await get_aid_by_name(session, n1)
-    a2 = await get_aid_by_name(session, n2)
-    a3 = await get_aid_by_name(session, n3)
+    async with UnitOfWork(DatabaseManager.get_single()) as uow:
+        uid = await uow.users.get_uid(ctx.getSenderId())
 
-    if a1 is None:
-        await ctx.reply(f"啊啊——{n1} 是什么小哥？")
-        return
-
-    if a2 is None:
-        await ctx.reply(f"啊啊——{n2} 是什么小哥？")
-        return
-
-    if a3 is None:
-        await ctx.reply(f"啊啊——{n3} 是什么小哥？")
-        return
-
-    info1 = await get_award_info(session, uid, a1)
-    info2 = await get_award_info(session, uid, a2)
-    info3 = await get_award_info(session, uid, a3)
-
-    lid1 = await _get_lid(session, a1)
-    lid2 = await _get_lid(session, a2)
-    lid3 = await _get_lid(session, a3)
-    cost = costs[lid1] + costs[lid2] + costs[lid3]
-
-    using: dict[int, int] = {}
-
-    for aid in (a1, a2, a3):
-        using.setdefault(aid, 0)
-        using[aid] += 1
-
-    for aid, v in using.items():
-        st = await get_storage(session, uid, aid) or 0
-        logger.info(f"{aid} {st} {v}")
-
-        if st < v:
-            if aid == a1:
-                await ctx.reply(f"啊啊——麻烦先检查一下你的 {n1} 数量够不够吧")
-            elif aid == a2:
-                await ctx.reply(f"啊啊——麻烦先检查一下你的 {n2} 数量够不够吧")
-            else:
-                await ctx.reply(f"啊啊——麻烦先检查一下你的 {n3} 数量够不够吧")
+        if not await uow.users.do_have_flag(uid, "合成"):
+            await ctx.reply("先去小镜商店买了机器使用凭证，你才能碰这台机器。")
             return
 
-    for aid, v in using.items():
-        await give_award(session, uid, aid, -v)
+        a1 = await uow.awards.get_aid_strong(n1)
+        a2 = await uow.awards.get_aid_strong(n2)
+        a3 = await uow.awards.get_aid_strong(n3)
+        info1 = await uow_get_award_info(uow, a1)
+        info2 = await uow_get_award_info(uow, a2)
+        info3 = await uow_get_award_info(uow, a3)
+        cost = costs[info1.level.lid] + costs[info2.level.lid] + costs[info3.level.lid]
 
-    m = await get_user_money(session, uid)
-    if m < cost:
-        await ctx.reply(f"本次合成要花 {cost} 薯片，你的薯片不够了哟")
-        return
-    await set_user_money(session, uid, m - cost)
+        using: dict[int, int] = {}
+        for aid in (a1, a2, a3):
+            using.setdefault(aid, 0)
+            using[aid] += 1
+        for aid, use in using.items():
+            await uow_use_award(uow, uid, aid, use)
 
-    aid, succeed = await try_merge(session, uid, a1, a2, a3)
+        after = await uow.users.use_money(uid, cost)
 
-    if aid == -1:
-        rlen = get_random().randint(2, 4)
-        rlen2 = get_random().randint(30, 90)
-        rchar = lambda: chr(get_random().randint(0x4E00, 0x9FFF))
-
-        title = "".join((rchar() for _ in range(rlen)))
-        desc = "".join((rchar() for _ in range(rlen2)))
-        image = imageToBytes(await make_strange())
-        stars = "☆"
-        color = "#FF00FF"
-        add = get_random().randint(1, 100)
-        beforeStats = -1
-    else:
-        info = await get_award_info(session, uid, aid)
-
-        if info.skinName is not None:
-            title = f"{info.awardName}[{info.skinName}]"
+        aid, succeed = await try_merge(uow.session, uid, a1, a2, a3)
+        if aid == -1:
+            info = await generate_random_info()
+            add = get_random().randint(1, 100)
+            do_xb = False
         else:
-            title = info.awardName
+            info = await uow_get_award_info(uow, aid, uid)
+            add = get_random().randint(1, 3)
+            do_xb = info.level.lid in (4, 5)
+            await uow.inventories.give(uid, aid, add)
 
-        desc = info.awardDescription
-        image = info.awardImg
-        stars = info.levelName
-        color = info.color
-
-        beforeStats = await get_statistics(session, uid, aid)
-        add = get_random().randint(1, 3)
-        await give_award(session, uid, aid, add)
-
-    logger.info(f"has: {beforeStats}")
-
-    name = await ctx.getSenderName()
+    username = await ctx.getSenderName()
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderName()
+        username = await ctx.getSenderName()
 
     area_title_1 = await getTextImage(
-        text=f"{name} 的合成材料：",
+        text=f"{username} 的合成材料：",
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
         font_size=80,
         margin_bottom=30,
     )
 
-    box1 = await display_box(info1.color, info1.awardImg, False)
-    box2 = await display_box(info2.color, info2.awardImg, False)
-    box3 = await display_box(info3.color, info3.awardImg, False)
+    box1 = await display_box(info1.level.color, info1.image, False)
+    box2 = await display_box(info2.level.color, info2.image, False)
+    box3 = await display_box(info3.level.color, info3.image, False)
     area_material_box = await pileImages(
         images=[box1, box2, box3],
         background="#8A8580",
@@ -156,17 +100,17 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     )
 
     area_product_entry = await catch(
-        title=title,
-        description=desc,
-        image=image,
-        stars=stars,
-        color=color,
-        new=(beforeStats == 0),
+        title=info.name,
+        description=info.description,
+        image=info.image,
+        stars=info.level.display_name,
+        color=info.level.color,
+        new=info.new,
         notation=f"+{add}",
     )
 
     area_title_3 = await getTextImage(
-        text=f"本次合成花费了你 {cost} 薯片，你还有 {m - cost} 薯片。",
+        text=f"本次合成花费了你 {cost} 薯片，你还有 {after} 薯片。",
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
         font_size=24,
@@ -190,11 +134,12 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         60,
     )
     await ctx.send(UniMessage.image(raw=imageToBytes(img)))
-    await session.commit()
 
-    if isinstance(ctx, GroupContext):
-        get_localdata().add_xb(ctx.event.group_id, ctx.getSenderId(), XBRecord(
-            time=now_datetime(),
-            action=Action.merged,
-            data=f"{title} ×{add}"
-        ))
+    if isinstance(ctx, GroupContext) and do_xb:
+        get_localdata().add_xb(
+            ctx.event.group_id,
+            ctx.getSenderId(),
+            XBRecord(
+                time=now_datetime(), action=Action.merged, data=f"{info.name} ×{add}"
+            ),
+        )

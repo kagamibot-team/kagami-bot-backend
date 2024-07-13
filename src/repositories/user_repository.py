@@ -1,6 +1,8 @@
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.base.exceptions import LackException
+
 from ..base.repository import BaseRepository
 from ..models import User
 
@@ -25,7 +27,7 @@ class UserRepository(BaseRepository[User]):
             user = User(qqid=str(qqid))
             await self.add(user)
 
-    async def get_uid_by_qqid(self, qqid: int | str) -> int:
+    async def get_uid(self, qqid: int | str) -> int:
         """根据用户的 qqid 获取用户的 data_id
 
         Args:
@@ -77,3 +79,61 @@ class UserRepository(BaseRepository[User]):
             .tuples()
             .one()
         )
+
+    async def get_flags(self, uid: int) -> set[str]:
+        return set(
+            (
+                await self.session.execute(
+                    select(User.feature_flag).filter(User.data_id == uid)
+                )
+            )
+            .scalar_one()
+            .split(",")
+        )
+
+    async def do_have_flag(self, uid: int, flag: str):
+        return flag in await self.get_flags(uid)
+
+    async def get_money(self, uid: int) -> float:
+        """获得用户现在有多少薯片
+
+        Args:
+            uid (int): 用户 ID
+
+        Returns:
+            float: 薯片数量
+        """
+
+        return (
+            await self.session.execute(select(User.money).filter(User.data_id == uid))
+        ).scalar_one()
+
+    async def set_money(self, uid: int, money: float):
+        """设置用户要有多少薯片
+
+        Args:
+            uid (int): 用户 ID
+            money (float): 薯片数量
+        """
+
+        await self.session.execute(
+            update(User).where(User.data_id == uid).values(money=money)
+        )
+
+    async def use_money(self, uid: int, money: float, report: bool = True) -> float:
+        """消耗薯片
+
+        Args:
+            uid (int): 用户 ID
+            money (float): 数量
+            report (bool, optional): 是否在钱不够时抛出异常
+
+        Returns:
+            float: 使用后剩余的钱的数量
+        """
+
+        current = await self.get_money(uid)
+        if current - money < 0 and report:
+            raise LackException("薯片", money, current)
+        await self.set_money(uid, current - money)
+        return current - money

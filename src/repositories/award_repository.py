@@ -4,6 +4,8 @@ from typing import cast
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.base.exceptions import ObjectNotFoundException
+
 from ..base.repository import BaseRepository
 from ..models import Award, AwardAltName
 
@@ -51,7 +53,7 @@ class AwardRepository(BaseRepository[Award]):
 
         return cast(int, award.data_id)
 
-    async def get_award_id_by_name(self, name: str) -> int | None:
+    async def get_aid(self, name: str) -> int | None:
         """根据名字找到一个小哥的 ID
 
         Args:
@@ -67,3 +69,34 @@ class AwardRepository(BaseRepository[Award]):
             a = (await self.session.execute(q2)).scalar_one_or_none()
 
         return a
+
+    async def get_aid_strong(self, name: str) -> int:
+        """强制获得一个小哥 ID，如果没有就报错
+
+        Args:
+            name (str): 小哥的名字
+
+        Returns:
+            int: 小哥的 ID
+        """
+        aid = await self.get_aid(name)
+        if aid is None:
+            raise ObjectNotFoundException("小哥", name)
+        return aid
+
+    async def get_info(self, aid: int) -> tuple[str, str, int, str]:
+        """获取一个小哥的基础信息
+
+        Args:
+            aid (int): 小哥的 ID
+
+        Returns:
+            tuple[str, str, int, str]: 名字、描述、等级 ID 和图片
+        """
+        query = select(
+            Award.name,
+            Award.description,
+            Award.level_id,
+            Award.image,
+        ).filter(Award.data_id == aid)
+        return (await self.session.execute(query)).tuples().one()

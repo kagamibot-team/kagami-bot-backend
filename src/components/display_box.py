@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 import PIL
 import PIL.Image
 
@@ -12,8 +13,8 @@ from src.common.draw.shapes import (
 from src.common.draw.tools import hex_to_rgb, rgb_to_hex, mix_color
 
 
-async def _display_box(color: str, central_image: str | bytes) -> PIL.Image.Image:
-    if not isinstance(central_image, str):
+async def _display_box(color: str, central_image: Path | str | bytes) -> PIL.Image.Image:
+    if not isinstance(central_image, (str, Path)):
         image = PIL.Image.open(io.BytesIO(central_image))
     else:
         image = await loadImage(central_image)
@@ -38,7 +39,7 @@ display_box_cache: dict[str, PIL.Image.Image] = {}
 
 
 async def display_box(
-    color: str, central_image: str | bytes, new: bool = False
+    color: str, central_image: Path | str | bytes, new: bool = False
 ) -> PIL.Image.Image:
     key = f"{color}-{hash(central_image)}"
     if key not in display_box_cache:

@@ -22,10 +22,10 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
     jrrp = today_user.randint(1, 100)
 
     level = today.choices(level_repo.sorted, [l.weight for l in level_repo.sorted])[0]
-    query = select(Award.data_id).filter(Award.level_id == level.id)
+    query = select(Award.data_id).filter(Award.level_id == level.lid)
     awards = (await session.execute(query)).tuples().all()
     aid = today.choice(awards)[0]
-    display = await get_award_info(session, -1, aid)
+    display = await get_award_info_deprecated(session, -1, aid)
 
     name = await ctx.getSenderName()
 

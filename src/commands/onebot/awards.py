@@ -42,7 +42,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
         await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
         return
 
-    info = await get_award_info(session, user, award)
+    info = await get_award_info_deprecated(session, user, award)
 
     if info.skinName is not None:
         nameDisplay = la.disp.award_display_with_skin.format(
@@ -79,7 +79,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
         await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
         return
 
-    info = await get_award_info(session, user, award)
+    info = await get_award_info_deprecated(session, user, award)
 
     if info.skinName is not None:
         nameDisplay = f"{info.awardName}[{info.skinName}]"
@@ -171,7 +171,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
         await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
         return
 
-    info = await get_award_info(session, user, award)
+    info = await get_award_info_deprecated(session, user, award)
 
     if info.skinName is not None:
         nameDisplay = f"{info.awardName}[{info.skinName}]"
@@ -209,7 +209,7 @@ async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
 
 async def _get_levels():
     return [
-        (level.id, level.display_name, level.color, level.weight)
+        (level.lid, level.display_name, level.color, level.weight)
         for level in level_repo.sorted
     ]
 
@@ -332,7 +332,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         )
 
     for lid, lname, lcolor, lweight in levels:
-        if target_level is not None and lid != target_level.id:
+        if target_level is not None and lid != target_level.lid:
             continue
         if len(awards[lid]) == 0:
             continue
@@ -455,7 +455,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     awards: dict[int, Sequence[tuple[int, str, str]]] = {}
     total: int = 0
     for lid, lname, lcolor, _ in levels:
-        if target_level is not None and lid != target_level.id:
+        if target_level is not None and lid != target_level.lid:
             continue
         awards[lid] = await _get_awards(session, lid)
         total += len(awards[lid])
@@ -474,7 +474,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     )
 
     for lid, lname, lcolor, _ in levels:
-        if target_level is not None and lid != target_level.id:
+        if target_level is not None and lid != target_level.lid:
             continue
 
         if len(awards[lid]) == 0:

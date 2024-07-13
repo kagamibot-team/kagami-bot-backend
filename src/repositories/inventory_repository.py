@@ -7,7 +7,7 @@ from ..models import Inventory
 
 class InventoryRepository(BaseRepository[Inventory]):
     """
-    和玩家的小哥库存和皮肤记录有关的仓库
+    和玩家的小哥库存有关的仓库
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -88,19 +88,21 @@ class InventoryRepository(BaseRepository[Inventory]):
         """
         return sum(await self.get_inventory(uid, aid))
 
-    async def give(self, uid: int, aid: int, count: int, record_used: bool=True):
-        """获取小哥
+    async def give(self, uid: int, aid: int, count: int, record_used: bool=True) -> tuple[int, int]:
+        """获取小哥，返回更新后的库存量和使用量
 
         Args:
             uid (int): 玩家的id
             aid (int): 小哥的id
             count (int): 获取的数量
+            record_used (bool): 是否记录小哥的使用，默认开启
         """
         sto, use = await self.get_inventory(uid, aid)
         if count < 0 and record_used:
             use += -count
         sto += count
         await self.set_inventory(uid, aid, sto, use)
+        return sto, use
 
     async def get_inventory_dict(self, uid: int) -> dict[int, tuple[int, int]]:
         """获取玩家所有小哥物品栏的字典

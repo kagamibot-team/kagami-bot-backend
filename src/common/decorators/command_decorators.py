@@ -22,6 +22,7 @@ from src.base.db import get_session
 from src.base.event_manager import EventManager
 from src.base.event_root import root
 from src.base.event_timer import addInterval, addTimeout
+from src.base.exceptions import KagamiCoreException
 from src.base.onebot_events import OnebotStartedContext
 from src.logic.admin import isAdmin
 
@@ -38,7 +39,9 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
         rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
     """
 
-    def wrapper(func: Callable[[TCU_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
+    def wrapper(
+        func: Callable[[TCU_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
+    ):
         async def inner(ctx: TCU_co):
             result = rule.parse(await ctx.getMessage())
 
@@ -59,7 +62,9 @@ def withAlconna(rule: Alconna[Sequence[Any]]):
         rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
     """
 
-    def wrapper(func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
+    def wrapper(
+        func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
+    ):
         async def inner(ctx: TC_co):
             result = rule.parse(await ctx.getMessage())
 
@@ -348,6 +353,30 @@ def timeout_at_start(timeout: float):
         @root.listen(OnebotStartedContext)
         async def _(ctx: OnebotStartedContext):
             addTimeout(timeout, partial(func, ctx))
+
+    return deco
+
+
+def kagami_exception_handler():
+    """
+    当有小镜 Bot 内部抛出的 KagamiCoreException 错误时，把错误告知给用户。
+    """
+
+    def deco(func: Callable[[TCU_co], Coroutine[None, None, T]]):
+        async def inner(ctx: TCU_co) -> T | None:
+            try:
+                return await func(ctx)
+            except KagamiCoreException as e:
+                await ctx.reply(e.message)
+            except Exception as e:  #!pylint: disable=W0703
+                logger.opt(exception=e).exception(e)
+                await ctx.reply(
+                    UniMessage().text(
+                        f"程序遇到了错误：{repr(e)}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！！"
+                    )
+                )
+
+        return inner
 
     return deco
 

@@ -119,15 +119,15 @@ class Context(ABC, Generic[TRECEIPT]):
     async def isTextOnly(self) -> bool: ...
 
 
-class UniMessageContext(Context[TRECEIPT], Generic[TRECEIPT]):
+class UniMessageContext(Context[Recallable]):
     @abstractmethod
     async def getMessage(self) -> UniMessage[Segment]: ...
 
     @abstractmethod
-    async def send(self, message: Iterable[Any] | str) -> TRECEIPT: ...
+    async def send(self, message: Iterable[Any] | str) -> Recallable: ...
 
     @abstractmethod
-    async def reply(self, message: Iterable[Any] | str) -> TRECEIPT: ...
+    async def reply(self, message: Iterable[Any] | str) -> Recallable: ...
 
     async def getText(self) -> str:
         return (await self.getMessage()).extract_plain_text()
@@ -136,7 +136,7 @@ class UniMessageContext(Context[TRECEIPT], Generic[TRECEIPT]):
         return (await self.getMessage()).only(Text)
 
 
-class OnebotMessageContext(UniMessageContext[OnebotReceipt], Generic[TE]):
+class OnebotMessageContext(UniMessageContext, Generic[TE]):
     event: TE
     bot: OnebotBotProtocol
 
