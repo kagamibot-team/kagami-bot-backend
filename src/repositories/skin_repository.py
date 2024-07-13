@@ -3,11 +3,11 @@ from pathlib import Path
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..base.repository import BaseRepository
+from ..base.repository import DBRepository
 from ..models import Skin
 
 
-class SkinRepository(BaseRepository[Skin]):
+class SkinRepository(DBRepository[Skin]):
     """
     皮肤的仓库
     """

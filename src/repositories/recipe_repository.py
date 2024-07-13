@@ -1,12 +1,16 @@
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..base.exceptions import RecipeMissingException
-from ..base.repository import BaseRepository
+from src.models.models import Award
+from src.models.recipe_history import RecipeHistory
+from src.models.statics import Level
+
+from ..base.exceptions import ObjectAlreadyExistsException, RecipeMissingException
+from ..base.repository import DBRepository
 from ..models import Recipe
 
 
-class RecipeRepository(BaseRepository[Recipe]):
+class RecipeRepository(DBRepository[Recipe]):
     """
     小哥合成配方的仓库
     """
@@ -38,6 +42,26 @@ class RecipeRepository(BaseRepository[Recipe]):
 
         return (await self.session.execute(query)).tuples().one_or_none()
 
+    async def get_recipe_id(self, aid1: int, aid2: int, aid3: int) -> int:
+        """获得某个合成配方的 ID
+
+        Args:
+            aid1 (int): 第一个小哥的 ID
+            aid2 (int): 第二个小哥的 ID
+            aid3 (int): 第三个小哥的 ID
+
+        Returns:
+            int: 合成配方的 ID
+        """
+
+        aid1, aid2, aid3 = sorted([aid1, aid2, aid3])
+
+        query = select(Recipe.data_id).filter(
+            Recipe.award1 == aid1, Recipe.award2 == aid2, Recipe.award3 == aid3
+        )
+
+        return (await self.session.execute(query)).scalar_one()
+
     async def add_recipe(
         self,
         aid1: int,
@@ -47,7 +71,7 @@ class RecipeRepository(BaseRepository[Recipe]):
         possibility: float,
         modified: bool = False,
     ) -> None:
-        """添加一个配方
+        """添加一个配方。当配方存在时，会抛出 `ObjectAlreadyExistsException` 异常。
 
         Args:
             aid1 (int): 第一个小哥的 ID
@@ -57,6 +81,8 @@ class RecipeRepository(BaseRepository[Recipe]):
             possibility (float): 成功率
         """
         aid1, aid2, aid3 = sorted([aid1, aid2, aid3])
+        if await self.get_recipe(aid1, aid2, aid3) is not None:
+            raise ObjectAlreadyExistsException(f"Recipe<{aid1}, {aid2}, {aid3}>")
         await self.add(
             Recipe(
                 award1=aid1,
@@ -113,8 +139,9 @@ class RecipeRepository(BaseRepository[Recipe]):
                 modified=1,
             )
         )
-        
+
         await self.session.execute(query)
+        await self.clear_history(await self.get_recipe_id(aid1, aid2, aid3))
 
     async def clear_not_modified(self) -> None:
         """删除所有未修改的配方"""
@@ -122,3 +149,80 @@ class RecipeRepository(BaseRepository[Recipe]):
 
         await self.session.execute(query)
         await self.session.flush()
+
+    async def clear_history(self, rid: int):
+        """清除某个合成配方所有的合成历史
+
+        Args:
+            rid (int): 配方的 ID
+        """
+
+        await self.session.execute(
+            delete(RecipeHistory).where(RecipeHistory.recipe == rid)
+        )
+
+    async def record_history(self, group_id: int | str, rid: int, uid: int):
+        """记录下一次合成历史
+
+        Args:
+            group_id (int | str): 群 ID
+            rid (int): 配方的 ID
+            uid (int): 用户的 ID
+        """
+
+        await self.session.execute(
+            insert(RecipeHistory).values(
+                source=str(group_id),
+                recipe=rid,
+                first=uid,
+            )
+        )
+
+    async def get_histories(
+        self,
+        group_id: int | str,
+        result: int | None = None,
+        level: int | Level | None = None,
+        page_index: int = 0,
+        page_size: int = 10,
+    ):
+        """获得抓小哥的历史记录合集
+
+        Args:
+            group_id (int | str): 群 ID
+            result (int | None, optional): 筛选条件之合成出来的小哥 ID. Defaults to None.
+            level (int | Level | None, optional): 筛选条件之等级. Defaults to None.
+            page_index (int, optional): 第几页（程序的方式定义索引）. Defaults to 0.
+            page_size (int, optional): 一页多少个. Defaults to 10.
+
+        Returns:
+            Sequence[tuple[int, int, int, int, int, datetime]]: 输入的三个 ID，输出的一个 ID，第一个发现者的 UID，记录的时间
+        """
+
+        query = (
+            select(
+                Recipe.award1,
+                Recipe.award2,
+                Recipe.award3,
+                Recipe.result,
+                RecipeHistory.first,
+                RecipeHistory.created_at,
+            )
+            .join(RecipeHistory, RecipeHistory.recipe == Recipe.data_id)
+            .filter(RecipeHistory.source == str(group_id))
+        )
+
+        if result is not None:
+            query = query.filter(Recipe.result == result)
+
+        if level is not None:
+            if isinstance(level, Level):
+                level = level.lid
+            query = query.join(Award, Recipe.result == Award.data_id)
+            query = query.filter(Award.level_id == level)
+
+        query = query.order_by(-RecipeHistory.data_id)
+        query = query.offset(page_index * page_size)
+        query = query.limit(page_size)
+
+        return (await self.session.execute(query)).tuples().all()

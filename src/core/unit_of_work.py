@@ -116,14 +116,14 @@ class UnitOfWork:
         """皮肤仓库"""
 
         return SkinRepository(self.session)
-    
+
     @property
     def levels(self):
         """等级仓库"""
 
         # return LevelRepository()
         return level_repo
-    
+
     @property
     def skin_inventory(self):
         """皮肤记录仓库"""

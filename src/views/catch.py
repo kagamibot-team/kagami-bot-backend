@@ -1,28 +1,6 @@
 from pydantic import BaseModel
 
-
-class DisplayBox(BaseModel):
-    """
-    一个小哥的图片展示框
-    """
-
-    color: str
-    image: str | bytes
-    new: bool
-
-
-class AwardDetail(BaseModel):
-    """
-    在抓小哥等的界面中见到的那一个个条目
-    """
-
-    title: str
-    description: str
-    image: str | bytes
-    stars: str
-    color: str
-    new: bool
-    notation: str
+from .award import AwardInfo
 
 
 class CatchMesssage(BaseModel):
@@ -68,7 +46,7 @@ class CatchResultMessage(CatchMesssage):
     money_sum: int
     "在抓之后的总钱数"
 
-    catchs: list[AwardDetail]
+    catchs: list[AwardInfo]
     "抓小哥的条目"
 
     @property

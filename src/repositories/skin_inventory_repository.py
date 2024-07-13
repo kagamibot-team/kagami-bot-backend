@@ -1,11 +1,11 @@
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..base.repository import BaseRepository
+from ..base.repository import DBRepository
 from ..models.models import Skin, SkinRecord
 
 
-class SkinInventoryRepository(BaseRepository[SkinRecord]):
+class SkinInventoryRepository(DBRepository[SkinRecord]):
     """
     和皮肤记录有关的仓库
     """

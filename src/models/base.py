@@ -4,6 +4,8 @@ from sqlalchemy import Column, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.declarative import declarative_base
 
+from src.common.times import now_datetime
+
 
 Base = declarative_base()
 
@@ -15,12 +17,12 @@ if TYPE_CHECKING:
 
 class BaseMixin:
     data_id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    created_at = Column(DateTime, nullable=False, default=now_datetime)
     updated_at = Column(
         DateTime,
         nullable=False,
-        default=datetime.datetime.now,
-        onupdate=datetime.datetime.now,
+        default=now_datetime,
+        onupdate=now_datetime,
     )
 
 

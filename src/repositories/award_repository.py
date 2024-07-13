@@ -6,11 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.exceptions import ObjectNotFoundException
 
-from ..base.repository import BaseRepository
+from ..base.repository import DBRepository
 from ..models import Award, AwardAltName
 
 
-class AwardRepository(BaseRepository[Award]):
+class AwardRepository(DBRepository[Award]):
     """
     小哥的仓库
     """

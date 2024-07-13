@@ -21,7 +21,6 @@ across different repositories.
 
 from typing import Generic, Type, TypeVar
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import Base
@@ -29,7 +28,7 @@ from ..models import Base
 T = TypeVar("T", bound="Base")
 
 
-class BaseRepository(Generic[T]):
+class DBRepository(Generic[T]):
     """
     基础的数据库仓库，用于管理一个特定的数据库表。
     """
@@ -38,29 +37,10 @@ class BaseRepository(Generic[T]):
         self.session = session
         self.model = model
 
-    async def get_by_id(self, id: int) -> T | None:
-        return await self.session.get(self.model, id)
-
-    async def get_all(self) -> list[T]:
-        return list((await self.session.execute(select(self.model))).scalars().all())
-
     async def add(self, obj: T) -> T:
         self.session.add(obj)
         await self.session.flush()
         return obj
 
-    async def delete(self, obj: T) -> None:
-        await self.session.delete(obj)
-        await self.session.flush()
 
-    async def delete_by_id(self, id: int) -> None:
-        obj = await self.get_by_id(id)
-        if obj:
-            await self.delete(obj)
-
-    async def update(self, obj: T) -> T:
-        await self.session.flush()
-        return obj
-
-
-__all__ = ["BaseRepository"]
+__all__ = ["DBRepository"]

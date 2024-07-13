@@ -13,7 +13,7 @@ from typing import (
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot_plugin_alconna import Segment, Text
-from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING # type: ignore
+from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING  # type: ignore
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 
 from src.base.onebot_api import (

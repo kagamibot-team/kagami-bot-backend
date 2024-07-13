@@ -54,6 +54,40 @@ def vertical_pile(
     return base
 
 
+def horizontal_pile(
+    images: list[PIL.Image.Image],
+    paddingX: int = 0,
+    align: Literal["top", "center", "bottom"] = "center",
+    background: str = "#00000000",
+    marginTop: int = 0,
+    marginLeft: int = 0,
+    marginRight: int = 0,
+    marginBottom: int = 0,
+) -> PIL.Image.Image:
+    maxHeight = max([i.height for i in images] + [1])
+    width = sum((i.width for i in images)) + paddingX * (len(images) - 1)
+
+    base = PIL.Image.new(
+        "RGBA",
+        (width + marginLeft + marginRight, maxHeight + marginTop + marginBottom),
+        background,
+    )
+    leftPointer = 0
+
+    for image in images:
+        if align == "top":
+            top = 0
+        elif align == "bottom":
+            top = maxHeight - image.height
+        else:
+            top = (maxHeight - image.height) // 2
+
+        paste_image(base, image, leftPointer + marginLeft, top + marginTop)
+        leftPointer += image.width + paddingX
+
+    return base
+
+
 def render_text(
     *,
     text: str,

@@ -1,11 +1,11 @@
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..base.repository import BaseRepository
+from ..base.repository import DBRepository
 from ..models import Global
 
 
-class SettingRepository(BaseRepository[Global]):
+class SettingRepository(DBRepository[Global]):
     """
     和游戏全局设置项有关的仓库
     """

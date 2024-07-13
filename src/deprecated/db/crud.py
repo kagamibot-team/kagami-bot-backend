@@ -22,24 +22,6 @@ async def deleteObj(session: Session, obj: object):
     await session.flush()
 
 
-### TAG ###
-async def getTag(session: Session, tag_name: str, tag_args: str):
-    "根据名字和属性返回标签，如果不存在则立即创建"
-
-    tag = (
-        await session.execute(
-            select(Tag).filter(Tag.tag_name == tag_name, Tag.tag_args == tag_args)
-        )
-    ).scalar_one_or_none()
-
-    if tag is None:
-        tag = Tag(tag_name=tag_name, tag_args=tag_args)
-        session.add(tag)
-        await session.flush()
-
-    return tag
-
-
 async def getAwardByName(session: Session, name: str):
     "根据名字返回小哥，如果不存在则返回 None"
 
@@ -80,37 +62,6 @@ async def getAwardAltNameObject(session: Session, name: str):
     return (
         await session.execute(select(AwardAltName).filter(AwardAltName.name == name))
     ).scalar_one_or_none()
-
-
-async def getAwardTag(session: Session, award: Award, tag: Tag):
-    "判断小哥是否拥有标签"
-
-    return (
-        await session.execute(
-            select(AwardTagRelation).filter(
-                AwardTagRelation.award_id == award.data_id,
-                AwardTagRelation.tag_id == tag.data_id,
-            )
-        )
-    ).scalar_one_or_none()
-
-
-async def addAwardTag(session: Session, award: Award, tag: Tag):
-    "为小哥添加标签"
-
-    if await getAwardTag(session, award, tag) is None:
-        relation = AwardTagRelation(award=award, tag=tag)
-        session.add(relation)
-        await session.flush()
-
-
-async def removeAwardTag(session: Session, award: Award, tag: Tag):
-    "为小哥移除标签"
-
-    relation = await getAwardTag(session, award, tag)
-    if relation is not None:
-        await session.delete(relation)
-        await session.flush()
 
 
 ### USER ###
@@ -189,31 +140,3 @@ async def getSkinAltNameObject(session: Session, name: str):
     return (
         await session.execute(select(SkinAltName).filter(SkinAltName.name == name))
     ).scalar_one_or_none()
-
-
-async def getSkinTag(session: Session, skin: Skin, tag: Tag):
-    "返回皮肤的一个标签关系，如果不存在则为 `None`"
-
-    return (
-        await session.execute(
-            select(SkinTagRelation)
-            .filter(SkinTagRelation.skin_id == skin.data_id)
-            .filter(SkinTagRelation.tag_id == tag.data_id)
-        )
-    ).scalar_one_or_none()
-
-
-async def addSkinTag(session: Session, skin: Skin, tag: Tag):
-    "添加一个皮肤标签关系"
-
-    if await getSkinTag(session, skin, tag) is None:
-        session.add(SkinTagRelation(skin=skin, tag=tag))
-        await session.flush()
-
-
-async def removeSkinTag(session: Session, skin: Skin, tag: Tag):
-    "删除一个皮肤标签关系"
-
-    if (rel := await getSkinTag(session, skin, tag)) is not None:
-        await session.delete(rel)
-        await session.flush()

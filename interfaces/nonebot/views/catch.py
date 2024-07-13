@@ -1,4 +1,3 @@
-import io
 from typing import Any, TypeVar
 
 import PIL
@@ -6,74 +5,26 @@ import PIL.Image
 import PIL.ImageChops
 import PIL.ImageDraw
 from imagetext_py import TextAlign
-from loguru import logger
 from nonebot_plugin_alconna import UniMessage
 
 from src.common.decorators.threading import make_async
 from src.common.draw.texts import Fonts
-from src.common.draw.tools import hex_to_rgb, imageToBytes, mix_color, rgb_to_hex
-from src.views.catch import AwardDetail, CatchMesssage, CatchResultMessage, DisplayBox
+from src.common.draw.tools import imageToBytes
+from src.views.award import AwardInfo
+from src.views.catch import CatchMesssage, CatchResultMessage
 
-from .basics import (
-    apply_mask,
-    draw_rounded_rectangle,
-    paste_image,
-    render_text,
-    rounded_rectangle_mask,
-    vertical_pile,
-)
+from .awards import display_box
+from .basics import paste_image, render_text, vertical_pile
 
 T = TypeVar("T")
 
-DISPLAY_BOX_CACHE: dict[str, PIL.Image.Image] = {}
 
-
-def _display_box(color: str, central_image: str | bytes) -> PIL.Image.Image:
-    if not isinstance(central_image, str):
-        image = PIL.Image.open(io.BytesIO(central_image)).convert("RGBA")
-    else:
-        image = PIL.Image.open(central_image).convert("RGBA")
-        logger.info(f"图片 {central_image} 还没有被预渲染过，现在渲染。")
-    image = image.resize((180, 144), PIL.Image.ADAPTIVE)
-    image = apply_mask(image, rounded_rectangle_mask(180, 144, 10))
-
-    canvas = PIL.Image.new("RGBA", (180, 144), (255, 255, 255, 0))
-
-    outerRect = draw_rounded_rectangle(
-        180, 144, 10, rgb_to_hex(mix_color(hex_to_rgb(color), (255, 255, 255), 0.35))
-    )
-    innerRect = draw_rounded_rectangle(176, 140, 8, color)
-
-    paste_image(canvas, outerRect, 0, 0)
-    paste_image(canvas, innerRect, 2, 2)
-    paste_image(canvas, image, 0, 0)
-
-    return canvas
-
-
-def display_box(data: DisplayBox) -> PIL.Image.Image:
-    """
-    渲染 DisplayBox
-    """
-
-    cache_key = f"{data.color}-{hash(data.image)}"
-    if cache_key not in DISPLAY_BOX_CACHE:
-        DISPLAY_BOX_CACHE[cache_key] = _display_box(data.color, data.image)
-    image = DISPLAY_BOX_CACHE[cache_key].copy()
-    if data.new:
-        image_new = PIL.Image.open("./res/new.png").convert("RGBA")
-        paste_image(image, image_new, 88, 0)
-    return image
-
-
-def catch(data: AwardDetail) -> PIL.Image.Image:
+def catch(data: AwardInfo) -> PIL.Image.Image:
     """
     渲染 AwardDetail
     """
 
-    left_display = display_box(
-        DisplayBox(color=data.color, image=data.image, new=data.new)
-    )
+    left_display = display_box(data)
     rightDescription = render_text(
         text=data.description,
         width=567,
@@ -84,17 +35,17 @@ def catch(data: AwardDetail) -> PIL.Image.Image:
         paragraph_spacing=15,
     )
     rightTitle = render_text(
-        text=data.title,
+        text=data.display_name,
         font_size=43,
         color="#ffffff",
         font=Fonts.JINGNAN_JUNJUN,
     )
     rightStar = render_text(
-        text=data.stars,
+        text=data.level.display_name,
         width=400,
         font_size=43,
         align=TextAlign.Right,
-        color=data.color,
+        color=data.level.color,
         font=Fonts.MAPLE_UI,
     )
     leftNotation = render_text(
@@ -173,7 +124,7 @@ def render_catch_result_image(data: CatchResultMessage) -> PIL.Image.Image:
     )
 
 
-async def render_catch_result_mesage(data: CatchResultMessage) -> UniMessage[Any]:
+async def render_catch_result_message(data: CatchResultMessage) -> UniMessage[Any]:
     return UniMessage.image(
         raw=await make_async(imageToBytes)(
             await make_async(render_catch_result_image)(data)

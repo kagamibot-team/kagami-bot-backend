@@ -1,11 +1,11 @@
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..base.repository import BaseRepository
+from ..base.repository import DBRepository
 from ..models import Inventory
 
 
-class InventoryRepository(BaseRepository[Inventory]):
+class InventoryRepository(DBRepository[Inventory]):
     """
     和玩家的小哥库存有关的仓库
     """

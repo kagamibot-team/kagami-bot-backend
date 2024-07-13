@@ -5,41 +5,22 @@
 import os
 from pathlib import Path
 
-from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import deprecated
 
 from src.base.exceptions import LackException
 from src.common.data.skins import get_using_skin
-from src.common.dataclasses.award_info import AwardInfo
+from src.common.dataclasses.award_info import AwardInfoDeprecated as AwardInfoDeprecated
 from src.common.download import download, writeData
 from src.common.draw.strange import make_strange
 from src.common.draw.tools import imageToBytes
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
 from src.models.models import *
-from src.models.statics import Level, level_repo
+from src.models.statics import level_repo
 from src.repositories.inventory_repository import InventoryRepository
-
-
-class TempAwardInfo(BaseModel):
-    aid: int
-    name: str
-    description: str
-    level: Level
-    image: Path | str | bytes
-
-    sid: int | None
-    skin_name: str | None
-
-    new: bool
-
-    @property
-    def display_name(self):
-        if self.skin_name is not None:
-            return f"{self.name}[{self.skin_name}]"
-        return self.name
+from src.views.award import AwardInfo
 
 
 async def uow_get_award_info(uow: UnitOfWork, aid: int, uid: int | None = None):
@@ -65,7 +46,7 @@ async def uow_get_award_info(uow: UnitOfWork, aid: int, uid: int | None = None):
     else:
         new = False
 
-    return TempAwardInfo(
+    return AwardInfo(
         aid=aid,
         name=aname,
         description=desc,
@@ -74,6 +55,7 @@ async def uow_get_award_info(uow: UnitOfWork, aid: int, uid: int | None = None):
         sid=sid,
         skin_name=sname,
         new=new,
+        notation="",
     )
 
 
@@ -86,7 +68,7 @@ async def generate_random_info():
     rlen2 = get_random().randint(30, 90)
     rchar = lambda: chr(get_random().randint(0x4E00, 0x9FFF))
 
-    return TempAwardInfo(
+    return AwardInfo(
         aid=-1,
         name="".join((rchar() for _ in range(rlen))),
         description="".join((rchar() for _ in range(rlen2))),
@@ -95,6 +77,7 @@ async def generate_random_info():
         sid=None,
         skin_name=None,
         new=False,
+        notation="",
     )
 
 
@@ -134,7 +117,7 @@ async def get_award_info_deprecated(session: AsyncSession, uid: int, aid: int):
 
     level = level_repo.levels[award[4]]
 
-    info = AwardInfo(
+    info = AwardInfoDeprecated(
         awardId=award[0],
         awardImg=award[1],
         awardName=award[2],

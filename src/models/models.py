@@ -5,6 +5,7 @@ from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import *
+from .recipe_history import RecipeHistory
 
 DEFAULT_IMG = os.path.join(".", "res", "default.png")
 
@@ -18,17 +19,6 @@ class Global(Base, BaseMixin):
 
     catch_interval: Mapped[float] = mapped_column(default=3600)
     last_reported_version: Mapped[str] = mapped_column(default="", server_default="")
-
-
-class Tag(Base, BaseMixin):
-    """
-    标签表
-    """
-
-    __tablename__ = "catch_tag"
-
-    tag_name: Mapped[str] = mapped_column(default="")
-    tag_args: Mapped[str] = mapped_column(default="")
 
 
 class Award(Base, BaseMixin):
@@ -52,17 +42,6 @@ class AwardAltName(Base, BaseMixin, AltNameMixin):
     award_id = Column(
         Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"), index=True
     )
-
-
-class AwardTagRelation(Base, BaseMixin):
-    """
-    一个承载所有小哥的标签关联表
-    """
-
-    __tablename__ = "catch_award_tag_relation"
-
-    award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
-    tag_id = Column(Integer, ForeignKey("catch_tag.data_id", ondelete="CASCADE"))
 
 
 class Inventory(Base, BaseMixin):
@@ -123,13 +102,6 @@ class Skin(Base, BaseMixin):
     )
 
 
-class SkinTagRelation(Base, BaseMixin):
-    __tablename__ = "catch_skin_tag_relation"
-
-    skin_id = Column(Integer, ForeignKey("catch_skin.data_id", ondelete="CASCADE"))
-    tag_id = Column(Integer, ForeignKey("catch_tag.data_id", ondelete="CASCADE"))
-
-
 class SkinAltName(Base, BaseMixin, AltNameMixin):
     """
     一个承载所有皮肤的别名的表
@@ -175,15 +147,13 @@ class Recipe(Base, BaseMixin):
 
 __all__ = [
     "Global",
-    "Tag",
     "Award",
     "AwardAltName",
-    "AwardTagRelation",
     "Inventory",
     "User",
     "SkinRecord",
     "Skin",
-    "SkinTagRelation",
     "SkinAltName",
     "Recipe",
+    "RecipeHistory",
 ]

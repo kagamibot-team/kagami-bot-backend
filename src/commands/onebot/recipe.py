@@ -1,14 +1,10 @@
+from interfaces.nonebot.views.recipe import render_merge_message
 from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.decorators.command_decorators import kagami_exception_handler
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
 from src.imports import *
-
-
-async def _get_lid(session: AsyncSession, a: int):
-    return (
-        await session.execute(select(Award.level_id).filter(Award.data_id == a))
-    ).scalar_one()
+from src.views.recipe import MergeResult, MergeStatus
 
 
 @listenOnebot()
@@ -29,6 +25,8 @@ async def _(ctx: OnebotMessageContext, res: Arparma):
     n3 = res.query[str]("name3")
     if n1 is None or n2 is None or n3 is None:
         return
+
+    username = await ctx.getSenderName()
 
     async with UnitOfWork(DatabaseManager.get_single()) as uow:
         uid = await uow.users.get_uid(ctx.getSenderId())
@@ -59,81 +57,38 @@ async def _(ctx: OnebotMessageContext, res: Arparma):
             info = await generate_random_info()
             add = get_random().randint(1, 100)
             do_xb = False
+            info.notation = f"+{add}"
         else:
             info = await uow_get_award_info(uow, aid, uid)
             add = get_random().randint(1, 3)
             do_xb = info.level.lid in (4, 5)
+            info.notation = f"+{add}"
             await uow.inventories.give(uid, aid, add)
 
-    username = await ctx.getSenderName()
-    if isinstance(ctx, GroupContext):
-        username = await ctx.getSenderName()
+        if isinstance(ctx, GroupContext):
+            await uow.recipes.record_history(
+                ctx.event.group_id,
+                await uow.recipes.get_recipe_id(a1, a2, a3),
+                uid,
+            )
 
-    area_title_1 = await getTextImage(
-        text=f"{username} 的合成材料：",
-        color="#FFFFFF",
-        font=Fonts.HARMONYOS_SANS_BLACK,
-        font_size=80,
-        margin_bottom=30,
-    )
+        if succeed:
+            status = MergeStatus.success
+        elif aid == 89 or aid == -1:
+            status = MergeStatus.fail
+        else:
+            status = MergeStatus.what
 
-    box1 = await display_box(info1.level.color, info1.image, False)
-    box2 = await display_box(info2.level.color, info2.image, False)
-    box3 = await display_box(info3.level.color, info3.image, False)
-    area_material_box = await pileImages(
-        images=[box1, box2, box3],
-        background="#8A8580",
-        paddingX=24,
-        marginLeft=18,
-        marginBottom=24,
-    )
+        merge_info = MergeResult(
+            username=username,
+            successed=status,
+            inputs=(info1, info2, info3),
+            output=info,
+            cost_money=cost,
+            remain_money=int(after),
+        )
 
-    succeeded = "成功" if succeed else "失败"
-    succeeded_sign = "！" if succeed or aid == 89 or aid == -1 else "？"
-
-    area_title_2 = await getTextImage(
-        text=f"合成结果：{succeeded}{succeeded_sign}",
-        color="#FFFFFF",
-        font=Fonts.HARMONYOS_SANS_BLACK,
-        font_size=60,
-        margin_bottom=18,
-    )
-
-    area_product_entry = await catch(
-        title=info.name,
-        description=info.description,
-        image=info.image,
-        stars=info.level.display_name,
-        color=info.level.color,
-        new=info.new,
-        notation=f"+{add}",
-    )
-
-    area_title_3 = await getTextImage(
-        text=f"本次合成花费了你 {cost} 薯片，你还有 {after} 薯片。",
-        color="#FFFFFF",
-        font=Fonts.HARMONYOS_SANS_BLACK,
-        font_size=24,
-        margin_top=12,
-    )
-
-    img = await verticalPile(
-        [
-            area_title_1,
-            area_material_box,
-            area_title_2,
-            area_product_entry,
-            area_title_3,
-        ],
-        15,
-        "left",
-        "#8A8580",
-        60,
-        60,
-        60,
-        60,
-    )
-    await ctx.send(UniMessage.image(raw=imageToBytes(img)))
+    await ctx.send(await render_merge_message(merge_info))
 
     if isinstance(ctx, GroupContext) and do_xb:
         get_localdata().add_xb(

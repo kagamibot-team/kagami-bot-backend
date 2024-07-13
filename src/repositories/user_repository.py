@@ -3,11 +3,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.exceptions import LackException
 
-from ..base.repository import BaseRepository
+from ..base.repository import DBRepository
 from ..models import User
 
 
-class UserRepository(BaseRepository[User]):
+class UserRepository(DBRepository[User]):
     """
     和玩家数据有关的仓库
     """

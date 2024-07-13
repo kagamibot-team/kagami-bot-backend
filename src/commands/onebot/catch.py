@@ -1,13 +1,22 @@
 import time
 
-from interfaces.nonebot.views.catch import render_catch_failed_message, render_catch_result_mesage
+from interfaces.nonebot.views.catch import render_catch_failed_message, render_catch_result_message
 from src.imports import *
 from src.logic.catch import pickAwards
 from src.logic.catch_time import calculateTime, updateUserTime
-from src.views.catch import AwardDetail, CatchMesssage, CatchResultMessage
+from src.views.catch import CatchMesssage, CatchResultMessage
 
 
 async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
+    catchs: list[AwardInfo] = []
+
+    async with UnitOfWork(DatabaseManager.get_single()) as uow:
+        for aid, display in e.displays.items():
+            aifo = await uow_get_award_info(uow, aid, e.uid)
+            aifo.new = display.pick.beforeStats == 0
+            aifo.notation = f"+{display.pick.delta}"
+            catchs.append(aifo)
+
     message = CatchResultMessage(
         username=await ctx.getSenderName(),
         money_changed=int(e.picks.money),
@@ -15,20 +24,9 @@ async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
         slot_remain=e.userTime.pickRemain,
         slot_sum=e.userTime.pickMax,
         next_time=e.userTime.pickLastUpdated + e.userTime.interval - time.time(),
-        catchs=[
-            AwardDetail(
-                title=display.name,
-                description=display.description,
-                image=display.image,
-                stars=display.level,
-                color=display.color,
-                new=display.pick.beforeStats == 0,
-                notation=f"+{display.pick.delta}",
-            )
-            for display in e.displays.values()
-        ],
+        catchs=catchs,
     )
-    await ctx.send(await render_catch_result_mesage(message))
+    await ctx.send(await render_catch_result_message(message))
 
 
 async def save_picks(

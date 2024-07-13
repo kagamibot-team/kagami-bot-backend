@@ -6,7 +6,6 @@ from src.common.draw.images import imagePaste
 from src.common.draw.texts import Fonts, getTextImage
 from src.components.display_box import display_box
 
-
 async def __title(text: str, color: str = "#FFFFFF"):
     return await getTextImage(
         text=text,
