@@ -1,6 +1,10 @@
 import time
 
-from interfaces.nonebot.views.catch import render_catch_failed_message, render_catch_result_message
+from interfaces.nonebot.views.catch import (
+    render_catch_failed_message,
+    render_catch_result_message,
+)
+from src.core.unit_of_work import get_unit_of_work
 from src.imports import *
 from src.logic.catch import pickAwards
 from src.logic.catch_time import calculateTime, updateUserTime
@@ -10,7 +14,7 @@ from src.views.catch import CatchMesssage, CatchResultMessage
 async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
     catchs: list[AwardInfo] = []
 
-    async with UnitOfWork(DatabaseManager.get_single()) as uow:
+    async with get_unit_of_work() as uow:
         for aid, display in e.displays.items():
             aifo = await uow_get_award_info(uow, aid, e.uid)
             aifo.new = display.pick.beforeStats == 0
@@ -45,22 +49,17 @@ async def save_picks(
     for aid in pickResult.awards.keys():
         pick = pickResult.awards[aid]
         spent_count += pick.delta
-        
+
         now_stats = await get_statistics(session, uid, aid)
         await give_award(session, uid, aid, pick.delta)
 
-        query = (
-            select(
-                Award.name,
-                Award.image,
-                Award.description,
-                Award.level_id,
-            )
-            .filter(Award.data_id == aid)
-        )
-        name, image, description, lid = (
-            (await session.execute(query)).tuples().one()
-        )
+        query = select(
+            Award.name,
+            Award.image,
+            Award.description,
+            Award.level_id,
+        ).filter(Award.data_id == aid)
+        name, image, description, lid = (await session.execute(query)).tuples().one()
 
         level = level_repo.levels[lid]
 
@@ -150,12 +149,18 @@ async def picks(
     if len(preEvent.picks.awards) > 0:
         await sendPickMessage(ctx, preEvent)
     else:
-        await ctx.reply(await render_catch_failed_message(CatchMesssage(
-            username=await ctx.getSenderName(),
-            slot_remain=userTime.pickRemain,
-            slot_sum=userTime.pickMax,
-            next_time=userTime.pickLastUpdated + userTime.interval - time.time()
-        )))
+        await ctx.reply(
+            await render_catch_failed_message(
+                CatchMesssage(
+                    username=await ctx.getSenderName(),
+                    slot_remain=userTime.pickRemain,
+                    slot_sum=userTime.pickMax,
+                    next_time=userTime.pickLastUpdated
+                    + userTime.interval
+                    - time.time(),
+                )
+            )
+        )
     return preEvent
 
 

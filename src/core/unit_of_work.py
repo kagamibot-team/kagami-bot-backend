@@ -17,11 +17,13 @@ database operations within a transaction are committed or rolled back together.
 该模块的思路源自 ChatGPT。
 """
 
+import asyncio
 from types import TracebackType
 from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.base.lock_manager import get_lock
 from src.models.statics import level_repo
 from src.repositories.skin_inventory_repository import SkinInventoryRepository
 
@@ -39,14 +41,19 @@ from ..repositories import (
 class UnitOfWork:
     """
     一个工作单元。这个工作单元能够提供相关数据库操作仓库的上下文。
+    因为要保证线程安全性，所以引入了一个参数，用于方便管理锁
     """
 
     db_manager: DatabaseManager
     _session: AsyncSession | None
+    lock: asyncio.Lock | None
 
-    def __init__(self, db_manager: DatabaseManager) -> None:
+    def __init__(
+        self, db_manager: DatabaseManager, lock: asyncio.Lock | None = None
+    ) -> None:
         self.db_manager = db_manager
         self._session = None
+        self.lock = lock
 
     @property
     def session(self) -> AsyncSession:
@@ -66,6 +73,8 @@ class UnitOfWork:
 
     async def __aenter__(self) -> Self:
         self._session = self.db_manager.get_session()
+        if self.lock:
+            await self.lock.acquire()
         return self
 
     async def __aexit__(
@@ -80,6 +89,8 @@ class UnitOfWork:
             await self.session.rollback()
         await self.session.close()
         self._session = None
+        if self.lock is not None:
+            self.lock.release()
 
     @property
     def users(self):
@@ -131,8 +142,12 @@ class UnitOfWork:
         return SkinInventoryRepository(self.session)
 
 
-def get_unit_of_work():
-    return UnitOfWork(DatabaseManager.get_single())
+def get_unit_of_work(qqid: str | int | None = None):
+    """获得一个工作单元。如果提供了相应的 QQID，可以加锁"""
+    lock: asyncio.Lock | None = None
+    if qqid is not None:
+        lock = get_lock(str(qqid))
+    return UnitOfWork(DatabaseManager.get_single(), lock=lock)
 
 
 __all__ = ["UnitOfWork", "get_unit_of_work"]

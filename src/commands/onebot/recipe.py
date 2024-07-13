@@ -1,9 +1,22 @@
+from arclet.alconna import Alconna, Arg, Arparma
+
 from interfaces.nonebot.views.recipe import render_merge_message
+from src.base.command_events import GroupContext, OnebotMessageContext
 from src.base.local_storage import Action, XBRecord, get_localdata
-from src.common.decorators.command_decorators import kagami_exception_handler
+from src.common.data.awards import (
+    generate_random_info,
+    uow_get_award_info,
+    uow_use_award,
+)
+from src.common.data.recipe import try_merge
+from src.common.decorators.command_decorators import (
+    kagami_exception_handler,
+    listenOnebot,
+    matchAlconna,
+)
 from src.common.rd import get_random
-from src.core.unit_of_work import UnitOfWork
-from src.imports import *
+from src.common.times import now_datetime
+from src.core.unit_of_work import get_unit_of_work
 from src.views.recipe import MergeResult, MergeStatus
 
 
@@ -28,7 +41,7 @@ async def _(ctx: OnebotMessageContext, res: Arparma):
 
     username = await ctx.getSenderName()
 
-    async with UnitOfWork(DatabaseManager.get_single()) as uow:
+    async with get_unit_of_work(qqid=ctx.getSenderId()) as uow:
         uid = await uow.users.get_uid(ctx.getSenderId())
 
         if not await uow.users.do_have_flag(uid, "合成"):
@@ -74,7 +87,7 @@ async def _(ctx: OnebotMessageContext, res: Arparma):
 
         if succeed:
             status = MergeStatus.success
-        elif aid == 89 or aid == -1:
+        elif aid in (89, -1):
             status = MergeStatus.fail
         else:
             status = MergeStatus.what
