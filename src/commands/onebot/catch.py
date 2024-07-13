@@ -11,7 +11,7 @@ from src.logic.catch_time import calculateTime, updateUserTime
 from src.views.catch import CatchMesssage, CatchResultMessage
 
 
-async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
+async def sendPickMessage(ctx: OnebotContext, e: PrePickMessageEvent):
     catchs: list[AwardInfo] = []
 
     async with get_unit_of_work() as uow:
@@ -93,7 +93,7 @@ async def save_picks(
 
 
 async def picks(
-    ctx: OnebotMessageContext, session: AsyncSession, uid: int, count: int | None = None
+    ctx: OnebotContext, session: AsyncSession, uid: int, count: int | None = None
 ):
     """
     进行一次抓小哥。抓小哥的流程如下：
@@ -170,14 +170,14 @@ async def picks(
 )
 @withLoading(la.loading.zhua)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
+async def _(ctx: OnebotContext, session: AsyncSession, result: Arparma):
     # logger.info(result.query[int]("count"))
     count = result.query[int]("count")
 
     if count is None:
         count = 1
 
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
+    user = await get_uid_by_qqid(session, ctx.sender_id)
     await picks(ctx, session, user, count)
 
 
@@ -185,16 +185,16 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
 @matchRegex("^(狂抓|kz|狂抓小哥)$")
 @withLoading(la.loading.kz)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
+async def _(ctx: OnebotContext, session: AsyncSession, _):
+    user = await get_uid_by_qqid(session, ctx.sender_id)
     await picks(ctx, session, user)
 
 
 @listenOnebot()
 @matchLiteral("是")
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+async def _(ctx: OnebotContext, session: AsyncSession):
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
     flags_before = await get_user_flags(session, uid)
     await add_user_flag(session, uid, "是")
     utime = await calculateTime(session, uid)

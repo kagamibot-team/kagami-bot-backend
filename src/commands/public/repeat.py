@@ -5,7 +5,7 @@ import re
 
 @listenPublic()
 async def repeat(ctx: PublicContext):
-    message = await ctx.getMessage()
+    message = ctx.message
     msg0 = message[0]
     if not isinstance(msg0, Text):
         return

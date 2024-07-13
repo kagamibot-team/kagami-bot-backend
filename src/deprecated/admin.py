@@ -13,47 +13,6 @@ from .tools import requireAdmin
 
 @requireAdmin
 @databaseIO()
-class Give(Command):
-    def __init__(self):
-        super().__init__(
-            "^/give",
-            " (\\d+) (\\S+)( \\d+)?$",
-        )
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message(
-            [
-                at(env.sender),
-                text(" Invalid format, expected /give <uid> <awardName>"),
-            ]
-        )
-
-    async def handleCommand(
-        self, env: CheckEnvironment, result: re.Match[str]
-    ) -> Message | None:
-        award = await getAwardByName(env.session, result.group(2))
-
-        if award is None:
-            return self.notExists(env, result.group(2))
-
-        count = 1
-
-        if result.group(3):
-            count = int(result.group(3)[1:])
-
-        user = await getUser(env.session, int(result.group(1)))
-        inventory = await getInventory(env.session, user, award)
-        inventory.storage += count
-
-        message = Message(
-            [at(env.sender), text(f" : 已将 {award.name} 给予用户 {result.group(1)}")]
-        )
-
-        return message
-
-
-@requireAdmin
-@databaseIO()
 @dataclass
 class CatchAddSkin(Command):
     commandPattern: str = f"^:: ?{KEYWORD_CREATE} ?{KEYWORD_SKIN} "
@@ -80,25 +39,6 @@ class CatchAddSkin(Command):
         env.session.add(skin)
 
         return Message([at(env.sender), text("MSG_SKIN_ADDED_SUCCESSFUL")])
-
-
-@requireAdmin
-@databaseIO()
-@dataclass
-class CatchGiveMoney(Command):
-    commandPattern: str = ":: ?给钱"
-    argsPattern: str = " (\\d+) (-?\\d+)"
-
-    def errorMessage(self, env: CheckEnvironment) -> Message | None:
-        return Message([at(env.sender), text("MSG_GIVE_MONEY_WRONG_FORMAT")])
-
-    async def handleCommand(self, env: CheckEnvironment, result: re.Match[str]):
-        money = int(result.group(2))
-
-        user = await getUser(env.session, int(result.group(1)))
-        user.money += money
-
-        return Message([at(env.sender), text("MSG_GIVE_MONEY_OK")])
 
 
 @requireAdmin

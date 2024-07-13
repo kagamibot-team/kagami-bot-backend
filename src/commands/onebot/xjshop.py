@@ -6,7 +6,7 @@ import qrcode.main
 from src.imports import *
 
 
-async def send_shop_message(ctx: OnebotMessageContext, session: AsyncSession, shop: ShopData):
+async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: ShopData):
     titles: list[PILImage] = []
     boxes: list[PILImage] = []
 
@@ -15,7 +15,7 @@ async def send_shop_message(ctx: OnebotMessageContext, session: AsyncSession, sh
         name = await ctx.getSenderName()
 
     res = await session.execute(
-        select(User.money).filter(User.qq_id == ctx.getSenderId())
+        select(User.money).filter(User.qq_id == ctx.sender_id)
     )
     res = res.scalar_one_or_none() or 0.0
 
@@ -75,11 +75,11 @@ async def send_shop_message(ctx: OnebotMessageContext, session: AsyncSession, sh
 )
 @withLoading()
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
+async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
     buys = res.query[list[str]]("商品名列表")
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
     shop_data = ShopData()
-    shop_data_evt = ShopBuildingEvent(shop_data, ctx.getSenderId(), uid, session)
+    shop_data_evt = ShopBuildingEvent(shop_data, ctx.sender_id, uid, session)
     await root.emit(shop_data_evt)
 
     if buys is None:
@@ -96,7 +96,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
     buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
     buy_result += f"客户：{name}\n"
-    buy_result += f"编号：{ctx.getSenderId()}\n"
+    buy_result += f"编号：{ctx.sender_id}\n"
     buy_result += "--------------------\n\n"
 
     money_left_query = select(User.money).filter(User.data_id == uid)
@@ -122,7 +122,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
 
     if money_sum <= money_left:
         for product in products:
-            evt = ShopBuyEvent(product, ctx.getSenderId(), uid, session)
+            evt = ShopBuyEvent(product, ctx.sender_id, uid, session)
             await root.emit(evt)
 
         money_update_query = (

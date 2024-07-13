@@ -24,8 +24,8 @@ def randomKagami():
 async def ping(ctx: GroupContext):
     if (
         ctx.event.to_me
-        and len(await ctx.getMessage()) == 1
-        and (await ctx.getMessage())[0].data["text"] == ""
+        and len(ctx.message) == 1
+        and (ctx.message)[0].data["text"] == ""
     ):
         kagami = randomKagami()
         if kagami is None:
@@ -64,14 +64,14 @@ GET_UP_TIME_PRESETS = {
 @requireOperatorInGroup()
 @withSessionLock()
 async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
-    info = await get_group_member_info(ctx.bot, ctx.event.group_id, ctx.getSenderId())
+    info = await get_group_member_info(ctx.bot, ctx.event.group_id, ctx.sender_id)
     self_info = await get_group_member_info(
         ctx.bot, ctx.event.group_id, int(ctx.bot.self_id)
     )
     if self_info["role"] == "admin" and info["role"] != "member":
         await send_private_msg(
             ctx.bot,
-            ctx.getSenderId(),
+            ctx.sender_id,
             UniMessage("诶……好像没办法给群里的管理员或者群主禁言……")
             .emoji(id="106")
             .emoji(id="106")
@@ -80,7 +80,7 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
         await asyncio.sleep(get_random().random() + 0.5)
         await send_private_msg(
             ctx.bot,
-            ctx.getSenderId(),
+            ctx.sender_id,
             "所以……如果你不是管理员，你可能就能获得这个晚安的奖励了",
         )
         return
@@ -105,11 +105,11 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
             ma = match.group(4)
             if ma.isdigit():
                 target_hour = int(ma)
-            elif (ta := GET_UP_TIME_PRESETS.get(ma)):
+            elif ta := GET_UP_TIME_PRESETS.get(ma):
                 target_hour = ta
             else:
                 target_hour = 8
-            
+
             ma2 = match.group(5)
             if ma2 is not None:
                 target_minute = 30
@@ -135,7 +135,7 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
         target_time = dt.replace(hour=target_hour, minute=target_minute, second=0)
 
     if dt.hour >= 21 and dt.hour < 23:
-        uid = await get_uid_by_qqid(session, ctx.getSenderId())
+        uid = await get_uid_by_qqid(session, ctx.sender_id)
         query = select(User.last_sleep_early_time, User.sleep_early_count).filter(
             User.data_id == uid
         )
@@ -163,10 +163,10 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
         return
 
     delta = target_time - dt
-    await set_group_ban(ctx.bot, ctx.event.group_id, ctx.getSenderId(), delta)
+    await set_group_ban(ctx.bot, ctx.event.group_id, ctx.sender_id, delta)
 
     rep_name = ""
-    sender = ctx.getSenderId()
+    sender = ctx.sender_id
     custom_replies = config.custom_replies
     if (k := str(sender)) in custom_replies.keys():
         rep_name = custom_replies[k] + "！"

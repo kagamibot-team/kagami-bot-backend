@@ -11,7 +11,7 @@ async def _(
     result: Arparma,
 ):
     name = result.query[str]("name")
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
+    user = await get_uid_by_qqid(session, ctx.sender_id)
 
     if name is None:
         return
@@ -47,8 +47,8 @@ async def _(
 @matchAlconna(Alconna("re:(pfjd|pftj|皮肤图鉴|皮肤进度|皮肤收集进度)"))
 @withLoading()
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+async def _(ctx: OnebotContext, session: AsyncSession, _: Arparma):
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
 
     query = (
         select(Skin.data_id, Skin.image, Skin.name, Award.name, Award.level_id)

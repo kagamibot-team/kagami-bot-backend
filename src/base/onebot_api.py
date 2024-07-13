@@ -47,7 +47,7 @@ async def delete_msg(
 
 
 async def set_msg_emoji_like(
-    bot: OnebotBotProtocol, message_id: int, emoji_id: int | str | QQEmoji
+    bot: OnebotBotProtocol, message_id: str, emoji_id: int | str | QQEmoji
 ):
     if isinstance(emoji_id, QQEmoji):
         emoji_id = emoji_id.value

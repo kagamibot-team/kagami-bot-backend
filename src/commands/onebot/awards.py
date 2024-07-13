@@ -4,7 +4,6 @@ from typing import Sequence
 from interfaces.nonebot.views.catch import render_award_info_message
 from src.base.exceptions import DoNotHaveException
 from src.common.decorators.command_decorators import kagami_exception_handler
-from src.common.decorators.threading import make_async
 from src.core.unit_of_work import get_unit_of_work
 from src.imports import *
 from src.logic.admin import isAdmin
@@ -21,7 +20,7 @@ from src.logic.admin import isAdmin
         Option("条目", alias=["--display", "-d"]),
     )
 )
-async def _(ctx: UniMessageContext, res: Arparma[Any]):
+async def _(ctx: OnebotContext, res: Arparma[Any]):
     name = res.query[str]("名字")
     if name is None:
         return
@@ -32,7 +31,7 @@ async def _(ctx: UniMessageContext, res: Arparma[Any]):
     async with get_unit_of_work() as uow:
         aid = await uow.awards.get_aid_strong(name)
         sid = None
-        uid = await uow.users.get_uid(ctx.getSenderId() or 0)
+        uid = await uow.users.get_uid(ctx.sender_id)
         notation = ""
 
         if not do_admin:
@@ -144,8 +143,8 @@ def calc_progress(
 )
 @withLoading(la.loading.zhuajd)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
     if uid is None:
         return
 
@@ -250,8 +249,8 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
 @matchAlconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
 @withLoading(la.loading.kc)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
     if uid is None:
         return
 
@@ -315,7 +314,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
 )
 @withLoading(la.loading.all_xg)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
+async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
     levels = await _get_levels()
 
     levelName = res.query[str]("等级名字")
@@ -379,4 +378,4 @@ async def _(ctx: GroupContext):
     赤石
     """
 
-    msg = await ctx.getMessage()
+    msg = ctx.message

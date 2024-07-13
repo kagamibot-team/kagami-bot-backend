@@ -64,44 +64,6 @@ async def getAwardAltNameObject(session: Session, name: str):
     ).scalar_one_or_none()
 
 
-### USER ###
-async def getUser(session: Session, qqid: int):
-    "返回一个用户，如果该用户不存在，则立即创建"
-
-    userResult = await session.execute(
-        select(User)
-        .with_hint(User, "USE INDEX ix_catch_user_data_qq_id")
-        .filter(User.qq_id == str(qqid))
-    )
-
-    user = userResult.scalar_one_or_none()
-
-    if user is None:
-        user = User(qq_id=str(qqid))
-        session.add(user)
-        await session.flush()
-
-    return user
-
-
-async def getInventory(session: Session, user: User, award: Award):
-    "返回一个用户的小哥库存，如果没有，则立即创建"
-
-    stats = (
-        await session.execute(
-            select(Inventory)
-            .filter(Inventory.user_id == user.data_id)
-            .filter(Inventory.award_id == award.data_id)
-        )
-    ).scalar_one_or_none()
-
-    if not stats:
-        stats = Inventory(user=user, award=award, count=0)
-        session.add(stats)
-
-    return stats
-
-
 async def getSkinByName(session: Session, name: str):
     "根据名字返回皮肤，如果没有则返回 None"
 

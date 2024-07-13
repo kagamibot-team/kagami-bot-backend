@@ -1,4 +1,4 @@
-from src.base.local_storage import LocalStorageManager
+from src.base.local_storage import get_localdata
 from src.imports import *
 
 
@@ -7,7 +7,7 @@ from src.imports import *
 async def _(ctx: GroupContext, _):
     _dates_message: dict[str, list[str]] = {}
 
-    for qqid, xb in LocalStorageManager.instance().data.get_group_xb(ctx.event.group_id).items():
+    for qqid, xb in get_localdata().get_group_xb(ctx.event.group_id).items():
         name = await get_name(ctx.bot, qqid, ctx.event.group_id)
         _data: dict[str, list[str]] = {}
 

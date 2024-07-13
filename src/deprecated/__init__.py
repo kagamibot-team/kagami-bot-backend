@@ -14,18 +14,14 @@ from .old_version import (
 )
 
 from .admin import (
-    Give,
     CatchAddSkin,
-    CatchGiveMoney,
     AddAltName,
     RemoveAltName,
 )
 
 
 enabledCommand: list[CommandBase] = [
-    Give(),
     CatchAddSkin(),
-    CatchGiveMoney(),
     AddAltName(),
     RemoveAltName(),
 ]

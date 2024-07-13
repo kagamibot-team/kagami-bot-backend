@@ -1,7 +1,7 @@
 from arclet.alconna import Alconna, Arg, Arparma
 
 from interfaces.nonebot.views.recipe import render_merge_message
-from src.base.command_events import GroupContext, OnebotMessageContext
+from src.base.command_events import GroupContext, OnebotContext
 from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.data.awards import (
     generate_random_info,
@@ -30,7 +30,7 @@ from src.views.recipe import MergeResult, MergeStatus
         Arg("name3", str),
     )
 )
-async def _(ctx: OnebotMessageContext, res: Arparma):
+async def _(ctx: OnebotContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
 
     n1 = res.query[str]("name1")
@@ -41,8 +41,8 @@ async def _(ctx: OnebotMessageContext, res: Arparma):
 
     username = await ctx.getSenderName()
 
-    async with get_unit_of_work(qqid=ctx.getSenderId()) as uow:
-        uid = await uow.users.get_uid(ctx.getSenderId())
+    async with get_unit_of_work(qqid=ctx.sender_id) as uow:
+        uid = await uow.users.get_uid(ctx.sender_id)
 
         if not await uow.users.do_have_flag(uid, "合成"):
             await ctx.reply("先去小镜商店买了机器使用凭证，你才能碰这台机器。")
@@ -106,7 +106,7 @@ async def _(ctx: OnebotMessageContext, res: Arparma):
     if isinstance(ctx, GroupContext) and do_xb:
         get_localdata().add_xb(
             ctx.event.group_id,
-            ctx.getSenderId(),
+            ctx.sender_id,
             XBRecord(
                 time=now_datetime(), action=Action.merged, data=f"{info.name} ×{add}"
             ),

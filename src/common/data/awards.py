@@ -19,6 +19,7 @@ from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
 from src.models.models import *
 from src.models.statics import level_repo
+from src.repositories.award_repository import AwardRepository
 from src.repositories.inventory_repository import InventoryRepository
 from src.views.award import AwardInfo
 
@@ -142,54 +143,6 @@ async def get_award_info_deprecated(session: AsyncSession, uid: int, aid: int):
 
 
 @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
-async def set_inventory(
-    session: AsyncSession, uid: int, aid: int, storage: int, used: int
-):
-    """设置玩家的小哥的库存信息
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户 ID
-        aid (int): 小哥 ID
-        storage (int): 库存有多少小哥
-        used (int): 用过多少小哥
-    """
-
-    await InventoryRepository(session).set_inventory(uid, aid, storage, used)
-
-
-@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
-async def get_inventory(session: AsyncSession, uid: int, aid: int) -> tuple[int, int]:
-    """获得小哥物品栏的原始信息
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户的 ID
-        aid (int): 小哥的 ID
-
-    Returns:
-        tuple[int, int]: 两项分别是库存中有多少小哥，目前用掉了多少小哥
-    """
-
-    return await InventoryRepository(session).get_inventory(uid, aid)
-
-
-@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
-async def get_storage(session: AsyncSession, uid: int, aid: int):
-    """返回用户库存里有多少小哥
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户 uid
-        aid (int): 小哥 id
-
-    Returns:
-        int: 库存小哥的数量
-    """
-    return await InventoryRepository(session).get_storage(uid, aid)
-
-
-@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def get_statistics(session: AsyncSession, uid: int, aid: int):
     """获得迄今为止一共抓到了多少小哥
 
@@ -226,19 +179,9 @@ async def give_award(
         )
 
 
+@deprecated("该模块正在考虑废弃，请考虑使用 AwardRepository 管理库存信息")
 async def get_aid_by_name(session: AsyncSession, name: str):
-    query = select(Award.data_id).filter(Award.name == name)
-    res = (await session.execute(query)).scalar_one_or_none()
-
-    if res is None:
-        query = (
-            select(Award.data_id)
-            .join(AwardAltName, AwardAltName.award_id == Award.data_id)
-            .filter(AwardAltName.name == name)
-        )
-        res = (await session.execute(query)).scalar_one_or_none()
-
-    return res
+    return await AwardRepository(session).get_aid(name)
 
 
 async def download_award_image(aid: int, url: str):

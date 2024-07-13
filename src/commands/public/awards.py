@@ -187,3 +187,9 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
             messages += f"成功将名字叫 {name} 的小哥更改为抽得到，可以被随机合成出来\n"
 
     await ctx.reply(messages)
+
+
+@listenGroup()
+@requireAdmin()
+async def give_something(ctx: GroupContext):
+    pass

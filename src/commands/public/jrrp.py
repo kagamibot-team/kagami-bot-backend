@@ -10,7 +10,7 @@ from src.imports import *
 @matchRegex("^(小镜|xj)(今日人品|jrrp)$")
 @withSessionLock()
 async def _(ctx: GroupContext, session: AsyncSession, _):
-    qqid = ctx.getSenderId()
+    qqid = ctx.sender_id
     dt = now_datetime()
 
     if qqid is None:
@@ -100,7 +100,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
 @matchRegex("^(小镜|xj)(签到|qd)$")
 @withSessionLock()
 async def _(ctx: GroupContext, session: AsyncSession, _):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
 
     query = select(User.last_sign_in_time, User.sign_in_count, User.money).filter(
         User.data_id == uid

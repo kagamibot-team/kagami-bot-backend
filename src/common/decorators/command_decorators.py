@@ -12,10 +12,9 @@ from nonebot_plugin_alconna import UniMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.command_events import (
-    Context,
     GroupContext,
+    OnebotContext,
     PrivateContext,
-    UniMessageContext,
 )
 from src.base.db import get_session
 from src.base.event_manager import EventManager
@@ -26,8 +25,7 @@ from src.base.onebot_events import OnebotStartedContext
 from src.logic.admin import isAdmin
 
 T = TypeVar("T")
-TC_co = TypeVar("TC_co", bound=Context, covariant=True)
-TCU_co = TypeVar("TCU_co", bound=UniMessageContext, covariant=True)
+TC_co = TypeVar("TC_co", bound=OnebotContext, covariant=True)
 TA = TypeVarTuple("TA")
 
 
@@ -39,10 +37,10 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
     """
 
     def wrapper(
-        func: Callable[[TCU_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
+        func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
     ):
-        async def inner(ctx: TCU_co):
-            result = rule.parse(await ctx.getMessage())
+        async def inner(ctx: TC_co):
+            result = rule.parse(ctx.message)
 
             if not result.matched:
                 return None
@@ -65,7 +63,7 @@ def withAlconna(rule: Alconna[Sequence[Any]]):
         func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
     ):
         async def inner(ctx: TC_co):
-            result = rule.parse(await ctx.getMessage())
+            result = rule.parse(ctx.message)
 
             return await func(ctx, result)
 
@@ -83,10 +81,10 @@ def matchRegex(rule: str):
 
     def wrapper(func: Callable[[TC_co, re.Match[str]], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC_co):
-            if not await ctx.isTextOnly():
+            if not ctx.is_text_only():
                 return
 
-            result = re.fullmatch(rule, await ctx.getText())
+            result = re.fullmatch(rule, ctx.text)
 
             if result is None:
                 return None
@@ -107,10 +105,10 @@ def matchLiteral(text: str):
 
     def wrapper(func: Callable[[TC_co], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC_co):
-            if not await ctx.isTextOnly():
+            if not ctx.is_text_only():
                 return
 
-            if text != await ctx.getText():
+            if text != ctx.text:
                 return None
 
             return await func(ctx)
@@ -192,8 +190,8 @@ def listenPublic(manager: EventManager = root):
         manager (EventManager, optional): 事件管理器，默认是 root。
     """
 
-    def wrapper(func: Callable[[UniMessageContext], Coroutine[Any, Any, T]]):
-        manager.listen(UniMessageContext)(func)
+    def wrapper(func: Callable[[OnebotContext], Coroutine[Any, Any, T]]):
+        manager.listen(OnebotContext)(func)
 
     return wrapper
 
@@ -234,7 +232,7 @@ def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
 
     def wrapper(func: Callable[[TC_co, AsyncSession, *TA], Coroutine[Any, Any, T]]):
         async def inner(ctx: TC_co, *args: Unpack[TA]):
-            sender = ctx.getSenderId()
+            sender = ctx.sender_id
             if sender is None:
                 lock = manager[-1]
             else:
@@ -286,8 +284,8 @@ def withLoading(text: str = "请稍候……"):
         text (str, optional): 附带的文本，默认是 "请稍候……"。
     """
 
-    def wrapper(func: Callable[[TCU_co, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TCU_co, *args: Unpack[TA]):
+    def wrapper(func: Callable[[TC_co, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TC_co, *args: Unpack[TA]):
             receipt = await ctx.reply(
                 UniMessage().text(text).image(path=pathlib.Path("./res/科目三.gif"))
             )
@@ -348,8 +346,8 @@ def kagami_exception_handler():
     当有小镜 Bot 内部抛出的 KagamiCoreException 错误时，把错误告知给用户。
     """
 
-    def deco(func: Callable[[TCU_co], Coroutine[None, None, T]]):
-        async def inner(ctx: TCU_co) -> T | None:
+    def deco(func: Callable[[TC_co], Coroutine[None, None, T]]):
+        async def inner(ctx: TC_co) -> T | None:
             try:
                 return await func(ctx)
             except KagamiCoreException as e:

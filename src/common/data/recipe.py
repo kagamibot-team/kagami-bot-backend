@@ -5,7 +5,7 @@
 import math
 
 from nonebot import logger
-from sqlalchemy import delete, func, insert, select
+from sqlalchemy import func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.rd import get_random
@@ -109,10 +109,6 @@ async def get_merge_result(
     )
     await session.flush()
     return result, possibility
-
-
-async def clear_all_recipe(session: AsyncSession):
-    await session.execute(delete(Recipe))
 
 
 async def try_merge(

@@ -4,7 +4,6 @@ from typing import Any, Protocol, cast
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 from nonebot_plugin_alconna.uniseg.message import UniMessage
-from nonebot_plugin_alconna import Reply, Image, Text, At, Emoji
 
 
 class Recallable(Protocol):
@@ -19,6 +18,7 @@ class NoRecall(Recallable):
 class OnebotEventProtocol(Protocol):
     user_id: int
     to_me: bool
+    original_message: Message
 
     def get_message(self) -> Message: ...
 
