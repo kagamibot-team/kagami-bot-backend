@@ -15,6 +15,7 @@ from .catch import catch
 def render_merge_image(data: MergeResult):
     area_title_1 = render_text(
         text=data.title1,
+        width=567,
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
         font_size=80,
@@ -32,6 +33,7 @@ def render_merge_image(data: MergeResult):
 
     area_title_2 = render_text(
         text=data.title2,
+        width=567,
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
         font_size=60,
@@ -42,6 +44,7 @@ def render_merge_image(data: MergeResult):
 
     area_title_3 = render_text(
         text=data.title3,
+        width=567,
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
         font_size=24,

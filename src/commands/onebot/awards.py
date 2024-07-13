@@ -1,194 +1,67 @@
 import math
-import pathlib
 from typing import Sequence
 
+from interfaces.nonebot.views.catch import render_award_info_message
+from src.base.exceptions import DoNotHaveException
+from src.common.decorators.command_decorators import kagami_exception_handler
+from src.common.decorators.threading import make_async
+from src.core.unit_of_work import get_unit_of_work
 from src.imports import *
+from src.logic.admin import isAdmin
 
 
-@listenOnebot()
-@matchAlconna(Alconna("re:(展示|zhanshi|zs)", Arg("name", str)))
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
-    name = result.query[str]("name")
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
-
-    if name is None:
-        return
-
-    award = await get_aid_by_name(session, name)
-
-    if award is None:
-        # 有可能是打成了皮肤的名字，试着匹配一下有没有皮肤有这个名字的
-
-        sid = await get_sid_by_name(session, name)
-        if sid is None:
-            await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
-            return
-
-        award = (
-            await session.execute(
-                select(Skin.award_id)
-                .filter(Skin.data_id == sid)
-                .join(Award, Award.data_id == Skin.award_id)
-                .join(SkinRecord, SkinRecord.skin_id == sid)
-                .filter(SkinRecord.user_id == user)
-            )
-        ).scalar_one_or_none()
-        if award is None:
-            await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
-            return
-
-    if await get_statistics(session, user, award) <= 0:
-        await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
-        return
-
-    info = await get_award_info_deprecated(session, user, award)
-
-    if info.skinName is not None:
-        nameDisplay = la.disp.award_display_with_skin.format(
-            info.awardName, info.skinName, info.levelName
-        )
-    else:
-        nameDisplay = la.disp.award_display.format(info.awardName, info.levelName)
-
-    await ctx.reply(
-        UniMessage()
-        .text(nameDisplay)
-        .image(path=pathlib.Path(info.awardImg))
-        .text(f"\n{info.awardDescription}")
-    )
-
-
-@listenOnebot()
-@matchAlconna(Alconna("re:(展示|zhanshi|zs)条目", Arg("name", str)))
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
-    name = result.query[str]("name")
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
-
-    if name is None:
-        return
-
-    award = await get_aid_by_name(session, name)
-
-    if award is None:
-        await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
-        return
-
-    if await get_statistics(session, user, award) <= 0:
-        await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
-        return
-
-    info = await get_award_info_deprecated(session, user, award)
-
-    if info.skinName is not None:
-        nameDisplay = f"{info.awardName}[{info.skinName}]"
-    else:
-        nameDisplay = info.awardName
-
-    image = await catch(
-        title=nameDisplay,
-        description=info.awardDescription,
-        image=info.awardImg,
-        stars=info.levelName,
-        color=info.color,
-        new=False,
-        notation=str(await get_storage(session, user, award)),
-    )
-
-    await ctx.send(UniMessage().image(raw=imageToBytes(image)))
-
-
-@listenOnebot()
-@requireAdmin()
+@listenPublic()
+@kagami_exception_handler()
 @matchAlconna(
     Alconna(
-        "re:(展示|zhanshi|zs)",
-        ["::"],
-        Arg("name", str),
-        Arg("sname", str, flags=[ArgFlag.OPTIONAL]),
+        "展示",
+        Arg("名字", str),
+        Option("皮肤", Arg("皮肤名", str), alias=["--skin", "-s"]),
+        Option("管理员", alias=["--admin", "-a"]),
+        Option("条目", alias=["--display", "-d"]),
     )
 )
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
-    name = result.query[str]("name")
-    sname = result.query[str]("sname")
-
+async def _(ctx: UniMessageContext, res: Arparma[Any]):
+    name = res.query[str]("名字")
     if name is None:
         return
+    skin_name = res.query[str]("皮肤名")
+    do_admin = res.find("管理员") and isAdmin(ctx)
+    do_display = res.find("条目")
 
-    aid = await get_aid_by_name(session, name)
+    async with get_unit_of_work() as uow:
+        aid = await uow.awards.get_aid_strong(name)
+        sid = None
+        uid = await uow.users.get_uid(ctx.getSenderId() or 0)
+        notation = ""
 
-    if aid is None:
-        await ctx.reply(la.err.award_not_found.format(name))
-        return
+        if not do_admin:
+            sto = await uow.inventories.get_storage(uid, aid)
+            if sto <= 0:
+                raise DoNotHaveException(name)
+            notation = str(sto)
 
-    query = select(Award.name, Award.description, Award.image).filter(
-        Award.data_id == aid
-    )
-    dname, description, img_path = (await session.execute(query)).tuples().one()
+        if skin_name is not None:
+            sid = await uow.skins.get_sid_strong(skin_name)
+            if not do_admin and not await uow.skin_inventory.do_user_have(uid, sid):
+                raise DoNotHaveException(skin_name)
+            uid = None
+        if do_admin:
+            uid = None
+        info = await uow_get_award_info(uow, aid, uid, sid)
+        info.new = False
+        info.notation = notation
 
-    if sname is not None:
-        sid = await get_sid_by_name(session, sname)
-        if sid is None:
-            await ctx.reply(la.err.skin_not_found.format(name))
-            return
-
-        query = select(Skin.name, Skin.description, Skin.image).filter(
-            Skin.data_id == sid, Skin.award_id == aid
-        )
-        res = (await session.execute(query)).tuples().one_or_none()
-
-        if res is None:
-            await ctx.reply(la.err.invalid_skin_award_pair.format(name, sname))
-            return
-
-        dname, edesc, img_path = res
-        description = edesc or description
-
-    await ctx.reply(
-        UniMessage()
-        .text(f"[{aid}]{dname}")
-        .image(path=pathlib.Path(img_path))
-        .text(f"\n{description}")
-    )
-
-
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(Alconna("re:(展示|zhanshi|zs)条目", ["::"], Arg("name", str)))
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
-    name = result.query[str]("name")
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
-
-    if name is None:
-        return
-
-    award = await get_aid_by_name(session, name)
-
-    if award is None:
-        await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
-        return
-
-    info = await get_award_info_deprecated(session, user, award)
-
-    if info.skinName is not None:
-        nameDisplay = f"{info.awardName}[{info.skinName}]"
+    if do_display:
+        msg = await render_award_info_message(info)
+        await ctx.send(msg)
     else:
-        nameDisplay = info.awardName
-
-    image = await catch(
-        title=nameDisplay,
-        description=info.awardDescription,
-        image=info.awardImg,
-        stars=info.levelName,
-        color=info.color,
-        new=False,
-        notation="",
-    )
-
-    await ctx.send(UniMessage().image(raw=imageToBytes(image)))
+        msg = (
+            UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
+            .image(raw=info.image_bytes)
+            .text(f"\n{info.description}")
+        )
+        await ctx.reply(msg)
 
 
 async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
@@ -215,9 +88,7 @@ async def _get_levels():
 
 
 async def _get_awards(session: AsyncSession, lid: int):
-    query = select(Award.data_id, Award.name, Award.image).filter(
-        Award.level_id == lid
-    )
+    query = select(Award.data_id, Award.name, Award.image).filter(Award.level_id == lid)
     return (await session.execute(query)).tuples().all()
 
 

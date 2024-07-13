@@ -13,6 +13,27 @@ class SkinInventoryRepository(DBRepository[SkinRecord]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, SkinRecord)
 
+    async def do_user_have(self, uid: int, sid: int) -> bool:
+        """获得一个用户是否拥有一个皮肤
+
+        Args:
+            uid (int): 用户的 ID
+            sid (int): 皮肤的 ID
+
+        Returns:
+            bool: 是否拥有
+        """
+
+        query = (
+            select(SkinRecord.skin_id)
+            .filter(
+                SkinRecord.user_id == uid,
+                SkinRecord.skin_id == sid,
+            )
+        )
+        result = await self.session.execute(query)
+        return result.scalars().one_or_none() is not None
+
     async def get_using(self, uid: int, aid: int) -> int | None:
         """获得一个用户正在挂载的皮肤
 

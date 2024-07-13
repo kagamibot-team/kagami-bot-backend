@@ -23,3 +23,14 @@ class AwardInfo(BaseModel):
         if self.skin_name is not None:
             return f"{self.name}[{self.skin_name}]"
         return self.name
+
+    @property
+    def image_path(self):
+        assert isinstance(self.image, (str, Path))
+        return Path(self.image)
+
+    @property
+    def image_bytes(self) -> bytes:
+        if isinstance(self.image, (str, Path)):
+            return Path(self.image).read_bytes()
+        return self.image

@@ -11,7 +11,7 @@ from typing_extensions import deprecated
 
 from src.base.exceptions import LackException
 from src.common.data.skins import get_using_skin
-from src.common.dataclasses.award_info import AwardInfoDeprecated as AwardInfoDeprecated
+from src.common.dataclasses.award_info import AwardInfoDeprecated
 from src.common.download import download, writeData
 from src.common.draw.strange import make_strange
 from src.common.draw.tools import imageToBytes
@@ -23,7 +23,9 @@ from src.repositories.inventory_repository import InventoryRepository
 from src.views.award import AwardInfo
 
 
-async def uow_get_award_info(uow: UnitOfWork, aid: int, uid: int | None = None):
+async def uow_get_award_info(
+    uow: UnitOfWork, aid: int, uid: int | None = None, sid: int | None = None
+):
     """在大规模重构之前提供的临时方法，用来获取一个小哥的基础信息
 
     Args:
@@ -31,20 +33,21 @@ async def uow_get_award_info(uow: UnitOfWork, aid: int, uid: int | None = None):
         aid (int): 小哥 ID
         uid (int | None, optional): 用户 ID，可留空，用来获取皮肤的信息. Defaults to None.
     """
+    if uid is not None and sid is not None:
+        raise ValueError("请不要同时启用 uid 和 sid 两个参数")
+
     aname, desc, lid, img = await uow.awards.get_info(aid)
     level = uow.levels.get_by_id(lid)
     sname = None
-    sid = None
+    new = False
 
     if uid:
         sid = await uow.skin_inventory.get_using(uid, aid)
-        if sid:
-            sname, sdesc, img = await uow.skins.get_info(sid)
-            sdesc = sdesc.strip()
-            desc = sdesc or desc
         new = await uow.inventories.get_stats(uid, aid) > 0
-    else:
-        new = False
+    if sid:
+        sname, sdesc, img = await uow.skins.get_info(sid)
+        sdesc = sdesc.strip()
+        desc = sdesc or desc
 
     return AwardInfo(
         aid=aid,

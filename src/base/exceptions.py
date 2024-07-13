@@ -60,3 +60,15 @@ class LackException(KagamiCoreException):
             f"你需要 {self.required} {self.obj_type}，"
             f"你只有 {self.current} {self.obj_type}"
         )
+
+
+class DoNotHaveException(KagamiCoreException):
+    """用户没有什么东西的时候的报错"""
+
+    def __init__(self, obj: str) -> None:
+        super().__init__()
+        self.obj = obj
+
+    @property
+    def message(self) -> str:
+        return f"阿呀！你好像没有 {self.obj}……"

@@ -134,3 +134,8 @@ async def render_catch_result_message(data: CatchResultMessage) -> UniMessage[An
 
 async def render_catch_failed_message(data: CatchMesssage) -> UniMessage[Any]:
     return UniMessage.text(f"小哥还没长成，请再等{data.timedelta_text}吧！")
+
+
+async def render_award_info_message(data: AwardInfo) -> UniMessage[Any]:
+    image = await make_async(catch)(data)
+    return UniMessage.image(raw=await make_async(imageToBytes)(image))

@@ -131,4 +131,8 @@ class UnitOfWork:
         return SkinInventoryRepository(self.session)
 
 
-__all__ = ["UnitOfWork"]
+def get_unit_of_work():
+    return UnitOfWork(DatabaseManager.get_single())
+
+
+__all__ = ["UnitOfWork", "get_unit_of_work"]
