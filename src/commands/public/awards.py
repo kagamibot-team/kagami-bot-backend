@@ -163,7 +163,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
             try:
                 fp = await download_award_image(aid, imageUrl)
                 await session.execute(
-                    update(Award).where(Award.data_id == aid).values(img_path=fp)
+                    update(Award).where(Award.data_id == aid).values(image=fp)
                 )
                 messages += f"成功将名字叫 {name} 的小哥的图片改为 {fp}。\n"
             except Exception as e:  # pylint: disable=broad-except
