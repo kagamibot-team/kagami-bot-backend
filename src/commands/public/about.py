@@ -5,7 +5,6 @@
 from src.common.lang.zh import get_latest_versions
 from src.imports import *
 
-
 updateHistory: dict[str, list[str]] = la.about.update
 updateHistoryDev: dict[str, list[str]] = la.about.update_dev
 help: dict[str, list[str]] = la.about.help

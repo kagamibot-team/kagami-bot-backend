@@ -1,5 +1,5 @@
-from src.imports import *
 from src.components.ref_book import skin_book
+from src.imports import *
 
 
 @listenOnebot()

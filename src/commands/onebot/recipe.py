@@ -120,7 +120,6 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         await give_award(session, uid, aid, add)
 
     logger.info(f"has: {beforeStats}")
-    await root.emit(PlayerMergeEvent(uid, (a1, a2, a3), aid, succeed, add))
 
     name = await ctx.getSenderName()
     if isinstance(ctx, GroupContext):

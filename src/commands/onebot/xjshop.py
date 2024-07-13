@@ -1,7 +1,8 @@
-import qrcode
-import qrcode.main
-import qrcode.constants
 import PIL.Image
+import qrcode
+import qrcode.constants
+import qrcode.main
+
 from src.imports import *
 
 
