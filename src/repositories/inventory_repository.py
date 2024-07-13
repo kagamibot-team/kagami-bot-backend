@@ -1,4 +1,4 @@
-from sqlalchemy import select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..base.repository import BaseRepository
@@ -13,23 +13,59 @@ class InventoryRepository(BaseRepository[Inventory]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, Inventory)
 
-    async def assure(self, uid: int, aid: int):
-        """确保数据库中有这个玩家对该小哥的记录，没有则创建
+    async def set_inventory(self, uid: int, aid: int, storage: int, used: int):
+        """设置玩家的小哥库存
 
         Args:
-            uid (int): 玩家的id
-            aid (int): 小哥的id
+            uid (int): 用户 ID
+            aid (int): 小哥 ID
+            storage (int): 库存数量
+            used (int): 用过的数量
         """
-        query = select(Inventory.data_id).filter(
-            Inventory.user_id == uid,
-            Inventory.award_id == aid,
+        query = (
+            update(Inventory)
+            .where(Inventory.user_id == uid, Inventory.award_id == aid)
+            .values(storage=storage, used=used)
+            .returning(Inventory.data_id)
         )
-        result = await self.session.execute(query)
-        if not result.scalars().first():
-            await self.add(Inventory(uid=uid, aid=aid))
 
-    async def get_count(self, uid: int, aid: int) -> int:
-        """获取玩家某个小哥的数量
+        result = (await self.session.execute(query)).scalars().all()
+        if len(result) > 1:
+            # 可能是奇怪的数据库问题，这个时候删掉原先的数据然后更改
+            await self.session.execute(
+                delete(Inventory).where(
+                    Inventory.user_id == uid, Inventory.award_id == aid
+                )
+            )
+            result = ()
+
+        if len(result) == 0:
+            # 这时候没有库存，很有可能是更新失败的情景，我们创建一个新的行
+            await self.session.execute(
+                insert(Inventory).values(
+                    storage=storage, used=used, user_id=uid, award_id=aid
+                )
+            )
+
+    async def get_inventory(self, uid: int, aid: int) -> tuple[int, int]:
+        """获得小哥物品栏的原始信息
+
+        Args:
+            uid (int): 用户的 ID
+            aid (int): 小哥的 ID
+
+        Returns:
+            tuple[int, int]: 两项分别是库存中有多少小哥，目前用掉了多少小哥
+        """
+
+        query = select(Inventory.storage, Inventory.used).filter(
+            Inventory.user_id == uid, Inventory.award_id == aid
+        )
+
+        return (await self.session.execute(query)).tuples().one_or_none() or (0, 0)
+
+    async def get_storage(self, uid: int, aid: int) -> int:
+        """获取玩家某个小哥的库存数量
 
         Args:
             uid (int): 玩家的id
@@ -38,13 +74,7 @@ class InventoryRepository(BaseRepository[Inventory]):
         Returns:
             int: 数量
         """
-        await self.assure(uid, aid)
-        query = select(Inventory.storage).filter(
-            Inventory.user_id == uid,
-            Inventory.award_id == aid,
-        )
-        result = await self.session.execute(query)
-        return result.scalar_one()
+        return (await self.get_inventory(uid, aid))[0]
 
     async def get_stats(self, uid: int, aid: int) -> int:
         """获取玩家某个小哥的统计数据
@@ -56,16 +86,9 @@ class InventoryRepository(BaseRepository[Inventory]):
         Returns:
             int: 数量
         """
-        await self.assure(uid, aid)
-        query = select(Inventory.storage, Inventory.used).filter(
-            Inventory.user_id == uid,
-            Inventory.award_id == aid,
-        )
-        result = await self.session.execute(query)
-        count, used = result.tuples().one()
-        return count + used
+        return sum(await self.get_inventory(uid, aid))
 
-    async def obtain(self, uid: int, aid: int, count: int):
+    async def give(self, uid: int, aid: int, count: int, record_used: bool=True):
         """获取小哥
 
         Args:
@@ -73,47 +96,23 @@ class InventoryRepository(BaseRepository[Inventory]):
             aid (int): 小哥的id
             count (int): 获取的数量
         """
-        await self.assure(uid, aid)
-        query = (
-            update(Inventory)
-            .where(
-                Inventory.user_id == uid,
-                Inventory.award_id == aid,
-            )
-            .values(count=Inventory.storage + count)
-        )
+        sto, use = await self.get_inventory(uid, aid)
+        if count < 0 and record_used:
+            use += -count
+        sto += count
+        await self.set_inventory(uid, aid, sto, use)
 
-        await self.session.execute(query)
-
-    async def use(self, uid: int, aid: int, count: int):
-        """消耗小哥，会减少库存，并记录使用数量
-
-        Args:
-            uid (int): 玩家的id
-            aid (int): 小哥的id
-            count (int): 使用的数量
-        """
-        await self.assure(uid, aid)
-        query = (
-            update(Inventory)
-            .where(
-                Inventory.user_id == uid,
-                Inventory.award_id == aid,
-            )
-            .values(count=Inventory.storage - count, used=Inventory.used + count)
-        )
-
-        await self.session.execute(query)
-
-    async def get_count_dict(self, uid: int) -> dict[int, int]:
-        """获取玩家所有小哥库存的字典
+    async def get_inventory_dict(self, uid: int) -> dict[int, tuple[int, int]]:
+        """获取玩家所有小哥物品栏的字典
 
         Args:
             uid (int): 玩家的id
 
         Returns:
-            dict: 字典
+            dict[int, tuple[int, int]]: 字典，值的两项分别是库存和用过的
         """
-        query = select(Inventory.award_id, Inventory.storage).filter(Inventory.user_id == uid)
+        query = select(Inventory.award_id, Inventory.storage, Inventory.used).filter(
+            Inventory.user_id == uid
+        )
         result = await self.session.execute(query)
-        return dict(result.tuples())
+        return {aid: (sto, use) for aid, sto, use in result.tuples().all()}

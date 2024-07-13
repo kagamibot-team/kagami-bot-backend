@@ -47,7 +47,9 @@ async def save_picks(
     for aid in pickResult.awards.keys():
         pick = pickResult.awards[aid]
         spent_count += pick.delta
-        before = await give_award(session, uid, aid, pick.delta)
+        
+        now_stats = await get_statistics(session, uid, aid)
+        await give_award(session, uid, aid, pick.delta)
 
         query = (
             select(
@@ -70,7 +72,7 @@ async def save_picks(
             description=description,
             level=level.display_name,
             color=level.color,
-            beforeStorage=before,
+            beforeStorage=now_stats,
             pick=pick,
         )
 

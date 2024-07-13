@@ -1,7 +1,7 @@
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..base.exceptions import ObjectNotFound
+from ..base.exceptions import RecipeMissing
 from ..base.repository import BaseRepository
 from ..models import Recipe
 
@@ -93,7 +93,7 @@ class RecipeRepository(BaseRepository[Recipe]):
             # 检查，如果两个参数缺一个，就报错
 
             if aidres is None or possibility is None:
-                raise ObjectNotFound("原配方不存在，无法更新")
+                raise RecipeMissing()
             await self.add_recipe(aid1, aid2, aid3, aidres, possibility, True)
             return
 

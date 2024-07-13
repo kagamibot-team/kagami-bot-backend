@@ -230,12 +230,7 @@ async def _get_others(session: AsyncSession, uid: int):
     skins = (await session.execute(query)).tuples().all()
     skins = dict(skins)
 
-    query = select(Inventory.award_id, Inventory.storage, Inventory.used).filter(
-        Inventory.user_id == uid
-    )
-    storages = (await session.execute(query)).tuples().all()
-    storages = {aid: (sto, use) for aid, sto, use in storages}
-
+    storages = await InventoryRepository(session).get_inventory_dict(uid)
     return skins, storages
 
 

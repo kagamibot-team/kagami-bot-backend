@@ -1,6 +1,11 @@
-import os
+"""
+该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息
+"""
 
-from sqlalchemy import delete, insert, select, update
+import os
+from typing_extensions import deprecated
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.data.skins import get_using_skin
@@ -8,6 +13,7 @@ from src.common.dataclasses.award_info import AwardInfo
 from src.common.download import download, writeData
 from src.models.models import *
 from src.models.statics import level_repo
+from src.repositories.inventory_repository import InventoryRepository
 
 
 async def get_award_info(session: AsyncSession, uid: int, aid: int):
@@ -51,6 +57,7 @@ async def get_award_info(session: AsyncSession, uid: int, aid: int):
     return info
 
 
+# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def set_inventory(
     session: AsyncSession, uid: int, aid: int, storage: int, used: int
 ):
@@ -64,30 +71,10 @@ async def set_inventory(
         used (int): 用过多少小哥
     """
 
-    query = (
-        update(Inventory)
-        .where(Inventory.user_id == uid, Inventory.award_id == aid)
-        .values(storage=storage, used=used)
-        .returning(Inventory.data_id)
-    )
-
-    result = (await session.execute(query)).scalars().all()
-    if len(result) > 1:
-        # 可能是奇怪的数据库问题，这个时候删掉原先的数据然后更改
-        await session.execute(
-            delete(Inventory).where(Inventory.user_id == uid, Inventory.award_id == aid)
-        )
-        result = ()
-
-    if len(result) == 0:
-        # 这时候没有库存，很有可能是更新失败的情景，我们创建一个新的行
-        await session.execute(
-            insert(Inventory).values(
-                storage=storage, used=used, user_id=uid, award_id=aid
-            )
-        )
+    await InventoryRepository(session).set_inventory(uid, aid, storage, used)
 
 
+# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def get_inventory(session: AsyncSession, uid: int, aid: int) -> tuple[int, int]:
     """获得小哥物品栏的原始信息
 
@@ -100,13 +87,10 @@ async def get_inventory(session: AsyncSession, uid: int, aid: int) -> tuple[int,
         tuple[int, int]: 两项分别是库存中有多少小哥，目前用掉了多少小哥
     """
 
-    query = select(Inventory.storage, Inventory.used).filter(
-        Inventory.user_id == uid, Inventory.award_id == aid
-    )
-
-    return (await session.execute(query)).tuples().one_or_none() or (0, 0)
+    return await InventoryRepository(session).get_inventory(uid, aid)
 
 
+# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def get_storage(session: AsyncSession, uid: int, aid: int):
     """返回用户库存里有多少小哥
 
@@ -118,9 +102,10 @@ async def get_storage(session: AsyncSession, uid: int, aid: int):
     Returns:
         int: 库存小哥的数量
     """
-    return (await get_inventory(session, uid, aid))[0]
+    return await InventoryRepository(session).get_storage(uid, aid)
 
 
+# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def get_statistics(session: AsyncSession, uid: int, aid: int):
     """获得迄今为止一共抓到了多少小哥
 
@@ -132,10 +117,10 @@ async def get_statistics(session: AsyncSession, uid: int, aid: int):
     Returns:
         int: 累计的小哥数量
     """
+    return await InventoryRepository(session).get_stats(uid, aid)
 
-    return sum(await get_inventory(session, uid, aid))
 
-
+# @deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def give_award(session: AsyncSession, uid: int, aid: int, count: int):
     """增减一个用户的小哥库存
 
@@ -148,14 +133,7 @@ async def give_award(session: AsyncSession, uid: int, aid: int, count: int):
     Returns:
         int: 在调整库存之前，用户的库存值
     """
-    sto, use = await get_inventory(session, uid, aid)
-
-    if count < 0:
-        use += -count
-    sto += count
-
-    await set_inventory(session, uid, aid, sto, use)
-    return sto - count
+    await InventoryRepository(session).give(uid, aid, count)
 
 
 async def get_aid_by_name(session: AsyncSession, name: str):

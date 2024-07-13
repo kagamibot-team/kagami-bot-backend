@@ -127,6 +127,14 @@ def pack_save_task(zfp: pathlib.Path):
 
 
 async def pack_save(filename: str | None = None):
+    """把游戏存档打包成压缩包
+
+    Args:
+        filename (str | None, optional): 压缩包的名字. Defaults to None.
+
+    Returns:
+        Path: 压缩包存到了哪里
+    """
     await collect_images()
 
     filename = filename or f"save-{now_datetime().strftime('%Y-%m-%dT%H_%M_%S')}.zip"

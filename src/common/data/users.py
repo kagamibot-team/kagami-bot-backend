@@ -6,6 +6,15 @@ from src.models.models import User
 
 
 async def get_uid_by_qqid(session: AsyncSession, qqid: int | str):
+    """根据用户的 QQ 号获得在数据库中的 UID，如果数据库中没有用户信息，会创建一个数据库行
+
+    Args:
+        session (AsyncSession): 数据库会话
+        qqid (int | str): QQ 号
+
+    Returns:
+        int: 获得用户的数据库 ID
+    """
     qqid = str(qqid)
 
     result = await session.execute(select(User.data_id).where(User.qq_id == qqid))

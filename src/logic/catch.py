@@ -1,5 +1,3 @@
-import random
-
 from src.imports import *
 from .catch_time import *
 

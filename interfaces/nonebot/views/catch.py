@@ -6,6 +6,7 @@ import PIL.Image
 import PIL.ImageChops
 import PIL.ImageDraw
 from imagetext_py import TextAlign
+from loguru import logger
 from nonebot_plugin_alconna import UniMessage
 
 from src.common.decorators.threading import make_async
@@ -32,6 +33,7 @@ def _display_box(color: str, central_image: str | bytes) -> PIL.Image.Image:
         image = PIL.Image.open(io.BytesIO(central_image)).convert("RGBA")
     else:
         image = PIL.Image.open(central_image).convert("RGBA")
+        logger.info(f"图片 {central_image} 还没有被预渲染过，现在渲染。")
     image = image.resize((180, 144), PIL.Image.ADAPTIVE)
     image = apply_mask(image, rounded_rectangle_mask(180, 144, 10))
 
