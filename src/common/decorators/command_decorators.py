@@ -12,7 +12,6 @@ from nonebot_plugin_alconna import UniMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.command_events import (
-    ConsoleContext,
     Context,
     GroupContext,
     PrivateContext,
@@ -182,19 +181,6 @@ def listenPrivate(manager: EventManager = root):
 
     def wrapper(func: Callable[[PrivateContext], Coroutine[Any, Any, T]]):
         manager.listen(PrivateContext)(func)
-
-    return wrapper
-
-
-def listenConsole(manager: EventManager = root):
-    """添加控制台的事件监听器
-
-    Args:
-        manager (EventManager, optional): 事件管理器，默认是 root。
-    """
-
-    def wrapper(func: Callable[[ConsoleContext], Coroutine[Any, Any, T]]):
-        manager.listen(ConsoleContext)(func)
 
     return wrapper
 
@@ -390,7 +376,6 @@ __all__ = [
     "debugOnly",
     "listenGroup",
     "listenPrivate",
-    "listenConsole",
     "listenPublic",
     "listenOnebot",
     "withSessionLock",

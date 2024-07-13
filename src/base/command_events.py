@@ -11,8 +11,6 @@ from typing import (
     cast,
 )
 
-from nonebot.adapters.console.bot import Bot as _ConsoleBot
-from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot_plugin_alconna import Segment, Text
 from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING # type: ignore
@@ -26,7 +24,6 @@ from src.base.onebot_api import (
 )
 from src.base.onebot_basic import (
     MessageLike,
-    NoRecall,
     OnebotBotProtocol,
     OnebotEventProtocol,
     OnebotGroupEventProtocol,
@@ -294,28 +291,6 @@ class PrivateContext(OnebotMessageContext[OnebotEventProtocol]):
         )
 
 
-class ConsoleContext(UniMessageContext):
-    event: _ConsoleEvent
-    bot: _ConsoleBot
-
-    def __init__(self, event: _ConsoleEvent, bot: _ConsoleBot) -> None:
-        self.event = event
-        self.bot = bot
-
-    async def send(self, message: Iterable[Any] | str):
-        await self.bot.send(self.event, str(message))
-        return NoRecall()
-
-    async def reply(self, message: Iterable[Any] | str):
-        return await self.send(message)
-
-    def getSenderId(self):
-        return None
-
-    async def getMessage(self) -> UniMessage[Any]:
-        return UniMessage(self.event.message.extract_plain_text())
-
-
 # FALLBACK
 PublicContext = UniMessageContext
 
@@ -323,7 +298,6 @@ PublicContext = UniMessageContext
 __all__ = [
     "GroupContext",
     "PrivateContext",
-    "ConsoleContext",
     "OnebotMessageContext",
     "Context",
     "UniMessageContext",
