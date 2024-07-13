@@ -2,10 +2,11 @@
 对小哥进行的增删查改操作
 """
 
+from src.core.unit_of_work import get_unit_of_work
 from src.imports import *
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchAlconna(
     Alconna(
@@ -43,7 +44,7 @@ async def _(ctx: PublicContext, res: Arparma):
         await ctx.reply(UniMessage(la.msg.award_create_success.format(name)))
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchAlconna(
     Alconna(
@@ -70,7 +71,7 @@ async def _(ctx: PublicContext, res: Arparma):
         await ctx.reply(UniMessage(la.msg.award_delete_success.format(name)))
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @withAlconna(
     Alconna(
@@ -191,5 +192,41 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
 
 @listenGroup()
 @requireAdmin()
-async def give_something(ctx: GroupContext):
-    pass
+@matchAlconna(Alconna(["::"], "给薯片", Arg("对方", int | At), Arg("数量", int)))
+async def _(ctx: GroupContext, res: Arparma[Any]):
+    target = res.query("对方")
+    number = res.query[int]("数量")
+    if target is None or number is None:
+        return
+    if isinstance(target, At):
+        target = int(target.target)
+    assert isinstance(target, int)
+
+    async with get_unit_of_work() as uow:
+        uid = await uow.users.get_uid(target)
+        await uow.users.add_money(uid, number)
+
+    await ctx.reply("给了。", at=False, ref=True)
+
+
+@listenGroup()
+@requireAdmin()
+@matchAlconna(
+    Alconna(["::"], "给小哥", Arg("对方", int | At), Arg("名称", str), Arg("数量", int))
+)
+async def _(ctx: GroupContext, res: Arparma[Any]):
+    target = res.query("对方")
+    name = res.query[str]("名称")
+    number = res.query[int]("数量")
+    if target is None or number is None or name is None:
+        return
+    if isinstance(target, At):
+        target = int(target.target)
+    assert isinstance(target, int)
+
+    async with get_unit_of_work() as uow:
+        uid = await uow.users.get_uid(target)
+        aid = await uow.awards.get_aid_strong(name)
+        await uow.inventories.give(uid, aid, number, False)
+
+    await ctx.reply("给了。", at=False, ref=True)

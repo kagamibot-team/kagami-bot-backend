@@ -9,7 +9,7 @@ from src.imports import *
 from src.logic.admin import isAdmin
 
 
-@listenPublic()
+@listenOnebot()
 @kagami_exception_handler()
 @matchAlconna(
     Alconna(

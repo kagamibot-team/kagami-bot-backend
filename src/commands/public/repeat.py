@@ -3,7 +3,7 @@ from nonebot_plugin_alconna import Text, At, Emoji
 import re
 
 
-@listenPublic()
+@listenOnebot()
 async def repeat(ctx: PublicContext):
     message = ctx.message
     msg0 = message[0]

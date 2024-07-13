@@ -1,7 +1,7 @@
 from src.imports import *
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchAlconna(
     Alconna(
@@ -36,7 +36,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     await ctx.reply(f"{name}, {pos}")
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchAlconna(
     Alconna(
@@ -140,7 +140,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     return
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchAlconna(Alconna("re:(删除所有配方)", ["::"]))
 @withFreeSession()

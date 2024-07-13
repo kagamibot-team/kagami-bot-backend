@@ -1,7 +1,7 @@
 from src.imports import *
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchRegex("^:: ?(所有|全部) ?(等级|级别) ?$")
 @withFreeSession()

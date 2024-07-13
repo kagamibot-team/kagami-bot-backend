@@ -28,7 +28,7 @@ async def _(ctx: GroupContext, _):
     )
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchLiteral("::reload-script")
 async def _(ctx: PublicContext):

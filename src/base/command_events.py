@@ -17,7 +17,7 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent,
     PrivateMessageEvent,
 )
-from nonebot_plugin_alconna import Segment
+from nonebot_plugin_alconna import Segment, Text
 from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING  # type: ignore
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 
@@ -206,7 +206,7 @@ class OnebotContext(Generic[TE]):
         return await self._send_forward(nodes)
 
     def is_text_only(self) -> bool:
-        return self.event.message_type == "private"
+        return self.message.only(Text)
     
     @property
     def text(self):

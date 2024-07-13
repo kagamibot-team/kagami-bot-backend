@@ -4,6 +4,7 @@ import pathlib
 import re
 import time
 from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple, Unpack
+from typing_extensions import deprecated
 
 from arclet.alconna import Alconna, Arparma
 from nonebot import get_driver, logger
@@ -165,7 +166,7 @@ def listenGroup(manager: EventManager = root):
     """
 
     def wrapper(func: Callable[[GroupContext], Coroutine[Any, Any, T]]):
-        manager.listen(GroupContext)(func)
+        manager.listen(GroupContext)(kagami_exception_handler()(func))
 
     return wrapper
 
@@ -178,20 +179,7 @@ def listenPrivate(manager: EventManager = root):
     """
 
     def wrapper(func: Callable[[PrivateContext], Coroutine[Any, Any, T]]):
-        manager.listen(PrivateContext)(func)
-
-    return wrapper
-
-
-def listenPublic(manager: EventManager = root):
-    """添加全局消息的事件监听器
-
-    Args:
-        manager (EventManager, optional): 事件管理器，默认是 root。
-    """
-
-    def wrapper(func: Callable[[OnebotContext], Coroutine[Any, Any, T]]):
-        manager.listen(OnebotContext)(func)
+        manager.listen(PrivateContext)(kagami_exception_handler()(func))
 
     return wrapper
 
@@ -206,8 +194,8 @@ def listenOnebot(manager: EventManager = root):
     def wrapper(
         func: Callable[[GroupContext | PrivateContext], Coroutine[Any, Any, T]]
     ):
-        listenGroup(manager)(func)
-        listenPrivate(manager)(func)
+        listenGroup(manager)(kagami_exception_handler()(func))
+        listenPrivate(manager)(kagami_exception_handler()(func))
 
     return wrapper
 
@@ -227,6 +215,7 @@ class SessionLockManager:
 globalSessionLockManager = SessionLockManager()
 
 
+@deprecated("未来将会使用 UOW - Repository 模式，不会直接在外面暴露 session 对象")
 def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
     """获得一个异步的 SQLAlchemy 会话，并使用锁来保证线程安全。"""
 
@@ -237,7 +226,6 @@ def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
                 lock = manager[-1]
             else:
                 lock = manager[sender]
-            # lock = manager[-1]
 
             async with lock:
                 session = get_session()
@@ -251,6 +239,7 @@ def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
     return wrapper
 
 
+@deprecated("未来将会使用 UOW - Repository 模式，不会直接在外面暴露 session 对象")
 def withFreeSession():
     """随便获得一个异步的 SQLAlchemy 会话"""
 
@@ -292,16 +281,6 @@ def withLoading(text: str = "请稍候……"):
             try:
                 msg = await func(ctx, *args)
                 return msg
-            except ActionFailed as e:
-                logger.warning("又遇到了，那久违的「ActionFailed」")
-            except Exception as e:  # pylint: disable=broad-except
-                await ctx.reply(
-                    UniMessage().text(
-                        f"程序遇到了错误：{repr(e)}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！！"
-                    )
-                )
-
-                logger.opt(exception=e, colors=True).error(e)
             finally:
                 await receipt.recall()
 
@@ -374,7 +353,6 @@ __all__ = [
     "debugOnly",
     "listenGroup",
     "listenPrivate",
-    "listenPublic",
     "listenOnebot",
     "withSessionLock",
     "withFreeSession",

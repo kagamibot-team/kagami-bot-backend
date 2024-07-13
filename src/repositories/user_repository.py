@@ -120,6 +120,16 @@ class UserRepository(DBRepository[User]):
             update(User).where(User.data_id == uid).values(money=money)
         )
 
+    async def add_money(self, uid: int, money: float):
+        """增加用户的薯片数量
+
+        Args:
+            uid (int): 用户 ID
+            money (float): 薯片数量
+        """
+
+        await self.set_money(uid, (await self.get_money(uid)) + money)
+
     async def use_money(self, uid: int, money: float, report: bool = True) -> float:
         """消耗薯片
 

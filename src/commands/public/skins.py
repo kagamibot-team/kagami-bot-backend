@@ -10,7 +10,7 @@ class SkinInfo:
     price: float
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @withAlconna(
     Alconna(

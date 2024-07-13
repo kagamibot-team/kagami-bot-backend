@@ -75,7 +75,7 @@ def __match_str(s: str):
     return True
 
 
-@listenPublic()
+@listenOnebot()
 async def _(ctx: OnebotContext):
     message = ctx.message
     if len(message) == 0:

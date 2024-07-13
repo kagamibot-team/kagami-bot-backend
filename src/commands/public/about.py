@@ -39,7 +39,7 @@ def constructHelpMessage(helps: list[str]) -> UniMessage:
     return UniMessage().text(text)
 
 
-@listenPublic()
+@listenOnebot()
 @matchRegex("^(抓小哥|zhua) ?(更新|gx|upd|update)$")
 async def _(ctx: PublicContext, *_):
     count = 3
@@ -82,13 +82,13 @@ async def _(ctx: PublicContext, *_):
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
-@listenPublic()
+@listenOnebot()
 @matchRegex("^:: ?(抓小哥|zhua) ?(更新|gx|upd|update)$")
 async def _(ctx: PublicContext, *_):
     await ctx.send(constructUpdateMessage(updateHistoryDev))
 
 
-@listenPublic()
+@listenOnebot()
 @matchRegex("^(抓小哥|zhua) ?(帮助|help)$")
 async def _(ctx: PublicContext, *_):
     sections: list[PIL.Image.Image] = []
@@ -129,13 +129,13 @@ async def _(ctx: PublicContext, *_):
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
-@listenPublic()
+@listenOnebot()
 @matchRegex("^:: ?(抓小哥|zhua) ?(帮助|help)$")
 async def _(ctx: PublicContext, *_):
     await ctx.send(constructHelpMessage(helpAdmin))
 
 
-@listenPublic()
+@listenOnebot()
 @matchRegex("^(关于 ?抓小哥|zhua ?about)$")
 async def _(ctx: PublicContext, *_):
     await ctx.send(UniMessage().text(la.about.about))
