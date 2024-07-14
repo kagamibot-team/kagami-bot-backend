@@ -4,7 +4,7 @@ class KagamiCoreException(Exception):
     @property
     def message(self) -> str:
         return "通常来说，你应该看不到这条错误信息。如果你看到了，请联系开发组修复。"
-    
+
     def __str__(self) -> str:
         return self.message
 
@@ -47,7 +47,9 @@ class ObjectAlreadyExistsException(KagamiCoreException):
 class LackException(KagamiCoreException):
     """用户缺少什么的时候的报错信息"""
 
-    def __init__(self, obj_type: str, required: str | float | int, current: str | float | int) -> None:
+    def __init__(
+        self, obj_type: str, required: str | float | int, current: str | float | int
+    ) -> None:
         super().__init__()
         self.obj_type = obj_type
         self.required = required
@@ -72,3 +74,19 @@ class DoNotHaveException(KagamiCoreException):
     @property
     def message(self) -> str:
         return f"阿呀！你好像没有 {self.obj}……"
+
+
+class KagamiRangeError(KagamiCoreException):
+    """当用户输入的值不符合要求时抛出此异常"""
+
+    def __init__(
+        self, obj_type: str, required: str | float | int, current: str | float | int
+    ) -> None:
+        super().__init__()
+        self.obj_type = obj_type
+        self.required = required
+        self.current = current
+
+    @property
+    def message(self) -> str:
+        return f"这个 {self.obj_type} 的值太离谱了，一般你得要输入 {self.required}，你输入了 {self.current}"

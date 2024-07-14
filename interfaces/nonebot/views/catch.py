@@ -139,3 +139,9 @@ async def render_catch_failed_message(data: CatchMesssage) -> UniMessage[Any]:
 async def render_award_info_message(data: AwardInfo) -> UniMessage[Any]:
     image = await make_async(catch)(data)
     return UniMessage.image(raw=await make_async(imageToBytes)(image))
+
+
+async def render_catch_message(message: CatchMesssage) -> UniMessage[Any]:
+    if isinstance(message, CatchResultMessage):
+        return await render_catch_result_message(message)
+    return await render_catch_failed_message(message)

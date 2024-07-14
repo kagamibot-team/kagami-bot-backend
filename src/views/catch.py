@@ -8,6 +8,12 @@ class CatchMesssage(BaseModel):
     抓小哥时的提示消息，可能没有抓到小哥
     """
 
+    uid: int
+    "玩家ID"
+
+    qqid: int
+    "QQ号"
+
     username: str
     "玩家的用户名"
 
@@ -19,7 +25,10 @@ class CatchMesssage(BaseModel):
 
     next_time: float
     "下次槽位恢复的时间"
-    
+
+    group_id: int | None
+    "群号"
+
     @property
     def timedelta_text(self):
         "倒计时"

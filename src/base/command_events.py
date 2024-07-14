@@ -101,6 +101,10 @@ class OnebotContext(Generic[TE]):
     event: TE
     bot: OnebotBotProtocol
 
+    @property
+    def group_id(self) -> int | None:
+        return None
+
     def __init__(self, event: TE, bot: OnebotBotProtocol) -> None:
         self.event = event
         self.bot = bot
@@ -207,13 +211,17 @@ class OnebotContext(Generic[TE]):
 
     def is_text_only(self) -> bool:
         return self.message.only(Text)
-    
+
     @property
     def text(self):
         return self.message.extract_plain_text()
 
 
 class GroupContext(OnebotContext[GroupMessageEvent]):
+    @property
+    def group_id(self):
+        return self.event.group_id
+
     async def getSenderName(self):
         sender = self.sender_id
         info = await self.bot.call_api(

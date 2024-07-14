@@ -40,18 +40,3 @@ async def _(e: PicksEvent):
 
         await give_skin(session, e.uid, skin)
         await use_skin(session, e.uid, skin)
-
-
-# 将图片和描述改成皮肤的图片和描述
-@root.listen(PrePickMessageEvent)
-async def _(e: PrePickMessageEvent):
-    for aid, display in e.displays.items():
-        sid = await get_using_skin(e.session, e.uid, aid)
-        if sid:
-            query = select(Skin.name, Skin.description, Skin.image).filter(Skin.data_id == sid)
-            name, description, image = (await e.session.execute(query)).tuples().one()
-            display.name += f"[{name}]"
-            display.image = image
-
-            if len(description.strip()) > 0:
-                display.description = description
