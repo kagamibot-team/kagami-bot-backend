@@ -159,8 +159,8 @@ async def _(ctx: OnebotContext, _):
 
 
 @listenOnebot()
-@matchLiteral("是")
-async def _(ctx: OnebotContext):
+@matchRegex("^是[。.，,！!]?$")
+async def _(ctx: OnebotContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
         flags_before = await get_user_flags(uow.session, uid)
