@@ -23,6 +23,7 @@ from src.logic.catch import pickAwards
 from src.logic.catch_time import uow_calculate_time
 from src.views.award import AwardInfo
 from src.views.catch import CatchMesssage, CatchResultMessage
+from src.views.user import UserData
 
 
 async def picks(
@@ -90,12 +91,15 @@ async def picks(
             user_time.pickLastUpdated,
         )
         await uow.users.add_money(uid, pick_result.money)
+        user = UserData(
+            uid=uid,
+            qqid=str(qqid),
+            name=qqname,
+        )
 
         if spent_count > 0:
             msg = CatchResultMessage(
-                uid=uid,
-                qqid=qqid,
-                username=qqname,
+                user=user,
                 slot_remain=user_time.pickRemain - spent_count,
                 slot_sum=user_time.pickMax,
                 next_time=user_time.pickLastUpdated + user_time.interval - time.time(),
@@ -106,9 +110,7 @@ async def picks(
             )
         else:
             msg = CatchMesssage(
-                uid=uid,
-                qqid=qqid,
-                username=qqname,
+                user=user,
                 slot_remain=user_time.pickRemain - spent_count,
                 slot_sum=user_time.pickMax,
                 next_time=user_time.pickLastUpdated + user_time.interval - time.time(),
@@ -137,7 +139,7 @@ async def handle_xb(msg: CatchMesssage):
     if len(data) > 0:
         LocalStorageManager.instance().data.add_xb(
             msg.group_id,
-            msg.qqid,
+            msg.user.qqid,
             XBRecord(time=now_datetime(), action=Action.catched, data="，".join(data)),
         )
         LocalStorageManager.instance().save()

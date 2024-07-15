@@ -2,6 +2,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.exceptions import LackException
+from src.views.user import UserData
 
 from ..base.repository import DBRepository
 from ..models import User

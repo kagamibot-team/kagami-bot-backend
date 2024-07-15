@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from src.views.user import UserData
+
 from .award import AwardInfo
 
 
@@ -8,14 +10,8 @@ class CatchMesssage(BaseModel):
     抓小哥时的提示消息，可能没有抓到小哥
     """
 
-    uid: int
-    "玩家ID"
-
-    qqid: int
-    "QQ号"
-
-    username: str
-    "玩家的用户名"
+    user: UserData
+    "抓小哥的玩家"
 
     slot_remain: int
     "还有多少次抓小哥的次数"
@@ -61,7 +57,7 @@ class CatchResultMessage(CatchMesssage):
     @property
     def title(self):
         "标题"
-        return self.username + " 的一抓"
+        return self.user.name + " 的一抓"
 
     @property
     def details(self):

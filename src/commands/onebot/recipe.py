@@ -14,6 +14,7 @@ from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.views.recipe import MergeResult, MergeStatus
+from src.views.user import UserData
 
 
 @listenOnebot()
@@ -88,7 +89,11 @@ async def _(ctx: OnebotContext, res: Arparma):
             status = MergeStatus.what
 
         merge_info = MergeResult(
-            username=username,
+            user=UserData(
+                uid=uid,
+                qqid=str(ctx.sender_id),
+                name=username,
+            ),
             successed=status,
             inputs=(info1, info2, info3),
             output=info,

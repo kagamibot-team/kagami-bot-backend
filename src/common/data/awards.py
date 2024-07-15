@@ -7,7 +7,6 @@ from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing_extensions import deprecated
 
 from src.base.exceptions import LackException
 from src.common.data.skins import get_using_skin
@@ -142,7 +141,6 @@ async def get_award_info_deprecated(session: AsyncSession, uid: int, aid: int):
     return info
 
 
-@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def get_statistics(session: AsyncSession, uid: int, aid: int):
     """获得迄今为止一共抓到了多少小哥
 
@@ -157,7 +155,6 @@ async def get_statistics(session: AsyncSession, uid: int, aid: int):
     return await InventoryRepository(session).get_stats(uid, aid)
 
 
-@deprecated("该模块正在考虑废弃，请考虑使用 AwardRepository 管理库存信息")
 async def get_aid_by_name(session: AsyncSession, name: str):
     return await AwardRepository(session).get_aid(name)
 
