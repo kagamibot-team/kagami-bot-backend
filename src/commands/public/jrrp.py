@@ -3,14 +3,13 @@ import time
 
 import PIL.Image
 from nonebot_plugin_alconna import UniMessage
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.command_events import GroupContext
 from src.base.local_storage import LocalStorageManager
 from src.base.onebot_enum import QQEmoji
 from src.common.data.awards import get_award_info_deprecated
-from src.common.data.users import get_uid_by_qqid
 from src.common.decorators.command_decorators import (
     listenGroup,
     matchRegex,
@@ -22,7 +21,8 @@ from src.common.draw.tools import imageToBytes
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime, to_utc8
 from src.components import catch
-from src.models.models import Award, User
+from src.core.unit_of_work import get_unit_of_work
+from src.models.models import Award
 from src.models.statics import level_repo
 
 
@@ -93,7 +93,6 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
         [area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80
     )
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
-    # await ctx.reply(UniMessage().text(f"你的今日人品是：{str(jrrp)}。\n本次今日小哥是：{diplay.awardName}。"))
 
     if isinstance(ctx, GroupContext):
         if jrrp == 100:
@@ -118,44 +117,32 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
 
 @listenGroup()
 @matchRegex("^(小镜|xj)(签到|qd)$")
-@withSessionLock()
-async def _(ctx: GroupContext, session: AsyncSession, _):
-    uid = await get_uid_by_qqid(session, ctx.sender_id)
+async def _(ctx: GroupContext, _):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        uid = await uow.users.get_uid(ctx.sender_id)
+        ts, count = await uow.users.get_sign_in_info(uid)
 
-    query = select(User.last_sign_in_time, User.sign_in_count, User.money).filter(
-        User.data_id == uid
-    )
+        last_sign_date = to_utc8(timestamp_to_datetime(ts)).date()
+        now_date = now_datetime().date()
 
-    last_sign_in, count, money = (await session.execute(query)).tuples().one()
+        moneydelta = 0
 
-    last_sign_date = to_utc8(timestamp_to_datetime(last_sign_in)).date()
-    now_date = now_datetime().date()
+        if (now_date - last_sign_date).days == 0:
+            await ctx.reply("你今天已经签到过了哦～")
+            return
 
-    moneydelta = 0
+        if (now_date - last_sign_date).days > 1:
+            count = 1
+        else:
+            count += 1
 
-    if (now_date - last_sign_date).days == 0:
-        await ctx.reply("你今天已经签到过了哦～")
-        return
+        moneydelta = (1 - get_random().random() ** ((count - 1) * 0.2 + 1)) * 90 + 10
+        moneydelta = int(moneydelta)
 
-    if (now_date - last_sign_date).days > 1:
-        count = 1
-    else:
-        count += 1
+        await uow.users.add_money(uid, moneydelta)
+        await uow.users.set_sign_in_info(uid, time.time(), count)
 
-    moneydelta = (1 - get_random().random() ** ((count - 1) * 0.2 + 1)) * 90 + 10
-    moneydelta = int(moneydelta)
-
-    await session.execute(
-        update(User)
-        .filter(User.data_id == uid)
-        .values(
-            sign_in_count=count, last_sign_in_time=time.time(), money=money + moneydelta
-        )
-    )
-
-    await session.commit()
     await ctx.reply(f"签到成功！你已经连续签到 {count} 天了，得到了 {moneydelta} 薯片")
-
     no = LocalStorageManager.instance().data.sign(ctx.event.group_id)
     LocalStorageManager.instance().save()
     if no == 1:
