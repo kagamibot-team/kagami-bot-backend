@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import cast
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.exceptions import ObjectNotFoundException
@@ -100,3 +100,20 @@ class AwardRepository(DBRepository[Award]):
             Award.image,
         ).filter(Award.data_id == aid)
         return (await self.session.execute(query)).tuples().one()
+
+    async def set_alias(self, aid: int, name: str):
+        """设置一个小哥的别名
+
+        Args:
+            aid (int): 小哥的 ID
+            name (str): 别名
+        """
+        await self.session.execute(insert(AwardAltName).values(award_id=aid, name=name))
+
+    async def remove_alias(self, name: str):
+        """移除一个小哥的别名
+
+        Args:
+            name (str): 别名
+        """
+        await self.session.execute(delete(AwardAltName).where(AwardAltName.name == name))

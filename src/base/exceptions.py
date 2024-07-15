@@ -19,7 +19,7 @@ class ObjectNotFoundException(KagamiCoreException):
 
     @property
     def message(self) -> str:
-        return f"我好像不知道你说的 {self.obj_name} 是什么 {self.obj_type}"
+        return f"我好像没找到你说的 {self.obj_name} 的那个 {self.obj_type}"
 
 
 class RecipeMissingException(KagamiCoreException):
@@ -90,3 +90,15 @@ class KagamiRangeError(KagamiCoreException):
     @property
     def message(self) -> str:
         return f"这个 {self.obj_type} 的值太离谱了，一般你得要输入 {self.required}，你输入了 {self.current}"
+
+
+class MultipleObjectFoundException(KagamiCoreException):
+    """当用户输入的值不明确时抛出此异常"""
+
+    def __init__(self, obj_name: str) -> None:
+        super().__init__()
+        self.obj_name = obj_name
+    
+    @property
+    def message(self) -> str:
+        return f"你说的 {self.obj_name} 对应的对象太多了，请具体一点"

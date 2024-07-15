@@ -7,8 +7,8 @@ from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple, Un
 from typing_extensions import deprecated
 
 from arclet.alconna import Alconna, Arparma
+from arclet.alconna.exceptions import ArgumentMissing
 from nonebot import get_driver, logger
-from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import UniMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,6 +42,10 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
     ):
         async def inner(ctx: TC_co):
             result = rule.parse(ctx.message)
+
+            if result.error_info is not None and isinstance(result.error_info, ArgumentMissing):
+                await ctx.reply(repr(result.error_info))
+                return
 
             if not result.matched:
                 return None

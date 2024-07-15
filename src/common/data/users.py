@@ -29,15 +29,6 @@ async def get_uid_by_qqid(session: AsyncSession, qqid: int | str):
     return data_id
 
 
-async def get_qqid_by_uid(session: AsyncSession, data_id: int | str):
-    data_id = str(data_id)
-
-    result = await session.execute(select(User.qq_id).where(User.data_id == data_id))
-    qq_id = result.scalar_one()
-
-    return qq_id
-
-
 async def get_user_flags(session: AsyncSession, uid: int) -> set[str]:
     return set(
         (await session.execute(select(User.feature_flag).filter(User.data_id == uid)))

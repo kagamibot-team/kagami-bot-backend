@@ -1,3 +1,5 @@
+from src.base.exceptions import ObjectAlreadyExistsException
+from src.core.unit_of_work import get_unit_of_work
 from src.imports import *
 
 
@@ -12,7 +14,33 @@ class SkinInfo:
 
 @listenOnebot()
 @requireAdmin()
-@withAlconna(
+@matchAlconna(
+    Alconna(
+        ["::"],
+        "re:(创建|新增|增加|添加)皮肤",
+        Arg("小哥名", str),
+        Arg("皮肤名", str),
+    )
+)
+async def _(ctx: OnebotContext, res: Arparma):
+    aname = res.query[str]("小哥名")
+    sname = res.query[str]("皮肤名")
+    if aname is None or sname is None:
+        return
+
+    async with get_unit_of_work() as uow:
+        aid = await uow.awards.get_aid_strong(aname)
+        sid = await uow.skins.get_sid(sname)
+        if sid is not None:
+            raise ObjectAlreadyExistsException(f"皮肤 {sname}")
+        await uow.skins.add_skin(aid, sname)
+
+    await ctx.reply("ok.")
+
+
+@listenOnebot()
+@requireAdmin()
+@matchAlconna(
     Alconna(
         "re:(修改|更改|调整|改变|设置|设定)皮肤",
         ["::"],
@@ -37,13 +65,6 @@ class SkinInfo:
 )
 @withFreeSession()
 async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
-    if res.error_info is not None and isinstance(res.error_info, ArgumentMissing):
-        await ctx.reply(UniMessage(repr(res.error_info)))
-        return
-
-    if not res.matched:
-        return
-
     name = res.query[str]("皮肤原名")
 
     if name is None:

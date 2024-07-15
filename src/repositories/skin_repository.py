@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.exceptions import ObjectNotFoundException
@@ -55,7 +55,7 @@ class SkinRepository(DBRepository[Skin]):
             a = (await self.session.execute(q2)).scalar_one_or_none()
 
         return a
-    
+
     async def get_sid_strong(self, name: str) -> int:
         """根据名字获得皮肤的 ID，如果不存在会抛出异常
 
@@ -69,3 +69,35 @@ class SkinRepository(DBRepository[Skin]):
         if s is None:
             raise ObjectNotFoundException("皮肤", name)
         return s
+
+    async def add_skin(self, aid: int, name: str) -> int:
+        """创建一个皮肤，注意这里会直接创建，请提前检查名字是否会重复
+
+        Args:
+            aid (int): 小哥的 ID
+            name (str): 皮肤的名字
+
+        Returns:
+            int: 皮肤的 ID
+        """
+
+        q = insert(Skin).values(award_id=aid, name=name).returning(Skin.data_id)
+        return (await self.session.execute(q)).scalar_one()
+
+    async def set_alias(self, sid: int, name: str):
+        """设置一个皮肤的别名
+
+        Args:
+            sid (int): 皮肤的 ID
+            name (str): 别名
+        """
+        await self.session.execute(insert(SkinAltName).values(skin_id=sid, name=name))
+
+    async def remove_alias(self, name: str):
+        """删除一个皮肤的别名
+
+        Args:
+            name (str): 别名
+        """
+
+        await self.session.execute(delete(SkinAltName).where(SkinAltName.name == name))

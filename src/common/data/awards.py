@@ -157,28 +157,6 @@ async def get_statistics(session: AsyncSession, uid: int, aid: int):
     return await InventoryRepository(session).get_stats(uid, aid)
 
 
-@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
-async def give_award(
-    session: AsyncSession, uid: int, aid: int, count: int, report_lack: bool = True
-):
-    """增减一个用户的小哥库存
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户 ID
-        aid (int): 小哥 ID
-        count (int): 增减数量。如果值小于 0，会记录使用的量。
-        report_lack (bool): 是否在小哥数量不够时抛出异常，默认为 True
-    """
-    sto, _ = await InventoryRepository(session).give(uid, aid, count)
-    if sto < 0 and count < 0 and report_lack:
-        raise LackException(
-            (await get_award_info_deprecated(session, uid, aid)).awardName,
-            -count,
-            sto - count,
-        )
-
-
 @deprecated("该模块正在考虑废弃，请考虑使用 AwardRepository 管理库存信息")
 async def get_aid_by_name(session: AsyncSession, name: str):
     return await AwardRepository(session).get_aid(name)
