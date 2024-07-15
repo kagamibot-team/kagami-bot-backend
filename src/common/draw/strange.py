@@ -6,7 +6,6 @@ import PIL.Image
 
 from src.common.draw.images import imagePaste
 from src.common.rd import get_random
-from src.imports.images import PILImage
 
 
 def load_sources(
@@ -28,7 +27,7 @@ sources = load_sources()
 
 
 async def make_strange(
-    sources: list[PILImage] = sources,
+    sources: list[PIL.Image.Image] = sources,
     xGrids: int = 5,
     yGrids: int = 4,
     premix_background: bool = True,

@@ -1,5 +1,17 @@
-from src.common.lang.zh import get_latest_version
-from src.imports import *
+from loguru import logger
+from nonebot import get_driver
+from nonebot.exception import ActionFailed
+from sqlalchemy import delete, insert, select, update
+
+from src.base.db import get_session
+from src.base.event_root import root
+from src.base.onebot_api import send_group_msg, set_qq_status
+from src.base.onebot_enum import QQStatus
+from src.base.onebot_events import OnebotStartedContext
+from src.base.onebot_tools import broadcast
+from src.common.config import config
+from src.common.lang.zh import get_latest_version, la
+from src.models.models import Global
 
 
 @root.listen(OnebotStartedContext)
@@ -18,7 +30,7 @@ async def _(ctx: OnebotStartedContext):
             glob = (
                 await session.execute(select(Global.last_reported_version))
             ).scalar_one()
-        except Exception as e: # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             logger.warning(e)
             await session.execute(delete(Global))
             await session.execute(insert(Global))

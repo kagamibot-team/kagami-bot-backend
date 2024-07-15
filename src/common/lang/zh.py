@@ -424,3 +424,6 @@ def get_latest_version() -> str:
 
 def get_latest_versions(count: int = 3) -> list[str]:
     return sorted(la.about.update.keys(), reverse=True, key=Version)[:count]
+
+
+__all__ = ["la", "get_latest_version", "get_latest_versions"]

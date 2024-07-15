@@ -2,7 +2,12 @@
 小镜！！！
 """
 
-from src.imports import *
+from nonebot_plugin_alconna import Emoji, Text, UniMessage
+
+from src.base.command_events import OnebotContext
+from src.common.config import config
+from src.common.decorators.command_decorators import listenOnebot
+from src.common.lang.zh import la
 
 
 def __match_char(c: str):

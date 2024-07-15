@@ -9,10 +9,7 @@ from src.common.data.awards import (
     uow_use_award,
 )
 from src.common.data.recipe import try_merge
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-)
+from src.common.decorators.command_decorators import listenOnebot, matchAlconna
 from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work

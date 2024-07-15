@@ -1,12 +1,42 @@
+import PIL
+import PIL.Image
+from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
+from nonebot_plugin_alconna import UniMessage
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.base.command_events import GroupContext, OnebotContext
+from src.common.data.awards import get_aid_by_name
+from src.common.data.skins import (
+    do_user_have_skin,
+    get_sid_by_name,
+    get_skin_name,
+    switch_skin_of_award,
+    use_skin,
+)
+from src.common.data.users import get_uid_by_qqid
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchAlconna,
+    requireAdmin,
+    withFreeSession,
+    withLoading,
+    withSessionLock,
+)
+from src.common.draw.images import pileImages, verticalPile
+from src.common.draw.texts import Fonts, getTextImage
+from src.common.draw.tools import imageToBytes
+from src.common.lang.zh import la
 from src.components.ref_book import skin_book
-from src.imports import *
+from src.models.models import Award, AwardAltName, Skin, SkinAltName, SkinRecord
+from src.models.statics import level_repo
 
 
 @listenOnebot()
 @matchAlconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("name", str)))
 @withSessionLock()
 async def _(
-    ctx: GroupContext | PrivateContext,
+    ctx: OnebotContext,
     session: AsyncSession,
     result: Arparma,
 ):
@@ -38,7 +68,11 @@ async def _(
     if skin is None:
         await ctx.reply(UniMessage().text(la.msg.skin_set_default.format(name)))
     else:
-        await ctx.reply(UniMessage().text(la.msg.skin_set_2.format(name, await get_skin_name(session, skin))))
+        await ctx.reply(
+            UniMessage().text(
+                la.msg.skin_set_2.format(name, await get_skin_name(session, skin))
+            )
+        )
 
     await session.commit()
 
@@ -50,14 +84,15 @@ async def _(
 async def _(ctx: OnebotContext, session: AsyncSession, _: Arparma):
     uid = await get_uid_by_qqid(session, ctx.sender_id)
 
-    query = (
-        select(Skin.data_id, Skin.image, Skin.name, Award.name, Award.level_id)
-        .join(Award, Award.data_id == Skin.award_id)
-    )
+    query = select(
+        Skin.data_id, Skin.image, Skin.name, Award.name, Award.level_id
+    ).join(Award, Award.data_id == Skin.award_id)
     skins = (await session.execute(query)).tuples().all()
     skins = sorted(skins, key=lambda s: level_repo.sorted_index[s[4]])
 
-    query = select(SkinRecord.skin_id, SkinRecord.selected).filter(SkinRecord.user_id == uid)
+    query = select(SkinRecord.skin_id, SkinRecord.selected).filter(
+        SkinRecord.user_id == uid
+    )
     owned = dict((await session.execute(query)).tuples().all())
 
     _boxes: list[tuple[str, str, str, str, str]] = []
@@ -91,7 +126,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, _: Arparma):
         notation = la.disp.skin_using if owned[sid] == 1 else ""
         _boxes.append((sname, aname, notation, level_repo.levels[lid].color, img))
 
-    boxes: list[PILImage] = []
+    boxes: list[PIL.Image.Image] = []
     for box in _boxes:
         boxes.append(await skin_book(*box))
 
@@ -114,19 +149,22 @@ async def _(ctx: OnebotContext, session: AsyncSession, _: Arparma):
 )
 @withLoading()
 @withFreeSession()
-async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
+async def _(session: AsyncSession, ctx: OnebotContext, res: Arparma):
     name = res.query[str]("name")
 
-    query = (
-        select(Skin.name, Award.name, Skin.price, Award.level_id, Skin.image)
-        .join(Award, Skin.award_id == Award.data_id)
+    query = select(Skin.name, Award.name, Skin.price, Award.level_id, Skin.image).join(
+        Award, Skin.award_id == Award.data_id
     )
 
     if name:
         query1 = query.filter(Award.name == name)
         query2 = query.filter(Skin.name == name)
-        query3 = query.join(AwardAltName, AwardAltName.award_id == Award.data_id).filter(AwardAltName.name == name)
-        query4 = query.join(SkinAltName, SkinAltName.skin_id == Skin.data_id).filter(SkinAltName.name == name)
+        query3 = query.join(
+            AwardAltName, AwardAltName.award_id == Award.data_id
+        ).filter(AwardAltName.name == name)
+        query4 = query.join(SkinAltName, SkinAltName.skin_id == Skin.data_id).filter(
+            SkinAltName.name == name
+        )
 
         skins1 = (await session.execute(query1)).tuples()
         skins2 = (await session.execute(query2)).tuples()
@@ -139,9 +177,13 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
 
     skins = sorted(skins, key=lambda s: level_repo.sorted_index[s[3]])
 
-    boxes: list[PILImage] = []
+    boxes: list[PIL.Image.Image] = []
     for box in skins:
-        boxes.append(await skin_book(box[0], box[1], str(box[2]), level_repo.levels[box[3]].color, box[4]))
+        boxes.append(
+            await skin_book(
+                box[0], box[1], str(box[2]), level_repo.levels[box[3]].color, box[4]
+            )
+        )
 
     area_title = await getTextImage(
         text=f"全部 {len(skins)} 种皮肤：",

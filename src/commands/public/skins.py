@@ -1,15 +1,20 @@
+from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
+from loguru import logger
+from nonebot_plugin_alconna import Image, UniMessage
+from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.base.command_events import OnebotContext, OnebotContext
 from src.base.exceptions import ObjectAlreadyExistsException
+from src.common.data.skins import downloadSkinImage, get_sid_by_name
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchAlconna,
+    requireAdmin,
+    withFreeSession,
+)
 from src.core.unit_of_work import get_unit_of_work
-from src.imports import *
-
-
-@dataclass
-class SkinInfo:
-    aName: str
-    name: str
-    image: str
-    extra_description: str
-    price: float
+from src.models.models import Skin
 
 
 @listenOnebot()
@@ -64,7 +69,7 @@ async def _(ctx: OnebotContext, res: Arparma):
     )
 )
 @withFreeSession()
-async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
+async def _(session: AsyncSession, ctx: OnebotContext, res: Arparma):
     name = res.query[str]("皮肤原名")
 
     if name is None:

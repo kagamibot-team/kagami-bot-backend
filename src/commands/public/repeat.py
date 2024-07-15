@@ -1,10 +1,13 @@
-from src.imports import *
-from nonebot_plugin_alconna import Text, At, Emoji
 import re
+
+from nonebot_plugin_alconna import At, Emoji, Text, UniMessage
+
+from src.base.command_events import OnebotContext
+from src.common.decorators.command_decorators import listenOnebot
 
 
 @listenOnebot()
-async def repeat(ctx: PublicContext):
+async def repeat(ctx: OnebotContext):
     message = ctx.message
     msg0 = message[0]
     if not isinstance(msg0, Text):

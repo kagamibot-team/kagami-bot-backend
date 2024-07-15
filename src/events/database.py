@@ -1,7 +1,10 @@
 import functools
 
+from loguru import logger
+
 from src.base.db import manual_checkpoint
-from src.imports import *
+from src.base.event_timer import addInterval
+from src.common.config import config
 
 
 @functools.partial(addInterval, config.autosave_interval, skip_first=True)

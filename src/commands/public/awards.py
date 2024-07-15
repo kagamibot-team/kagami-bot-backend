@@ -2,8 +2,28 @@
 对小哥进行的增删查改操作
 """
 
+from typing import Any
+
+from arclet.alconna import Alconna, Arg, ArgFlag, Arparma, MultiVar, Option
+from loguru import logger
+from nonebot_plugin_alconna import At, Image, UniMessage
+from sqlalchemy import delete, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.base.command_events import GroupContext, OnebotContext
+from src.base.db import get_session
+from src.common.data.awards import download_award_image, get_aid_by_name
+from src.common.decorators.command_decorators import (
+    listenGroup,
+    listenOnebot,
+    matchAlconna,
+    requireAdmin,
+    withFreeSession,
+)
+from src.common.lang.zh import la
 from src.core.unit_of_work import get_unit_of_work
-from src.imports import *
+from src.models.models import Award, AwardAltName
+from src.models.statics import level_repo
 
 
 @listenOnebot()
@@ -16,17 +36,15 @@ from src.imports import *
         Arg("level", str),
     )
 )
-async def _(ctx: PublicContext, res: Arparma):
+async def _(ctx: OnebotContext, res: Arparma):
     name = res.query[str]("name")
     levelName = res.query[str]("level")
 
     assert name is not None
     assert levelName is not None
 
-    session = get_session()
-
-    async with session.begin():
-        _award = await get_aid_by_name(session, name)
+    async with get_unit_of_work() as uow:
+        _award = await uow.awards.get_aid(name)
 
         if _award is not None:
             await ctx.reply(UniMessage(la.err.award_exists.format(name)))
@@ -37,11 +55,8 @@ async def _(ctx: PublicContext, res: Arparma):
             await ctx.reply(UniMessage(la.err.level_not_found.format(levelName)))
             return
 
-        award = Award(level_id=level_obj.lid, name=name)
-        session.add(award)
-        await session.commit()
-
-        await ctx.reply(UniMessage(la.msg.award_create_success.format(name)))
+        await uow.awards.add_award(name, level_obj.lid)
+    await ctx.reply("ok.")
 
 
 @listenOnebot()
@@ -53,7 +68,7 @@ async def _(ctx: PublicContext, res: Arparma):
         Arg("name", str),
     )
 )
-async def _(ctx: PublicContext, res: Arparma):
+async def _(ctx: OnebotContext, res: Arparma):
     name = res.query[str]("name")
 
     assert name is not None
@@ -73,7 +88,7 @@ async def _(ctx: PublicContext, res: Arparma):
 
 @listenOnebot()
 @requireAdmin()
-@withAlconna(
+@matchAlconna(
     Alconna(
         "re:(修改|更改|调整|改变|设置|设定)小哥",
         ["::"],
@@ -105,14 +120,7 @@ async def _(ctx: PublicContext, res: Arparma):
     )
 )
 @withFreeSession()
-async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
-    if res.error_info is not None and isinstance(res.error_info, ArgumentMissing):
-        await ctx.reply(UniMessage(repr(res.error_info)))
-        return
-
-    if not res.matched:
-        return
-
+async def _(session: AsyncSession, ctx: OnebotContext, res: Arparma):
     name = res.query[str]("小哥原名")
 
     if name is None:
@@ -212,17 +220,26 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 @listenGroup()
 @requireAdmin()
 @matchAlconna(
-    Alconna(["::"], "给小哥", Arg("对方", int | At), Arg("名称", str), Arg("数量", int))
+    Alconna(
+        ["::"],
+        "给小哥",
+        Arg("对方", int | At),
+        Arg("名称", str),
+        Arg("数量", int, flags=[ArgFlag.OPTIONAL]),
+    )
 )
 async def _(ctx: GroupContext, res: Arparma[Any]):
     target = res.query("对方")
     name = res.query[str]("名称")
     number = res.query[int]("数量")
-    if target is None or number is None or name is None:
+    if target is None or name is None:
         return
     if isinstance(target, At):
         target = int(target.target)
     assert isinstance(target, int)
+
+    if number is None:
+        number = 1
 
     async with get_unit_of_work() as uow:
         uid = await uow.users.get_uid(target)

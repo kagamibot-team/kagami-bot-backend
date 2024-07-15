@@ -1,11 +1,36 @@
 import math
-from typing import Sequence
+from typing import Any, Sequence
+
+import PIL
+import PIL.Image
+from arclet.alconna import Alconna, Arg, Arparma, Option
+from loguru import logger
+from nonebot_plugin_alconna import UniMessage
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from interfaces.nonebot.views.catch import render_award_info_message
+from src.base.command_events import GroupContext, OnebotContext
 from src.base.exceptions import DoNotHaveException
+from src.common.data.awards import uow_get_award_info
+from src.common.data.users import get_uid_by_qqid
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchAlconna,
+    requireAdmin,
+    withLoading,
+    withSessionLock,
+)
+from src.common.draw.images import pileImages, verticalPile
+from src.common.draw.texts import Fonts, getTextImage
+from src.common.draw.tools import imageToBytes
+from src.common.lang.zh import la
+from src.components.ref_book import ref_book_box
 from src.core.unit_of_work import get_unit_of_work
-from src.imports import *
 from src.logic.admin import isAdmin
+from src.models.models import Award, Skin, SkinRecord
+from src.models.statics import level_repo
+from src.repositories.inventory_repository import InventoryRepository
 
 
 @listenOnebot()
@@ -61,7 +86,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         await ctx.reply(msg)
 
 
-async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
+async def _combine_cells(imgs: list[PIL.Image.Image], marginTop: int = 0):
     return await pileImages(
         paddingX=0,
         paddingY=0,
@@ -156,13 +181,13 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
         met_sums[lid] = 0
         if len(awards[lid]) == 0:
             continue
-        imgs: list[PILImage] = []
+        imgs: list[PIL.Image.Image] = []
         for aid, _, _ in awards[lid]:
             sto, use = storages[aid] if aid in storages.keys() else (0, 0)
             if sto + use:
                 met_sums[lid] += 1
 
-    baseImgs: list[PILImage] = []
+    baseImgs: list[PIL.Image.Image] = []
 
     name = await ctx.getSenderName()
 
@@ -204,7 +229,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
             continue
         if len(awards[lid]) == 0:
             continue
-        imgs: list[PILImage] = []
+        imgs: list[PIL.Image.Image] = []
         for aid, name, img in awards[lid]:
             color = lcolor
             sto, use = storages[aid] if aid in storages.keys() else (0, 0)
@@ -255,10 +280,10 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
     levels = await _get_levels()
     skins, storages = await _get_others(session, uid)
 
-    imgs: list[PILImage] = []
+    imgs: list[PIL.Image.Image] = []
     for lid, _, lcolor, _ in levels:
         awards = await _get_awards(session, lid)
-        _imgs: list[tuple[int, PILImage]] = []
+        _imgs: list[tuple[int, PIL.Image.Image]] = []
 
         if len(awards) == 0:
             continue
@@ -328,7 +353,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
         awards[lid] = await _get_awards(session, lid)
         total += len(awards[lid])
 
-    baseImgs: list[PILImage] = []
+    baseImgs: list[PIL.Image.Image] = []
     lNameDisplay = f" {levelName} " if target_level is not None else ""
     baseImgs.append(
         await getTextImage(
@@ -347,7 +372,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
 
         if len(awards[lid]) == 0:
             continue
-        imgs: list[PILImage] = []
+        imgs: list[PIL.Image.Image] = []
         for _, name, img in awards[lid]:
             color = lcolor
             imgs.append(await ref_book_box(name, "", "", color, img))
@@ -368,12 +393,3 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
 
     img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
-
-
-@listenGroup()
-async def _(ctx: GroupContext):
-    """
-    赤石
-    """
-
-    msg = ctx.message

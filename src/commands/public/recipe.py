@@ -1,6 +1,9 @@
+from src.base.command_events import OnebotContext
 from src.base.exceptions import ObjectNotFoundException
+from src.common.data.awards import uow_get_award_info
+from src.common.decorators.command_decorators import listenOnebot, matchAlconna, requireAdmin
 from src.core.unit_of_work import get_unit_of_work
-from src.imports import *
+from arclet.alconna import Alconna, Arg, Arparma, Option
 
 
 @listenOnebot()
@@ -14,7 +17,7 @@ from src.imports import *
         Arg("name3", str),
     )
 )
-async def _(ctx: PublicContext, res: Arparma):
+async def _(ctx: OnebotContext, res: Arparma):
     n1 = res.query[str]("name1")
     n2 = res.query[str]("name2")
     n3 = res.query[str]("name3")
@@ -57,7 +60,7 @@ async def _(ctx: PublicContext, res: Arparma):
         ),
     )
 )
-async def _(ctx: PublicContext, res: Arparma):
+async def _(ctx: OnebotContext, res: Arparma):
     n1 = res.query[str]("name1")
     n2 = res.query[str]("name2")
     n3 = res.query[str]("name3")
@@ -88,7 +91,7 @@ async def _(ctx: PublicContext, res: Arparma):
         Option("--force", alias=["-f", "强制"]),
     )
 )
-async def _(ctx: PublicContext, res: Arparma):
+async def _(ctx: OnebotContext, res: Arparma):
     async with get_unit_of_work() as uow:
         await uow.recipes.clear_not_modified(force=res.exist("--force"))
     await ctx.reply("ok.")

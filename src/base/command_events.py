@@ -274,14 +274,9 @@ class PrivateContext(OnebotContext[PrivateMessageEvent]):
         )
 
 
-# FALLBACK
-PublicContext = OnebotContext
-
-
 __all__ = [
     "GroupContext",
     "PrivateContext",
     "OnebotContext",
-    "PublicContext",
     "forwardMessage",
 ]
