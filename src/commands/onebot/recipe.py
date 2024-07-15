@@ -10,7 +10,6 @@ from src.common.data.awards import (
 )
 from src.common.data.recipe import try_merge
 from src.common.decorators.command_decorators import (
-    kagami_exception_handler,
     listenOnebot,
     matchAlconna,
 )
@@ -21,7 +20,6 @@ from src.views.recipe import MergeResult, MergeStatus
 
 
 @listenOnebot()
-@kagami_exception_handler()
 @matchAlconna(
     Alconna(
         "re:(合成|hc)(小哥|xg)?",

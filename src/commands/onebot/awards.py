@@ -3,14 +3,12 @@ from typing import Sequence
 
 from interfaces.nonebot.views.catch import render_award_info_message
 from src.base.exceptions import DoNotHaveException
-from src.common.decorators.command_decorators import kagami_exception_handler
 from src.core.unit_of_work import get_unit_of_work
 from src.imports import *
 from src.logic.admin import isAdmin
 
 
 @listenOnebot()
-@kagami_exception_handler()
 @matchAlconna(
     Alconna(
         "展示",
