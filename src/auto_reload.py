@@ -9,25 +9,23 @@ import pathlib
 import pkgutil
 from types import ModuleType
 
-from nonebot import get_driver, logger
+from loguru import logger
+from nonebot import get_driver
 
-from src.base.collections import PriorityList
-from src.base.event_root import activate_root, root
+from src.base.event_root import root
+from utils.collections import PriorityList
 
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
-    # ("common",),
-    # ("common", "data"),
-    # ("imports",),
-    # ("components",),
-    ("commands",),
-    ("events",),
-    ("logic",),
+    ("interfaces",),
+    ("src", "commands"),
+    ("src", "events"),
+    ("src", "logic"),
 )
 
 
 def _import(name: str, *parents: str):
-    _name = ".".join(["src", *parents, name])
+    _name = ".".join([*parents, name])
     m = importlib.import_module(_name)
     return m
 
@@ -50,7 +48,7 @@ def load_packages():
     加载所有需要的模块
     """
 
-    package_dir = pathlib.Path(__file__).resolve().parent
+    package_dir = pathlib.Path(__file__).resolve().parent.parent
     for to_import in to_load_parents:
         loaded_modules.extend(
             _walk_load(os.path.join(package_dir, *to_import), *to_import)
@@ -124,6 +122,4 @@ def init():
     """
     初始化加载器
     """
-
-    activate_root(root)
     load_packages()

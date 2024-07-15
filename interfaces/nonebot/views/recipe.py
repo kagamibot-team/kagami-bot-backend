@@ -2,14 +2,14 @@ from typing import Any
 
 from nonebot_plugin_alconna import UniMessage
 
-from interfaces.nonebot.views.awards import display_box
+from interfaces.nonebot.components.awards import display_box
 from src.common.decorators.threading import make_async
 from src.common.draw.texts import Fonts
 from src.common.draw.tools import imageToBytes
 from src.views.recipe import MergeResult
 
-from .basics import horizontal_pile, render_text, vertical_pile
-from .catch import catch
+from ..base.basics import horizontal_pile, render_text, vertical_pile
+from ..components.catch import catch
 
 
 def render_merge_image(data: MergeResult):

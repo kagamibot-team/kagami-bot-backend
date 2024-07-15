@@ -134,7 +134,7 @@ class RecipeRepository(DBRepository[Recipe]):
                 Recipe.award3 == aid3,
             )
             .values(
-                aidres=aidres,
+                result=aidres,
                 possibility=possibility,
                 modified=1,
             )
@@ -143,9 +143,11 @@ class RecipeRepository(DBRepository[Recipe]):
         await self.session.execute(query)
         await self.clear_history(await self.get_recipe_id(aid1, aid2, aid3))
 
-    async def clear_not_modified(self) -> None:
+    async def clear_not_modified(self, force: bool=False) -> None:
         """删除所有未修改的配方"""
-        query = delete(Recipe).where(Recipe.modified == 0)
+        query = delete(Recipe)
+        if not force:
+            query = query.where(Recipe.modified == 0)
 
         await self.session.execute(query)
         await self.session.flush()

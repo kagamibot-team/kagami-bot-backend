@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 
-from nonebot import logger
+from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 from src.common.times import now_datetime

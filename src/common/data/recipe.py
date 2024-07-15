@@ -4,7 +4,7 @@
 
 import math
 
-from nonebot import logger
+from loguru import logger
 from sqlalchemy import func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 

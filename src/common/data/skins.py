@@ -1,9 +1,9 @@
 import os
 
-from nonebot import logger
+from loguru import logger
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import MultipleResultsFound
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.download import download, writeData
 from src.common.lang.zh import la

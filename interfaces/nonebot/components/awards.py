@@ -8,7 +8,7 @@ from loguru import logger
 from src.common.draw.tools import hex_to_rgb, mix_color, rgb_to_hex
 from src.views.award import AwardInfo
 
-from .basics import (
+from ..base.basics import (
     apply_mask,
     draw_rounded_rectangle,
     paste_image,

@@ -81,8 +81,14 @@ async def _(ctx: PublicContext, res: Arparma):
 
 @listenOnebot()
 @requireAdmin()
-@matchAlconna(Alconna("re:(删除所有配方)", ["::"]))
-async def _(ctx: PublicContext, _: Arparma):
+@matchAlconna(
+    Alconna(
+        ["::"],
+        "删除所有配方",
+        Option("--force", alias=["-f", "强制"]),
+    )
+)
+async def _(ctx: PublicContext, res: Arparma):
     async with get_unit_of_work() as uow:
-        await uow.recipes.clear_not_modified()
+        await uow.recipes.clear_not_modified(force=res.exist("--force"))
     await ctx.reply("ok.")

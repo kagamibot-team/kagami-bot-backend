@@ -2,9 +2,9 @@ import asyncio
 import time
 from typing import Any, Callable, Coroutine, TypeVar
 
-from nonebot import logger
+from loguru import logger
 
-from src.base.collections import PriorityList
+from utils.collections import PriorityList
 
 T = TypeVar("T")
 TV_contra = TypeVar("TV_contra", contravariant=True)
