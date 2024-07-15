@@ -1,194 +1,64 @@
 import math
-import pathlib
 from typing import Sequence
 
+from interfaces.nonebot.views.catch import render_award_info_message
+from src.base.exceptions import DoNotHaveException
+from src.core.unit_of_work import get_unit_of_work
 from src.imports import *
+from src.logic.admin import isAdmin
 
 
 @listenOnebot()
-@matchAlconna(Alconna("re:(展示|zhanshi|zs)", Arg("name", str)))
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
-    name = result.query[str]("name")
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
-
-    if name is None:
-        return
-
-    award = await get_aid_by_name(session, name)
-
-    if award is None:
-        # 有可能是打成了皮肤的名字，试着匹配一下有没有皮肤有这个名字的
-
-        sid = await get_sid_by_name(session, name)
-        if sid is None:
-            await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
-            return
-
-        award = (
-            await session.execute(
-                select(Skin.applied_award_id)
-                .filter(Skin.data_id == sid)
-                .join(Award, Award.data_id == Skin.applied_award_id)
-                .join(UsedSkin, UsedSkin.skin_id == sid)
-                .filter(UsedSkin.user_id == user)
-            )
-        ).scalar_one_or_none()
-        if award is None:
-            await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
-            return
-
-    if await get_statistics(session, user, award) <= 0:
-        await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
-        return
-
-    info = await get_award_info(session, user, award)
-
-    if info.skinName is not None:
-        nameDisplay = la.disp.award_display_with_skin.format(
-            info.awardName, info.skinName, info.levelName
-        )
-    else:
-        nameDisplay = la.disp.award_display.format(info.awardName, info.levelName)
-
-    await ctx.reply(
-        UniMessage()
-        .text(nameDisplay)
-        .image(path=pathlib.Path(info.awardImg))
-        .text(f"\n{info.awardDescription}")
-    )
-
-
-@listenOnebot()
-@matchAlconna(Alconna("re:(展示|zhanshi|zs)条目", Arg("name", str)))
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
-    name = result.query[str]("name")
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
-
-    if name is None:
-        return
-
-    award = await get_aid_by_name(session, name)
-
-    if award is None:
-        await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
-        return
-
-    if await get_statistics(session, user, award) <= 0:
-        await ctx.reply(UniMessage(la.err.award_not_encountered_yet.format(name)))
-        return
-
-    info = await get_award_info(session, user, award)
-
-    if info.skinName is not None:
-        nameDisplay = f"{info.awardName}[{info.skinName}]"
-    else:
-        nameDisplay = info.awardName
-
-    image = await catch(
-        title=nameDisplay,
-        description=info.awardDescription,
-        image=info.awardImg,
-        stars=info.levelName,
-        color=info.color,
-        new=False,
-        notation=str(await get_storage(session, user, award)),
-    )
-
-    await ctx.send(UniMessage().image(raw=imageToBytes(image)))
-
-
-@listenOnebot()
-@requireAdmin()
 @matchAlconna(
     Alconna(
-        "re:(展示|zhanshi|zs)",
-        ["::"],
-        Arg("name", str),
-        Arg("sname", str, flags=[ArgFlag.OPTIONAL]),
+        "展示",
+        Arg("名字", str),
+        Option("皮肤", Arg("皮肤名", str), alias=["--skin", "-s"]),
+        Option("管理员", alias=["--admin", "-a"]),
+        Option("条目", alias=["--display", "-d"]),
     )
 )
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
-    name = result.query[str]("name")
-    sname = result.query[str]("sname")
-
+async def _(ctx: OnebotContext, res: Arparma[Any]):
+    name = res.query[str]("名字")
     if name is None:
         return
+    skin_name = res.query[str]("皮肤名")
+    do_admin = res.find("管理员") and isAdmin(ctx)
+    do_display = res.find("条目")
 
-    aid = await get_aid_by_name(session, name)
+    async with get_unit_of_work() as uow:
+        aid = await uow.awards.get_aid_strong(name)
+        sid = None
+        uid = await uow.users.get_uid(ctx.sender_id)
+        notation = ""
 
-    if aid is None:
-        await ctx.reply(la.err.award_not_found.format(name))
-        return
+        if not do_admin:
+            sto = await uow.inventories.get_storage(uid, aid)
+            if sto <= 0:
+                raise DoNotHaveException(name)
+            notation = str(sto)
 
-    query = select(Award.name, Award.description, Award.img_path).filter(
-        Award.data_id == aid
-    )
-    dname, description, img_path = (await session.execute(query)).tuples().one()
+        if skin_name is not None:
+            sid = await uow.skins.get_sid_strong(skin_name)
+            if not do_admin and not await uow.skin_inventory.do_user_have(uid, sid):
+                raise DoNotHaveException(skin_name)
+            uid = None
+        if do_admin:
+            uid = None
+        info = await uow_get_award_info(uow, aid, uid, sid)
+        info.new = False
+        info.notation = notation
 
-    if sname is not None:
-        sid = await get_sid_by_name(session, sname)
-        if sid is None:
-            await ctx.reply(la.err.skin_not_found.format(name))
-            return
-
-        query = select(Skin.name, Skin.extra_description, Skin.image).filter(
-            Skin.data_id == sid, Skin.applied_award_id == aid
-        )
-        res = (await session.execute(query)).tuples().one_or_none()
-
-        if res is None:
-            await ctx.reply(la.err.invalid_skin_award_pair.format(name, sname))
-            return
-
-        dname, edesc, img_path = res
-        description = edesc or description
-
-    await ctx.reply(
-        UniMessage()
-        .text(f"[{aid}]{dname}")
-        .image(path=pathlib.Path(img_path))
-        .text(f"\n{description}")
-    )
-
-
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(Alconna("re:(展示|zhanshi|zs)条目", ["::"], Arg("name", str)))
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
-    name = result.query[str]("name")
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
-
-    if name is None:
-        return
-
-    award = await get_aid_by_name(session, name)
-
-    if award is None:
-        await ctx.reply(UniMessage(la.err.award_not_found.format(name)))
-        return
-
-    info = await get_award_info(session, user, award)
-
-    if info.skinName is not None:
-        nameDisplay = f"{info.awardName}[{info.skinName}]"
+    if do_display:
+        msg = await render_award_info_message(info)
+        await ctx.send(msg)
     else:
-        nameDisplay = info.awardName
-
-    image = await catch(
-        title=nameDisplay,
-        description=info.awardDescription,
-        image=info.awardImg,
-        stars=info.levelName,
-        color=info.color,
-        new=False,
-        notation="",
-    )
-
-    await ctx.send(UniMessage().image(raw=imageToBytes(image)))
+        msg = (
+            UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
+            .image(raw=info.image_bytes)
+            .text(f"\n{info.description}")
+        )
+        await ctx.reply(msg)
 
 
 async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
@@ -207,40 +77,29 @@ async def _combine_cells(imgs: list[PILImage], marginTop: int = 0):
     )
 
 
-async def _get_levels(session: AsyncSession):
-    query = select(Level.data_id, Level.name, Level.color_code, Level.weight).order_by(
-        -Level.sorting_priority, Level.weight
-    )
-    return (await session.execute(query)).tuples().all()
+async def _get_levels():
+    return [
+        (level.lid, level.display_name, level.color, level.weight)
+        for level in level_repo.sorted
+    ]
 
 
 async def _get_awards(session: AsyncSession, lid: int):
-    query = select(Award.data_id, Award.name, Award.img_path).filter(
-        Award.level_id == lid
-    )
+    query = select(Award.data_id, Award.name, Award.image).filter(Award.level_id == lid)
     return (await session.execute(query)).tuples().all()
 
 
 async def _get_others(session: AsyncSession, uid: int):
-    query = select(Skin.applied_award_id, Skin.image).filter(
-        Skin.owned_skins.any(OwnedSkin.user_id == uid)
+    query = (
+        select(Skin.award_id, Skin.image)
+        .join(SkinRecord, SkinRecord.skin_id == Skin.data_id)
+        .filter(SkinRecord.user_id == uid, SkinRecord.selected == 1)
     )
     skins = (await session.execute(query)).tuples().all()
     skins = dict(skins)
 
-    query = select(StorageStats.target_award_id, StorageStats.count).filter(
-        StorageStats.target_user_id == uid
-    )
-    storages = (await session.execute(query)).tuples().all()
-    storages = dict(storages)
-
-    query = select(UsedStats.target_award_id, UsedStats.count).filter(
-        UsedStats.target_user_id == uid
-    )
-    used = (await session.execute(query)).tuples().all()
-    used = dict(used)
-
-    return skins, storages, used
+    storages = await InventoryRepository(session).get_inventory_dict(uid)
+    return skins, storages
 
 
 def calc_progress(
@@ -282,13 +141,13 @@ def calc_progress(
 )
 @withLoading(la.loading.zhuajd)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
     if uid is None:
         return
 
-    levels = await _get_levels(session)
-    skins, storages, used = await _get_others(session, uid)
+    levels = await _get_levels()
+    skins, storages = await _get_others(session, uid)
     awards: dict[int, Sequence[tuple[int, str, str]]] = {}
     met_sums: dict[int, int] = {}
 
@@ -299,8 +158,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
             continue
         imgs: list[PILImage] = []
         for aid, _, _ in awards[lid]:
-            sto = storages[aid] if aid in storages.keys() else 0
-            use = used[aid] if aid in used.keys() else 0
+            sto, use = storages[aid] if aid in storages.keys() else (0, 0)
             if sto + use:
                 met_sums[lid] += 1
 
@@ -309,17 +167,17 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     levelName = res.query[str]("等级名字")
-    levelId = None
+    target_level = None
     if levelName is not None:
-        levelId = await get_lid_by_name(session, levelName)
+        target_level = level_repo.get_by_name(levelName)
 
-    if levelId is not None:
+    if target_level is not None:
         baseImgs.append(
             await getTextImage(
-                text=f"{name} 的{levelName}进度：",
+                text=f"{name} 的{target_level.display_name}进度：",
                 color="#FFFFFF",
                 font=Fonts.HARMONYOS_SANS_BLACK,
                 font_size=80,
@@ -342,15 +200,14 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         )
 
     for lid, lname, lcolor, lweight in levels:
-        if levelId is not None and lid != levelId:
+        if target_level is not None and lid != target_level.lid:
             continue
         if len(awards[lid]) == 0:
             continue
         imgs: list[PILImage] = []
         for aid, name, img in awards[lid]:
             color = lcolor
-            sto = storages[aid] if aid in storages.keys() else 0
-            use = used[aid] if aid in used.keys() else 0
+            sto, use = storages[aid] if aid in storages.keys() else (0, 0)
 
             if sto + use == 0:
                 if lweight == 0:
@@ -362,7 +219,9 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
                 img = skins[aid]
 
             imgs.append(
-                await ref_book_box(name, str(sto) if (sto + use) else "", color, img)
+                await ref_book_box(
+                    name, str(sto) if (sto + use) else "", str(sto + use), color, img
+                )
             )
 
         lAwardCount = len(awards[lid]) if (lweight or met_sums[lid] > 1) else 1
@@ -388,13 +247,13 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
 @matchAlconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
 @withLoading(la.loading.kc)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
     if uid is None:
         return
 
-    levels = await _get_levels(session)
-    skins, storages, used = await _get_others(session, uid)
+    levels = await _get_levels()
+    skins, storages = await _get_others(session, uid)
 
     imgs: list[PILImage] = []
     for lid, _, lcolor, _ in levels:
@@ -405,15 +264,14 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
             continue
         for aid, name, img in awards:
             color = lcolor
-            sto = storages[aid] if aid in storages.keys() else 0
-            use = used[aid] if aid in used.keys() else 0
+            sto, _ = storages[aid] if aid in storages.keys() else (0, 0)
 
             if sto == 0:
                 continue
             if aid in skins.keys():
                 img = skins[aid]
 
-            _imgs.append((sto, await ref_book_box(name, str(sto), color, img)))
+            _imgs.append((sto, await ref_book_box(name, str(sto), "", color, img)))
 
         _imgs.sort(key=lambda x: -x[0])
         imgs += [i[1] for i in _imgs]
@@ -421,7 +279,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     area_title = await getTextImage(
         text=f"{name} 的抓小哥库存：",
@@ -454,24 +312,24 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, __: Arparma):
 )
 @withLoading(la.loading.all_xg)
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
-    levels = await _get_levels(session)
+async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
+    levels = await _get_levels()
 
     levelName = res.query[str]("等级名字")
-    levelId = None
+    target_level = None
     if levelName is not None:
-        levelId = await get_lid_by_name(session, levelName)
+        target_level = level_repo.get_by_name(levelName)
 
     awards: dict[int, Sequence[tuple[int, str, str]]] = {}
     total: int = 0
     for lid, lname, lcolor, _ in levels:
-        if levelId is not None and lid != levelId:
+        if target_level is not None and lid != target_level.lid:
             continue
         awards[lid] = await _get_awards(session, lid)
         total += len(awards[lid])
 
     baseImgs: list[PILImage] = []
-    lNameDisplay = f" {levelName} " if levelId is not None else ""
+    lNameDisplay = f" {levelName} " if target_level is not None else ""
     baseImgs.append(
         await getTextImage(
             text=f"全部 {total} 只{lNameDisplay}小哥：",
@@ -484,7 +342,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
     )
 
     for lid, lname, lcolor, _ in levels:
-        if levelId is not None and lid != levelId:
+        if target_level is not None and lid != target_level.lid:
             continue
 
         if len(awards[lid]) == 0:
@@ -492,7 +350,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
         imgs: list[PILImage] = []
         for _, name, img in awards[lid]:
             color = lcolor
-            imgs.append(await ref_book_box(name, "", color, img))
+            imgs.append(await ref_book_box(name, "", "", color, img))
 
         title = f"{lname} 共 {len(awards[lid])} 只"
 
@@ -510,3 +368,12 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
 
     img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
     await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+
+
+@listenGroup()
+async def _(ctx: GroupContext):
+    """
+    赤石
+    """
+
+    msg = ctx.message

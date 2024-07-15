@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class AwardInfo(BaseModel):
+class AwardInfoDeprecated(BaseModel):
     awardId: int
     awardImg: str
     awardName: str

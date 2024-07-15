@@ -1,21 +1,24 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import (
     Any,
     Generic,
     Iterable,
     Literal,
     NotRequired,
-    Sequence,
     TypedDict,
     TypeVar,
     cast,
 )
 
-from nonebot.adapters.console.bot import Bot as _ConsoleBot
-from nonebot.adapters.console.event import MessageEvent as _ConsoleEvent
-from nonebot.adapters.onebot.v11 import Message, MessageSegment
+from nonebot.adapters.onebot.v11 import (
+    Message,
+    MessageSegment,
+    MessageEvent,
+    GroupMessageEvent,
+    PrivateMessageEvent,
+)
 from nonebot_plugin_alconna import Segment, Text
-from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING # type: ignore
+from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING  # type: ignore
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 
 from src.base.onebot_api import (
@@ -26,11 +29,7 @@ from src.base.onebot_api import (
 )
 from src.base.onebot_basic import (
     MessageLike,
-    NoRecall,
     OnebotBotProtocol,
-    OnebotEventProtocol,
-    OnebotGroupEventProtocol,
-    Recallable,
     export_msg,
 )
 from src.base.onebot_enum import QQEmoji
@@ -83,8 +82,7 @@ def forwardMessage(
     return {"name": name, "uin": str(uin), "content": content}
 
 
-TRECEIPT = TypeVar("TRECEIPT", bound=Recallable)
-TE = TypeVar("TE", bound="OnebotEventProtocol")
+TE = TypeVar("TE", bound="MessageEvent")
 
 
 class OnebotReceipt:
@@ -99,46 +97,13 @@ class OnebotReceipt:
         await delete_msg(self.bot, self.message_id)
 
 
-class Context(ABC, Generic[TRECEIPT]):
-    @abstractmethod
-    async def getMessage(self) -> Sequence[Any]: ...
-
-    @abstractmethod
-    async def send(self, message: Sequence[Any] | str) -> TRECEIPT: ...
-
-    @abstractmethod
-    async def reply(self, message: Sequence[Any] | str) -> TRECEIPT: ...
-
-    @abstractmethod
-    def getSenderId(self) -> int | None: ...
-
-    @abstractmethod
-    async def getText(self) -> str: ...
-
-    @abstractmethod
-    async def isTextOnly(self) -> bool: ...
-
-
-class UniMessageContext(Context[TRECEIPT], Generic[TRECEIPT]):
-    @abstractmethod
-    async def getMessage(self) -> UniMessage[Segment]: ...
-
-    @abstractmethod
-    async def send(self, message: Iterable[Any] | str) -> TRECEIPT: ...
-
-    @abstractmethod
-    async def reply(self, message: Iterable[Any] | str) -> TRECEIPT: ...
-
-    async def getText(self) -> str:
-        return (await self.getMessage()).extract_plain_text()
-
-    async def isTextOnly(self) -> bool:
-        return (await self.getMessage()).only(Text)
-
-
-class OnebotMessageContext(UniMessageContext[OnebotReceipt], Generic[TE]):
+class OnebotContext(Generic[TE]):
     event: TE
     bot: OnebotBotProtocol
+
+    @property
+    def group_id(self) -> int | None:
+        return None
 
     def __init__(self, event: TE, bot: OnebotBotProtocol) -> None:
         self.event = event
@@ -150,10 +115,11 @@ class OnebotMessageContext(UniMessageContext[OnebotReceipt], Generic[TE]):
     @abstractmethod
     async def _send_forward(self, messages: list[_ForwardMessageNode]) -> Any: ...
 
-    async def getMessage(self) -> UniMessage[Segment]:
+    @property
+    def message(self) -> UniMessage[Segment]:
         return cast(
             UniMessage[Segment],
-            UniMessage(BUILDER_MAPPING["OneBot V11"].generate(self.event.get_message())),  # type: ignore
+            UniMessage(BUILDER_MAPPING["OneBot V11"].generate(self.event.original_message)),  # type: ignore
         )
 
     async def reply(
@@ -174,17 +140,22 @@ class OnebotMessageContext(UniMessageContext[OnebotReceipt], Generic[TE]):
         """
         msg = message
         if at:
-            msg = UniMessage.at(str(self.getSenderId())) + " " + msg
+            msg = UniMessage.at(str(self.sender_id)) + " " + msg
         if ref:
-            msg = UniMessage.reply((await self.getMessage()).get_message_id()) + msg
+            msg = UniMessage.reply(self.message.get_message_id()) + msg
         return await self.send(msg)
 
-    def getSenderId(self):
+    @property
+    def sender_id(self):
         return self.event.user_id
 
     async def getSenderName(self) -> str:
-        info = await self.bot.call_api("get_stranger_info", user_id=self.getSenderId())
+        info = await self.bot.call_api("get_stranger_info", user_id=self.sender_id)
         return info["nick"]
+
+    @property
+    def sender_name(self):
+        return self.getSenderName()
 
     async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
         message = UniMessage(message)
@@ -238,10 +209,21 @@ class OnebotMessageContext(UniMessageContext[OnebotReceipt], Generic[TE]):
 
         return await self._send_forward(nodes)
 
+    def is_text_only(self) -> bool:
+        return self.message.only(Text)
 
-class GroupContext(OnebotMessageContext[OnebotGroupEventProtocol]):
-    async def getSenderNameInGroup(self):
-        sender = self.getSenderId()
+    @property
+    def text(self):
+        return self.message.extract_plain_text()
+
+
+class GroupContext(OnebotContext[GroupMessageEvent]):
+    @property
+    def group_id(self):
+        return self.event.group_id
+
+    async def getSenderName(self):
+        sender = self.sender_id
         info = await self.bot.call_api(
             "get_group_member_info", group_id=self.event.group_id, user_id=sender
         )
@@ -264,9 +246,7 @@ class GroupContext(OnebotMessageContext[OnebotGroupEventProtocol]):
             emoji_id (int | str | QQEmoji): 表情的 ID，参见[相关文档](https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html#EmojiType)
         """
 
-        await set_msg_emoji_like(
-            self.bot, int((await self.getMessage()).get_message_id()), emoji_id
-        )
+        await set_msg_emoji_like(self.bot, self.message.get_message_id(), emoji_id)
 
     async def is_group_admin(self) -> bool:
         """判断自己是不是这个群的管理员
@@ -284,7 +264,7 @@ class GroupContext(OnebotMessageContext[OnebotGroupEventProtocol]):
         return info["role"] == "admin" or info["role"] == "owner"
 
 
-class PrivateContext(OnebotMessageContext[OnebotEventProtocol]):
+class PrivateContext(OnebotContext[PrivateMessageEvent]):
     async def _send(self, message: MessageLike):
         return await send_private_msg(self.bot, self.event.user_id, message)
 
@@ -294,39 +274,14 @@ class PrivateContext(OnebotMessageContext[OnebotEventProtocol]):
         )
 
 
-class ConsoleContext(UniMessageContext):
-    event: _ConsoleEvent
-    bot: _ConsoleBot
-
-    def __init__(self, event: _ConsoleEvent, bot: _ConsoleBot) -> None:
-        self.event = event
-        self.bot = bot
-
-    async def send(self, message: Iterable[Any] | str):
-        await self.bot.send(self.event, str(message))
-        return NoRecall()
-
-    async def reply(self, message: Iterable[Any] | str):
-        return await self.send(message)
-
-    def getSenderId(self):
-        return None
-
-    async def getMessage(self) -> UniMessage[Any]:
-        return UniMessage(self.event.message.extract_plain_text())
-
-
 # FALLBACK
-PublicContext = UniMessageContext
+PublicContext = OnebotContext
 
 
 __all__ = [
     "GroupContext",
     "PrivateContext",
-    "ConsoleContext",
-    "OnebotMessageContext",
-    "Context",
-    "UniMessageContext",
+    "OnebotContext",
     "PublicContext",
     "forwardMessage",
 ]

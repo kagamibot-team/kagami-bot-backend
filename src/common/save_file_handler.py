@@ -40,7 +40,7 @@ async def collect_images():
 
     session = get_session()
     async with session.begin():
-        query = select(Award.data_id, Award.img_path)
+        query = select(Award.data_id, Award.image)
         awards = (await session.execute(query)).tuples()
 
         folder = pathlib.Path("./data/awards/")
@@ -119,17 +119,22 @@ def pack_save_task(zfp: pathlib.Path):
         with zf.open("data/db.sqlite3", "w") as f:
             f.write(pathlib.Path("./data/db.sqlite3").read_bytes())
 
-        with zf.open("data/catch_history.json", "w") as f:
-            f.write(pathlib.Path("./data/catch_history.json").read_bytes())
-
-        with zf.open("data/sign_in_history.json", "w") as f:
-            f.write(pathlib.Path("./data/sign_in_history.json").read_bytes())
+        with zf.open("data/localstorage.json", "w") as f:
+            f.write(pathlib.Path("./data/localstorage.json").read_bytes())
 
         with zf.open("data/log.log", "w") as f:
             f.write(pathlib.Path("./data/log.log").read_bytes())
 
 
 async def pack_save(filename: str | None = None):
+    """把游戏存档打包成压缩包
+
+    Args:
+        filename (str | None, optional): 压缩包的名字. Defaults to None.
+
+    Returns:
+        Path: 压缩包存到了哪里
+    """
     await collect_images()
 
     filename = filename or f"save-{now_datetime().strftime('%Y-%m-%dT%H_%M_%S')}.zip"

@@ -17,7 +17,7 @@ def newImage(size: tuple[int, int] = (500, 500), color: str = "white"):
 
 
 @make_async
-def loadImage(fp: str):
+def loadImage(fp: str | pathlib.Path):
     image = PIL.Image.open(fp)
     return image.convert("RGBA")
 

@@ -1,11 +1,11 @@
 import pathlib
-import random
 from typing import Iterable
 
 import PIL
 import PIL.Image
 
 from src.common.draw.images import imagePaste
+from src.common.rd import get_random
 from src.imports.images import PILImage
 
 
@@ -53,7 +53,7 @@ async def make_strange(
         for j in range(yGrids):
             left = w * i
             top = h * j
-            source = random.choice(sources)
+            source = get_random().choice(sources)
             res = source.crop((left, top, left + w, top + h))
             if premix_background:
                 _res = PIL.Image.new(

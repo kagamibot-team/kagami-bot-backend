@@ -1,43 +1,133 @@
+"""
+该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息
+"""
+
 import os
-from sqlalchemy import insert, select, update
+from pathlib import Path
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing_extensions import deprecated
 
-from src.common.dataclasses.data_changed_events import PlayerStorageChangedEvent
+from src.base.exceptions import LackException
+from src.common.data.skins import get_using_skin
+from src.common.dataclasses.award_info import AwardInfoDeprecated
 from src.common.download import download, writeData
+from src.common.draw.strange import make_strange
+from src.common.draw.tools import imageToBytes
+from src.common.rd import get_random
+from src.core.unit_of_work import UnitOfWork
 from src.models.models import *
-from src.common.dataclasses.award_info import AwardInfo
-from src.base.event_root import root
+from src.models.statics import level_repo
+from src.repositories.award_repository import AwardRepository
+from src.repositories.inventory_repository import InventoryRepository
+from src.views.award import AwardInfo
 
 
-async def get_award_info(session: AsyncSession, uid: int, aid: int):
-    query = (
-        select(
-            Award.data_id,
-            Award.img_path,
-            Award.name,
-            Award.description,
-            Level.name,
-            Level.color_code,
-        )
-        .filter(Award.data_id == aid)
-        .join(Level, Level.data_id == Award.level_id)
+async def uow_get_award_info(
+    uow: UnitOfWork, aid: int, uid: int | None = None, sid: int | None = None
+):
+    """在大规模重构之前提供的临时方法，用来获取一个小哥的基础信息
+
+    Args:
+        uow (UnitOfWork): 工作单元
+        aid (int): 小哥 ID
+        uid (int | None, optional): 用户 ID，可留空，用来获取皮肤的信息. Defaults to None.
+    """
+    if uid is not None and sid is not None:
+        raise ValueError("请不要同时启用 uid 和 sid 两个参数")
+
+    aname, desc, lid, img = await uow.awards.get_info(aid)
+    level = uow.levels.get_by_id(lid)
+    sname = None
+    new = False
+
+    if uid:
+        sid = await uow.skin_inventory.get_using(uid, aid)
+        new = await uow.inventories.get_stats(uid, aid) > 0
+    if sid:
+        sname, sdesc, img = await uow.skins.get_info(sid)
+        sdesc = sdesc.strip()
+        desc = sdesc or desc
+
+    return AwardInfo(
+        aid=aid,
+        name=aname,
+        description=desc,
+        level=level,
+        image=Path(img),
+        sid=sid,
+        skin_name=sname,
+        new=new,
+        notation="",
     )
+
+
+async def generate_random_info():
+    """
+    生成一个合成失败时的乱码小哥信息
+    """
+
+    rlen = get_random().randint(2, 4)
+    rlen2 = get_random().randint(30, 90)
+    rchar = lambda: chr(get_random().randint(0x4E00, 0x9FFF))
+
+    return AwardInfo(
+        aid=-1,
+        name="".join((rchar() for _ in range(rlen))),
+        description="".join((rchar() for _ in range(rlen2))),
+        image=imageToBytes(await make_strange()),
+        level=level_repo.levels[0],
+        sid=None,
+        skin_name=None,
+        new=False,
+        notation="",
+    )
+
+
+async def uow_use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
+    """在大规模重构之前提供的临时方法，用来让用户使用小哥，如果数量不够则报错
+
+    Args:
+        uow (UnitOfWork): 工作单元
+        uid (int): 用户 ID
+        aid (int): 小哥 ID
+        count (int): 数量
+    """
+    sto, _ = await uow.inventories.give(uid, aid, -count)
+    if sto < 0:
+        raise LackException(
+            (await uow_get_award_info(uow, aid)).name, count, sto + count
+        )
+
+
+async def get_award_info_deprecated(session: AsyncSession, uid: int, aid: int):
+    query = select(
+        Award.data_id,
+        Award.image,
+        Award.name,
+        Award.description,
+        Award.level_id,
+    ).filter(Award.data_id == aid)
     award = (await session.execute(query)).one().tuple()
 
-    skinQuery = (
-        select(Skin.name, Skin.extra_description, Skin.image)
-        .filter(Skin.applied_award_id == award[0])
-        .filter(Skin.used_skins.any(UsedSkin.user_id == uid))
-    )
-    skin = (await session.execute(skinQuery)).one_or_none()
+    using_skin = await get_using_skin(session, uid, aid)
+    skin = None
+    if using_skin is not None:
+        query = select(Skin.name, Skin.description, Skin.image).filter(
+            Skin.data_id == using_skin
+        )
+        skin = (await session.execute(query)).one_or_none()
 
-    info = AwardInfo(
+    level = level_repo.levels[award[4]]
+
+    info = AwardInfoDeprecated(
         awardId=award[0],
         awardImg=award[1],
         awardName=award[2],
         awardDescription=award[3],
-        levelName=award[4],
-        color=award[5],
+        levelName=level.display_name,
+        color=level.color,
         skinName=None,
     )
 
@@ -52,24 +142,7 @@ async def get_award_info(session: AsyncSession, uid: int, aid: int):
     return info
 
 
-async def get_storage(session: AsyncSession, uid: int, aid: int):
-    """返回用户库存里有多少小哥
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户 uid
-        aid (int): 小哥 id
-
-    Returns:
-        int: 库存小哥的数量
-    """
-    query = select(StorageStats.count).filter(
-        StorageStats.target_user_id == uid, StorageStats.target_award_id == aid
-    )
-
-    return (await session.execute(query)).scalar_one_or_none()
-
-
+@deprecated("该模块正在考虑废弃，请考虑使用 InventoryRespository 管理库存信息")
 async def get_statistics(session: AsyncSession, uid: int, aid: int):
     """获得迄今为止一共抓到了多少小哥
 
@@ -77,88 +150,16 @@ async def get_statistics(session: AsyncSession, uid: int, aid: int):
         session (AsyncSession): 数据库会话
         uid (int): 用户在数据库中的 ID
         aid (int): 小哥在数据库中的 ID
-    """
-
-    query1 = select(StorageStats.count).filter(
-        StorageStats.target_user_id == uid, StorageStats.target_award_id == aid
-    )
-    query2 = select(UsedStats.count).filter(
-        UsedStats.target_user_id == uid, UsedStats.target_award_id == aid
-    )
-
-    sto = (await session.execute(query1)).scalar_one_or_none() or 0
-    use = (await session.execute(query2)).scalar_one_or_none() or 0
-
-    return sto + use
-
-
-async def add_storage(session: AsyncSession, uid: int, aid: int, count: int):
-    """增减一个用户的小哥库存
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户 ID
-        aid (int): 小哥 ID
-        count (int): 增减数量。如果值小于 0，会记录使用的量。
 
     Returns:
-        int: 在调整库存之前，用户的库存值
+        int: 累计的小哥数量
     """
-    res = await get_storage(session, uid, aid)
-
-    if res is None:
-        newStorage = StorageStats(target_user_id=uid, target_award_id=aid, count=count)
-        session.add(newStorage)
-        return 0
-
-    query = (
-        update(StorageStats)
-        .where(
-            StorageStats.target_user_id == uid,
-            StorageStats.target_award_id == aid,
-        )
-        .values(count=res + count)
-    )
-    await session.execute(query)
-
-    if count < 0:
-        query2 = select(UsedStats.count).filter(
-            UsedStats.target_user_id == uid, UsedStats.target_award_id == aid
-        )
-        sta = (await session.execute(query2)).scalar_one_or_none()
-        if sta is None:
-            query = insert(UsedStats).values(
-                target_award_id=aid,
-                target_user_id=uid,
-                count=-count,
-            )
-        else:
-            query = (
-                update(UsedStats)
-                .where(
-                    UsedStats.target_award_id == aid, UsedStats.target_user_id == uid
-                )
-                .values(count=UsedStats.count - count)
-            )
-        await session.execute(query)
-
-    # 释放相关的事件
-    await root.emit(PlayerStorageChangedEvent(uid, aid, count, res, res + count))
-
-    return res
+    return await InventoryRepository(session).get_stats(uid, aid)
 
 
+@deprecated("该模块正在考虑废弃，请考虑使用 AwardRepository 管理库存信息")
 async def get_aid_by_name(session: AsyncSession, name: str):
-    query = select(Award.data_id).filter(Award.name == name)
-    res = (await session.execute(query)).scalar_one_or_none()
-
-    if res is None:
-        query = select(Award.data_id).filter(
-            Award.alt_names.any(AwardAltName.name == name)
-        )
-        res = (await session.execute(query)).scalar_one_or_none()
-
-    return res
+    return await AwardRepository(session).get_aid(name)
 
 
 async def download_award_image(aid: int, url: str):

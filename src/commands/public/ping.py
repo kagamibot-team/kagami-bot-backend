@@ -75,9 +75,9 @@ def __match_str(s: str):
     return True
 
 
-@listenPublic()
-async def _(ctx: UniMessageContext):
-    message = await ctx.getMessage()
+@listenOnebot()
+async def _(ctx: OnebotContext):
+    message = ctx.message
     if len(message) == 0:
         return
     if not isinstance((msg0 := message[0]), Text):
@@ -97,7 +97,7 @@ async def _(ctx: UniMessageContext):
         return
 
     rep_name = la.msg.default_reply
-    sender = ctx.getSenderId()
+    sender = ctx.sender_id
     custom_replies = config.custom_replies
     if (k := str(sender)) in custom_replies.keys():
         rep_name = custom_replies[k]

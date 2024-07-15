@@ -1,16 +1,13 @@
-from ..base.command_events import ConsoleContext, GroupContext, Context
+from ..base.command_events import GroupContext, OnebotContext
 from ..common.config import config
 
 
-def isAdmin(ctx: Context) -> bool:
-    if isinstance(ctx, ConsoleContext):
-        return True
-
+def isAdmin(ctx: OnebotContext) -> bool:
     if isinstance(ctx, GroupContext):
         if ctx.event.group_id in config.admin_groups:
             return True
 
-    if ctx.getSenderId() == config.admin_id:
+    if ctx.sender_id == config.admin_id:
         return True
 
     return False

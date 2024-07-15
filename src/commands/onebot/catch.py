@@ -1,213 +1,131 @@
 import time
 
-
+from interfaces.nonebot.views.catch import render_catch_message
+from src.base.exceptions import KagamiRangeError
+from src.base.local_storage import Action, LocalStorageManager, XBRecord
+from src.core.unit_of_work import get_unit_of_work
 from src.imports import *
 from src.logic.catch import pickAwards
-from src.logic.catch_time import calculateTime, updateUserTime
-
-
-async def sendPickMessage(ctx: OnebotMessageContext, e: PrePickMessageEvent):
-    pickDisplay = e.displays
-    userTime = e.userTime
-    timeToNextPick = userTime.pickLastUpdated + userTime.interval
-
-    money = e.picks.money
-
-    deltaTime = int(timeToNextPick - time.time())
-
-    seconds = deltaTime % 60
-    minutes = int(deltaTime / 60) % 60
-    hours = int(deltaTime / 3600)
-
-    timeStr = f"{seconds}{la.unit.second}"
-    if hours > 0:
-        timeStr = f"{minutes}{la.unit.minute}" + timeStr
-    elif minutes > 0:
-        timeStr = f"{hours}{la.unit.hour}{minutes}{la.unit.minute}" + timeStr
-
-    if len(pickDisplay) == 0:
-        await ctx.reply(UniMessage().text(la.err.catch_not_available.format(timeStr)))
-        return
-
-    titles: list[PIL.Image.Image] = []
-    boxes: list[PIL.Image.Image] = []
-
-    name = await ctx.getSenderName()
-
-    if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
-
-    titles.append(
-        await getTextImage(
-            text=f"{name} 的一抓！",
-            color="#63605C",
-            font=Fonts.JINGNAN_BOBO_HEI,
-            font_size=96,
-            width=800,
-        )
-    )
-    titles.append(
-        await getTextImage(
-            text=(
-                f"本次获得{int(money)}{la.unit.money}，"
-                f"目前共有{int(e.moneyUpdated)}{la.unit.money}。"
-            ),
-            width=800,
-            color="#9B9690",
-            font=Fonts.ALIMAMA_SHU_HEI,
-            font_size=28,
-        )
-    )
-    titles.append(
-        await getTextImage(
-            text=(
-                f"剩余次数： {userTime.pickRemain}/{userTime.pickMax}，"
-                f"距下次次数恢复还要{timeStr}。"
-            ),
-            width=800,
-            color="#9B9690",
-            font=Fonts.ALIMAMA_SHU_HEI,
-            font_size=28,
-        )
-    )
-
-    for display in pickDisplay.values():
-        image = await catch(
-            title=display.name,
-            description=display.description,
-            image=display.image,
-            stars=display.level,
-            color=display.color,
-            new=display.pick.beforeStats == 0,
-            notation=f"+{display.pick.delta}",
-        )
-        boxes.append(image)
-
-    area_title = await verticalPile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
-    area_box = await verticalPile(boxes, 30, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile(
-        [area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80
-    )
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
-
-
-async def save_picks(
-    *,
-    pickResult: Picks,
-    group_id: int | None,
-    uid: int,
-    session: AsyncSession,
-    userTime: UserTime,
-):
-    preEvent = PrePickMessageEvent(pickResult, group_id, {}, uid, session, userTime)
-
-    # 在这里进行了数据库库存的操作
-    spent_count = 0
-
-    for aid in pickResult.awards.keys():
-        pick = pickResult.awards[aid]
-        spent_count += pick.delta
-        before = await add_storage(session, uid, aid, pick.delta)
-
-        query = (
-            select(
-                Award.name,
-                Award.img_path,
-                Award.description,
-                Level.name,
-                Level.color_code,
-            )
-            .filter(Award.data_id == aid)
-            .join(Level, Award.level_id == Level.data_id)
-        )
-        name, image, description, level, color = (
-            (await session.execute(query)).tuples().one()
-        )
-
-        preEvent.displays[aid] = PickDisplay(
-            name=name,
-            image=image,
-            description=description,
-            level=level,
-            color=color,
-            beforeStorage=before,
-            pick=pick,
-        )
-
-    await updateUserTime(
-        session=session,
-        uid=uid,
-        count_remain=userTime.pickRemain - spent_count,
-        last_calc=userTime.pickLastUpdated,
-    )
-    preEvent.userTime.pickRemain = userTime.pickRemain - spent_count
-    query = (
-        update(User)
-        .where(User.data_id == uid)
-        .values(money=User.money + pickResult.money)
-        .returning(User.money)
-    )
-    res = (await session.execute(query)).scalar_one()
-    preEvent.moneyUpdated = res
-
-    return preEvent
+from src.logic.catch_time import uow_calculate_time
+from src.views.catch import CatchMesssage, CatchResultMessage
 
 
 async def picks(
-    ctx: OnebotMessageContext, session: AsyncSession, uid: int, count: int | None = None
-):
-    """
-    进行一次抓小哥。抓小哥的流程如下：
+    qqid: int,
+    qqname: str | None = None,
+    count: int | None = None,
+    group_id: int | None = None,
+) -> CatchMesssage:
+    """在一次数据库操作中抓小哥。流程如下：
     - 刷新计算用户的时间，包括抓小哥的时间和可以抓的次数
     - 抓一次小哥，先把结果存在内存中
     - 发布 `PicksEvent` 事件以允许对结果进行修改
     - 将数据写入数据库会话中
-    - 发布 `PrePickMessageEvent` 事件以方便为消息展示做准备
-    - 数据库提交更改并关闭
-    - 生成图片，发送回复
 
     Args:
-        ctx (OnebotMessageContext): 抓小哥的上下文
-        session (AsyncSession): 所开启的数据库会话，将会在中途关闭
-        uid (int): 数据库中的用户 ID
-        count (int | None, optional): 抓的次数，如果为 None，则尽可能多抓
+        ctx (OnebotContext): 上下文
+        uow (UnitOfWork): 工作单元
+        uid (int): 用户id
+        count (int | None, optional): 抓取次数. Defaults to None.
+        group_id (int | None, optional): 群号，用于记录喜报. Defaults to None.
+    Returns:
+        CatchMesssage: 抓取结果
     """
 
-    userTime = await calculateTime(session, uid)
+    if qqname is None:
+        qqname = str(qqid)
 
-    if count is None:
-        count = userTime.pickRemain
+    async with get_unit_of_work(qqid) as uow:
+        uid = await uow.users.get_uid(qqid)
+        user_time = await uow_calculate_time(uow, uid)
 
-    if count <= 0 and userTime.pickRemain != 0:
-        await ctx.reply(UniMessage().text(la.err.invalid_catch_count.format(count)))
+        if count is None:
+            count = user_time.pickRemain
+
+        if count <= 0 and user_time.pickRemain != 0:
+            raise KagamiRangeError("抓小哥次数", "大于 0 的数", count)
+
+        count = min(user_time.pickRemain, count)
+        count = max(0, count)
+
+        pick_result = await pickAwards(uow.session, uid, count)
+        pick_event = PicksEvent(
+            uid=uid,
+            group_id=group_id,
+            picks=pick_result,
+            session=uow.session,
+        )
+
+        await root.emit(pick_event)
+
+        spent_count = 0
+        catchs: list[AwardInfo] = []
+
+        for aid, pick in pick_result.awards.items():
+            spent_count += pick.delta
+            await uow.inventories.give(uid, aid, pick.delta)
+            info = await uow_get_award_info(uow, aid, uid)
+            info.new = pick.beforeStats == 0
+            info.notation = f"+{pick.delta}"
+            catchs.append(info)
+
+        await uow.users.update_catch_time(
+            uid,
+            user_time.pickRemain - spent_count,
+            user_time.pickLastUpdated,
+        )
+        await uow.users.add_money(uid, pick_result.money)
+
+        if spent_count > 0:
+            msg = CatchResultMessage(
+                uid=uid,
+                qqid=qqid,
+                username=qqname,
+                slot_remain=user_time.pickRemain - spent_count,
+                slot_sum=user_time.pickMax,
+                next_time=user_time.pickLastUpdated + user_time.interval - time.time(),
+                money_changed=int(pick_result.money),
+                money_sum=int(await uow.users.get_money(uid)),
+                catchs=catchs,
+                group_id=group_id,
+            )
+        else:
+            msg = CatchMesssage(
+                uid=uid,
+                qqid=qqid,
+                username=qqname,
+                slot_remain=user_time.pickRemain - spent_count,
+                slot_sum=user_time.pickMax,
+                next_time=user_time.pickLastUpdated + user_time.interval - time.time(),
+                group_id=group_id,
+            )
+
+    await handle_xb(msg)
+    return msg
+
+
+async def handle_xb(msg: CatchMesssage):
+    if not isinstance(msg, CatchResultMessage):
         return
 
-    count = min(userTime.pickRemain, count)
-    count = max(0, count)
+    if msg.group_id is None:
+        return
 
-    group_id: int | None = None
+    data: list[str] = []
+    for info in msg.catchs:
+        if info.level.lid not in (4, 5):
+            continue
 
-    if isinstance(ctx, GroupContext):
-        group_id = ctx.event.group_id
+        new_hint = "（新）" if info.new else ""
+        data.append(f"{info.name} ×{info.notation[1:]}{new_hint}")
 
-    pickResult = await pickAwards(session, uid, count)
-    pickEvent = PicksEvent(uid, group_id, pickResult, session)
-
-    await root.emit(pickEvent)
-
-    preEvent = await save_picks(
-        pickResult=pickResult,
-        group_id=group_id,
-        uid=uid,
-        session=session,
-        userTime=userTime,
-    )
-
-    await root.emit(preEvent)
-    await session.commit()
-
-    # 此后数据库被关闭，发送数据
-    await sendPickMessage(ctx, preEvent)
+    if len(data) > 0:
+        LocalStorageManager.instance().data.add_xb(
+            msg.group_id,
+            msg.qqid,
+            XBRecord(time=now_datetime(), action=Action.catched, data="，".join(data)),
+        )
+        LocalStorageManager.instance().save()
 
 
 @listenOnebot()
@@ -215,41 +133,48 @@ async def picks(
     Alconna("re:(抓小哥|zhua|抓抓)", Arg("count", int, flags=[ArgFlag.OPTIONAL]))
 )
 @withLoading(la.loading.zhua)
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, result: Arparma):
-    # logger.info(result.query[int]("count"))
+async def _(ctx: OnebotContext, result: Arparma):
     count = result.query[int]("count")
-
     if count is None:
         count = 1
-
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
-    await picks(ctx, session, user, count)
+    msg = await picks(
+        ctx.sender_id,
+        await ctx.sender_name,
+        count,
+        group_id=ctx.group_id,
+    )
+    await ctx.send(await render_catch_message(msg))
 
 
 @listenOnebot()
 @matchRegex("^(狂抓|kz|狂抓小哥)$")
 @withLoading(la.loading.kz)
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, _):
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
-    await picks(ctx, session, user)
+async def _(ctx: OnebotContext, _):
+    msg = await picks(
+        ctx.sender_id,
+        await ctx.sender_name,
+        group_id=ctx.group_id,
+    )
+    await ctx.send(await render_catch_message(msg))
 
 
 @listenOnebot()
-@matchLiteral("是")
-@withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
-    flags_before = await get_user_flags(session, uid)
-    await add_user_flag(session, uid, "是")
-    utime = await calculateTime(session, uid)
-
+@matchRegex("^是[。.，,！!]?$")
+async def _(ctx: OnebotContext, _):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        uid = await uow.users.get_uid(ctx.sender_id)
+        flags_before = await get_user_flags(uow.session, uid)
+        await add_user_flag(uow.session, uid, "是")
+        utime = await uow_calculate_time(uow, uid)
     if utime.pickRemain > 0:
-        await picks(ctx, session, uid, 1)  # 抓一次给他看
+        msg = await picks(
+            ctx.sender_id,
+            await ctx.sender_name,
+            1,
+            group_id=ctx.group_id,
+        )
+        await ctx.send(await render_catch_message(msg))
     elif "是" not in flags_before:
         await ctx.reply("收到。", ref=True)
     else:
         await ctx.reply("是", ref=True, at=False)
-
-    await session.commit()

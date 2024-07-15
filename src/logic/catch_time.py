@@ -79,3 +79,16 @@ async def calculateTime(session: AsyncSession, uid: int) -> UserTime:
         pickLastUpdated=pick_count_last_calculated,
         interval=pickInterval,
     )
+
+
+async def uow_calculate_time(uow: UnitOfWork, uid: int) -> UserTime:
+    """*重构需要* 根据当前时间，重新计算玩家抓小哥的时间和上限，并更新数据库中的数据。
+
+    Args:
+        uow (UnitOfWork): 工作单元
+        uid (int): 用户 ID
+
+    Returns:
+        UserTime: 玩家抓小哥的时间和上限信息
+    """
+    return await calculateTime(uow.session, uid)

@@ -2,31 +2,20 @@
 和小哥合成有关的各种东西
 """
 
-from dataclasses import dataclass
-import itertools
 import math
-import random
-import statistics
 
-from nonebot import logger
-from sqlalchemy import delete, func, insert, select
+from loguru import logger
+from sqlalchemy import func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.models import Award, AwardTagRelation, Level, Recipe, Tag
+from src.common.rd import get_random
+from src.models.models import Award, Recipe
 
 
 async def _get_lid(session: AsyncSession, a: int):
     return (
-        (
-            await session.execute(
-                select(Award.level_id, Level.weight)
-                .join(Level, Award.level_id == Level.data_id)
-                .filter(Award.data_id == a)
-            )
-        )
-        .tuples()
-        .one()
-    )
+        await session.execute(select(Award.level_id).filter(Award.data_id == a))
+    ).scalar_one()
 
 
 async def generate_random_result(
@@ -44,30 +33,13 @@ async def generate_random_result(
         tuple[int, float]: 合成出来的小哥 aid 和合成概率
     """
 
-    # 获得所有的 Level 的信息
-    # 拿到的数据应该是
-    #   - 1: 65.0
-    #   - 2: 24.5
-    #   - 3: 8.0
-    #   - 4: 2.0
-    #   - 5: 0.5
-    query = (
-        select(Level.data_id, Level.weight)
-        .filter(Level.weight > 0)
-        .join(Award, Award.level_id == Level.data_id)
-        .group_by(Level.data_id)
-        .order_by(-Level.weight)
-    )
-    levels = (await session.execute(query)).tuples().all()
-    levels_qr = {lid: i for i, (lid, _) in enumerate(levels)}
-
     # 获得三个小哥的等级 ID
-    lid1, w1 = await _get_lid(session, a1)
-    lid2, w2 = await _get_lid(session, a2)
-    lid3, w3 = await _get_lid(session, a3)
+    lid1 = await _get_lid(session, a1)
+    lid2 = await _get_lid(session, a2)
+    lid3 = await _get_lid(session, a3)
 
-    # 如果含有零星小哥，那么合成产物一定是零星小哥（lid=7），我们对于「成功」产物，就随机生成一个值返回吧。
-    if lid1 == 7 or lid2 == 7 or lid3 == 7:
+    # 如果含有零星小哥，那么合成产物一定是零星小哥（lid=0），我们对于「成功」产物，就随机生成一个值返回吧。
+    if lid1 == 0 or lid2 == 0 or lid3 == 0:
         # 小哥的 data_id 是 5
         return 5, 0.0
 
@@ -86,7 +58,7 @@ async def generate_random_result(
     rms = ((lid1**2 + lid2**2 + lid3**2) / 3) ** 0.5  # 三个等级的平方平均数
     fvi = (rms / 5) ** (1 / 10)  # 变换为配方珍贵指数(0.851~1)
 
-    poss = 1 - lid / 8  # 基础概率，由产物等级决定 (0.875, 0.75, 0.625, 0.5, 0.375)
+    poss = 1 - lid / 9  # 基础概率，由产物等级决定 (0.88, 0.77, 0.66, 0.55, 0.44)
     poss = poss ** (
         1 + (lid - max(lid1, lid2, lid3)) / 5
     )  # 综合概率，由产物等级与材料最高级之差影响，升级则降低概率
@@ -135,11 +107,8 @@ async def get_merge_result(
             award1=a1, award2=a2, award3=a3, result=result, possibility=possibility
         )
     )
+    await session.flush()
     return result, possibility
-
-
-async def clear_all_recipe(session: AsyncSession):
-    await session.execute(delete(Recipe))
 
 
 async def try_merge(
@@ -155,25 +124,25 @@ async def try_merge(
         a3 (int): 第三个小哥 aid
 
     Returns:
-        int: 合成出来的小哥的 aid
+        tuple[int, bool]: 合成出来的小哥的 aid，以及是否成功了
     """
 
     result, possibility = await get_merge_result(session, a1, a2, a3)
 
-    if random.random() <= possibility:
+    if get_random().random() <= possibility:
         return result, True
 
-    if random.random() <= 0.8:
+    if get_random().random() <= 0.8:
         # 粑粑小哥
         return 89, False
 
-    if random.random() <= 0.5:
+    if get_random().random() <= 0.5:
         # 对此时有特殊情况，是乱码小哥
         return -1, False
 
     query = (
         select(Award.data_id)
-        .filter(Award.level_id == 7)
+        .filter(Award.level_id == 0)
         .order_by(func.random())
         .limit(1)
     )

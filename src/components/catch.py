@@ -1,7 +1,8 @@
+from pathlib import Path
+
 import PIL
 import PIL.Image
 from imagetext_py import TextAlign
-
 
 from src.common.draw.images import imagePaste
 from src.common.draw.texts import Fonts, getTextImage
@@ -11,7 +12,7 @@ from src.components.display_box import display_box
 async def catch(
     title: str,
     description: str,
-    image: str | bytes,
+    image: str | bytes | Path,
     stars: str,
     color: str,
     new: bool,
@@ -58,7 +59,11 @@ async def catch(
     )
     leftNotation = await getTextImage(
         text=notation,
-        color="#FFFFFF",
+        color=(
+            "#FFFFFF"
+            if notation == "+1"
+            else "#FFFD55" if notation == "+2" else "#8BFA84"
+        ),
         font=Fonts.MARU_MONICA,
         font_size=48,
         margin_bottom=5,

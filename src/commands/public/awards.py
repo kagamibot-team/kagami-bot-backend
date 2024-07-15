@@ -2,10 +2,11 @@
 对小哥进行的增删查改操作
 """
 
+from src.core.unit_of_work import get_unit_of_work
 from src.imports import *
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchAlconna(
     Alconna(
@@ -31,19 +32,19 @@ async def _(ctx: PublicContext, res: Arparma):
             await ctx.reply(UniMessage(la.err.award_exists.format(name)))
             return
 
-        level = await get_lid_by_name(session, levelName)
-        if level is None:
+        level_obj = level_repo.get_by_name(levelName)
+        if level_obj is None:
             await ctx.reply(UniMessage(la.err.level_not_found.format(levelName)))
             return
 
-        award = Award(level_id=level, name=name)
+        award = Award(level_id=level_obj.lid, name=name)
         session.add(award)
         await session.commit()
 
         await ctx.reply(UniMessage(la.msg.award_create_success.format(name)))
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchAlconna(
     Alconna(
@@ -62,13 +63,15 @@ async def _(ctx: PublicContext, res: Arparma):
     async with session.begin():
         await session.execute(delete(Award).filter(Award.name == name))
         await session.execute(
-            delete(Award).filter(Award.alt_names.any(AwardAltName.name == name))
+            delete(Award).where(
+                AwardAltName.award_id == Award.data_id, AwardAltName.name == name
+            )
         )
         await session.commit()
         await ctx.reply(UniMessage(la.msg.award_delete_success.format(name)))
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @withAlconna(
     Alconna(
@@ -136,13 +139,13 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
         messages += f"成功将名字叫 {name} 的小哥的名字改为 {newName}。\n"
 
     if levelName is not None:
-        lid = await get_lid_by_name(session, levelName)
+        level = level_repo.get_by_name(levelName)
 
-        if lid is None:
+        if level is None:
             messages += f"更改等级未成功，因为名字叫 {levelName} 的等级不存在。"
         else:
             await session.execute(
-                update(Award).where(Award.data_id == aid).values(level_id=lid)
+                update(Award).where(Award.data_id == aid).values(level_id=level.lid)
             )
             messages += f"成功将名字叫 {name} 的小哥的等级改为 {levelName}。\n"
 
@@ -161,7 +164,7 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
             try:
                 fp = await download_award_image(aid, imageUrl)
                 await session.execute(
-                    update(Award).where(Award.data_id == aid).values(img_path=fp)
+                    update(Award).where(Award.data_id == aid).values(image=fp)
                 )
                 messages += f"成功将名字叫 {name} 的小哥的图片改为 {fp}。\n"
             except Exception as e:  # pylint: disable=broad-except
@@ -185,3 +188,45 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
             messages += f"成功将名字叫 {name} 的小哥更改为抽得到，可以被随机合成出来\n"
 
     await ctx.reply(messages)
+
+
+@listenGroup()
+@requireAdmin()
+@matchAlconna(Alconna(["::"], "给薯片", Arg("对方", int | At), Arg("数量", int)))
+async def _(ctx: GroupContext, res: Arparma[Any]):
+    target = res.query("对方")
+    number = res.query[int]("数量")
+    if target is None or number is None:
+        return
+    if isinstance(target, At):
+        target = int(target.target)
+    assert isinstance(target, int)
+
+    async with get_unit_of_work() as uow:
+        uid = await uow.users.get_uid(target)
+        await uow.users.add_money(uid, number)
+
+    await ctx.reply("给了。", at=False, ref=True)
+
+
+@listenGroup()
+@requireAdmin()
+@matchAlconna(
+    Alconna(["::"], "给小哥", Arg("对方", int | At), Arg("名称", str), Arg("数量", int))
+)
+async def _(ctx: GroupContext, res: Arparma[Any]):
+    target = res.query("对方")
+    name = res.query[str]("名称")
+    number = res.query[int]("数量")
+    if target is None or number is None or name is None:
+        return
+    if isinstance(target, At):
+        target = int(target.target)
+    assert isinstance(target, int)
+
+    async with get_unit_of_work() as uow:
+        uid = await uow.users.get_uid(target)
+        aid = await uow.awards.get_aid_strong(name)
+        await uow.inventories.give(uid, aid, number, False)
+
+    await ctx.reply("给了。", at=False, ref=True)

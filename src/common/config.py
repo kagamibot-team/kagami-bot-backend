@@ -5,32 +5,32 @@ from pydantic import BaseModel
 class Config(BaseModel):
     """Plugin Config Here"""
 
-    # 对 Bot 拥有绝对管理权的管理员（一员）
     admin_id: int = -1
+    "对 Bot 拥有绝对管理权的管理员（一员）"
 
-    # 允许管理 Bot 的小哥库等的各种事项的群
     admin_groups: list[int] = []
+    "小镜 Bot 的管理员群聊"
 
-    # 我是谁
     my_name: list[str] = ["小镜", "柊镜"]
+    "小镜 Bot 的名字"
 
-    # 在发送「小镜！！！」的时候，遇到特殊的 QQ 号，回复特殊的内容
     custom_replies: dict[str, str] = {}
+    "在发送「小镜！！！」的时候，遇到特殊的 QQ 号，回复特殊的内容"
 
-    # 是否预先画好小哥的图片
     predraw_images: int = 0
+    "是否预先画好小哥的图片"
 
-    # 数据库的路径
     sqlalchemy_database_url: str = "sqlite+aiosqlite:///./data/db.sqlite3"
+    "数据库的 SQLAlchemy URI"
 
-    # 是否启用仅在白名单群聊中才能够响应消息
     enable_white_list: bool = False
+    "是否启用仅在白名单群聊中才能够响应消息"
 
-    # 白名单群聊
     white_list_groups: list[int] = []
+    "白名单群聊"
 
-    # 数据库自动保存间隔，在 SQLite 数据库时启用，为负数时不自动保存
     autosave_interval: float = 600
+    "数据库自动保存间隔，在 SQLite 数据库时启用，为负数时不自动保存"
 
 
 config = get_plugin_config(Config)

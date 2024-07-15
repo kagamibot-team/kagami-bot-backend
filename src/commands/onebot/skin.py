@@ -1,5 +1,5 @@
-from src.imports import *
 from src.components.ref_book import skin_book
+from src.imports import *
 
 
 @listenOnebot()
@@ -11,7 +11,7 @@ async def _(
     result: Arparma,
 ):
     name = result.query[str]("name")
-    user = await get_uid_by_qqid(session, ctx.getSenderId())
+    user = await get_uid_by_qqid(session, ctx.sender_id)
 
     if name is None:
         return
@@ -24,15 +24,11 @@ async def _(
             await ctx.reply(UniMessage().text(la.err.not_found.format(name)))
             return
 
-        query = select(OwnedSkin.data_id).filter(
-            OwnedSkin.user_id == user, OwnedSkin.skin_id == skin
-        )
-        owned = (await session.execute(query)).scalar_one_or_none()
-        if owned is None:
+        if not await do_user_have_skin(session, user, skin):
             await ctx.reply(UniMessage().text(la.err.not_own.format(name)))
             return
 
-        await set_skin(session, user, skin)
+        await use_skin(session, user, skin)
         await ctx.reply(UniMessage().text(la.msg.skin_set.format(name)))
         await session.commit()
         return
@@ -42,7 +38,7 @@ async def _(
     if skin is None:
         await ctx.reply(UniMessage().text(la.msg.skin_set_default.format(name)))
     else:
-        await ctx.reply(UniMessage().text(la.msg.skin_set_2.format(name, skin[1])))
+        await ctx.reply(UniMessage().text(la.msg.skin_set_2.format(name, await get_skin_name(session, skin))))
 
     await session.commit()
 
@@ -51,22 +47,18 @@ async def _(
 @matchAlconna(Alconna("re:(pfjd|pftj|皮肤图鉴|皮肤进度|皮肤收集进度)"))
 @withLoading()
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+async def _(ctx: OnebotContext, session: AsyncSession, _: Arparma):
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
 
     query = (
-        select(Skin.data_id, Skin.image, Skin.name, Award.name, Level.color_code)
-        .join(Award, Award.data_id == Skin.applied_award_id)
-        .join(Level, Level.data_id == Award.level_id)
-        .order_by(-Level.sorting_priority, Level.weight, Skin.applied_award_id)
+        select(Skin.data_id, Skin.image, Skin.name, Award.name, Award.level_id)
+        .join(Award, Award.data_id == Skin.award_id)
     )
     skins = (await session.execute(query)).tuples().all()
+    skins = sorted(skins, key=lambda s: level_repo.sorted_index[s[4]])
 
-    query = select(OwnedSkin.skin_id).filter(OwnedSkin.user_id == uid)
-    owned = (await session.execute(query)).scalars().all()
-
-    query = select(UsedSkin.skin_id).filter(UsedSkin.user_id == uid)
-    used = (await session.execute(query)).scalars().all()
+    query = select(SkinRecord.skin_id, SkinRecord.selected).filter(SkinRecord.user_id == uid)
+    owned = dict((await session.execute(query)).tuples().all())
 
     _boxes: list[tuple[str, str, str, str, str]] = []
     _un = (
@@ -80,7 +72,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     area_title = await getTextImage(
         text=f"{name} 的皮肤进度：",
@@ -91,13 +83,13 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
         width=216 * 6,
     )
 
-    for sid, img, sname, aname, color in skins:
+    for sid, img, sname, aname, lid in skins:
         if sid not in owned:
             _boxes.append(_un)
             continue
 
-        notation = la.disp.skin_using if sid in used else ""
-        _boxes.append((sname, aname, notation, color, img))
+        notation = la.disp.skin_using if owned[sid] == 1 else ""
+        _boxes.append((sname, aname, notation, level_repo.levels[lid].color, img))
 
     boxes: list[PILImage] = []
     for box in _boxes:
@@ -108,7 +100,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, _: Arparma):
     img = await verticalPile(
         [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
     )
-    await ctx.reply(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
 
 
 @listenOnebot()
@@ -126,17 +118,15 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     name = res.query[str]("name")
 
     query = (
-        select(Skin.name, Award.name, Skin.price, Level.color_code, Skin.image)
-        .join(Award, Skin.applied_award_id == Award.data_id)
-        .join(Level, Level.data_id == Award.level_id)
-        .order_by(-Level.sorting_priority, Level.weight, Skin.applied_award_id)
+        select(Skin.name, Award.name, Skin.price, Award.level_id, Skin.image)
+        .join(Award, Skin.award_id == Award.data_id)
     )
 
     if name:
         query1 = query.filter(Award.name == name)
         query2 = query.filter(Skin.name == name)
-        query3 = query.filter(Award.alt_names.any(AwardAltName.name == name))
-        query4 = query.filter(Skin.alt_names.any(SkinAltName.name == name))
+        query3 = query.join(AwardAltName, AwardAltName.award_id == Award.data_id).filter(AwardAltName.name == name)
+        query4 = query.join(SkinAltName, SkinAltName.skin_id == Skin.data_id).filter(SkinAltName.name == name)
 
         skins1 = (await session.execute(query1)).tuples()
         skins2 = (await session.execute(query2)).tuples()
@@ -147,9 +137,11 @@ async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
     else:
         skins = list((await session.execute(query)).tuples())
 
+    skins = sorted(skins, key=lambda s: level_repo.sorted_index[s[3]])
+
     boxes: list[PILImage] = []
     for box in skins:
-        boxes.append(await skin_book(box[0], box[1], str(box[2]), box[3], box[4]))
+        boxes.append(await skin_book(box[0], box[1], str(box[2]), level_repo.levels[box[3]].color, box[4]))
 
     area_title = await getTextImage(
         text=f"全部 {len(skins)} 种皮肤：",

@@ -3,8 +3,6 @@
 """
 
 from nonebot import on_notice, on_type  # type: ignore
-from nonebot.adapters.console import Bot as ConsoleBot
-from nonebot.adapters.console import MessageEvent as ConsoleMessageEvent
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
@@ -13,7 +11,7 @@ from nonebot.adapters.onebot.v11 import (
     PrivateMessageEvent,
 )
 
-from src.base.command_events import ConsoleContext, GroupContext, PrivateContext
+from src.base.command_events import GroupContext, PrivateContext
 from src.base.event_manager import EventManager
 from src.base.onebot_events import (
     GroupMessageEmojiLike,
@@ -30,16 +28,11 @@ def activate_root(event_root: EventManager):
         event_root (EventManager): 事件管理器
     """
 
-    consoleHandler = on_type(ConsoleMessageEvent)
     groupMessageHandler = on_type(GroupMessageEvent)
     privateMessageHandler = on_type(PrivateMessageEvent)
 
     notice_group_msg_emoji_like_handler = on_notice()
     onebot_startup_hander = on_type(LifecycleMetaEvent)
-
-    @consoleHandler.handle()
-    async def _(bot: ConsoleBot, event: ConsoleMessageEvent):
-        await event_root.throw(ConsoleContext(event, bot))
 
     @groupMessageHandler.handle()
     async def _(bot: Bot, event: GroupMessageEvent):

@@ -1,5 +1,3 @@
-import random
-
 from src.imports import *
 from .catch_time import *
 
@@ -21,16 +19,8 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
     picks = Picks(awards={}, money=0, uid=uid)
     assert count >= 0
 
-    # 初始化一些会重复用的量
-    query = select(Level.data_id, Level.weight, Level.price).filter(Level.weight > 0)
-    levels = (await session.execute(query)).tuples().all()
-
     # 开始抓小哥
     for _ in range(count):
-        if len(levels) == 0:
-            logger.error("数据库中没有等级")
-            break
-
         flags = await get_user_flags(session, uid)
         if "是" in flags:
             flags.remove("是")
@@ -51,13 +41,13 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
                 )
                 continue
 
-        level = random.choices(levels, [l[1] for l in levels])[0]
+        level = get_random().choices(level_repo.sorted, [l.weight for l in level_repo.sorted])[0]
 
         # 这里是在数据库中随机抽取该等级的小哥的操作
         # 据说有速度更快的写法……
         query = (
             select(Award.data_id)
-            .filter(Award.level_id == level[0], Award.is_special_get_only == False) # pylint: disable=singleton-comparison
+            .filter(Award.level_id == level.lid, Award.is_special_get_only == False) # pylint: disable=singleton-comparison
             .order_by(func.random())
             .limit(1)
         )
@@ -74,9 +64,9 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
             picks.awards[award] = Pick(
                 beforeStats=await get_statistics(session, uid, award),
                 delta=1,
-                level=level[0],
+                level=level.lid,
             )
 
-        picks.money += level[2]
+        picks.money += level.awarding
 
     return picks

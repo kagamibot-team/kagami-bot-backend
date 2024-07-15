@@ -1,7 +1,8 @@
 import random
 import time
 
-from src.common.dataclasses.sign_in_history import signInHistor
+from src.base.local_storage import LocalStorageManager
+from src.common.rd import get_random
 from src.imports import *
 
 
@@ -9,7 +10,7 @@ from src.imports import *
 @matchRegex("^(小镜|xj)(今日人品|jrrp)$")
 @withSessionLock()
 async def _(ctx: GroupContext, session: AsyncSession, _):
-    qqid = ctx.getSenderId()
+    qqid = ctx.sender_id
     dt = now_datetime()
 
     if qqid is None:
@@ -20,18 +21,16 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
 
     jrrp = today_user.randint(1, 100)
 
-    query = select(Level.data_id, Level.weight, Level.price).filter(Level.weight > 0)
-    levels = (await session.execute(query)).tuples().all()
-    level = today.choices(levels, [l[1] for l in levels])[0]
-    query = select(Award.data_id).filter(Award.level_id == level[0])
+    level = today.choices(level_repo.sorted, [l.weight for l in level_repo.sorted])[0]
+    query = select(Award.data_id).filter(Award.level_id == level.lid)
     awards = (await session.execute(query)).tuples().all()
     aid = today.choice(awards)[0]
-    display = await get_award_info(session, -1, aid)
+    display = await get_award_info_deprecated(session, -1, aid)
 
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     titles: list[PIL.Image.Image] = []
     titles.append(
@@ -101,7 +100,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
 @matchRegex("^(小镜|xj)(签到|qd)$")
 @withSessionLock()
 async def _(ctx: GroupContext, session: AsyncSession, _):
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
 
     query = select(User.last_sign_in_time, User.sign_in_count, User.money).filter(
         User.data_id == uid
@@ -123,7 +122,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
     else:
         count += 1
 
-    moneydelta = (1 - random.random() ** ((count - 1) * 0.2 + 1)) * 90 + 10
+    moneydelta = (1 - get_random().random() ** ((count - 1) * 0.2 + 1)) * 90 + 10
     moneydelta = int(moneydelta)
 
     await session.execute(
@@ -137,7 +136,8 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
     await session.commit()
     await ctx.reply(f"签到成功！你已经连续签到 {count} 天了，得到了 {moneydelta} 薯片")
 
-    no = signInHistor.sign(ctx.event.group_id)
+    no = LocalStorageManager.instance().data.sign(ctx.event.group_id)
+    LocalStorageManager.instance().save()
     if no == 1:
         await ctx.stickEmoji(QQEmoji.NO)
     elif no == 2:

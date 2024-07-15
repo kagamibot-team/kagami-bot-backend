@@ -3,8 +3,9 @@
 如果有一些需要方便开发的指令，就写到这里吧！
 """
 
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
 from src.base.db import manual_checkpoint
 from src.common.save_file_handler import pack_save
 from src.imports import *
@@ -27,7 +28,7 @@ async def _(ctx: GroupContext, _):
     )
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchLiteral("::reload-script")
 async def _(ctx: PublicContext):

@@ -2,7 +2,7 @@ from src.imports import *
 from src.logic.catch_time import getInterval
 
 
-@listenPublic()
+@listenOnebot()
 @requireAdmin()
 @matchAlconna(Alconna(["::"], "re:(更改|改变|设置)周期", Arg("interval", int)))
 @withFreeSession()

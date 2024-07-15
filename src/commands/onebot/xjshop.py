@@ -1,12 +1,36 @@
-import qrcode
-import qrcode.main
-import qrcode.constants
 import PIL.Image
+import qrcode
+import qrcode.constants
+import qrcode.main
+
 from src.imports import *
 
 
-async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
+async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: ShopData):
+    titles: list[PILImage] = []
     boxes: list[PILImage] = []
+
+    name = await ctx.getSenderName()
+    if isinstance(ctx, GroupContext):
+        name = await ctx.getSenderName()
+
+    res = await session.execute(
+        select(User.money).filter(User.qq_id == ctx.sender_id)
+    )
+    res = res.scalar_one_or_none() or 0.0
+
+    titles.append(
+        await getTextImage(
+            text=(
+                f"欢迎来到小镜商店，{name}！您拥有{int(res)}{la.unit.money}。\n"
+                "输入“小镜商店 购买 {商品名}”就可以购买了。\n"
+            ),
+            width=808 - 80*2,
+            color="#FFFFFF",
+            font=Fonts.HARMONYOS_SANS_BLACK,
+            font_size=28,
+        )
+    )
 
     for group, products in shop.products.items():
         boxes.append(
@@ -31,12 +55,11 @@ async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
             )
         )
 
-    image = await verticalPile(boxes, 0, "left", "#9B9690", 484, 80, 80, 80)
+    area_title = await verticalPile(titles, 0, "left", "#9B9690", 0, 0, 0, 0)
+    area_box = await verticalPile(boxes, 0, "left", "#9B9690", 0, 0, 0, 0)
+    image = await verticalPile([area_title, area_box], 40, "left", "#9B9690", 464, 80, 80, 60)
     image.paste(PIL.Image.open("./res/kagami_shop.png"), (0, 0))
-    await ctx.reply(
-        "输入“小镜商店 购买 商品名”就可以购买了"
-        + UniMessage.image(raw=imageToBytes(image))
-    )
+    await ctx.send(UniMessage.image(raw=imageToBytes(image)))
 
 
 @listenOnebot()
@@ -52,28 +75,28 @@ async def send_shop_message(ctx: OnebotMessageContext, shop: ShopData):
 )
 @withLoading()
 @withSessionLock()
-async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
+async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
     buys = res.query[list[str]]("商品名列表")
-    uid = await get_uid_by_qqid(session, ctx.getSenderId())
+    uid = await get_uid_by_qqid(session, ctx.sender_id)
     shop_data = ShopData()
-    shop_data_evt = ShopBuildingEvent(shop_data, ctx.getSenderId(), uid, session)
+    shop_data_evt = ShopBuildingEvent(shop_data, ctx.sender_id, uid, session)
     await root.emit(shop_data_evt)
 
     if buys is None:
-        await send_shop_message(ctx, shop_data)
+        await send_shop_message(ctx, session, shop_data)
         return
 
     name = await ctx.getSenderName()
 
     if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderNameInGroup()
+        name = await ctx.getSenderName()
 
     buy_result = "小镜的 Shop 销售小票\n"
     buy_result += "--------------------\n"
     buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
     buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
     buy_result += f"客户：{name}\n"
-    buy_result += f"编号：{ctx.getSenderId()}\n"
+    buy_result += f"编号：{ctx.sender_id}\n"
     buy_result += "--------------------\n\n"
 
     money_left_query = select(User.money).filter(User.data_id == uid)
@@ -99,7 +122,7 @@ async def _(ctx: OnebotMessageContext, session: AsyncSession, res: Arparma):
 
     if money_sum <= money_left:
         for product in products:
-            evt = ShopBuyEvent(product, ctx.getSenderId(), uid, session)
+            evt = ShopBuyEvent(product, ctx.sender_id, uid, session)
             await root.emit(evt)
 
         money_update_query = (
