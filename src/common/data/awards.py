@@ -23,10 +23,46 @@ from src.repositories.inventory_repository import InventoryRepository
 from src.views.award import AwardInfo
 
 
-async def uow_get_award_info(
+def award_info_from_uow(
+    uow: UnitOfWork,
+    aid: int,
+    name: str,
+    description: str,
+    level_id: int,
+    image: str,
+    is_special_get_only: bool,
+    sorting: int,
+):
+    """
+    用来获取一个小哥的基础信息
+
+    Args:
+        uow (UnitOfWork): 工作单元
+        aid (int): 小哥 ID
+        name (str): 小哥名称
+        description (str): 小哥描述
+        level_id (int): 小哥等级
+        image (str): 小哥图片
+        is_special_get_only (bool): 是否只能通过特殊方式获得
+        sorting (int): 排序
+    """
+    return AwardInfo(
+        aid=aid,
+        name=name,
+        description=description,
+        level=uow.levels.get_by_id(level_id),
+        image=Path(image),
+        sid=None,
+        skin_name=None,
+        new=False,
+        notation="",
+    )
+
+
+async def get_award_info(
     uow: UnitOfWork, aid: int, uid: int | None = None, sid: int | None = None
 ):
-    """在大规模重构之前提供的临时方法，用来获取一个小哥的基础信息
+    """用来获取一个小哥的基础信息
 
     Args:
         uow (UnitOfWork): 工作单元
@@ -62,6 +98,36 @@ async def uow_get_award_info(
     )
 
 
+async def get_a_list_of_award_info(
+    uow: UnitOfWork, uid: int | None, aids: list[int]
+) -> list[AwardInfo]:
+    """用来获取多个小哥的基础信息
+
+    Args:
+        uow (UnitOfWork): 工作单元
+        aids (list[int]): 小哥 ID 列表
+    """
+    basics = await uow.awards.get_list_of_award_info(aids)
+    basics = [award_info_from_uow(uow, *info) for info in basics]
+
+    if uid is None:
+        return basics
+
+    using = await uow.skin_inventory.get_using_list(uid)
+    for info in basics:
+        if info.aid in using:
+            sid = using[info.aid]
+            info.sid = sid
+            sname, sdesc, img = await uow.skins.get_info(sid)
+            info.skin_name = sname
+            info.description = sdesc.strip() or info.description
+            info.image = Path(img)
+
+        info.new = await uow.inventories.get_stats(uid, info.aid) > 0
+
+    return basics
+
+
 async def generate_random_info():
     """
     生成一个合成失败时的乱码小哥信息
@@ -84,8 +150,8 @@ async def generate_random_info():
     )
 
 
-async def uow_use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
-    """在大规模重构之前提供的临时方法，用来让用户使用小哥，如果数量不够则报错
+async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
+    """用来让用户使用小哥，如果数量不够则报错
 
     Args:
         uow (UnitOfWork): 工作单元
@@ -95,9 +161,7 @@ async def uow_use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
     """
     sto, _ = await uow.inventories.give(uid, aid, -count)
     if sto < 0:
-        raise LackException(
-            (await uow_get_award_info(uow, aid)).name, count, sto + count
-        )
+        raise LackException((await get_award_info(uow, aid)).name, count, sto + count)
 
 
 async def get_award_info_deprecated(session: AsyncSession, uid: int, aid: int):
@@ -163,11 +227,11 @@ async def download_award_image(aid: int, url: str):
     uIndex: int = 0
 
     def _path():
-        return os.path.join(".", "data", "awards", f"{aid}_{uIndex}.png")
+        return Path("./data/awards") / f"{aid}_{uIndex}.png"
 
-    while os.path.exists(_path()):
+    while _path().exists():
         uIndex += 1
 
     await writeData(await download(url), _path())
 
-    return _path()
+    return _path().as_posix()

@@ -9,7 +9,7 @@ from src.base.command_events import OnebotContext
 from src.base.event_root import root
 from src.base.exceptions import KagamiRangeError
 from src.base.local_storage import Action, LocalStorageManager, XBRecord
-from src.common.data.awards import uow_get_award_info
+from src.common.data.awards import get_award_info
 from src.common.data.users import add_user_flag, get_user_flags
 from src.common.dataclasses.catch_data import PicksEvent
 from src.common.decorators.command_decorators import (
@@ -82,7 +82,7 @@ async def picks(
         for aid, pick in pick_result.awards.items():
             spent_count += pick.delta
             await uow.inventories.give(uid, aid, pick.delta)
-            info = await uow_get_award_info(uow, aid, uid)
+            info = await get_award_info(uow, aid, uid)
             info.new = pick.beforeStats == 0
             info.notation = f"+{pick.delta}"
             catchs.append(info)

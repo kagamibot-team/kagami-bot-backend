@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from interfaces.nonebot.views.catch import render_award_info_message
 from src.base.command_events import GroupContext, OnebotContext
 from src.base.exceptions import DoNotHaveException
-from src.common.data.awards import uow_get_award_info
+from src.common.data.awards import get_award_info
 from src.common.data.users import get_uid_by_qqid
 from src.common.decorators.command_decorators import (
     listenOnebot,
@@ -70,7 +70,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
             uid = None
         if do_admin:
             uid = None
-        info = await uow_get_award_info(uow, aid, uid, sid)
+        info = await get_award_info(uow, aid, uid, sid)
         info.new = False
         info.notation = notation
 

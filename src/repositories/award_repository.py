@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import cast
+from typing import Sequence, cast
 
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -165,3 +165,26 @@ class AwardRepository(DBRepository[Award]):
             query = query.values(sorting=sorting)
 
         await self.session.execute(query)
+
+    async def get_list_of_award_info(
+        self, aids: list[int]
+    ) -> Sequence[tuple[int, str, str, int, str, bool, int]]:
+        """获取多个小哥的基础信息
+
+        Args:
+            aids (list[int]): 小哥的 ID 列表
+
+        Returns:
+            Sequence[tuple[int, str, str, int, str, bool, int]]: 小哥 ID 和基础信息
+        """
+        
+        query = select(
+            Award.data_id,
+            Award.name,
+            Award.description,
+            Award.level_id,
+            Award.image,
+            Award.is_special_get_only,
+            Award.sorting,
+        ).where(Award.data_id.in_(aids))
+        return (await self.session.execute(query)).tuples().all()

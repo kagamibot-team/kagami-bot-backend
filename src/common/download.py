@@ -1,3 +1,4 @@
+from pathlib import Path
 import requests
 import asyncio
 import ssl
@@ -26,7 +27,7 @@ async def download(url: str):
     return await loop.run_in_executor(None, request_new_tst, url)
 
 
-async def writeData(raw: bytes, target: str):
+async def writeData(raw: bytes, target: str | Path):
     with open(target, "wb") as f:
         f.write(raw)
 
