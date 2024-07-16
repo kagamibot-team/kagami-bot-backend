@@ -58,7 +58,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         notation = ""
 
         if not do_admin:
-            sto = await uow.inventories.get_storage(uid, aid)
+            sto = await uow.inventories.get_stats(uid, aid)
             if sto <= 0:
                 raise DoNotHaveException(name)
             notation = str(sto)

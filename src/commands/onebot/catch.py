@@ -1,6 +1,8 @@
+import re
 import time
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
+from nonebot_plugin_alconna import At, Reply, Text
 
 from interfaces.nonebot.views.catch import render_catch_message
 from src.base.command_events import OnebotContext
@@ -176,8 +178,13 @@ async def _(ctx: OnebotContext, _):
 
 
 @listenOnebot()
-@matchRegex("^是[。.，,！!]?$")
-async def _(ctx: OnebotContext, _):
+async def _(ctx: OnebotContext):
+    msg = ctx.message.exclude(At).exclude(Reply)
+    if not msg.only(Text):
+        return
+    msg = msg.extract_plain_text().strip()
+    if not re.match("^是[。.！!？? ]*$", msg):
+        return
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
         flags_before = await get_user_flags(uow.session, uid)

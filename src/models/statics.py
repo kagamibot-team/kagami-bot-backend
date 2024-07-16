@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
+from src.base.exceptions import ObjectNotFoundException
+
 
 @dataclass
 class Level(BaseModel):
@@ -89,6 +91,12 @@ class LevelRepository:
 
     def get_by_name(self, name: str):
         return self.name_index.get(name)
+    
+    def get_by_name_strong(self, name: str):
+        r = self.name_index.get(name)
+        if r is None:
+            raise ObjectNotFoundException("等级", name)
+        return r
 
     def get_by_id(self, id: int):
         return self.levels[id]

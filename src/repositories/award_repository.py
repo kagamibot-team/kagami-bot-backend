@@ -116,4 +116,52 @@ class AwardRepository(DBRepository[Award]):
         Args:
             name (str): 别名
         """
-        await self.session.execute(delete(AwardAltName).where(AwardAltName.name == name))
+        await self.session.execute(
+            delete(AwardAltName).where(AwardAltName.name == name)
+        )
+
+    async def delete_award(self, aid: int):
+        """删除一个小哥
+
+        Args:
+            aid (int): 小哥的 ID
+        """
+        await self.session.execute(delete(Award).where(Award.data_id == aid))
+
+    async def modify(
+        self,
+        aid: int,
+        name: str | None = None,
+        description: str | None = None,
+        lid: int | None = None,
+        image: str | Path | None = None,
+        special: bool | None = None,
+        sorting: int | None = None,
+    ):
+        """修改一个小哥的信息
+
+        Args:
+            aid (int): 小哥的 ID
+            name (str | None): 名字
+            description (str | None): 描述
+            lid (int | None): 等级 ID
+            image (str | Path | None): 图片
+            special (bool | None): 是否是特殊的小哥，即无法被抽到与合成到
+            sorting (int | None): 排序的优先级
+        """
+
+        query = update(Award).where(Award.data_id == aid)
+        if name is not None:
+            query = query.values(name=name)
+        if description is not None:
+            query = query.values(description=description)
+        if lid is not None:
+            query = query.values(level_id=lid)
+        if image is not None:
+            query = query.values(image=str(image))
+        if special is not None:
+            query = query.values(is_special_get_only=special)
+        if sorting is not None:
+            query = query.values(sorting=sorting)
+
+        await self.session.execute(query)

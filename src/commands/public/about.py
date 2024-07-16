@@ -138,7 +138,7 @@ async def _(ctx: OnebotContext, *_):
 
 
 @listenOnebot()
-@matchRegex("^:: ?(抓小哥|zhua) ?(帮助|help)$")
+@matchRegex("^:: ?(抓小哥|zhua)? ?(帮助|help)$")
 async def _(ctx: OnebotContext, *_):
     await ctx.send(constructHelpMessage(helpAdmin))
 

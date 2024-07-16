@@ -118,7 +118,7 @@ class UnitOfWork:
 
     @property
     def awards(self):
-        """奖励仓库"""
+        """小哥仓库"""
 
         return AwardRepository(self.session)
 
