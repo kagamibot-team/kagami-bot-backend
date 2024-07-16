@@ -95,7 +95,9 @@ async def get_group_member_info(bot: OnebotBotProtocol, group_id: int, user_id: 
     )
 
 
-async def get_name(bot: OnebotBotProtocol, qqid: int | str, group_id: int | None) -> str:
+async def get_name(
+    bot: OnebotBotProtocol, qqid: int | str, group_id: int | None
+) -> str:
     info = await bot.call_api("get_stranger_info", user_id=qqid)
     name = info["nick"]
 

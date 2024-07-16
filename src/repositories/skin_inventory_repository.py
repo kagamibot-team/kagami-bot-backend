@@ -124,7 +124,7 @@ class SkinInventoryRepository(DBRepository[SkinRecord]):
             await self.session.flush()
             return False
         return True
-    
+
     async def get_using_list(self, uid: int) -> dict[int, int]:
         """获得一个用户正在挂载的所有皮肤
         Args:

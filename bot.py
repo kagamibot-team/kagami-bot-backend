@@ -55,7 +55,6 @@ def init():
         with open("./data/db.sqlite3", "wb") as _:
             pass
 
-
     nonebot.logger.info("检查数据库状态")
     config = Config("./alembic.ini")
     command.upgrade(config, "head")

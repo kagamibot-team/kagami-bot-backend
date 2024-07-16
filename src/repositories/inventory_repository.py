@@ -88,7 +88,9 @@ class InventoryRepository(DBRepository[Inventory]):
         """
         return sum(await self.get_inventory(uid, aid))
 
-    async def give(self, uid: int, aid: int, count: int, record_used: bool=True) -> tuple[int, int]:
+    async def give(
+        self, uid: int, aid: int, count: int, record_used: bool = True
+    ) -> tuple[int, int]:
         """获取小哥，返回更新后的库存量和使用量
 
         Args:

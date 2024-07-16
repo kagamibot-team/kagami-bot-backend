@@ -21,7 +21,7 @@ async def _(ctx: GroupContext, _):
             msg = record.time.strftime("%H:%M:%S")
             msg = f"在 {msg} {record.action.value}：{record.data}"
             _data[key].append(msg)
-        
+
         for key, value in _data.items():
             _dates_message.setdefault(key, [])
             msg = f"- 玩家 {name}\n" + "；\n".join(value) + "。"

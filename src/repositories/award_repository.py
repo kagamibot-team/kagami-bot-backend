@@ -177,7 +177,7 @@ class AwardRepository(DBRepository[Award]):
         Returns:
             Sequence[tuple[int, str, str, int, str, bool, int]]: 小哥 ID 和基础信息
         """
-        
+
         query = select(
             Award.data_id,
             Award.name,

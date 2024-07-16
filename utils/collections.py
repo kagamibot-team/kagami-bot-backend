@@ -18,7 +18,7 @@ class PriorityList(Generic[T]):
     def __init__(self):
         self.ls = []
 
-    def add(self, item: T, priority: int=0):
+    def add(self, item: T, priority: int = 0):
         """添加元素
 
         Args:

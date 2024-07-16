@@ -47,9 +47,7 @@ class AwardAltName(Base, BaseMixin, AltNameMixin):
 class Inventory(Base, BaseMixin):
     __tablename__ = "catch_inventory"
 
-    __table_args__ = (
-        Index("storage_stat_index", "user_id", "award_id", unique=True),
-    )
+    __table_args__ = (Index("storage_stat_index", "user_id", "award_id", unique=True),)
 
     user_id = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
     award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
@@ -97,9 +95,7 @@ class Skin(Base, BaseMixin):
     description: Mapped[str] = mapped_column(default="")
     image: Mapped[str] = mapped_column(default=DEFAULT_IMG)
     price: Mapped[float] = mapped_column(default=-1.0)
-    award_id = Column(
-        Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE")
-    )
+    award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
 
 
 class SkinAltName(Base, BaseMixin, AltNameMixin):

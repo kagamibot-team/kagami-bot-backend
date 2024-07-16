@@ -98,7 +98,7 @@ class MultipleObjectFoundException(KagamiCoreException):
     def __init__(self, obj_name: str) -> None:
         super().__init__()
         self.obj_name = obj_name
-    
+
     @property
     def message(self) -> str:
         return f"你说的 {self.obj_name} 对应的对象太多了，请具体一点"

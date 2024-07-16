@@ -18,7 +18,9 @@ async def __title(text: str, color: str = "#FFFFFF"):
     )
 
 
-async def ref_book_box(title: str, notationSto: str, notationSta: str, color: str, imgUrl: str):
+async def ref_book_box(
+    title: str, notationSto: str, notationSta: str, color: str, imgUrl: str
+):
     box = await display_box(color, imgUrl)
 
     bottomTitle = await __title(title)

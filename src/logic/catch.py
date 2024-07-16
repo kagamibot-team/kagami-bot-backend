@@ -48,13 +48,17 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
                 )
                 continue
 
-        level = get_random().choices(level_repo.sorted, [l.weight for l in level_repo.sorted])[0]
+        level = get_random().choices(
+            level_repo.sorted, [l.weight for l in level_repo.sorted]
+        )[0]
 
         # 这里是在数据库中随机抽取该等级的小哥的操作
         # 据说有速度更快的写法……
         query = (
             select(Award.data_id)
-            .filter(Award.level_id == level.lid, Award.is_special_get_only == False) # pylint: disable=singleton-comparison
+            .filter(
+                Award.level_id == level.lid, Award.is_special_get_only == False
+            )  # pylint: disable=singleton-comparison
             .order_by(func.random())
             .limit(1)
         )

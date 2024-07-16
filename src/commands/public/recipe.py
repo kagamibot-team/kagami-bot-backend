@@ -1,7 +1,11 @@
 from src.base.command_events import OnebotContext
 from src.base.exceptions import ObjectNotFoundException
 from src.common.data.awards import get_award_info
-from src.common.decorators.command_decorators import listenOnebot, matchAlconna, requireAdmin
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchAlconna,
+    requireAdmin,
+)
 from src.core.unit_of_work import get_unit_of_work
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
