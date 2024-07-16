@@ -20,7 +20,7 @@ from src.common.draw.texts import Fonts, getTextImage
 from src.common.draw.tools import imageToBytes
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime, to_utc8
-from src.components import catch
+from src.components.catch import catch
 from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Award
 from src.models.statics import level_repo
