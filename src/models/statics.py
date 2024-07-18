@@ -12,22 +12,22 @@ class Level(BaseModel):
     """
 
     __pydantic_fields_set__ = {
-        "lid",
         "search_names",
         "display_name",
         "weight",
         "color",
         "awarding",
+        "lid",
         "sorting_priority",
     }
 
-    lid: int = -1
     search_names: list[str]
     display_name: str
     weight: float
     color: str
     awarding: int
-    sorting_priority: int = 0
+    lid: int
+    sorting_priority: int
 
 
 class LevelRepository:

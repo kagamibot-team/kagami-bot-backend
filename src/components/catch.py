@@ -46,6 +46,8 @@ async def catch(
                 color=color,
                 awarding=0,
                 weight=0,
+                lid=0,
+                sorting_priority=0,
             ),
             image=image,
             sid=-1,

@@ -57,6 +57,7 @@ class GroupSignInData(BaseModel):
 
 
 class LocalStorageData(BaseModel):
+    ls_version: int = 1
     xbs: dict[str, dict[str, XBData]] = {}
     group_sign_in_data: dict[str, GroupSignInData] = {}
 

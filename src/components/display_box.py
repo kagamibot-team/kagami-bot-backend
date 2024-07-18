@@ -30,6 +30,8 @@ async def display_box(
                 weight=0,
                 color=color,
                 awarding=0,
+                lid=0,
+                sorting_priority=0,
             ),
         )
     )
