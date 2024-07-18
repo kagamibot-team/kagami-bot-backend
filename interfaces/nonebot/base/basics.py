@@ -88,6 +88,44 @@ def horizontal_pile(
     return base
 
 
+def pile(
+    images: list[PIL.Image.Image],
+    columns: int = 8,
+    background: str = "#000000",
+    paddingX: int = 0,
+    paddingY: int = 0,
+    horizontalAlign: Literal["top", "center", "bottom"] = "top",
+    verticalAlign: Literal["left", "center", "right"] = "left",
+    marginLeft: int = 0,
+    marginRight: int = 0,
+    marginTop: int = 0,
+    marginBottom: int = 0,
+):
+    piles: list[PIL.Image.Image] = []
+
+    i = 0
+
+    while images[i : i + columns]:
+        piles.append(
+            horizontal_pile(
+                images[i : i + columns],
+                paddingX,
+                horizontalAlign,
+                background,
+                0,
+                marginLeft,
+                marginRight,
+                0,
+            )
+        )
+
+        i += columns
+
+    return vertical_pile(
+        piles, paddingY, verticalAlign, background, marginTop, 0, 0, marginBottom
+    )
+
+
 def render_text(
     *,
     text: str,

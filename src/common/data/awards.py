@@ -4,6 +4,7 @@
 
 import os
 from pathlib import Path
+from typing import Mapping
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,7 +33,7 @@ def award_info_from_uow(
     image: str,
     is_special_get_only: bool,
     sorting: int,
-):
+) -> tuple[int, AwardInfo]:
     """
     用来获取一个小哥的基础信息
 
@@ -46,7 +47,7 @@ def award_info_from_uow(
         is_special_get_only (bool): 是否只能通过特殊方式获得
         sorting (int): 排序
     """
-    return AwardInfo(
+    return aid, AwardInfo(
         aid=aid,
         name=name,
         description=description,
@@ -56,6 +57,8 @@ def award_info_from_uow(
         skin_name=None,
         new=False,
         notation="",
+        sorting=sorting,
+        is_special_get_only=is_special_get_only,
     )
 
 
@@ -99,31 +102,42 @@ async def get_award_info(
 
 
 async def get_a_list_of_award_info(
-    uow: UnitOfWork, uid: int | None, aids: list[int]
-) -> list[AwardInfo]:
+    uow: UnitOfWork, uid: int | None, aids: list[int], show_notation2: bool = True
+) -> list[AwardInfo | None]:
     """用来获取多个小哥的基础信息
 
     Args:
         uow (UnitOfWork): 工作单元
-        aids (list[int]): 小哥 ID 列表
+        aids (list[AwardInfo | None]): 小哥 ID 列表
     """
-    basics = await uow.awards.get_list_of_award_info(aids)
-    basics = [award_info_from_uow(uow, *info) for info in basics]
-
+    _basics = await uow.awards.get_list_of_award_info(aids)
+    basics: list[AwardInfo | None] = list(
+        (award_info_from_uow(uow, *info)[1] for info in _basics)
+    )
     if uid is None:
         return basics
 
     using = await uow.skin_inventory.get_using_list(uid)
-    for info in basics:
-        if info.aid in using:
-            sid = using[info.aid]
+    for i, info in enumerate(basics):
+        if info is None:
+            continue
+
+        aid = info.aid
+
+        sto, use = await uow.inventories.get_inventory(uid, aid)
+        if sto + use == 0:
+            basics[i] = None
+            continue
+
+        info.notation = str(sto)
+        info.notation2 = str(sto + use) if show_notation2 else ""
+        if aid in using:
+            sid = using[aid]
             info.sid = sid
             sname, sdesc, img = await uow.skins.get_info(sid)
             info.skin_name = sname
             info.description = sdesc.strip() or info.description
             info.image = Path(img)
-
-        info.new = await uow.inventories.get_stats(uid, info.aid) > 0
 
     return basics
 

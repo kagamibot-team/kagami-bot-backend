@@ -1,36 +1,27 @@
-import math
-from typing import Any, Sequence
+from typing import Any
 
-import PIL
-import PIL.Image
 from arclet.alconna import Alconna, Arg, Arparma, Option
-from loguru import logger
 from nonebot_plugin_alconna import UniMessage
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from interfaces.nonebot.views.catch import render_award_info_message
-from src.base.command_events import GroupContext, OnebotContext
+from interfaces.nonebot.views.storage import (
+    render_progress_message,
+    render_storage_message,
+)
+from src.base.command_events import OnebotContext
 from src.base.exceptions import DoNotHaveException
-from src.common.data.awards import get_award_info
-from src.common.data.users import get_uid_by_qqid
+from src.common.data.awards import get_a_list_of_award_info, get_award_info
 from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
     requireAdmin,
     withLoading,
-    withSessionLock,
 )
-from src.common.draw.images import pileImages, verticalPile
-from src.common.draw.texts import Fonts, getTextImage
-from src.common.draw.tools import imageToBytes
 from src.common.lang.zh import la
-from src.components.ref_book import ref_book_box
-from src.core.unit_of_work import get_unit_of_work
+from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.logic.admin import isAdmin
-from src.models.models import Award, Skin, SkinRecord
-from src.models.statics import level_repo
-from src.repositories.inventory_repository import InventoryRepository
+from src.views.list_view import UserStorageView
+from src.views.user import UserData
 
 
 @listenOnebot()
@@ -86,70 +77,26 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         await ctx.reply(msg)
 
 
-async def _combine_cells(imgs: list[PIL.Image.Image], marginTop: int = 0):
-    return await pileImages(
-        paddingX=0,
-        paddingY=0,
-        images=imgs,
-        rowMaxNumber=8,
-        background="#9B9690",
-        horizontalAlign="top",
-        verticalAlign="left",
-        marginLeft=30,
-        marginRight=30,
-        marginBottom=30,
-        marginTop=marginTop,
-    )
+async def get_storage_view(
+    uow: UnitOfWork,
+    userdata: UserData | None,
+    level_name: str | None,
+    show_notation2: bool = True,
+) -> UserStorageView:
+    uid = None if userdata is None else userdata.uid
+    view = UserStorageView(user=userdata)
+    if level_name is not None:
+        view.limited_level = uow.levels.get_by_name_strong(level_name)
 
-
-async def _get_levels():
-    return [
-        (level.lid, level.display_name, level.color, level.weight)
-        for level in level_repo.sorted
-    ]
-
-
-async def _get_awards(session: AsyncSession, lid: int):
-    query = select(Award.data_id, Award.name, Award.image).filter(Award.level_id == lid)
-    return (await session.execute(query)).tuples().all()
-
-
-async def _get_others(session: AsyncSession, uid: int):
-    query = (
-        select(Skin.award_id, Skin.image)
-        .join(SkinRecord, SkinRecord.skin_id == Skin.data_id)
-        .filter(SkinRecord.user_id == uid, SkinRecord.selected == 1)
-    )
-    skins = (await session.execute(query)).tuples().all()
-    skins = dict(skins)
-
-    storages = await InventoryRepository(session).get_inventory_dict(uid)
-    return skins, storages
-
-
-def calc_progress(
-    levels: Sequence[tuple[int, str, str, float]],
-    met_sums: dict[int, int],
-    awards: dict[int, Sequence[tuple[int, str, str]]],
-):
-    param: int = 10
-    denominator: float = 0
-    for _, name, _, lweight in levels:
-        if lweight == 0:
+    for level in uow.levels.sorted:
+        if level_name is not None and level != view.limited_level:
             continue
-        logger.info(
-            f"{name}: {lweight} ^ {1.0 / param} = {math.pow(lweight, 1.0 / param)}"
+        aids = await uow.awards.get_aids(level.lid)
+        infos = await get_a_list_of_award_info(
+            uow, uid, aids, show_notation2=show_notation2
         )
-        denominator += 1.0 / math.pow(lweight, 1.0 / param)
-
-    progress: float = 0
-    for lid, _, _, lweight in levels:
-        if lweight == 0:
-            continue
-        numerator: float = 1.0 / math.pow(lweight, 1.0 / param)
-        progress += numerator / denominator * (1.0 * met_sums[lid] / len(awards[lid]))
-
-    return progress
+        view.awards.append((level, infos))
+    return view
 
 
 @listenOnebot()
@@ -165,160 +112,39 @@ def calc_progress(
     )
 )
 @withLoading(la.loading.zhuajd)
-@withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
-    uid = await get_uid_by_qqid(session, ctx.sender_id)
-    if uid is None:
-        return
-
-    levels = await _get_levels()
-    skins, storages = await _get_others(session, uid)
-    awards: dict[int, Sequence[tuple[int, str, str]]] = {}
-    met_sums: dict[int, int] = {}
-
-    for lid, _, _, _ in levels:
-        awards[lid] = await _get_awards(session, lid)
-        met_sums[lid] = 0
-        if len(awards[lid]) == 0:
-            continue
-        imgs: list[PIL.Image.Image] = []
-        for aid, _, _ in awards[lid]:
-            sto, use = storages[aid] if aid in storages.keys() else (0, 0)
-            if sto + use:
-                met_sums[lid] += 1
-
-    baseImgs: list[PIL.Image.Image] = []
-
-    name = await ctx.getSenderName()
-
-    if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderName()
-
+async def _(ctx: OnebotContext, res: Arparma):
     levelName = res.query[str]("等级名字")
-    target_level = None
-    if levelName is not None:
-        target_level = level_repo.get_by_name(levelName)
-
-    if target_level is not None:
-        baseImgs.append(
-            await getTextImage(
-                text=f"{name} 的{target_level.display_name}进度：",
-                color="#FFFFFF",
-                font=Fonts.HARMONYOS_SANS_BLACK,
-                font_size=80,
-                margin_bottom=30,
-                width=216 * 8,
-            )
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        view = await get_storage_view(
+            uow,
+            UserData(
+                uid=await uow.users.get_uid(ctx.sender_id),
+                name=await ctx.sender_name,
+                qqid=str(ctx.sender_id),
+            ),
+            levelName,
         )
 
-    else:
-        percent_progress: float = calc_progress(levels, met_sums, awards)
-        baseImgs.append(
-            await getTextImage(
-                text=f"{name} 的抓小哥进度：{str(round(percent_progress*100, 2))}%",
-                color="#FFFFFF",
-                font=Fonts.HARMONYOS_SANS_BLACK,
-                font_size=80,
-                margin_bottom=30,
-                width=216 * 8,
-            )
-        )
-
-    for lid, lname, lcolor, lweight in levels:
-        if target_level is not None and lid != target_level.lid:
-            continue
-        if len(awards[lid]) == 0:
-            continue
-        imgs: list[PIL.Image.Image] = []
-        for aid, name, img in awards[lid]:
-            color = lcolor
-            sto, use = storages[aid] if aid in storages.keys() else (0, 0)
-
-            if sto + use == 0:
-                if lweight == 0:
-                    continue
-                img = "./res/blank_placeholder.png"
-                name = la.disp.award_unknown_name
-                color = "#696361"
-            elif aid in skins.keys():
-                img = skins[aid]
-
-            imgs.append(
-                await ref_book_box(
-                    name, str(sto) if (sto + use) else "", str(sto + use), color, img
-                )
-            )
-
-        lAwardCount = len(awards[lid]) if (lweight or met_sums[lid] > 1) else 1
-        title = f"{lname} {met_sums[lid]}/{lAwardCount}"
-
-        baseImgs.append(
-            await getTextImage(
-                text=title,
-                color=lcolor,
-                font=[Fonts.JINGNAN_JUNJUN, Fonts.MAPLE_UI],
-                font_size=80,
-                width=216 * 8,
-            )
-        )
-
-        baseImgs.append(await _combine_cells(imgs))
-
-    img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(await render_progress_message(view))
 
 
 @listenOnebot()
 @matchAlconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
 @withLoading(la.loading.kc)
-@withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
-    uid = await get_uid_by_qqid(session, ctx.sender_id)
-    if uid is None:
-        return
+async def _(ctx: OnebotContext, __: Arparma):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        view = await get_storage_view(
+            uow,
+            UserData(
+                uid=await uow.users.get_uid(ctx.sender_id),
+                name=await ctx.sender_name,
+                qqid=str(ctx.sender_id),
+            ),
+            None,
+            show_notation2=False,
+        )
 
-    levels = await _get_levels()
-    skins, storages = await _get_others(session, uid)
-
-    imgs: list[PIL.Image.Image] = []
-    for lid, _, lcolor, _ in levels:
-        awards = await _get_awards(session, lid)
-        _imgs: list[tuple[int, PIL.Image.Image]] = []
-
-        if len(awards) == 0:
-            continue
-        for aid, name, img in awards:
-            color = lcolor
-            sto, _ = storages[aid] if aid in storages.keys() else (0, 0)
-
-            if sto == 0:
-                continue
-            if aid in skins.keys():
-                img = skins[aid]
-
-            _imgs.append((sto, await ref_book_box(name, str(sto), "", color, img)))
-
-        _imgs.sort(key=lambda x: -x[0])
-        imgs += [i[1] for i in _imgs]
-
-    name = await ctx.getSenderName()
-
-    if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderName()
-
-    area_title = await getTextImage(
-        text=f"{name} 的抓小哥库存：",
-        font_size=80,
-        font=Fonts.HARMONYOS_SANS_BLACK,
-        color="#FFFFFF",
-        width=216 * 8,
-        margin_bottom=30,
-    )
-    area_box = await pileImages(images=imgs, rowMaxNumber=8, background="#9B9690")
-    img = await verticalPile(
-        [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
-    )
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(await render_storage_message(view))
 
 
 @listenOnebot()
@@ -336,60 +162,8 @@ async def _(ctx: OnebotContext, session: AsyncSession, __: Arparma):
     )
 )
 @withLoading(la.loading.all_xg)
-@withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
-    levels = await _get_levels()
-
+async def _(ctx: OnebotContext, res: Arparma):
     levelName = res.query[str]("等级名字")
-    target_level = None
-    if levelName is not None:
-        target_level = level_repo.get_by_name(levelName)
-
-    awards: dict[int, Sequence[tuple[int, str, str]]] = {}
-    total: int = 0
-    for lid, lname, lcolor, _ in levels:
-        if target_level is not None and lid != target_level.lid:
-            continue
-        awards[lid] = await _get_awards(session, lid)
-        total += len(awards[lid])
-
-    baseImgs: list[PIL.Image.Image] = []
-    lNameDisplay = f" {levelName} " if target_level is not None else ""
-    baseImgs.append(
-        await getTextImage(
-            text=f"全部 {total} 只{lNameDisplay}小哥：",
-            color="#FFFFFF",
-            font=Fonts.HARMONYOS_SANS_BLACK,
-            font_size=80,
-            margin_bottom=30,
-            width=216 * 8,
-        )
-    )
-
-    for lid, lname, lcolor, _ in levels:
-        if target_level is not None and lid != target_level.lid:
-            continue
-
-        if len(awards[lid]) == 0:
-            continue
-        imgs: list[PIL.Image.Image] = []
-        for _, name, img in awards[lid]:
-            color = lcolor
-            imgs.append(await ref_book_box(name, "", "", color, img))
-
-        title = f"{lname} 共 {len(awards[lid])} 只"
-
-        baseImgs.append(
-            await getTextImage(
-                text=title,
-                color=lcolor,
-                font=[Fonts.JINGNAN_JUNJUN, Fonts.MAPLE_UI],
-                font_size=80,
-                width=216 * 8,
-            )
-        )
-
-        baseImgs.append(await _combine_cells(imgs))
-
-    img = await verticalPile(baseImgs, 15, "left", "#9B9690", 60, 60, 60, 60)
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        view = await get_storage_view(uow, None, levelName)
+    await ctx.send(await render_progress_message(view))

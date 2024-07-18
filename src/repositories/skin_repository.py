@@ -23,7 +23,11 @@ class SkinRepository(DBRepository[Skin]):
         return {row[0]: row[1] for row in (await self.session.execute(qa)).tuples()}
 
     async def update_image(self, data_id: int, image: str | Path) -> None:
-        u = update(Skin).where(Skin.data_id == data_id).values(image=str(image))
+        u = (
+            update(Skin)
+            .where(Skin.data_id == data_id)
+            .values(image=Path(image).as_posix())
+        )
         await self.session.execute(u)
 
     async def get_info(self, sid: int) -> tuple[str, str, str]:

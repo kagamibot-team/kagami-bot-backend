@@ -56,7 +56,7 @@ async def collect_images():
                 await session.execute(
                     update(Award)
                     .where(Award.data_id == did)
-                    .values(img_path=str(img_path))
+                    .values(img_path=img_path.as_posix())
                 )
             applied.add(img_path)
 
@@ -84,7 +84,9 @@ async def collect_images():
                     shutil.move(img_path, target_path)
                 img_path = target_path
                 await session.execute(
-                    update(Skin).where(Skin.data_id == did).values(image=str(img_path))
+                    update(Skin)
+                    .where(Skin.data_id == did)
+                    .values(image=img_path.as_posix())
                 )
             applied.add(img_path)
 

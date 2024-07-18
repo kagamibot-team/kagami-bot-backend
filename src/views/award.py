@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -13,11 +12,16 @@ class AwardInfo(BaseModel):
     level: Level
     image: Path | str | bytes
 
-    sid: int | None
-    skin_name: str | None
+    sid: int | None = None
+    skin_name: str | None = None
 
-    new: bool
-    notation: str
+    sorting: int = 0
+    is_special_get_only: bool = False
+
+    new: bool = False
+    notation: str = ""
+    notation2: str = ""
+    name_notation: str = ""
 
     @property
     def display_name(self):

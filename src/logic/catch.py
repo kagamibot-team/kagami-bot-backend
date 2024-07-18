@@ -57,8 +57,9 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
         query = (
             select(Award.data_id)
             .filter(
-                Award.level_id == level.lid, Award.is_special_get_only == False
-            )  # pylint: disable=singleton-comparison
+                Award.level_id == level.lid,
+                Award.is_special_get_only.is_not(True),
+            )
             .order_by(func.random())
             .limit(1)
         )
