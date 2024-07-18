@@ -2,7 +2,6 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.exceptions import LackException
-from src.views.user import UserData
 
 from ..base.repository import DBRepository
 from ..models import User
@@ -25,7 +24,7 @@ class UserRepository(DBRepository[User]):
 
         if result is None:
             # 创建一个新的用户
-            user = User(qqid=str(qqid))
+            user = User(qq_id=str(qqid))
             await self.add(user)
 
     async def get_uid(self, qqid: int | str) -> int:
