@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import os
 import re
 import time
 
@@ -9,56 +8,19 @@ from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.base.command_events import GroupContext, OnebotContext
+from src.base.command_events import GroupContext
 from src.base.onebot_api import get_group_member_info, send_private_msg, set_group_ban
 from src.common.config import config
 from src.common.data.users import get_uid_by_qqid, get_user_money, set_user_money
 from src.common.decorators.command_decorators import (
     listenGroup,
-    listenOnebot,
     matchAlconna,
-    matchRegex,
     requireOperatorInGroup,
-    withLoading,
     withSessionLock,
 )
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime
 from src.models.models import User
-
-
-def randomKagami():
-    rootPath = os.path.join(".", "data", "kagami")
-
-    if not os.path.exists(rootPath):
-        return None
-
-    files = os.listdir(rootPath)
-    if len(files) == 0:
-        return None
-
-    return os.path.join(rootPath, get_random().choice(files))
-
-
-@listenGroup()
-async def ping(ctx: GroupContext):
-    if (
-        ctx.event.to_me
-        and len(ctx.message) == 1
-        and (ctx.message)[0].data["text"] == ""
-    ):
-        kagami = randomKagami()
-        if kagami is None:
-            return
-
-        await ctx.reply(UniMessage().image(path=kagami))
-
-
-@listenOnebot()
-@matchRegex("^[小|柊]镜[， ,]?跳?科目三$")
-@withLoading("")
-async def _(ctx: OnebotContext, _: re.Match[str]):
-    await asyncio.sleep(5)
 
 
 GET_UP_TIME_PRESETS = {

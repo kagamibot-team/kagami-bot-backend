@@ -9,20 +9,19 @@ from src.common.decorators.command_decorators import listenOnebot
 @listenOnebot()
 async def repeat(ctx: OnebotContext):
     message = ctx.message
+    if len(message) == 0:
+        return
     msg0 = message[0]
     if not isinstance(msg0, Text):
         return
-    n = match_list[0]
     msg0o: str = msg0.text
-    if not msg0o.startswith(n):
+    if not msg0o.startswith("复读镜 "):
         return
-    msg0o_ = msg0o.replace("复读镜 ", "")
-    while "复读镜 " in msg0o_:
-        msg0o_ = msg0o_.replace("复读镜 ", "")
-    while msg0o_.startswith(" "):
-        msg0o_ = msg0o_.replace(" ", "")
+
+    msg0o_ = msg0o.replace("复读镜 ", "").lstrip()
     if len(msg0o_) == 0 and len(message) == 1:
         return
+
     if len(msg0o_) == 0:
         msg0o_ = ""
 
@@ -36,13 +35,8 @@ async def repeat(ctx: OnebotContext):
             _output += msg
         else:
             break
-    if re.match("^回收大于0(.)*", _output.extract_plain_text()) or re.match(
-        "^回收小于(.)*", _output.extract_plain_text()
-    ):
+
+    if re.match("^回收(大于0|小于)(.)*", _output.extract_plain_text()):
         await ctx.reply(UniMessage("这样做小镜会伤心的..."))
-        return
-
-    await ctx.send(_output)
-
-
-match_list = ["复读镜 "]
+    else:
+        await ctx.send(_output)
