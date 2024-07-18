@@ -1,56 +1,37 @@
-import io
 from pathlib import Path
+
 import PIL
 import PIL.Image
+from typing_extensions import deprecated
+
+from interfaces.nonebot.components.awards import display_box as _display_box
+from src.common.decorators.threading import make_async
+from src.models.statics import Level
+from src.views.award import AwardInfo
 
 
-from src.common.draw.images import imagePaste, loadImage
-from src.common.draw.shapes import (
-    applyMask,
-    roundedRectangleMask,
-    drawRoundedRectangleWithScalar,
-)
-from src.common.draw.tools import hex_to_rgb, rgb_to_hex, mix_color
-
-
-async def _display_box(color: str, central_image: Path | str | bytes) -> PIL.Image.Image:
-    if not isinstance(central_image, (str, Path)):
-        image = PIL.Image.open(io.BytesIO(central_image))
-    else:
-        image = await loadImage(central_image)
-    image = image.resize((180, 144), PIL.Image.ADAPTIVE)
-    image = await applyMask(image, await roundedRectangleMask(180, 144, 10))
-
-    canvas = PIL.Image.new("RGBA", (180, 144), (255, 255, 255, 0))
-
-    outerRect = await drawRoundedRectangleWithScalar(
-        180, 144, 10, rgb_to_hex(mix_color(hex_to_rgb(color), (255, 255, 255), 0.35))
-    )
-    innerRect = await drawRoundedRectangleWithScalar(176, 140, 8, color)
-
-    await imagePaste(canvas, outerRect, 0, 0)
-    await imagePaste(canvas, innerRect, 2, 2)
-    await imagePaste(canvas, image, 0, 0)
-
-    return canvas
-
-
-display_box_cache: dict[str, PIL.Image.Image] = {}
-
-
+@deprecated("未来将会直接使用 interfaces.nonebot 中的 display_box 函数")
 async def display_box(
     color: str, central_image: Path | str | bytes, new: bool = False
 ) -> PIL.Image.Image:
-    key = f"{color}-{hash(central_image)}"
-    if key not in display_box_cache:
-        display_box_cache[key] = await _display_box(color, central_image)
-
-    image = display_box_cache[key].copy()
-
-    if new:
-        image_new = PIL.Image.open("./res/new.png")
-        image_new = image_new.convert("RGBA")
-
-        await imagePaste(image, image_new, 88, 0)
-
-    return image
+    return await make_async(_display_box)(
+        AwardInfo(
+            aid=-1,
+            name="",
+            description="",
+            image=central_image,
+            new=new,
+            sid=0,
+            skin_name="",
+            notation="",
+            level=Level(
+                search_names=[],
+                display_name="",
+                weight=0,
+                color=color,
+                awarding=0,
+                lid=0,
+                sorting_priority=0,
+            ),
+        )
+    )

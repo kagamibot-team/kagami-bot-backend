@@ -2,8 +2,16 @@
 显示更新信息
 """
 
-from src.common.lang.zh import get_latest_versions
-from src.imports import *
+import PIL
+import PIL.Image
+from nonebot_plugin_alconna import UniMessage
+
+from src.base.command_events import OnebotContext
+from src.common.decorators.command_decorators import listenOnebot, matchRegex
+from src.common.draw.images import verticalPile
+from src.common.draw.texts import Fonts, getTextImage
+from src.common.draw.tools import imageToBytes
+from src.common.lang.zh import get_latest_versions, la
 
 updateHistory: dict[str, list[str]] = la.about.update
 updateHistoryDev: dict[str, list[str]] = la.about.update_dev
@@ -41,7 +49,7 @@ def constructHelpMessage(helps: list[str]) -> UniMessage:
 
 @listenOnebot()
 @matchRegex("^(抓小哥|zhua) ?(更新|gx|upd|update)$")
-async def _(ctx: PublicContext, *_):
+async def _(ctx: OnebotContext, *_):
     count = 3
     shortHistory = get_latest_versions(count)
     sections: list[PIL.Image.Image] = []
@@ -84,13 +92,13 @@ async def _(ctx: PublicContext, *_):
 
 @listenOnebot()
 @matchRegex("^:: ?(抓小哥|zhua) ?(更新|gx|upd|update)$")
-async def _(ctx: PublicContext, *_):
+async def _(ctx: OnebotContext, *_):
     await ctx.send(constructUpdateMessage(updateHistoryDev))
 
 
 @listenOnebot()
 @matchRegex("^(抓小哥|zhua) ?(帮助|help)$")
-async def _(ctx: PublicContext, *_):
+async def _(ctx: OnebotContext, *_):
     sections: list[PIL.Image.Image] = []
 
     title = await getTextImage(
@@ -130,12 +138,12 @@ async def _(ctx: PublicContext, *_):
 
 
 @listenOnebot()
-@matchRegex("^:: ?(抓小哥|zhua) ?(帮助|help)$")
-async def _(ctx: PublicContext, *_):
+@matchRegex("^:: ?(抓小哥|zhua)? ?(帮助|help)$")
+async def _(ctx: OnebotContext, *_):
     await ctx.send(constructHelpMessage(helpAdmin))
 
 
 @listenOnebot()
 @matchRegex("^(关于 ?抓小哥|zhua ?about)$")
-async def _(ctx: PublicContext, *_):
+async def _(ctx: OnebotContext, *_):
     await ctx.send(UniMessage().text(la.about.about))

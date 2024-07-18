@@ -1,22 +1,47 @@
+from typing import Any
+
 import PIL.Image
 import qrcode
 import qrcode.constants
 import qrcode.main
+from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
+from nonebot_plugin_alconna import UniMessage
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.imports import *
+from src.base.command_events import GroupContext, OnebotContext
+from src.base.event_root import root
+from src.common.data.users import get_uid_by_qqid
+from src.common.dataclasses.shop_data import (
+    ProductData,
+    ShopBuildingEvent,
+    ShopBuyEvent,
+    ShopData,
+)
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchAlconna,
+    withLoading,
+    withSessionLock,
+)
+from src.common.draw.images import imagePaste, pileImages, verticalPile
+from src.common.draw.texts import Fonts, getTextImage
+from src.common.draw.tools import imageToBytes
+from src.common.lang.zh import la
+from src.common.times import now_datetime
+from src.components.product import product_box
+from src.models.models import User
 
 
 async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: ShopData):
-    titles: list[PILImage] = []
-    boxes: list[PILImage] = []
+    titles: list[PIL.Image.Image] = []
+    boxes: list[PIL.Image.Image] = []
 
     name = await ctx.getSenderName()
     if isinstance(ctx, GroupContext):
         name = await ctx.getSenderName()
 
-    res = await session.execute(
-        select(User.money).filter(User.qq_id == ctx.sender_id)
-    )
+    res = await session.execute(select(User.money).filter(User.qq_id == ctx.sender_id))
     res = res.scalar_one_or_none() or 0.0
 
     titles.append(
@@ -25,7 +50,7 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
                 f"欢迎来到小镜商店，{name}！您拥有{int(res)}{la.unit.money}。\n"
                 "输入“小镜商店 购买 {商品名}”就可以购买了。\n"
             ),
-            width=808 - 80*2,
+            width=808 - 80 * 2,
             color="#FFFFFF",
             font=Fonts.HARMONYOS_SANS_BLACK,
             font_size=28,
@@ -42,7 +67,7 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
             )
         )
 
-        subs: list[PILImage] = []
+        subs: list[PIL.Image.Image] = []
         for product in products:
             subs.append(await product_box(product))
         boxes.append(
@@ -57,7 +82,9 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
 
     area_title = await verticalPile(titles, 0, "left", "#9B9690", 0, 0, 0, 0)
     area_box = await verticalPile(boxes, 0, "left", "#9B9690", 0, 0, 0, 0)
-    image = await verticalPile([area_title, area_box], 40, "left", "#9B9690", 464, 80, 80, 60)
+    image = await verticalPile(
+        [area_title, area_box], 40, "left", "#9B9690", 464, 80, 80, 60
+    )
     image.paste(PIL.Image.open("./res/kagami_shop.png"), (0, 0))
     await ctx.send(UniMessage.image(raw=imageToBytes(image)))
 
@@ -75,7 +102,7 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
 )
 @withLoading()
 @withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma):
+async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma[Any]):
     buys = res.query[list[str]]("商品名列表")
     uid = await get_uid_by_qqid(session, ctx.sender_id)
     shop_data = ShopData()

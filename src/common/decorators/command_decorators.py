@@ -43,8 +43,7 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
             if result.error_info is not None and isinstance(
                 result.error_info, (ArgumentMissing, ParamsUnmatched)
             ):
-                await ctx.reply(repr(result.error_info))
-                return
+                raise result.error_info
 
             if not result.matched:
                 return None
@@ -332,6 +331,8 @@ def kagami_exception_handler():
         async def inner(ctx: TC_co) -> T | None:
             try:
                 return await func(ctx)
+            except (ArgumentMissing, ParamsUnmatched) as e:
+                await ctx.reply(str(e.args))
             except KagamiCoreException as e:
                 await ctx.reply(e.message)
             except Exception as e:  #!pylint: disable=W0703

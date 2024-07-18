@@ -6,9 +6,17 @@
 import subprocess
 from pathlib import Path
 
+from src.base.command_events import GroupContext, OnebotContext
 from src.base.db import manual_checkpoint
+from src.common.decorators.command_decorators import (
+    listenGroup,
+    listenOnebot,
+    matchLiteral,
+    matchRegex,
+    requireAdmin,
+    withLoading,
+)
 from src.common.save_file_handler import pack_save
-from src.imports import *
 
 
 @listenGroup()
@@ -31,6 +39,6 @@ async def _(ctx: GroupContext, _):
 @listenOnebot()
 @requireAdmin()
 @matchLiteral("::reload-script")
-async def _(ctx: PublicContext):
+async def _(ctx: OnebotContext):
     await ctx.reply("服务器即将重启")
     subprocess.call(["sh", Path("./linux/upgrade.sh")])

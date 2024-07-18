@@ -5,18 +5,16 @@ from src.base.command_events import GroupContext, OnebotContext
 from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.data.awards import (
     generate_random_info,
-    uow_get_award_info,
-    uow_use_award,
+    get_award_info,
+    use_award,
 )
 from src.common.data.recipe import try_merge
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-)
+from src.common.decorators.command_decorators import listenOnebot, matchAlconna
 from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.views.recipe import MergeResult, MergeStatus
+from src.views.user import UserData
 
 
 @listenOnebot()
@@ -49,9 +47,9 @@ async def _(ctx: OnebotContext, res: Arparma):
         a1 = await uow.awards.get_aid_strong(n1)
         a2 = await uow.awards.get_aid_strong(n2)
         a3 = await uow.awards.get_aid_strong(n3)
-        info1 = await uow_get_award_info(uow, a1)
-        info2 = await uow_get_award_info(uow, a2)
-        info3 = await uow_get_award_info(uow, a3)
+        info1 = await get_award_info(uow, a1)
+        info2 = await get_award_info(uow, a2)
+        info3 = await get_award_info(uow, a3)
         cost = costs[info1.level.lid] + costs[info2.level.lid] + costs[info3.level.lid]
 
         using: dict[int, int] = {}
@@ -59,7 +57,7 @@ async def _(ctx: OnebotContext, res: Arparma):
             using.setdefault(aid, 0)
             using[aid] += 1
         for aid, use in using.items():
-            await uow_use_award(uow, uid, aid, use)
+            await use_award(uow, uid, aid, use)
 
         after = await uow.users.use_money(uid, cost)
 
@@ -70,7 +68,7 @@ async def _(ctx: OnebotContext, res: Arparma):
             do_xb = False
             info.notation = f"+{add}"
         else:
-            info = await uow_get_award_info(uow, aid, uid)
+            info = await get_award_info(uow, aid, uid)
             add = get_random().randint(1, 3)
             do_xb = info.level.lid in (4, 5)
             info.notation = f"+{add}"
@@ -91,7 +89,11 @@ async def _(ctx: OnebotContext, res: Arparma):
             status = MergeStatus.what
 
         merge_info = MergeResult(
-            username=username,
+            user=UserData(
+                uid=uid,
+                qqid=str(ctx.sender_id),
+                name=username,
+            ),
             successed=status,
             inputs=(info1, info2, info3),
             output=info,

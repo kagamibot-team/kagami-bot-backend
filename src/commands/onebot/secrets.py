@@ -1,5 +1,13 @@
+from nonebot_plugin_alconna import UniMessage
+
+from src.base.command_events import OnebotContext
+from src.common.data.awards import get_award_info
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchLiteral,
+    matchRegex,
+)
 from src.core.unit_of_work import get_unit_of_work
-from src.imports import *
 
 
 @listenOnebot()
@@ -54,7 +62,7 @@ async def _(ctx: OnebotContext, _):
         if not await uow.skin_inventory.select(uid, 37):
             await ctx.reply(UniMessage("切换成功！"), ref=True, at=False)
 
-        kbs_info = await uow_get_award_info(uow, 25, sid=37)
+        kbs_info = await get_award_info(uow, 25, sid=37)
 
         await ctx.send(
             UniMessage()

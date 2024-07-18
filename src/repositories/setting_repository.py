@@ -27,18 +27,14 @@ class SettingRepository(DBRepository[Global]):
         获取抓取间隔
         """
         await self.assure_one()
-        return (
-            await self.session.execute(select(Global.catch_interval))
-        ).scalar_one()
+        return (await self.session.execute(select(Global.catch_interval))).scalar_one()
 
     async def set_interval(self, interval: int):
         """
         设置抓取间隔
         """
         await self.assure_one()
-        await self.session.execute(
-            update(Global).values(catch_interval=interval)
-        )
+        await self.session.execute(update(Global).values(catch_interval=interval))
 
     async def get_last_version(self):
         """

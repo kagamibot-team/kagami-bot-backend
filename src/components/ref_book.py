@@ -6,6 +6,7 @@ from src.common.draw.images import imagePaste
 from src.common.draw.texts import Fonts, getTextImage
 from src.components.display_box import display_box
 
+
 async def __title(text: str, color: str = "#FFFFFF"):
     return await getTextImage(
         text=text,
@@ -17,7 +18,9 @@ async def __title(text: str, color: str = "#FFFFFF"):
     )
 
 
-async def ref_book_box(title: str, notationSto: str, notationSta: str, color: str, imgUrl: str):
+async def ref_book_box(
+    title: str, notationSto: str, notationSta: str, color: str, imgUrl: str
+):
     box = await display_box(color, imgUrl)
 
     bottomTitle = await __title(title)

@@ -24,7 +24,7 @@ class UserRepository(DBRepository[User]):
 
         if result is None:
             # 创建一个新的用户
-            user = User(qqid=str(qqid))
+            user = User(qq_id=str(qqid))
             await self.add(user)
 
     async def get_uid(self, qqid: int | str) -> int:
@@ -147,3 +147,40 @@ class UserRepository(DBRepository[User]):
             raise LackException("薯片", money, current)
         await self.set_money(uid, current - money)
         return current - money
+
+    async def get_sign_in_info(self, uid: int) -> tuple[float, int]:
+        """获得用户上次签到时间和签到次数
+
+        Args:
+            uid (int): 用户 ID
+
+        Returns:
+            tuple[float, int]: 上次签到时间、签到次数
+        """
+        query = select(User.last_sign_in_time, User.sign_in_count).filter(
+            User.data_id == uid
+        )
+        return (await self.session.execute(query)).tuples().one()
+
+    async def set_sign_in_info(
+        self,
+        uid: int,
+        last_sign_in_time: float,
+        sign_in_count: int,
+    ):
+        """设置用户上次签到时间和签到次数
+
+        Args:
+            uid (int): 用户 ID
+            last_sign_in_time (float): 上次签到时间
+            sign_in_count (int): 签到次数
+        """
+
+        await self.session.execute(
+            update(User)
+            .where(User.data_id == uid)
+            .values(
+                last_sign_in_time=last_sign_in_time,
+                sign_in_count=sign_in_count,
+            )
+        )

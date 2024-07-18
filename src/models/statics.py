@@ -1,31 +1,20 @@
-from dataclasses import dataclass
-
 from pydantic import BaseModel
 
+from src.base.exceptions import ObjectNotFoundException
 
-@dataclass
+
 class Level(BaseModel):
     """
     抓小哥中小哥的等级
     """
 
-    __pydantic_fields_set__ = {
-        "lid",
-        "search_names",
-        "display_name",
-        "weight",
-        "color",
-        "awarding",
-        "sorting_priority",
-    }
-
-    lid: int = -1
     search_names: list[str]
     display_name: str
     weight: float
     color: str
     awarding: int
-    sorting_priority: int = 0
+    lid: int
+    sorting_priority: int
 
 
 class LevelRepository:
@@ -89,6 +78,12 @@ class LevelRepository:
 
     def get_by_name(self, name: str):
         return self.name_index.get(name)
+
+    def get_by_name_strong(self, name: str):
+        r = self.name_index.get(name)
+        if r is None:
+            raise ObjectNotFoundException("等级", name)
+        return r
 
     def get_by_id(self, id: int):
         return self.levels[id]

@@ -1,5 +1,12 @@
-from src.imports import *
-from .catch_time import *
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.common.dataclasses import Picks, Pick
+from src.common.data.users import get_user_flags, set_user_flags
+from sqlalchemy import func, select
+from src.models.models import Award
+from src.common.data.awards import get_statistics
+from src.common.rd import get_random
+from src.models.statics import level_repo
 
 
 async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
@@ -41,13 +48,17 @@ async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
                 )
                 continue
 
-        level = get_random().choices(level_repo.sorted, [l.weight for l in level_repo.sorted])[0]
+        level = get_random().choices(
+            level_repo.sorted, [l.weight for l in level_repo.sorted]
+        )[0]
 
         # 这里是在数据库中随机抽取该等级的小哥的操作
         # 据说有速度更快的写法……
         query = (
             select(Award.data_id)
-            .filter(Award.level_id == level.lid, Award.is_special_get_only == False) # pylint: disable=singleton-comparison
+            .filter(
+                Award.level_id == level.lid, Award.is_special_get_only == False
+            )  # pylint: disable=singleton-comparison
             .order_by(func.random())
             .limit(1)
         )

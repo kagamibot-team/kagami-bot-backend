@@ -1,13 +1,31 @@
+import re
 import time
 
+from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
+from nonebot_plugin_alconna import At, Reply, Text
+
 from interfaces.nonebot.views.catch import render_catch_message
+from src.base.command_events import OnebotContext
+from src.base.event_root import root
 from src.base.exceptions import KagamiRangeError
 from src.base.local_storage import Action, LocalStorageManager, XBRecord
+from src.common.data.awards import get_award_info
+from src.common.data.users import add_user_flag, get_user_flags
+from src.common.dataclasses.catch_data import PicksEvent
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchAlconna,
+    matchRegex,
+    withLoading,
+)
+from src.common.lang.zh import la
+from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
-from src.imports import *
 from src.logic.catch import pickAwards
 from src.logic.catch_time import uow_calculate_time
+from src.views.award import AwardInfo
 from src.views.catch import CatchMesssage, CatchResultMessage
+from src.views.user import UserData
 
 
 async def picks(
@@ -64,7 +82,7 @@ async def picks(
         for aid, pick in pick_result.awards.items():
             spent_count += pick.delta
             await uow.inventories.give(uid, aid, pick.delta)
-            info = await uow_get_award_info(uow, aid, uid)
+            info = await get_award_info(uow, aid, uid)
             info.new = pick.beforeStats == 0
             info.notation = f"+{pick.delta}"
             catchs.append(info)
@@ -75,12 +93,15 @@ async def picks(
             user_time.pickLastUpdated,
         )
         await uow.users.add_money(uid, pick_result.money)
+        user = UserData(
+            uid=uid,
+            qqid=str(qqid),
+            name=qqname,
+        )
 
         if spent_count > 0:
             msg = CatchResultMessage(
-                uid=uid,
-                qqid=qqid,
-                username=qqname,
+                user=user,
                 slot_remain=user_time.pickRemain - spent_count,
                 slot_sum=user_time.pickMax,
                 next_time=user_time.pickLastUpdated + user_time.interval - time.time(),
@@ -91,9 +112,7 @@ async def picks(
             )
         else:
             msg = CatchMesssage(
-                uid=uid,
-                qqid=qqid,
-                username=qqname,
+                user=user,
                 slot_remain=user_time.pickRemain - spent_count,
                 slot_sum=user_time.pickMax,
                 next_time=user_time.pickLastUpdated + user_time.interval - time.time(),
@@ -122,7 +141,7 @@ async def handle_xb(msg: CatchMesssage):
     if len(data) > 0:
         LocalStorageManager.instance().data.add_xb(
             msg.group_id,
-            msg.qqid,
+            msg.user.qqid,
             XBRecord(time=now_datetime(), action=Action.catched, data="，".join(data)),
         )
         LocalStorageManager.instance().save()
@@ -159,8 +178,13 @@ async def _(ctx: OnebotContext, _):
 
 
 @listenOnebot()
-@matchRegex("^是[。.，,！!]?$")
-async def _(ctx: OnebotContext, _):
+async def _(ctx: OnebotContext):
+    msg = ctx.message.exclude(At).exclude(Reply)
+    if not msg.only(Text):
+        return
+    msg = msg.extract_plain_text().strip()
+    if not re.match("^是[。.！!？? ]*$", msg):
+        return
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
         flags_before = await get_user_flags(uow.session, uid)

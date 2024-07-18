@@ -1,6 +1,8 @@
 from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.views.award import AwardInfo
+
 from ..base.repository import DBRepository
 from ..models.models import Skin, SkinRecord
 
@@ -122,3 +124,20 @@ class SkinInventoryRepository(DBRepository[SkinRecord]):
             await self.session.flush()
             return False
         return True
+
+    async def get_using_list(self, uid: int) -> dict[int, int]:
+        """获得一个用户正在挂载的所有皮肤
+        Args:
+            uid (int): 用户 ID
+
+        Returns:
+            dict[int, int]: 皮肤 ID 的记录
+        """
+
+        query = (
+            select(Skin.award_id, SkinRecord.skin_id)
+            .join(Skin, Skin.data_id == SkinRecord.skin_id)
+            .filter(SkinRecord.user_id == uid, SkinRecord.selected == 1)
+        )
+        result = await self.session.execute(query)
+        return dict(result.tuples().all())

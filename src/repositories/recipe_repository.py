@@ -143,7 +143,7 @@ class RecipeRepository(DBRepository[Recipe]):
         await self.session.execute(query)
         await self.clear_history(await self.get_recipe_id(aid1, aid2, aid3))
 
-    async def clear_not_modified(self, force: bool=False) -> None:
+    async def clear_not_modified(self, force: bool = False) -> None:
         """删除所有未修改的配方"""
         query = delete(Recipe)
         if not force:
@@ -163,6 +163,45 @@ class RecipeRepository(DBRepository[Recipe]):
             delete(RecipeHistory).where(RecipeHistory.recipe == rid)
         )
 
+    async def limit_one_history(self, group_id: int | str, rid: int):
+        """限制数据库中的合成历史只保留最旧的一个
+
+        Args:
+            group_id (int | str): 群 ID
+            rid (int): 配方的 ID
+
+        Returns:
+            int | None: 如果有历史，返回最旧的历史的发现者 UID，否则返回 None
+        """
+
+        the_true_first_uid = await self.session.scalar(
+            select(RecipeHistory.first)
+            .where(
+                RecipeHistory.source == str(group_id),
+                RecipeHistory.recipe == rid,
+            )
+            .order_by(-RecipeHistory.data_id)
+            .limit(1)
+        )
+
+        await self.session.execute(
+            delete(RecipeHistory).where(
+                RecipeHistory.source == str(group_id),
+                RecipeHistory.recipe == rid,
+            )
+        )
+
+        if the_true_first_uid is not None:
+            await self.session.execute(
+                insert(RecipeHistory).values(
+                    source=str(group_id),
+                    recipe=rid,
+                    first=the_true_first_uid,
+                )
+            )
+
+        return the_true_first_uid
+
     async def record_history(self, group_id: int | str, rid: int, uid: int):
         """记录下一次合成历史
 
@@ -172,13 +211,17 @@ class RecipeRepository(DBRepository[Recipe]):
             uid (int): 用户的 ID
         """
 
-        await self.session.execute(
-            insert(RecipeHistory).values(
-                source=str(group_id),
-                recipe=rid,
-                first=uid,
+        # 前面忘记筛选了，这里只能人工再修复一下
+        first = await self.limit_one_history(group_id, rid)
+
+        if first is None:
+            await self.session.execute(
+                insert(RecipeHistory).values(
+                    source=str(group_id),
+                    recipe=rid,
+                    first=uid,
+                )
             )
-        )
 
     async def get_histories(
         self,

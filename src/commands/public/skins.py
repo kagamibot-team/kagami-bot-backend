@@ -1,15 +1,18 @@
+from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
+from loguru import logger
+from nonebot_plugin_alconna import Image
+from sqlalchemy import update
+
+from src.base.command_events import OnebotContext
 from src.base.exceptions import ObjectAlreadyExistsException
+from src.common.data.skins import downloadSkinImage
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchAlconna,
+    requireAdmin,
+)
 from src.core.unit_of_work import get_unit_of_work
-from src.imports import *
-
-
-@dataclass
-class SkinInfo:
-    aName: str
-    name: str
-    image: str
-    extra_description: str
-    price: float
+from src.models.models import Skin
 
 
 @listenOnebot()
@@ -63,56 +66,44 @@ async def _(ctx: OnebotContext, res: Arparma):
         ),
     )
 )
-@withFreeSession()
-async def _(session: AsyncSession, ctx: PublicContext, res: Arparma):
+async def _(ctx: OnebotContext, res: Arparma):
     name = res.query[str]("皮肤原名")
-
-    if name is None:
-        return
-
-    sid = await get_sid_by_name(session, name)
-
-    if sid is None:
-        await ctx.reply(UniMessage(f"名字叫 {name} 的皮肤不存在。"))
-        return
-
+    assert name is not None
     newName = res.query[str]("皮肤新名字")
     price = res.query[float]("价格")
     _description = res.query[tuple[str]]("描述")
     image = res.query[Image]("图片")
 
-    messages = UniMessage() + "本次更改结果：\n\n"
+    async with get_unit_of_work() as uow:
+        sid = await uow.skins.get_sid_strong(name)
+        session = uow.session
 
-    if newName is not None:
-        await session.execute(
-            update(Skin).where(Skin.data_id == sid).values(name=newName)
-        )
-        messages += f"成功将名字叫 {name} 的皮肤的名字改为 {newName}。\n"
-
-    if price is not None:
-        await session.execute(
-            update(Skin).where(Skin.data_id == sid).values(price=price)
-        )
-        messages += f"成功将名字叫 {name} 的皮肤的价格改为 {price}。\n"
-
-    if _description is not None:
-        description = "\n".join(_description)
-        await session.execute(
-            update(Skin)
-            .where(Skin.data_id == sid)
-            .values(extra_description=description)
-        )
-        messages += f"成功将名字叫 {name} 的皮肤的描述改为 {description}\n"
-
-    if image is not None:
-        imageUrl = image.url
-        if imageUrl is None:
-            logger.warning(f"名字叫 {name} 的皮肤的图片地址为空。")
-        else:
-            fp = await downloadSkinImage(sid, imageUrl)
+        if newName is not None:
             await session.execute(
-                update(Skin).where(Skin.data_id == sid).values(image=fp)
+                update(Skin).where(Skin.data_id == sid).values(name=newName)
             )
-            messages += f"成功将名字叫 {name} 的皮肤的图片改为 {fp}。\n"
 
-    await ctx.reply(messages)
+        if price is not None:
+            await session.execute(
+                update(Skin).where(Skin.data_id == sid).values(price=price)
+            )
+
+        if _description is not None:
+            description = "\n".join(_description)
+            await session.execute(
+                update(Skin)
+                .where(Skin.data_id == sid)
+                .values(extra_description=description)
+            )
+
+        if image is not None:
+            imageUrl = image.url
+            if imageUrl is None:
+                logger.warning(f"名字叫 {name} 的皮肤的图片地址为空。")
+            else:
+                fp = await downloadSkinImage(sid, imageUrl)
+                await session.execute(
+                    update(Skin).where(Skin.data_id == sid).values(image=fp)
+                )
+
+    await ctx.send("ok.")

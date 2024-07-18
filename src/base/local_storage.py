@@ -57,6 +57,7 @@ class GroupSignInData(BaseModel):
 
 
 class LocalStorageData(BaseModel):
+    ls_version: int = 1
     xbs: dict[str, dict[str, XBData]] = {}
     group_sign_in_data: dict[str, GroupSignInData] = {}
 
@@ -66,17 +67,17 @@ class LocalStorageData(BaseModel):
                 e.expire()
         for e in self.group_sign_in_data.values():
             e.expire()
-    
+
     def get_group_xb(self, group: str | int):
         self.update()
         self.xbs.setdefault(str(group), {})
         return self.xbs[str(group)]
-    
+
     def get_group_signin_count(self, group: str | int):
         self.update()
         self.group_sign_in_data.setdefault(str(group), GroupSignInData())
         return self.group_sign_in_data
-    
+
     def add_xb(self, group: int | str, qqid: int | str, record: XBRecord):
         self.get_group_xb(group).setdefault(str(qqid), XBData())
         self.xbs[str(group)][str(qqid)].records.append(record)
@@ -100,7 +101,7 @@ class LocalStorageManager:
         if LocalStorageManager._instance is None:
             raise RuntimeError("请先初始化 LocalStorageData 实例")
         return LocalStorageManager._instance
-    
+
     @staticmethod
     def init():
         if LocalStorageManager._instance is not None:
@@ -117,7 +118,7 @@ class LocalStorageManager:
         self.weak_load()
         self.save()
         return self._data
-    
+
     def update(self):
         self._data.update()
 

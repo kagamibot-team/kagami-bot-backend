@@ -21,7 +21,7 @@ from src.core.unit_of_work import get_unit_of_work
 @matchAlconna(
     Alconna(
         ["::"],
-        "re:(更改|设置|设定|调整)别名",
+        "re:(更改|设置|设定|调整|创建|添加)(别名|别名)",
         Arg("名字", str),
         Arg("别名", str),
         Option(
