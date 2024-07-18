@@ -1,25 +1,12 @@
-from dataclasses import dataclass
-
 from pydantic import BaseModel
 
 from src.base.exceptions import ObjectNotFoundException
 
 
-@dataclass
 class Level(BaseModel):
     """
     抓小哥中小哥的等级
     """
-
-    __pydantic_fields_set__ = {
-        "search_names",
-        "display_name",
-        "weight",
-        "color",
-        "awarding",
-        "lid",
-        "sorting_priority",
-    }
 
     search_names: list[str]
     display_name: str
