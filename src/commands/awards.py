@@ -1,7 +1,3 @@
-"""
-对小哥进行的增删查改操作
-"""
-
 from typing import Any
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma, MultiVar, Option
@@ -9,15 +5,20 @@ from nonebot_plugin_alconna import At, Image
 
 from src.base.command_events import GroupContext, OnebotContext
 from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
-from src.common.data.awards import download_award_image
+from src.common.data.awards import download_award_image, get_a_list_of_award_info
 from src.common.decorators.command_decorators import (
     listenGroup,
     listenOnebot,
     matchAlconna,
     requireAdmin,
+    withLoading,
 )
-from src.core.unit_of_work import get_unit_of_work
+from src.common.lang.zh import la
+from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.models.statics import level_repo
+from src.ui.pages.storage import render_progress_message, render_storage_message
+from src.ui.views.list_view import UserStorageView
+from src.ui.views.user import UserData
 
 
 @listenOnebot()
@@ -187,3 +188,95 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
         await uow.inventories.give(uid, aid, number, False)
 
     await ctx.reply("给了。", at=False, ref=True)
+
+
+async def get_storage_view(
+    uow: UnitOfWork,
+    userdata: UserData | None,
+    level_name: str | None,
+    show_notation2: bool = True,
+) -> UserStorageView:
+    uid = None if userdata is None else userdata.uid
+    view = UserStorageView(user=userdata)
+    if level_name is not None:
+        view.limited_level = uow.levels.get_by_name_strong(level_name)
+
+    for level in uow.levels.sorted:
+        if level_name is not None and level != view.limited_level:
+            continue
+        aids = await uow.awards.get_aids(level.lid)
+        infos = await get_a_list_of_award_info(
+            uow, uid, aids, show_notation2=show_notation2
+        )
+        view.awards.append((level, infos))
+    return view
+
+
+@listenOnebot()
+@matchAlconna(
+    Alconna(
+        "re:(zhuajd|抓进度|抓小哥进度)",
+        Option(
+            "等级",
+            Arg("等级名字", str),
+            alias=["--level", "级别", "-l", "-L"],
+            compact=True,
+        ),
+    )
+)
+@withLoading(la.loading.zhuajd)
+async def _(ctx: OnebotContext, res: Arparma):
+    levelName = res.query[str]("等级名字")
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        view = await get_storage_view(
+            uow,
+            UserData(
+                uid=await uow.users.get_uid(ctx.sender_id),
+                name=await ctx.sender_name,
+                qqid=str(ctx.sender_id),
+            ),
+            levelName,
+        )
+
+    await ctx.send(await render_progress_message(view))
+
+
+@listenOnebot()
+@matchAlconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
+@withLoading(la.loading.kc)
+async def _(ctx: OnebotContext, _: Arparma):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        view = await get_storage_view(
+            uow,
+            UserData(
+                uid=await uow.users.get_uid(ctx.sender_id),
+                name=await ctx.sender_name,
+                qqid=str(ctx.sender_id),
+            ),
+            None,
+            show_notation2=False,
+        )
+
+    await ctx.send(await render_storage_message(view))
+
+
+@listenOnebot()
+@requireAdmin()
+@matchAlconna(
+    Alconna(
+        "re:(所有|全部)小哥",
+        ["::"],
+        Option(
+            "等级",
+            Arg("等级名字", str),
+            alias=["--level", "级别", "-l", "-L"],
+            compact=True,
+        ),
+    )
+)
+@withLoading(la.loading.all_xg)
+async def _(ctx: OnebotContext, res: Arparma):
+    levelName = res.query[str]("等级名字")
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        view = await get_storage_view(uow, None, levelName)
+    await ctx.send(await render_progress_message(view))
