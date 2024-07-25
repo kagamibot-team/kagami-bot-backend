@@ -15,15 +15,14 @@ from src.common.decorators.command_decorators import (
     matchRegex,
     withSessionLock,
 )
-from src.common.draw.images import verticalPile
-from src.common.draw.texts import Fonts, getTextImage
-from src.common.draw.tools import imageToBytes
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime, to_utc8
-from src.components.catch import catch
 from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Award
 from src.models.statics import level_repo
+from src.ui.base.basics import Fonts, render_text, vertical_pile
+from src.ui.base.tools import image_to_bytes
+from src.ui.deprecated.catch import catch
 
 
 @listenGroup()
@@ -54,7 +53,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
 
     titles: list[PIL.Image.Image] = []
     titles.append(
-        await getTextImage(
+        render_text(
             text=(f"玩家 {name} ："),
             color="#9B9690",
             font=Fonts.ALIMAMA_SHU_HEI,
@@ -62,7 +61,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
         )
     )
     titles.append(
-        await getTextImage(
+        render_text(
             text=f"您的今日人品是： {str(jrrp)}！",
             color="#63605C",
             font=Fonts.JINGNAN_BOBO_HEI,
@@ -70,7 +69,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
         )
     )
     titles.append(
-        await getTextImage(
+        render_text(
             text="本次今日小哥是：",
             color="#63605C",
             font=Fonts.JINGNAN_BOBO_HEI,
@@ -88,11 +87,11 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
         notation="",
     )
 
-    area_title = await verticalPile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile(
+    area_title = vertical_pile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
+    img = vertical_pile(
         [area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80
     )
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
     if isinstance(ctx, GroupContext):
         if jrrp == 100:

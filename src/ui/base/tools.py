@@ -27,7 +27,7 @@ def mix_color(
     )
 
 
-def imageToBytes(img: PIL.Image.Image):
+def image_to_bytes(img: PIL.Image.Image):
     arr = np.array(img)
 
     if arr.shape[2] == 3:
@@ -40,4 +40,4 @@ def imageToBytes(img: PIL.Image.Image):
     return im.tobytes()
 
 
-__all__ = ["hex_to_rgb", "rgb_to_hex", "mix_color", "imageToBytes"]
+__all__ = ["hex_to_rgb", "rgb_to_hex", "mix_color", "image_to_bytes"]

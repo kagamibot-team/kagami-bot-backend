@@ -24,13 +24,12 @@ from src.common.decorators.command_decorators import (
     withLoading,
     withSessionLock,
 )
-from src.common.draw.images import imagePaste, pileImages, verticalPile
-from src.common.draw.texts import Fonts, getTextImage
-from src.common.draw.tools import imageToBytes
 from src.common.lang.zh import la
 from src.common.times import now_datetime
-from src.components.product import product_box
 from src.models.models import User
+from src.ui.base.basics import Fonts, paste_image, pile, render_text, vertical_pile
+from src.ui.base.tools import image_to_bytes
+from src.ui.deprecated.product import product_box
 
 
 async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: ShopData):
@@ -45,7 +44,7 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
     res = res.scalar_one_or_none() or 0.0
 
     titles.append(
-        await getTextImage(
+        render_text(
             text=(
                 f"欢迎来到小镜商店，{name}！您拥有{int(res)}{la.unit.money}。\n"
                 "输入“小镜商店 购买 {商品名}”就可以购买了。\n"
@@ -59,7 +58,7 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
 
     for group, products in shop.products.items():
         boxes.append(
-            await getTextImage(
+            render_text(
                 text=group,
                 color="#FFFFFF",
                 font=Fonts.HARMONYOS_SANS_BLACK,
@@ -71,22 +70,22 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
         for product in products:
             subs.append(await product_box(product))
         boxes.append(
-            await pileImages(
+            pile(
                 images=subs,
-                rowMaxNumber=3,
+                columns=3,
                 background="#9B9690",
                 horizontalAlign="center",
                 marginBottom=30,
             )
         )
 
-    area_title = await verticalPile(titles, 0, "left", "#9B9690", 0, 0, 0, 0)
-    area_box = await verticalPile(boxes, 0, "left", "#9B9690", 0, 0, 0, 0)
-    image = await verticalPile(
+    area_title = vertical_pile(titles, 0, "left", "#9B9690", 0, 0, 0, 0)
+    area_box = vertical_pile(boxes, 0, "left", "#9B9690", 0, 0, 0, 0)
+    image = vertical_pile(
         [area_title, area_box], 40, "left", "#9B9690", 464, 80, 80, 60
     )
     image.paste(PIL.Image.open("./res/kagami_shop.png"), (0, 0))
-    await ctx.send(UniMessage.image(raw=imageToBytes(image)))
+    await ctx.send(UniMessage.image(raw=image_to_bytes(image)))
 
 
 @listenOnebot()
@@ -177,7 +176,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma[Any]):
     buy_result += "  欢迎下次光临\n"
     buy_result += "--------------------\n"
 
-    image = await getTextImage(
+    image = render_text(
         text=buy_result,
         width=336,
         color="#000000",
@@ -191,7 +190,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma[Any]):
     )
 
     base = PIL.Image.new("RGB", image.size, "#FFFFFF")
-    await imagePaste(base, image, 0, 0)
+    paste_image(base, image, 0, 0)
 
     qrc = qrcode.main.QRCode(
         version=1,
@@ -207,4 +206,4 @@ async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma[Any]):
 
     base.paste(qr, (98, base.height - 240))
 
-    await ctx.send(UniMessage.image(raw=imageToBytes(base)))
+    await ctx.send(UniMessage.image(raw=image_to_bytes(base)))

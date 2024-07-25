@@ -3,7 +3,7 @@ from typing import Any
 from nonebot_plugin_alconna import UniMessage
 
 from src.ui.base.basics import Fonts, horizontal_pile, render_text, vertical_pile
-from src.ui.base.tools import imageToBytes
+from src.ui.base.tools import image_to_bytes
 from src.ui.components.awards import display_box
 from src.ui.components.catch import catch
 from src.ui.views.recipe import MergeResult
@@ -68,6 +68,6 @@ def render_merge_image(data: MergeResult):
 
 
 async def render_merge_message(data: MergeResult) -> UniMessage[Any]:
-    image = await make_async(imageToBytes)(await make_async(render_merge_image)(data))
+    image = await make_async(image_to_bytes)(await make_async(render_merge_image)(data))
 
     return UniMessage.image(raw=image)

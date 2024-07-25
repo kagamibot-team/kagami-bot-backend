@@ -1,6 +1,6 @@
 from nonebot_plugin_alconna import UniMessage
 
-from src.ui.base.tools import imageToBytes
+from src.ui.base.tools import image_to_bytes
 from src.ui.components.list_view import render_document
 from src.ui.views.list_view import UserStorageView
 from utils.threading import make_async
@@ -16,7 +16,7 @@ def render_storage_image(data: UserStorageView):
 
 async def render_progress_message(data: UserStorageView):
     return UniMessage.image(
-        raw=await make_async(imageToBytes)(
+        raw=await make_async(image_to_bytes)(
             await make_async(render_progress_image)(data)
         )
     )
@@ -24,5 +24,5 @@ async def render_progress_message(data: UserStorageView):
 
 async def render_storage_message(data: UserStorageView):
     return UniMessage.image(
-        raw=await make_async(imageToBytes)(await make_async(render_storage_image)(data))
+        raw=await make_async(image_to_bytes)(await make_async(render_storage_image)(data))
     )

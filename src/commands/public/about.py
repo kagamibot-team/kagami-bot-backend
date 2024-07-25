@@ -8,10 +8,9 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import OnebotContext
 from src.common.decorators.command_decorators import listenOnebot, matchRegex
-from src.common.draw.images import verticalPile
-from src.common.draw.texts import Fonts, getTextImage
-from src.common.draw.tools import imageToBytes
 from src.common.lang.zh import get_latest_versions, la
+from src.ui.base.basics import Fonts, render_text, vertical_pile
+from src.ui.base.tools import image_to_bytes
 
 updateHistory: dict[str, list[str]] = la.about.update
 updateHistoryDev: dict[str, list[str]] = la.about.update_dev
@@ -54,7 +53,7 @@ async def _(ctx: OnebotContext, *_):
     shortHistory = get_latest_versions(count)
     sections: list[PIL.Image.Image] = []
 
-    title = await getTextImage(
+    title = render_text(
         text="更新历史（近三次）",
         color="#63605C",
         font=Fonts.JINGNAN_BOBO_HEI,
@@ -64,7 +63,7 @@ async def _(ctx: OnebotContext, *_):
     for subtitle in shortHistory:
         subtitles: list[PIL.Image.Image] = []
         subtitles.append(
-            await getTextImage(
+            render_text(
                 text=subtitle,
                 color="#63605C",
                 font=Fonts.JINGNAN_JUNJUN,
@@ -74,20 +73,20 @@ async def _(ctx: OnebotContext, *_):
         )
         for commmand in updateHistory[subtitle]:
             subtitles.append(
-                await getTextImage(
+                render_text(
                     text=commmand,
                     color="#9B9690",
                     font=Fonts.ALIMAMA_SHU_HEI,
                     font_size=24,
                 )
             )
-        sections.append(await verticalPile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
+        sections.append(vertical_pile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
 
-    area_section = await verticalPile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile(
+    area_section = vertical_pile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
+    img = vertical_pile(
         [title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60
     )
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
 
 @listenOnebot()
@@ -101,7 +100,7 @@ async def _(ctx: OnebotContext, *_):
 async def _(ctx: OnebotContext, *_):
     sections: list[PIL.Image.Image] = []
 
-    title = await getTextImage(
+    title = render_text(
         text="指令列表",
         color="#63605C",
         font=Fonts.JINGNAN_BOBO_HEI,
@@ -111,7 +110,7 @@ async def _(ctx: OnebotContext, *_):
     for subtitle, commands in help.items():
         subtitles: list[PIL.Image.Image] = []
         subtitles.append(
-            await getTextImage(
+            render_text(
                 text=subtitle,
                 color="#63605C",
                 font=Fonts.JINGNAN_JUNJUN,
@@ -121,20 +120,20 @@ async def _(ctx: OnebotContext, *_):
         )
         for commmand in commands:
             subtitles.append(
-                await getTextImage(
+                render_text(
                     text=commmand,
                     color="#9B9690",
                     font=Fonts.ALIMAMA_SHU_HEI,
                     font_size=24,
                 )
             )
-        sections.append(await verticalPile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
+        sections.append(vertical_pile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
 
-    area_section = await verticalPile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = await verticalPile(
+    area_section = vertical_pile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
+    img = vertical_pile(
         [title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60
     )
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
 
 @listenOnebot()

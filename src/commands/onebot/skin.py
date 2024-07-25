@@ -23,13 +23,12 @@ from src.common.decorators.command_decorators import (
     withLoading,
     withSessionLock,
 )
-from src.common.draw.images import pileImages, verticalPile
-from src.common.draw.texts import Fonts, getTextImage
-from src.common.draw.tools import imageToBytes
 from src.common.lang.zh import la
-from src.components.ref_book import skin_book
 from src.models.models import Award, AwardAltName, Skin, SkinAltName, SkinRecord
 from src.models.statics import level_repo
+from src.ui.base.basics import Fonts, pile, render_text, vertical_pile
+from src.ui.base.tools import image_to_bytes
+from src.ui.deprecated.ref_book import skin_book
 
 
 @listenOnebot()
@@ -109,7 +108,7 @@ async def _(ctx: OnebotContext, session: AsyncSession, _: Arparma):
     if isinstance(ctx, GroupContext):
         name = await ctx.getSenderName()
 
-    area_title = await getTextImage(
+    area_title = render_text(
         text=f"{name} 的皮肤进度：",
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
@@ -130,12 +129,12 @@ async def _(ctx: OnebotContext, session: AsyncSession, _: Arparma):
     for box in _boxes:
         boxes.append(await skin_book(*box))
 
-    area_box = await pileImages(images=boxes, rowMaxNumber=6, background="#9B9690")
+    area_box = pile(images=boxes, columns=6, background="#9B9690")
 
-    img = await verticalPile(
+    img = vertical_pile(
         [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
     )
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
 
 @listenOnebot()
@@ -185,7 +184,7 @@ async def _(session: AsyncSession, ctx: OnebotContext, res: Arparma):
             )
         )
 
-    area_title = await getTextImage(
+    area_title = render_text(
         text=f"全部 {len(skins)} 种皮肤：",
         color="#FFFFFF",
         font=Fonts.HARMONYOS_SANS_BLACK,
@@ -194,9 +193,9 @@ async def _(session: AsyncSession, ctx: OnebotContext, res: Arparma):
         width=216 * 6,
     )
 
-    area_box = await pileImages(images=boxes, rowMaxNumber=6, background="#9B9690")
+    area_box = pile(images=boxes, columns=6, background="#9B9690")
 
-    img = await verticalPile(
+    img = vertical_pile(
         [area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60
     )
-    await ctx.send(UniMessage().image(raw=imageToBytes(img)))
+    await ctx.send(UniMessage().image(raw=image_to_bytes(img)))

@@ -18,7 +18,7 @@ from src.models.statics import level_repo
 from src.repositories.award_repository import AwardRepository
 from src.repositories.inventory_repository import InventoryRepository
 from src.ui.base.strange import make_strange
-from src.ui.base.tools import imageToBytes
+from src.ui.base.tools import image_to_bytes
 from src.ui.views.award import AwardInfo
 from utils.threading import make_async
 
@@ -154,7 +154,7 @@ async def generate_random_info():
         aid=-1,
         name="".join((rchar() for _ in range(rlen))),
         description="".join((rchar() for _ in range(rlen2))),
-        image=imageToBytes(await make_async(make_strange)()),
+        image=image_to_bytes(await make_async(make_strange)()),
         level=level_repo.levels[0],
         sid=None,
         skin_name=None,
