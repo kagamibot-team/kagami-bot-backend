@@ -131,7 +131,7 @@ async def _(ctx: OnebotContext, res: Arparma):
 @listenOnebot()
 @matchAlconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
 @withLoading(la.loading.kc)
-async def _(ctx: OnebotContext, __: Arparma):
+async def _(ctx: OnebotContext, _: Arparma):
     async with get_unit_of_work(ctx.sender_id) as uow:
         view = await get_storage_view(
             uow,

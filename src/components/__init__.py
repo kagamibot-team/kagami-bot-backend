@@ -8,7 +8,6 @@ from .ref_book import *
 
 __all__ = [
     "display_box",
-    "ref_book_box",
     "skin_book",
     "product_box",
 ]

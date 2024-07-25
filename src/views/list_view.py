@@ -71,16 +71,14 @@ class UserStorageView(BaseModel):
         "进度标题"
         if self.limited_level is None:
             return f"{self.user_name}抓小哥进度：{self.progress:.2%}"
-        else:
-            return f"{self.user_name}{self.limited_level.display_name}进度："
+        return f"{self.user_name}{self.limited_level.display_name}进度："
 
     @property
     def storage_title(self) -> str:
         "进度标题"
         if self.limited_level is None:
             return f"{self.user_name}库存"
-        else:
-            return f"{self.user_name}{self.limited_level.display_name}库存"
+        return f"{self.user_name}{self.limited_level.display_name}库存"
 
     @property
     def user_name(self) -> str:
