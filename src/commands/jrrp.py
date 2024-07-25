@@ -3,32 +3,24 @@ import time
 
 import PIL.Image
 from nonebot_plugin_alconna import UniMessage
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.command_events import GroupContext
 from src.base.local_storage import LocalStorageManager
 from src.base.onebot_enum import QQEmoji
-from src.common.data.awards import get_award_info_deprecated
-from src.common.decorators.command_decorators import (
-    listenGroup,
-    matchRegex,
-    withSessionLock,
-)
+from src.common.data.awards import get_award_info
+from src.common.decorators.command_decorators import listenGroup, matchRegex
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime, to_utc8
 from src.core.unit_of_work import get_unit_of_work
-from src.models.models import Award
-from src.models.statics import level_repo
+from src.logic.daily import get_daily
 from src.ui.base.basics import Fonts, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
-from src.ui.deprecated.catch import catch
+from src.ui.components.catch import catch
 
 
 @listenGroup()
 @matchRegex("^(小镜|xj)(今日人品|jrrp)$")
-@withSessionLock()
-async def _(ctx: GroupContext, session: AsyncSession, _):
+async def _(ctx: GroupContext, _):
     qqid = ctx.sender_id
     dt = now_datetime()
 
@@ -36,19 +28,11 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
         qqid = 0
 
     today_user: random.Random = random.Random(str(qqid) + "-" + str(dt.date()))
-    today: random.Random = random.Random(str(dt.date()))
-
     jrrp = today_user.randint(1, 100)
 
-    level = today.choices(level_repo.sorted, [l.weight for l in level_repo.sorted])[0]
-    query = select(Award.data_id).filter(Award.level_id == level.lid)
-    awards = (await session.execute(query)).tuples().all()
-    aid = today.choice(awards)[0]
-    display = await get_award_info_deprecated(session, -1, aid)
-
-    name = await ctx.getSenderName()
-
-    if isinstance(ctx, GroupContext):
+    async with get_unit_of_work(qqid) as uow:
+        aid = await get_daily(uow)
+        info = await get_award_info(uow, aid)
         name = await ctx.getSenderName()
 
     titles: list[PIL.Image.Image] = []
@@ -77,15 +61,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
         )
     )
 
-    area_box = await catch(
-        title=display.awardName,
-        description=display.awardDescription,
-        image=display.awardImg,
-        stars=display.levelName,
-        color=display.color,
-        new=False,
-        notation="",
-    )
+    area_box = catch(info)
 
     area_title = vertical_pile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
     img = vertical_pile([area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80)
