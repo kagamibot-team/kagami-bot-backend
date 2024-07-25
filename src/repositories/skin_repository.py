@@ -18,6 +18,10 @@ class SkinRepository(DBRepository[Skin]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, Skin)
 
+    async def delete(self, data_id: int) -> None:
+        d = delete(Skin).where(Skin.data_id == data_id)
+        await self.session.execute(d)
+
     async def get_all_images(self) -> dict[int, str]:
         qa = select(Skin.data_id, Skin.image)
         return {row[0]: row[1] for row in (await self.session.execute(qa)).tuples()}

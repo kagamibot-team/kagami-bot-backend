@@ -107,3 +107,21 @@ async def _(ctx: OnebotContext, res: Arparma):
                 )
 
     await ctx.send("ok.")
+
+
+@listenOnebot()
+@requireAdmin()
+@matchAlconna(
+    Alconna(
+        "re:(删除|移除|移除|删除)皮肤",
+        ["::"],
+        Arg("皮肤原名", str),
+    )
+)
+async def _(ctx: OnebotContext, res: Arparma):
+    name = res.query[str]("皮肤原名")
+    assert name is not None
+    async with get_unit_of_work() as uow:
+        sid = await uow.skins.get_sid_strong(name)
+        await uow.skins.delete(sid)
+    await ctx.send("ok.")
