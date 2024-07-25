@@ -17,11 +17,28 @@ class GroupMessageEmojiLike(BaseModel):
     likes: list[GroupEmoji]
 
 
+class GroupPoke(BaseModel):
+    time: int
+    self_id: int
+    group_id: int
+    user_id: int
+    target_id: int
+
+
 class GroupStickEmojiContext:
     event: GroupMessageEmojiLike
     bot: OnebotBotProtocol
 
     def __init__(self, event: GroupMessageEmojiLike, bot: OnebotBotProtocol) -> None:
+        self.event = event
+        self.bot = bot
+
+
+class GroupPokeContext:
+    event: GroupPoke
+    bot: OnebotBotProtocol
+
+    def __init__(self, event: GroupPoke, bot: OnebotBotProtocol) -> None:
         self.event = event
         self.bot = bot
 
