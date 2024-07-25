@@ -4,10 +4,10 @@ import PIL
 import PIL.Image
 from typing_extensions import deprecated
 
-from interfaces.nonebot.components.awards import display_box as _display_box
-from src.common.decorators.threading import make_async
 from src.models.statics import Level
-from src.views.award import AwardInfo
+from src.ui.components.awards import display_box as _display_box
+from src.ui.views.award import AwardInfo
+from utils.threading import make_async
 
 
 @deprecated("未来将会直接使用 interfaces.nonebot 中的 display_box 函数")

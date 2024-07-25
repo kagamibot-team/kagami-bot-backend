@@ -1,10 +1,9 @@
 import PIL
 import PIL.Image
 
-from interfaces.nonebot.base.basics import pile, render_text, vertical_pile
-from interfaces.nonebot.components.awards import ref_book_box
-from src.common.draw.texts import Fonts
-from src.views.list_view import ListView, ListViewDocument, TitleView
+from src.ui.base.basics import Fonts, pile, render_text, vertical_pile
+from src.ui.components.awards import ref_book_box
+from src.ui.views.list_view import ListView, ListViewDocument, TitleView
 
 
 def render_list_view(element: ListView, columns: int) -> PIL.Image.Image:

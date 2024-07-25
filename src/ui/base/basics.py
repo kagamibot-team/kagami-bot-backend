@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 import enum
-import os
-from typing import Iterable
+from pathlib import Path
+from typing import Literal
 
 import PIL
 import PIL.Image
+import PIL.ImageChops
+import PIL.ImageDraw
 from imagetext_py import (
     Canvas,
     Color,
@@ -19,29 +21,23 @@ from imagetext_py import (
     text_wrap,
 )
 
-from src.common.decorators.threading import make_async
 
-
-FONT_BASE = os.path.join(".", "res", "fonts")
-
-
-def _res(fn: str):
-    return os.path.join(FONT_BASE, fn)
+FONT_BASE = Path("./res/fonts/")
 
 
 class Fonts(enum.Enum):
-    JINGNAN_BOBO_HEI = _res("荆南波波黑-Bold.ttf")  # 界面标题
-    JINGNAN_JUNJUN = _res("JUNJUN.otf")  # 界面次级标题
-    ALIMAMA_SHU_HEI = _res("AlimamaShuHeiTi-Bold.ttf")  # 界面小文字
-    MAPLE_UI = _res("Maple UI.ttf")
-    HARMONYOS_SANS_BLACK = _res("HarmonyOS_Sans_SC_Black.ttf")
-    VONWAON_BITMAP_12 = _res("VonwaonBitmap-12px.ttf")
-    VONWAON_BITMAP_16 = _res("VonwaonBitmap-16px.ttf")
-    MARU_MONICA = _res("莫妮卡像素圆体 x12y16pxMaruMonica.otf")
+    JINGNAN_BOBO_HEI = FONT_BASE / "荆南波波黑-Bold.ttf"  # 界面标题
+    JINGNAN_JUNJUN = FONT_BASE / "JUNJUN.otf"  # 界面次级标题
+    ALIMAMA_SHU_HEI = FONT_BASE / "AlimamaShuHeiTi-Bold.ttf"  # 界面小文字
+    MAPLE_UI = FONT_BASE / "Maple UI.ttf"
+    HARMONYOS_SANS_BLACK = FONT_BASE / "HarmonyOS_Sans_SC_Black.ttf"
+    VONWAON_BITMAP_12 = FONT_BASE / "VonwaonBitmap-12px.ttf"
+    VONWAON_BITMAP_16 = FONT_BASE / "VonwaonBitmap-16px.ttf"
+    MARU_MONICA = FONT_BASE / "莫妮卡像素圆体 x12y16pxMaruMonica.otf"
 
 
 for font in Fonts:
-    FontDB.LoadFromPath(font.name, font.value)
+    FontDB.LoadFromPath(font.name, font.value.as_posix())
 
 
 @dataclass
@@ -51,8 +47,113 @@ class TextLines:
     height: float
 
 
-@make_async
-def getTextImage(
+def vertical_pile(
+    images: list[PIL.Image.Image],
+    paddingY: int = 0,
+    align: Literal["left", "center", "right"] = "left",
+    background: str = "#00000000",
+    marginTop: int = 0,
+    marginLeft: int = 0,
+    marginRight: int = 0,
+    marginBottom: int = 0,
+) -> PIL.Image.Image:
+    maxWidth = max([i.width for i in images] + [1])
+    height = sum((i.height for i in images)) + paddingY * (len(images) - 1)
+
+    base = PIL.Image.new(
+        "RGBA",
+        (maxWidth + marginLeft + marginRight, height + marginTop + marginBottom),
+        background,
+    )
+    topPointer = 0
+
+    for image in images:
+        if align == "left":
+            left = 0
+        elif align == "right":
+            left = maxWidth - image.width
+        else:
+            left = (maxWidth - image.width) // 2
+
+        paste_image(base, image, left + marginLeft, topPointer + marginTop)
+        topPointer += image.height + paddingY
+
+    return base
+
+
+def horizontal_pile(
+    images: list[PIL.Image.Image],
+    paddingX: int = 0,
+    align: Literal["top", "center", "bottom"] = "center",
+    background: str = "#00000000",
+    marginTop: int = 0,
+    marginLeft: int = 0,
+    marginRight: int = 0,
+    marginBottom: int = 0,
+) -> PIL.Image.Image:
+    maxHeight = max([i.height for i in images] + [1])
+    width = sum((i.width for i in images)) + paddingX * (len(images) - 1)
+
+    base = PIL.Image.new(
+        "RGBA",
+        (width + marginLeft + marginRight, maxHeight + marginTop + marginBottom),
+        background,
+    )
+    leftPointer = 0
+
+    for image in images:
+        if align == "top":
+            top = 0
+        elif align == "bottom":
+            top = maxHeight - image.height
+        else:
+            top = (maxHeight - image.height) // 2
+
+        paste_image(base, image, leftPointer + marginLeft, top + marginTop)
+        leftPointer += image.width + paddingX
+
+    return base
+
+
+def pile(
+    images: list[PIL.Image.Image],
+    columns: int = 8,
+    background: str = "#000000",
+    paddingX: int = 0,
+    paddingY: int = 0,
+    horizontalAlign: Literal["top", "center", "bottom"] = "top",
+    verticalAlign: Literal["left", "center", "right"] = "left",
+    marginLeft: int = 0,
+    marginRight: int = 0,
+    marginTop: int = 0,
+    marginBottom: int = 0,
+):
+    piles: list[PIL.Image.Image] = []
+
+    i = 0
+
+    while images[i : i + columns]:
+        piles.append(
+            horizontal_pile(
+                images[i : i + columns],
+                paddingX,
+                horizontalAlign,
+                background,
+                0,
+                marginLeft,
+                marginRight,
+                0,
+            )
+        )
+
+        i += columns
+
+    return vertical_pile(
+        piles, paddingY, verticalAlign, background, marginTop, 0, 0, marginBottom
+    )
+
+
+def render_text(
     *,
     text: str,
     font_size: float,
@@ -205,4 +306,33 @@ def getTextImage(
     )
 
 
-__all__ = ["Fonts", "getTextImage", "TextAlign"]
+def apply_mask(image: PIL.Image.Image, mask: PIL.Image.Image):
+    imageAlpha = image.convert("RGBA").split()[3]
+    imageAlpha = PIL.ImageChops.multiply(imageAlpha, mask)
+    image.putalpha(imageAlpha)
+
+    return image
+
+
+def rounded_rectangle_mask(
+    width: int, height: int, radius: int, scalar: int = 2
+) -> PIL.Image.Image:
+    mask = PIL.Image.new("L", (width * scalar, height * scalar), 0)
+    draw = PIL.ImageDraw.Draw(mask)
+    draw.rounded_rectangle(
+        (0, 0, width * scalar, height * scalar), radius=radius * scalar, fill=255
+    )
+    return mask.resize((width, height), PIL.Image.ADAPTIVE)
+
+
+def draw_rounded_rectangle(
+    width: int, height: int, radius: int, color: str, scalar: int = 2
+):
+    empty = PIL.Image.new("RGBA", (width, height), (255, 255, 255, 0))
+    colored = PIL.Image.new("RGBA", (width, height), color)
+    empty.paste(colored, (0, 0), rounded_rectangle_mask(width, height, radius, scalar))
+    return empty
+
+
+def paste_image(raw: PIL.Image.Image, src: PIL.Image.Image, x: int, y: int):
+    raw.paste(src, (x, y), src.convert("RGBA"))

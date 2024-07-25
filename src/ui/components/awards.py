@@ -6,9 +6,9 @@ import PIL.Image
 from imagetext_py import TextAlign
 from loguru import logger
 
-from src.common.draw.texts import Fonts
-from src.common.draw.tools import hex_to_rgb, mix_color, rgb_to_hex
-from src.views.award import AwardInfo
+from src.ui.base.basics import Fonts
+from src.ui.base.tools import hex_to_rgb, mix_color, rgb_to_hex
+from src.ui.views.award import AwardInfo
 
 from ..base.basics import (
     apply_mask,

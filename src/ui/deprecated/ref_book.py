@@ -2,13 +2,12 @@ import PIL
 import PIL.Image
 from imagetext_py import TextAlign
 
-from src.common.draw.images import imagePaste
-from src.common.draw.texts import Fonts, getTextImage
-from src.components.display_box import display_box
+from src.ui.base.basics import Fonts, paste_image, render_text
+from src.ui.deprecated.display_box import display_box
 
 
 async def __title(text: str, color: str = "#FFFFFF"):
-    return await getTextImage(
+    return render_text(
         text=text,
         width=180,
         color=color,
@@ -24,7 +23,7 @@ async def skin_book(title: str, title2: str, notation: str, color: str, imgUrl: 
     bottomTitle = await __title(title)
     bottomTitle2 = await __title(title2, "#C4BEBD")
 
-    bottomNotation = await getTextImage(
+    bottomNotation = render_text(
         text=notation,
         width=170,
         color="#FFFFFF",
@@ -37,9 +36,9 @@ async def skin_book(title: str, title2: str, notation: str, color: str, imgUrl: 
     )
 
     block = PIL.Image.new("RGB", (216, 234), "#9B9690")
-    await imagePaste(block, box, 18, 18)
-    await imagePaste(block, bottomTitle, 18, 170)
-    await imagePaste(block, bottomTitle2, 18, 194)
-    await imagePaste(block, bottomNotation, 23, 117)
+    paste_image(block, box, 18, 18)
+    paste_image(block, bottomTitle, 18, 170)
+    paste_image(block, bottomTitle2, 18, 194)
+    paste_image(block, bottomNotation, 23, 117)
 
     return block

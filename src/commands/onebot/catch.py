@@ -4,7 +4,7 @@ import time
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import At, Reply, Text
 
-from interfaces.nonebot.views.catch import render_catch_message
+from src.ui.pages.catch import render_catch_message
 from src.base.command_events import OnebotContext
 from src.base.event_root import root
 from src.base.exceptions import KagamiRangeError
@@ -23,9 +23,9 @@ from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import pickAwards
 from src.logic.catch_time import uow_calculate_time
-from src.views.award import AwardInfo
-from src.views.catch import CatchMesssage, CatchResultMessage
-from src.views.user import UserData
+from src.ui.views.award import AwardInfo
+from src.ui.views.catch import CatchMesssage, CatchResultMessage
+from src.ui.views.user import UserData
 
 
 async def picks(

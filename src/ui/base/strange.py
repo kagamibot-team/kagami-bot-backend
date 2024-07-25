@@ -4,8 +4,8 @@ from typing import Iterable
 import PIL
 import PIL.Image
 
-from src.common.draw.images import imagePaste
 from src.common.rd import get_random
+from src.ui.base.basics import paste_image
 
 
 def load_sources(
@@ -26,7 +26,7 @@ def load_sources(
 sources = load_sources()
 
 
-async def make_strange(
+def make_strange(
     sources: list[PIL.Image.Image] = sources,
     xGrids: int = 5,
     yGrids: int = 4,
@@ -60,8 +60,8 @@ async def make_strange(
                     size=res.size,
                     color="#FF00FF" if (i + j) % 2 == 0 else "#000000",
                 )
-                await imagePaste(_res, res, 0, 0)
+                paste_image(_res, res, 0, 0)
                 res = _res
-            await imagePaste(base, res, left, top)
+            paste_image(base, res, left, top)
 
     return base

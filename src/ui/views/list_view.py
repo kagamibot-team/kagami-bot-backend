@@ -2,8 +2,9 @@ from loguru import logger
 from pydantic import BaseModel
 
 from src.models.statics import Level
-from src.views.award import AwardInfo
-from src.views.user import UserData
+
+from .award import AwardInfo
+from .user import UserData
 
 
 def _try_int(value: str | int) -> int:

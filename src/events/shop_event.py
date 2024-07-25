@@ -7,7 +7,6 @@ from src.common.dataclasses.shop_data import (
     ShopBuildingEvent,
     ShopBuyEvent,
 )
-from src.common.draw.images import blurred
 from src.logic.catch_time import calculateTime
 from src.models.models import Award, Skin, SkinRecord, User
 from src.models.statics import level_repo
@@ -98,7 +97,7 @@ async def _(e: ShopBuildingEvent):
 
     for name, price, image, aname, lid in skins:
         pd = ProductData(
-            image=await blurred(image, 100),
+            image=image,
             title=f"皮肤{name}",
             description=f"{aname}",
             price=price,

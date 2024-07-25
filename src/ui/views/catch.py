@@ -1,8 +1,7 @@
 from pydantic import BaseModel
 
-from src.views.user import UserData
-
 from .award import AwardInfo
+from .user import UserData
 
 
 class CatchMesssage(BaseModel):

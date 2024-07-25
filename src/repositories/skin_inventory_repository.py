@@ -1,8 +1,6 @@
 from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.views.award import AwardInfo
-
 from ..base.repository import DBRepository
 from ..models.models import Skin, SkinRecord
 

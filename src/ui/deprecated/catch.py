@@ -4,10 +4,10 @@ import PIL
 import PIL.Image
 from typing_extensions import deprecated
 
-from interfaces.nonebot.views.catch import catch as _catch
-from src.common.decorators.threading import make_async
 from src.models.statics import Level
-from src.views.award import AwardInfo
+from src.ui.pages.catch import catch as _catch
+from src.ui.views.award import AwardInfo
+from utils.threading import make_async
 
 
 @deprecated("未来将会直接使用 interfaces.nonebot 中的 catch 函数")

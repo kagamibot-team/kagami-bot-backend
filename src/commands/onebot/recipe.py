@@ -1,6 +1,6 @@
 from arclet.alconna import Alconna, Arg, Arparma
 
-from interfaces.nonebot.views.recipe import render_merge_message
+from src.ui.pages.recipe import render_merge_message
 from src.base.command_events import GroupContext, OnebotContext
 from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.data.awards import (
@@ -13,8 +13,8 @@ from src.common.decorators.command_decorators import listenOnebot, matchAlconna
 from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
-from src.views.recipe import MergeResult, MergeStatus
-from src.views.user import UserData
+from src.ui.views.recipe import MergeResult, MergeStatus
+from src.ui.views.user import UserData
 
 
 @listenOnebot()

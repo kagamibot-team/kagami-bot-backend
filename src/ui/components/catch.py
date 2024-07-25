@@ -4,11 +4,9 @@ import PIL.ImageChops
 import PIL.ImageDraw
 from imagetext_py import TextAlign
 
-from src.common.draw.texts import Fonts
-from src.views.award import AwardInfo
-
-from ..components.awards import display_box
-from ..base.basics import paste_image, render_text
+from src.ui.base.basics import Fonts, paste_image, render_text
+from src.ui.components.awards import display_box
+from src.ui.views.award import AwardInfo
 
 
 def catch(data: AwardInfo) -> PIL.Image.Image:

@@ -6,14 +6,12 @@ import PIL.ImageChops
 import PIL.ImageDraw
 from nonebot_plugin_alconna import UniMessage
 
-from src.common.decorators.threading import make_async
-from src.common.draw.texts import Fonts
-from src.common.draw.tools import imageToBytes
-from src.views.award import AwardInfo
-from src.views.catch import CatchMesssage, CatchResultMessage
-
-from ..base.basics import render_text, vertical_pile
-from ..components.catch import catch
+from src.ui.base.basics import Fonts, render_text, vertical_pile
+from src.ui.base.tools import imageToBytes
+from src.ui.components.catch import catch
+from src.ui.views.award import AwardInfo
+from src.ui.views.catch import CatchMesssage, CatchResultMessage
+from utils.threading import make_async
 
 T = TypeVar("T")
 

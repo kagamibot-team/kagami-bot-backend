@@ -3,7 +3,7 @@ import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageChops
 
-from src.common.decorators.threading import make_async
+from utils.threading import make_async
 
 
 @make_async

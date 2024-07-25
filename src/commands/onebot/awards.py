@@ -3,8 +3,8 @@ from typing import Any
 from arclet.alconna import Alconna, Arg, Arparma, Option
 from nonebot_plugin_alconna import UniMessage
 
-from interfaces.nonebot.views.catch import render_award_info_message
-from interfaces.nonebot.views.storage import (
+from src.ui.pages.catch import render_award_info_message
+from src.ui.pages.storage import (
     render_progress_message,
     render_storage_message,
 )
@@ -20,8 +20,8 @@ from src.common.decorators.command_decorators import (
 from src.common.lang.zh import la
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.logic.admin import isAdmin
-from src.views.list_view import UserStorageView
-from src.views.user import UserData
+from src.ui.views.list_view import UserStorageView
+from src.ui.views.user import UserData
 
 
 @listenOnebot()
