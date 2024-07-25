@@ -17,13 +17,12 @@ from utils.collections import PriorityList
 
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
-    ("interfaces",),
     ("src", "common"),
     ("src", "commands"),
     ("src", "events"),
     ("src", "logic"),
     ("src", "repositories"),
-    ("src", "views"),
+    ("src", "ui"),
 )
 
 
