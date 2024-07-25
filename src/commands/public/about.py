@@ -83,9 +83,7 @@ async def _(ctx: OnebotContext, *_):
         sections.append(vertical_pile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
 
     area_section = vertical_pile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = vertical_pile(
-        [title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60
-    )
+    img = vertical_pile([title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60)
     await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
 
@@ -130,9 +128,7 @@ async def _(ctx: OnebotContext, *_):
         sections.append(vertical_pile(subtitles, 6, "left", "#EEEBE3", 0, 0, 0, 0))
 
     area_section = vertical_pile(sections, 20, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = vertical_pile(
-        [title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60
-    )
+    img = vertical_pile([title, area_section], 30, "left", "#EEEBE3", 50, 60, 60, 60)
     await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
 

@@ -88,9 +88,7 @@ async def _(ctx: GroupContext, session: AsyncSession, _):
     )
 
     area_title = vertical_pile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = vertical_pile(
-        [area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80
-    )
+    img = vertical_pile([area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80)
     await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
     if isinstance(ctx, GroupContext):

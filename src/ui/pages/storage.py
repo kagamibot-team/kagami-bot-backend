@@ -24,5 +24,7 @@ async def render_progress_message(data: UserStorageView):
 
 async def render_storage_message(data: UserStorageView):
     return UniMessage.image(
-        raw=await make_async(image_to_bytes)(await make_async(render_storage_image)(data))
+        raw=await make_async(image_to_bytes)(
+            await make_async(render_storage_image)(data)
+        )
     )

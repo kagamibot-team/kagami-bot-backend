@@ -1,7 +1,6 @@
 import asyncio
 import pathlib
 import re
-import time
 from functools import partial
 from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple, Unpack
 
@@ -47,26 +46,6 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
 
             if not result.matched:
                 return None
-
-            return await func(ctx, result)
-
-        return inner
-
-    return wrapper
-
-
-def withAlconna(rule: Alconna[Sequence[Any]]):
-    """传入一个 Alconna 参数。不检查是否匹配。
-
-    Args:
-        rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
-    """
-
-    def wrapper(
-        func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
-    ):
-        async def inner(ctx: TC_co):
-            result = rule.parse(ctx.message)
 
             return await func(ctx, result)
 
@@ -256,18 +235,6 @@ def withFreeSession():
     return wrapper
 
 
-def computeTime(func: Callable[[*TA], Coroutine[Any, Any, T]]):
-    """计算命令执行的时间，并在日志中输出"""
-
-    async def wrapper(*args: Unpack[TA]):
-        start = time.time()
-        msg = await func(*args)
-        logger.debug(f"{func.__name__} 花费了 {time.time() - start} 秒")
-        return msg
-
-    return wrapper
-
-
 def withLoading(text: str = "请稍候……"):
     """在命令执行时添加加载动画（科  目  三）
 
@@ -360,9 +327,7 @@ __all__ = [
     "listenOnebot",
     "withSessionLock",
     "withFreeSession",
-    "computeTime",
     "withLoading",
-    "withAlconna",
     "interval_at_start",
     "timeout_at_start",
 ]

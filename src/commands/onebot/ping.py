@@ -16,10 +16,10 @@ from src.common.decorators.command_decorators import (
     listenGroup,
     matchAlconna,
     requireOperatorInGroup,
-    withSessionLock,
 )
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime
+from src.core.unit_of_work import get_unit_of_work
 from src.models.models import User
 
 
@@ -44,8 +44,7 @@ GET_UP_TIME_PRESETS = {
     )
 )
 @requireOperatorInGroup()
-@withSessionLock()
-async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
+async def goodnight(ctx: GroupContext, res: Arparma):
     info = await get_group_member_info(ctx.bot, ctx.event.group_id, ctx.sender_id)
     self_info = await get_group_member_info(
         ctx.bot, ctx.event.group_id, int(ctx.bot.self_id)
@@ -116,29 +115,29 @@ async def goodnight(ctx: GroupContext, session: AsyncSession, res: Arparma):
     if dt.hour < target_hour:
         target_time = dt.replace(hour=target_hour, minute=target_minute, second=0)
 
-    if dt.hour >= 21 and dt.hour < 23:
-        uid = await get_uid_by_qqid(session, ctx.sender_id)
-        query = select(User.last_sleep_early_time, User.sleep_early_count).filter(
-            User.data_id == uid
-        )
-        last_sleep_time, sleep_count = (await session.execute(query)).tuples().one()
-        last_sleep_date = timestamp_to_datetime(last_sleep_time).date()
-        if (dt.date() - last_sleep_date).days < 1:
-            awards = -2
-        else:
-            awards = get_random().randint(50, 100)
-            await session.execute(
-                update(User)
-                .where(User.data_id == uid)
-                .values(
-                    last_sleep_early_time=time.time(),
-                    sleep_early_count=sleep_count + 1,
-                )
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        if dt.hour >= 21 and dt.hour < 23:
+            uid = await uow.users.get_uid(ctx.sender_id)
+            query = select(User.last_sleep_early_time, User.sleep_early_count).filter(
+                User.data_id == uid
             )
-            money = await get_user_money(session, uid)
-            await set_user_money(session, uid, money + awards)
-            await session.commit()
-        count = sleep_count + 1
+            last_sleep_time, sleep_count = (await uow.session.execute(query)).tuples().one()
+            last_sleep_date = timestamp_to_datetime(last_sleep_time).date()
+            if (dt.date() - last_sleep_date).days < 1:
+                awards = -2
+            else:
+                awards = get_random().randint(50, 100)
+                await uow.session.execute(
+                    update(User)
+                    .where(User.data_id == uid)
+                    .values(
+                        last_sleep_early_time=time.time(),
+                        sleep_early_count=sleep_count + 1,
+                    )
+                )
+                money = await get_user_money(uow.session, uid)
+                await set_user_money(uow.session, uid, money + awards)
+            count = sleep_count + 1
 
     if target_time is None:
         await ctx.reply("现在不是睡觉的时候吧……", ref=True, at=False)

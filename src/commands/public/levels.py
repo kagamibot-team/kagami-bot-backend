@@ -7,9 +7,9 @@ from src.common.decorators.command_decorators import (
     listenOnebot,
     matchRegex,
     requireAdmin,
-    withFreeSession,
 )
 from src.common.lang.zh import la
+from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Award
 from src.models.statics import level_repo
 
@@ -17,13 +17,13 @@ from src.models.statics import level_repo
 @listenOnebot()
 @requireAdmin()
 @matchRegex("^:: ?(所有|全部) ?(等级|级别) ?$")
-@withFreeSession()
-async def _(session: AsyncSession, ctx: OnebotContext, _):
-    query = select(
-        Award.level_id,
-        func.count(Award.data_id),
-    ).group_by(Award.level_id)
-    counts = dict((await session.execute(query)).tuples().all())
+async def _(ctx: OnebotContext, _):
+    async with get_unit_of_work() as uow:
+        query = select(
+            Award.level_id,
+            func.count(Award.data_id),
+        ).group_by(Award.level_id)
+        counts = dict((await uow.session.execute(query)).tuples().all())
     levels = [
         (level.lid, level.display_name, level.weight, level.color, level.awarding)
         for level in level_repo.sorted

@@ -81,7 +81,6 @@ async def get_award_info(
 
     if uid:
         sid = await uow.skin_inventory.get_using(uid, aid)
-        new = await uow.inventories.get_stats(uid, aid) > 0
     if sid:
         sname, sdesc, img = await uow.skins.get_info(sid)
         sdesc = sdesc.strip()
