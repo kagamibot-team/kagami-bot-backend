@@ -159,15 +159,14 @@ class SkinInventoryRepository(DBRepository[SkinRecord]):
 
         return list((await self.session.execute(query)).scalars())
 
-    async def use(self, uid: int, sid: int | None):
+    async def use(self, uid: int, aid: int, sid: int | None):
         """添加一个使用记录
 
         Args:
             uid (int): 用户 ID
+            aid (int): 小哥的 ID
             sid (int | None): 皮肤的 ID，None 表示不使用
         """
-        q = select(Skin.award_id).filter(Skin.data_id == sid)
-        aid = (await self.session.execute(q)).scalar_one()
         clear = (
             update(SkinRecord)
             .where(
@@ -178,8 +177,9 @@ class SkinInventoryRepository(DBRepository[SkinRecord]):
             .values({SkinRecord.selected: 0})
         )
         await self.session.execute(clear)
-        await self.session.execute(
-            update(SkinRecord)
-            .where(SkinRecord.skin_id == sid, SkinRecord.user_id == uid)
-            .values({SkinRecord.selected: 1})
-        )
+        if sid is not None:
+            await self.session.execute(
+                update(SkinRecord)
+                .where(SkinRecord.skin_id == sid, SkinRecord.user_id == uid)
+                .values({SkinRecord.selected: 1})
+            )

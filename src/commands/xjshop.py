@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.command_events import GroupContext, OnebotContext
 from src.base.event_root import root
-from src.common.data.users import get_uid_by_qqid
 from src.common.dataclasses.shop_data import (
     ProductData,
     ShopBuildingEvent,
@@ -105,7 +104,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
 
     async with get_unit_of_work(ctx.sender_id) as uow:
         session = uow.session
-        uid = await get_uid_by_qqid(session, ctx.sender_id)
+        uid = await uow.users.get_uid(ctx.sender_id)
         shop_data = ShopData()
         shop_data_evt = ShopBuildingEvent(shop_data, ctx.sender_id, uid, session)
         await root.emit(shop_data_evt)

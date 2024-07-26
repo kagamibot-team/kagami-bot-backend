@@ -28,32 +28,6 @@ async def give_skin(session: AsyncSession, uid: int, sid: int):
         await session.flush()
 
 
-async def get_using_skin(session: AsyncSession, uid: int, aid: int):
-    """获得用户某个小哥正在使用的皮肤。如果没有使用，则返回 None。
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户 ID
-        aid (int): 小哥 ID
-
-    Returns:
-        int | None: 使用的皮肤的 ID
-    """
-    try:
-        query = (
-            select(Skin.data_id)
-            .join(SkinRecord, Skin.data_id == SkinRecord.skin_id)
-            .filter(SkinRecord.user_id == uid, SkinRecord.selected == 1)
-            .filter(Skin.award_id == aid)
-        )
-        result = await session.execute(query)
-
-        return result.scalar_one_or_none()
-    except MultipleResultsFound as e:
-        logger.warning(e)
-        return None
-
-
 async def use_skin(session: AsyncSession, uid: int, sid: int):
     """让某个用户挂载皮肤。如果用户没有那个皮肤，则不会有反应。
 

@@ -52,7 +52,7 @@ async def _(ctx: OnebotContext, result: Arparma):
         else:
             aid = await uow.skins.get_aid(sid)
 
-        await uow.skin_inventory.use(uid, sid)
+        await uow.skin_inventory.use(uid, aid, sid)
 
         aname = (await uow.awards.get_info(aid))[0]
         sname = (await uow.skins.get_info(sid))[0] if sid is not None else "默认"

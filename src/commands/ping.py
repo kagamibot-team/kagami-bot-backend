@@ -14,7 +14,6 @@ from sqlalchemy import select, update
 from src.base.command_events import GroupContext, OnebotContext
 from src.base.onebot_api import get_group_member_info, send_private_msg, set_group_ban
 from src.common.config import config
-from src.common.data.users import get_user_money, set_user_money
 from src.common.decorators.command_decorators import (
     listenGroup,
     listenOnebot,
@@ -141,8 +140,8 @@ async def goodnight(ctx: GroupContext, res: Arparma):
                         sleep_early_count=sleep_count + 1,
                     )
                 )
-                money = await get_user_money(uow.session, uid)
-                await set_user_money(uow.session, uid, money + awards)
+                money = await uow.users.get_money(uid)
+                await uow.users.set_money(uid, money + awards)
             count = sleep_count + 1
 
     if target_time is None:
