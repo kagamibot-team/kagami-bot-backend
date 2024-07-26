@@ -3,7 +3,6 @@ from nonebot import get_driver
 from nonebot.exception import ActionFailed
 from sqlalchemy import delete, insert, select, update
 
-from src.base.db import get_session
 from src.base.event_root import root
 from src.base.onebot_api import send_group_msg, set_qq_status
 from src.base.onebot_enum import QQStatus
@@ -11,6 +10,7 @@ from src.base.onebot_events import OnebotStartedContext
 from src.base.onebot_tools import broadcast
 from src.common.config import config
 from src.common.lang.zh import get_latest_version, la
+from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Global
 
 
@@ -23,9 +23,8 @@ async def _(ctx: OnebotStartedContext):
             f"在设置在线状态时发生了问题，可能是现在正在使用 LLOnebot 环境而不支持此 API：{e}"
         )
 
-    session = get_session()
-
-    async with session.begin():
+    async with get_unit_of_work() as uow:
+        session = uow.session
         try:
             glob = (
                 await session.execute(select(Global.last_reported_version))
@@ -42,8 +41,6 @@ async def _(ctx: OnebotStartedContext):
 
         if glob != (lv := get_latest_version()):
             await session.execute(update(Global).values(last_reported_version=lv))
-            await session.commit()
-
             msg = f"刚刚推送了版本 {lv} 的更新，内容如下：\n"
 
             for upd_msg in la.about.update[lv]:

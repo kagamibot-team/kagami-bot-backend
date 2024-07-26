@@ -7,7 +7,7 @@ import subprocess
 from pathlib import Path
 
 from src.base.command_events import GroupContext, OnebotContext
-from src.base.db import manual_checkpoint
+from src.base.db import DatabaseManager
 from src.common.decorators.command_decorators import (
     listenGroup,
     listenOnebot,
@@ -26,7 +26,7 @@ from src.common.save_file_handler import pack_save
 )
 @withLoading()
 async def _(ctx: GroupContext, _):
-    await manual_checkpoint()
+    await DatabaseManager.get_single().manual_checkpoint()
     fp = await pack_save()
     await ctx.bot.call_api(
         "upload_group_file",

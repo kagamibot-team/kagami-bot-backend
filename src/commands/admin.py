@@ -1,5 +1,5 @@
 from src.base.command_events import OnebotContext
-from src.base.db import manual_checkpoint
+from src.base.db import DatabaseManager
 from src.common.decorators.command_decorators import (
     listenOnebot,
     matchLiteral,
@@ -19,5 +19,5 @@ async def _(ctx: OnebotContext):
 @requireAdmin()
 @matchLiteral("::manual-save")
 async def _(ctx: OnebotContext):
-    await manual_checkpoint()
+    await DatabaseManager.get_single().manual_checkpoint()
     await ctx.reply("ok")
