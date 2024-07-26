@@ -22,10 +22,10 @@ from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
     withLoading,
-    withSessionLock,
 )
 from src.common.lang.zh import la
 from src.common.times import now_datetime
+from src.core.unit_of_work import get_unit_of_work
 from src.models.models import User
 from src.ui.base.basics import Fonts, paste_image, pile, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
@@ -100,63 +100,65 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
     )
 )
 @withLoading()
-@withSessionLock()
-async def _(ctx: OnebotContext, session: AsyncSession, res: Arparma[Any]):
+async def _(ctx: OnebotContext, res: Arparma[Any]):
     buys = res.query[list[str]]("商品名列表")
-    uid = await get_uid_by_qqid(session, ctx.sender_id)
-    shop_data = ShopData()
-    shop_data_evt = ShopBuildingEvent(shop_data, ctx.sender_id, uid, session)
-    await root.emit(shop_data_evt)
 
-    if buys is None:
-        await send_shop_message(ctx, session, shop_data)
-        return
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        session = uow.session
+        uid = await get_uid_by_qqid(session, ctx.sender_id)
+        shop_data = ShopData()
+        shop_data_evt = ShopBuildingEvent(shop_data, ctx.sender_id, uid, session)
+        await root.emit(shop_data_evt)
 
-    name = await ctx.getSenderName()
+        if buys is None:
+            await send_shop_message(ctx, session, shop_data)
+            return
 
-    if isinstance(ctx, GroupContext):
         name = await ctx.getSenderName()
 
-    buy_result = "小镜的 Shop 销售小票\n"
-    buy_result += "--------------------\n"
-    buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
-    buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
-    buy_result += f"客户：{name}\n"
-    buy_result += f"编号：{ctx.sender_id}\n"
-    buy_result += "--------------------\n\n"
+        if isinstance(ctx, GroupContext):
+            name = await ctx.getSenderName()
 
-    money_left_query = select(User.money).filter(User.data_id == uid)
-    money_left = (await session.execute(money_left_query)).scalar_one()
+        buy_result = "小镜的 Shop 销售小票\n"
+        buy_result += "--------------------\n"
+        buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
+        buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
+        buy_result += f"客户：{name}\n"
+        buy_result += f"编号：{ctx.sender_id}\n"
+        buy_result += "--------------------\n\n"
 
-    money_sum = 0.0
-    products: list[ProductData] = []
+        money_left_query = select(User.money).filter(User.data_id == uid)
+        money_left = (await session.execute(money_left_query)).scalar_one()
 
-    for buy in set(buys):
-        for product in shop_data.iterate():
-            if buy == product.title or buy in product.alias:
-                if product.sold_out:
-                    buy_result += f"- {product.title} 已售罄\n"
+        money_sum = 0.0
+        products: list[ProductData] = []
+
+        for buy in set(buys):
+            for product in shop_data.iterate():
+                if buy == product.title or buy in product.alias:
+                    if product.sold_out:
+                        buy_result += f"- {product.title} 已售罄\n"
+                        break
+
+                    buy_result += f"- {product.title} {product.price}{la.unit.money}\n"
+                    money_sum += product.price
+                    products.append(product)
                     break
+            else:
+                buy_result += f"- {buy} 未找到\n"
+                continue
 
-                buy_result += f"- {product.title} {product.price}{la.unit.money}\n"
-                money_sum += product.price
-                products.append(product)
-                break
-        else:
-            buy_result += f"- {buy} 未找到\n"
-            continue
+        if money_sum <= money_left:
+            for product in products:
+                evt = ShopBuyEvent(product, ctx.sender_id, uid, session)
+                await root.emit(evt)
 
-    if money_sum <= money_left:
-        for product in products:
-            evt = ShopBuyEvent(product, ctx.sender_id, uid, session)
-            await root.emit(evt)
-
-        money_update_query = (
-            update(User).where(User.data_id == uid).values(money=money_left - money_sum)
-        )
-        await session.execute(money_update_query)
-
-    await session.commit()
+            money_update_query = (
+                update(User)
+                .where(User.data_id == uid)
+                .values(money=money_left - money_sum)
+            )
+            await session.execute(money_update_query)
 
     buy_result += "\n"
     buy_result += f"总计：{money_sum}{la.unit.money}\n"

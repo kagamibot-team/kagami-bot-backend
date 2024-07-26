@@ -109,3 +109,16 @@ class SkinRepository(DBRepository[Skin]):
         """
 
         await self.session.execute(delete(SkinAltName).where(SkinAltName.name == name))
+
+    async def get_aid(self, sid: int):
+        """获得一个皮肤对应的小哥 ID
+
+        Args:
+            sid (int): 皮肤 ID
+        """
+
+        return (
+            await self.session.execute(
+                select(Skin.award_id).filter(Skin.data_id == sid)
+            )
+        ).scalar_one()

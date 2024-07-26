@@ -60,13 +60,18 @@ def activate_root(event_root: EventManager):
             )
         if event.notice_type == "notify" and isinstance(event, NotifyEvent):
             if event.sub_type == "poke":
-                await event_root.throw(GroupPokeContext(GroupPoke(
-                    time=event.time,
-                    self_id=event.self_id,
-                    group_id=event.group_id,
-                    user_id=event.user_id,
-                    target_id=event.__getattribute__("target_id"),
-                ), bot))
+                await event_root.throw(
+                    GroupPokeContext(
+                        GroupPoke(
+                            time=event.time,
+                            self_id=event.self_id,
+                            group_id=event.group_id,
+                            user_id=event.user_id,
+                            target_id=getattr(event, "target_id"),
+                        ),
+                        bot,
+                    )
+                )
 
     @onebot_startup_hander.handle()
     async def _(bot: Bot, event: LifecycleMetaEvent):

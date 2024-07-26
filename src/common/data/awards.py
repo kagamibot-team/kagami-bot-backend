@@ -4,18 +4,14 @@
 
 from pathlib import Path
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.exceptions import LackException
-from src.common.data.skins import get_using_skin
-from src.common.dataclasses.award_info import AwardInfoDeprecated
 from src.common.download import download, writeData
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
 from src.models.models import *
 from src.models.statics import level_repo
-from src.repositories.award_repository import AwardRepository
 from src.repositories.inventory_repository import InventoryRepository
 from src.ui.base.strange import make_strange
 from src.ui.base.tools import image_to_bytes
@@ -176,47 +172,6 @@ async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
         raise LackException((await get_award_info(uow, aid)).name, count, sto + count)
 
 
-async def get_award_info_deprecated(session: AsyncSession, uid: int, aid: int):
-    query = select(
-        Award.data_id,
-        Award.image,
-        Award.name,
-        Award.description,
-        Award.level_id,
-    ).filter(Award.data_id == aid)
-    award = (await session.execute(query)).one().tuple()
-
-    using_skin = await get_using_skin(session, uid, aid)
-    skin = None
-    if using_skin is not None:
-        query = select(Skin.name, Skin.description, Skin.image).filter(
-            Skin.data_id == using_skin
-        )
-        skin = (await session.execute(query)).one_or_none()
-
-    level = level_repo.levels[award[4]]
-
-    info = AwardInfoDeprecated(
-        awardId=award[0],
-        awardImg=award[1],
-        awardName=award[2],
-        awardDescription=award[3],
-        levelName=level.display_name,
-        color=level.color,
-        skinName=None,
-    )
-
-    if skin:
-        skin = skin.tuple()
-        info.skinName = skin[0]
-        info.awardDescription = (
-            skin[1] if len(skin[1].strip()) > 0 else info.awardDescription
-        )
-        info.awardImg = skin[2]
-
-    return info
-
-
 async def get_statistics(session: AsyncSession, uid: int, aid: int):
     """获得迄今为止一共抓到了多少小哥
 
@@ -229,10 +184,6 @@ async def get_statistics(session: AsyncSession, uid: int, aid: int):
         int: 累计的小哥数量
     """
     return await InventoryRepository(session).get_stats(uid, aid)
-
-
-async def get_aid_by_name(session: AsyncSession, name: str):
-    return await AwardRepository(session).get_aid(name)
 
 
 async def download_award_image(aid: int, url: str):
