@@ -2,42 +2,7 @@ from packaging.version import Version
 
 
 class Messages:
-    catch_top = """剩余抓小哥的次数：{0}/{1}\n下次次数恢复还需要{2}\n你刚刚一共抓了{3}只小哥，并得到了{4}\n现在，你一共有{5}"""
-    mysp = "你有{}"
-    skin_set = "已经将皮肤设置为 {} 了"
-    skin_set_default = "已经将 {} 的皮肤设置为默认了"
-    skin_set_2 = "已将 {0} 的皮肤更换为 {1} 了"
-
-    award_create_success = "成功创建名字叫 {} 的小哥。"
-    award_delete_success = "成功删除名字叫 {} 的小哥。"
-
     default_reply = "在"
-
-
-class Error:
-    award_not_found = "没有叫 {} 的小哥。"
-    skin_not_found = "没有叫 {} 的皮肤。"
-    award_exists = "名字叫 {} 的小哥已存在。"
-
-    level_not_found = "等级 {} 不存在。"
-
-    award_not_encountered_yet = "你还没有遇到过叫做 {} 的小哥"
-    catch_not_available = "小哥还没长成，请再等{}吧！"
-
-    data_missing = "数据库不支持本事件发生。"
-    data_not_satisfied = "数据未达到本事件发生的条件。"
-
-    not_found = "你说的 {} 不存在。"
-    not_own = "你还没有 {} 。"
-
-    invalid_skin_award_pair = "小哥 {0} 和皮肤 {1} 之间没有关系。"
-
-    invalid_catch_count = "你想让我抓 {} 个小哥，你让我怎么抓嘛！"
-
-
-class Warning:
-    log_multi_skin = "用户 {} 有多个应用了的皮肤，将其清空"
-    log_use_skin_not_exists = "用户 {} 应用了不存在的皮肤"
 
 
 class Loading:
@@ -46,12 +11,9 @@ class Loading:
     all_xg = "正在生成图片……"
     zhua = "抓小哥机正在运作中……"
     kz = "抓小哥机正在运作中……"
-    pfjd = "正在回想你见过的皮肤……"
 
 
 class Display:
-    award_display = "{}【{}】"
-    award_display_with_skin = "{}[{}]【{}】"
     award_unknown_name = "???"
     skin_using = "使用中"
 
@@ -60,12 +22,7 @@ class Unit:
     second = "秒"
     minute = "分钟"
     hour = "小时"
-
     money = "薯片"
-
-
-class Develop:
-    database_not_found = "数据库文件不存在"
 
 
 class About:
@@ -280,6 +237,12 @@ class About:
             "修复了一些指令无法正常使用的问题",
             "修复了新玩家无法正常创建帐号的问题",
         ],
+        "0.7.2": [
+            "owo",
+            "修复了一些界面中可能出现的字体缺失问题",
+            "这次很多更新是在底层进行的，所以还有可能出现一些 bug……",
+            "距离公测已经不远了，在不久之后，会清空内测阶段的存档，感谢大家一直以来的支持，没有大家，抓小哥不会走到今天！",
+        ],
     }
     update_dev: dict[str, list[str]] = {
         "0.4.5": [
@@ -408,17 +371,22 @@ class About:
         "0.7.1": [
             "没有破坏性的底层更新",
         ],
+        "0.7.2": [
+            "彻底废除了以前使用装饰器获取 AsyncSession 的途径，统一使用 UnitOfWork，当然，为兼容旧版本代码，仍然可以从 uow 中获取 session，而且不会认为从 uow 中获取 session 是不规范的",
+            "将一些界面也改作使用 Components 思路渲染。当然，现在 AwardInfo 类在重构以后，还是堆积了太多的功能和不必要的属性上去，这会在以后调整的",
+            "修复了自动重载，现在的自动重载能够重载 UI 了",
+            "重构了小镜商店的底层代码，现在使用类而不是随地拉事件来注册商品",
+            "添加了戳一戳事件",
+            "简化了项目结构",
+        ],
     }
 
 
 class La:
-    dev = Develop()
-    err = Error()
     disp = Display()
     loading = Loading()
     unit = Unit()
     msg = Messages()
-    warn = Warning()
     about = About()
 
 

@@ -13,4 +13,4 @@ async def _(ctx: OnebotContext, _):
         uid = await uow.users.get_uid(ctx.sender_id)
         res = await uow.users.get_money(uid)
 
-    await ctx.reply(UniMessage(la.msg.mysp.format(f"{int(res)}{la.unit.money}")))
+    await ctx.reply(UniMessage(f"你有 {res} 薯片"))

@@ -119,7 +119,7 @@ class AddSlots(ShopProduct):
         return (await uow.users.get_catch_time_data(uid))[0]
 
     async def title(self, uow: UnitOfWork, uid: int):
-        return f"增加卡槽上限"
+        return "增加卡槽上限"
 
     async def description(self, uow: UnitOfWork, uid: int) -> str:
         return f"增加卡槽上限至{await self._slots(uow, uid)}"
@@ -196,7 +196,7 @@ class ShopService:
         if p is None:
             raise ObjectNotFoundException("商品", name)
         return p
-    
+
     async def freeze(self, uow: UnitOfWork, uid: int) -> ShopFreezed:
         result: ShopFreezed = {}
         for key, items in self.products.items():
