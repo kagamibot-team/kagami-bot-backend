@@ -80,7 +80,7 @@ def reload():
 
 def _tree():
     _tr: set[tuple[str, str]] = set()
-    package_dir = pathlib.Path(__file__).resolve().parent
+    package_dir = pathlib.Path(__file__).resolve().parent.parent
 
     for pa in to_load_parents:
         base = os.path.join(package_dir, *pa)

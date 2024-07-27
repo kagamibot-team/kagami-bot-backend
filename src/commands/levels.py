@@ -1,6 +1,5 @@
 from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.command_events import OnebotContext
 from src.common.decorators.command_decorators import (
@@ -10,8 +9,8 @@ from src.common.decorators.command_decorators import (
 )
 from src.common.lang.zh import la
 from src.core.unit_of_work import get_unit_of_work
-from src.models.models import Award
 from src.models.level import level_repo
+from src.models.models import Award
 
 
 @listenOnebot()

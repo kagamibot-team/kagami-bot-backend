@@ -28,7 +28,7 @@ def catch(data: AwardInfo) -> PIL.Image.Image:
         text=data.display_name,
         font_size=43,
         color="#ffffff",
-        font=Fonts.JINGNAN_JUNJUN,
+        font=[Fonts.JINGNAN_JUNJUN, Fonts.ALIMAMA_SHU_HEI, Fonts.MAPLE_UI],
     )
     rightStar = render_text(
         text=data.level.display_name,
