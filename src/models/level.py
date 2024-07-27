@@ -88,6 +88,11 @@ class LevelRepository:
     def get_by_id(self, id: int):
         return self.levels[id]
 
+    def __getitem__(self, key: int | str):
+        if isinstance(key, str):
+            return self.get_by_name_strong(key)
+        return self.get_by_id(key)
+
 
 # 目前暂时以单例模式运作
 level_repo = LevelRepository()

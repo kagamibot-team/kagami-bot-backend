@@ -20,7 +20,7 @@ from src.models.models import Award, AwardAltName, Skin, SkinAltName, SkinRecord
 from src.models.level import level_repo
 from src.ui.base.basics import Fonts, pile, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
-from src.ui.deprecated.ref_book import skin_book
+from src.ui.components.awards import ref_book_box_raw
 
 
 @listenOnebot()
@@ -107,8 +107,18 @@ async def _(ctx: OnebotContext, _: Arparma):
         _boxes.append((sname, aname, notation, level_repo.levels[lid].color, img))
 
     boxes: list[PIL.Image.Image] = []
-    for box in _boxes:
-        boxes.append(await skin_book(*box))
+    for sn, an, no, co, im in _boxes:
+        boxes.append(
+            ref_book_box_raw(
+                color=co,
+                image=im,
+                new=False,
+                notation_bottom=no,
+                notation_top="",
+                name=sn,
+                name_bottom=an,
+            )
+        )
 
     area_box = pile(images=boxes, columns=6, background="#9B9690")
 
@@ -157,10 +167,16 @@ async def _(ctx: OnebotContext, res: Arparma):
         skins = sorted(skins, key=lambda s: level_repo.sorted_index[s[3]])
 
     boxes: list[PIL.Image.Image] = []
-    for box in skins:
+    for sn, an, pr, lid, im in skins:
         boxes.append(
-            await skin_book(
-                box[0], box[1], str(box[2]), level_repo.levels[box[3]].color, box[4]
+            ref_book_box_raw(
+                color=uow.levels[lid].color,
+                image=im,
+                new=False,
+                notation_bottom=str(pr),
+                notation_top="",
+                name=sn,
+                name_bottom=an,
             )
         )
 
