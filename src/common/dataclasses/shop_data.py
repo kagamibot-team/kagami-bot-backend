@@ -1,6 +1,9 @@
 from typing import Generator
+
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.core.unit_of_work import UnitOfWork
 
 
 class ProductData(BaseModel):
@@ -36,15 +39,18 @@ class ShopBuildingEvent:
     data: ShopData
     qqid: int
     uid: int
-    session: AsyncSession
+    # session: AsyncSession
+    uow: UnitOfWork
 
-    def __init__(
-        self, data: ShopData, qqid: int, uid: int, session: AsyncSession
-    ) -> None:
+    @property
+    def session(self):
+        return self.uow.session
+
+    def __init__(self, data: ShopData, qqid: int, uid: int, uow: UnitOfWork) -> None:
         self.data = data
         self.qqid = qqid
         self.uid = uid
-        self.session = session
+        self.uow = uow
 
 
 class ShopBuyEvent:

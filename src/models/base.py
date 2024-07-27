@@ -1,4 +1,3 @@
-import datetime
 from typing import TYPE_CHECKING
 from sqlalchemy import Column, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
@@ -19,10 +18,7 @@ class BaseMixin:
     data_id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime, nullable=False, default=now_datetime)
     updated_at = Column(
-        DateTime,
-        nullable=False,
-        default=now_datetime,
-        onupdate=now_datetime,
+        DateTime, nullable=False, default=now_datetime, onupdate=now_datetime
     )
 
 

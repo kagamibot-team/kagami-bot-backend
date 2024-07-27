@@ -1,6 +1,8 @@
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.models.models import Award
+
 from ..base.repository import DBRepository
 from ..models import Inventory
 
@@ -106,7 +108,9 @@ class InventoryRepository(DBRepository[Inventory]):
         await self.set_inventory(uid, aid, sto, use)
         return sto, use
 
-    async def get_inventory_dict(self, uid: int) -> dict[int, tuple[int, int]]:
+    async def get_inventory_dict(
+        self, uid: int, aids: list[int] | None = None
+    ) -> dict[int, tuple[int, int]]:
         """获取玩家所有小哥物品栏的字典
 
         Args:
@@ -115,8 +119,17 @@ class InventoryRepository(DBRepository[Inventory]):
         Returns:
             dict[int, tuple[int, int]]: 字典，值的两项分别是库存和用过的
         """
-        query = select(Inventory.award_id, Inventory.storage, Inventory.used).filter(
-            Inventory.user_id == uid
+        aids = aids or []
+        query = (
+            select(Inventory.award_id, Inventory.storage, Inventory.used)
+            .filter(Inventory.user_id == uid)
+            .filter(Inventory.award_id.in_(aids))
         )
+
         result = await self.session.execute(query)
-        return {aid: (sto, use) for aid, sto, use in result.tuples().all()}
+        res = {aid: (sto, use) for aid, sto, use in result.tuples()}
+        for aid in aids:
+            if aid not in res:
+                res[aid] = (0, 0)
+
+        return res

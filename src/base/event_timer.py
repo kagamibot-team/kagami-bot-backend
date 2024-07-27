@@ -36,9 +36,6 @@ def addInterval(
         interval (float): 周期，单位秒
         func (Callable[[], Awaitable[Any]]): 一个异步函数的引用，这个异步函数不输入任何信息
         skip_first (bool, optional): 是否跳过第一次（即 0 秒时）运行函数. Defaults to True.
-
-    Returns:
-        int: 定时任务的 ID
     """
     itv = IntervalEvent(interval)
 
@@ -64,7 +61,7 @@ def addInterval(
     task = eventloop.create_task(_cycle())
     task.add_done_callback(_cycle_backup.discard)
 
-    return itv.id
+    return itv
 
 
 def addTimeout(timeout: float, func: Callable[[], Awaitable[Any]]):

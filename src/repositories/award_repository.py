@@ -34,7 +34,9 @@ class AwardRepository(DBRepository[Award]):
             data_id (int): 小哥的 ID
             image (str | Path): 图片的地址
         """
-        u = update(Award).where(Award.data_id == data_id).values(image=str(image))
+        if not isinstance(image, str):
+            image = image.as_posix()
+        u = update(Award).where(Award.data_id == data_id).values(image=image)
         await self.session.execute(u)
 
     async def add_award(self, name: str, lid: int):
@@ -69,6 +71,23 @@ class AwardRepository(DBRepository[Award]):
             a = (await self.session.execute(q2)).scalar_one_or_none()
 
         return a
+
+    async def get_aids(self, lid: int) -> list[int]:
+        """根据等级 ID 获得所有该等级的小哥的 ID
+
+        Args:
+            lid (int): 等级 ID
+
+        Returns:
+            list[int]: 小哥的 ID 列表
+        """
+
+        q = (
+            select(Award.data_id)
+            .filter(Award.level_id == lid)
+            .order_by(-Award.sorting, Award.data_id)
+        )
+        return [row[0] for row in (await self.session.execute(q)).tuples().all()]
 
     async def get_aid_strong(self, name: str) -> int:
         """强制获得一个小哥 ID，如果没有就报错
@@ -158,7 +177,7 @@ class AwardRepository(DBRepository[Award]):
         if lid is not None:
             query = query.values(level_id=lid)
         if image is not None:
-            query = query.values(image=str(image))
+            query = query.values(image=Path(image).as_posix())
         if special is not None:
             query = query.values(is_special_get_only=special)
         if sorting is not None:

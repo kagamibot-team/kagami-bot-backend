@@ -17,13 +17,12 @@ from utils.collections import PriorityList
 
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
-    ("interfaces",),
     ("src", "common"),
     ("src", "commands"),
     ("src", "events"),
     ("src", "logic"),
     ("src", "repositories"),
-    ("src", "views"),
+    ("src", "ui"),
 )
 
 
@@ -81,7 +80,7 @@ def reload():
 
 def _tree():
     _tr: set[tuple[str, str]] = set()
-    package_dir = pathlib.Path(__file__).resolve().parent
+    package_dir = pathlib.Path(__file__).resolve().parent.parent
 
     for pa in to_load_parents:
         base = os.path.join(package_dir, *pa)

@@ -1,7 +1,5 @@
-import asyncio
 import pathlib
 import re
-import time
 from functools import partial
 from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple, Unpack
 
@@ -10,11 +8,8 @@ from arclet.alconna.exceptions import ArgumentMissing, ParamsUnmatched
 from loguru import logger
 from nonebot import get_driver
 from nonebot_plugin_alconna import UniMessage
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing_extensions import deprecated
 
 from src.base.command_events import GroupContext, OnebotContext, PrivateContext
-from src.base.db import get_session
 from src.base.event_manager import EventManager
 from src.base.event_root import root
 from src.base.event_timer import addInterval, addTimeout
@@ -47,26 +42,6 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
 
             if not result.matched:
                 return None
-
-            return await func(ctx, result)
-
-        return inner
-
-    return wrapper
-
-
-def withAlconna(rule: Alconna[Sequence[Any]]):
-    """传入一个 Alconna 参数。不检查是否匹配。
-
-    Args:
-        rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
-    """
-
-    def wrapper(
-        func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
-    ):
-        async def inner(ctx: TC_co):
-            result = rule.parse(ctx.message)
 
             return await func(ctx, result)
 
@@ -202,72 +177,6 @@ def listenOnebot(manager: EventManager = root):
     return wrapper
 
 
-class SessionLockManager:
-    dc: dict[int, asyncio.Lock]
-
-    def __init__(self) -> None:
-        self.dc = {}
-
-    def __getitem__(self, key: int):
-        if key not in self.dc:
-            self.dc[key] = asyncio.Lock()
-        return self.dc[key]
-
-
-globalSessionLockManager = SessionLockManager()
-
-
-@deprecated("未来将会使用 UOW - Repository 模式，不会直接在外面暴露 session 对象")
-def withSessionLock(manager: SessionLockManager = globalSessionLockManager):
-    """获得一个异步的 SQLAlchemy 会话，并使用锁来保证线程安全。"""
-
-    def wrapper(func: Callable[[TC_co, AsyncSession, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC_co, *args: Unpack[TA]):
-            sender = ctx.sender_id
-            if sender is None:
-                lock = manager[-1]
-            else:
-                lock = manager[sender]
-
-            async with lock:
-                session = get_session()
-                async with session.begin():
-                    msg = await func(ctx, session, *args)
-                    await session.close()
-                    return msg
-
-        return inner
-
-    return wrapper
-
-
-@deprecated("未来将会使用 UOW - Repository 模式，不会直接在外面暴露 session 对象")
-def withFreeSession():
-    """随便获得一个异步的 SQLAlchemy 会话"""
-
-    def wrapper(func: Callable[[AsyncSession, *TA], Coroutine[Any, Any, T]]):
-        async def inner(*args: Unpack[TA]):
-            session = get_session()
-            async with session.begin():
-                return await func(session, *args)
-
-        return inner
-
-    return wrapper
-
-
-def computeTime(func: Callable[[*TA], Coroutine[Any, Any, T]]):
-    """计算命令执行的时间，并在日志中输出"""
-
-    async def wrapper(*args: Unpack[TA]):
-        start = time.time()
-        msg = await func(*args)
-        logger.debug(f"{func.__name__} 花费了 {time.time() - start} 秒")
-        return msg
-
-    return wrapper
-
-
 def withLoading(text: str = "请稍候……"):
     """在命令执行时添加加载动画（科  目  三）
 
@@ -358,11 +267,7 @@ __all__ = [
     "listenGroup",
     "listenPrivate",
     "listenOnebot",
-    "withSessionLock",
-    "withFreeSession",
-    "computeTime",
     "withLoading",
-    "withAlconna",
     "interval_at_start",
     "timeout_at_start",
 ]

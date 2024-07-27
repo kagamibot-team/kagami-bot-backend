@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from src.common.config import config
 
-__all__ = ["get_session", "manual_checkpoint", "get_sql_engine", "DatabaseManager"]
+__all__ = ["DatabaseManager"]
 
 
 class DatabaseManager:
@@ -80,19 +80,5 @@ class DatabaseManager:
         return single
 
 
-def get_session():
-    return DatabaseManager.get_single().get_session()
-
-
-async def manual_checkpoint():
-    return await DatabaseManager.get_single().manual_checkpoint()
-
-
-def get_sql_engine():
-    return DatabaseManager.get_single().sql_engine
-
-
 # 现在还没有形成完整的依赖注入范式，所以，只能先在这里初始化单例，以后再改
-
-
 DatabaseManager.init_single()

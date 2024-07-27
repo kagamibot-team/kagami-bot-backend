@@ -1,8 +1,6 @@
 from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.views.award import AwardInfo
-
 from ..base.repository import DBRepository
 from ..models.models import Skin, SkinRecord
 
@@ -141,3 +139,47 @@ class SkinInventoryRepository(DBRepository[SkinRecord]):
         )
         result = await self.session.execute(query)
         return dict(result.tuples().all())
+
+    async def get_list(self, uid: int, aid: int | None = None) -> list[int]:
+        """获取一个用户拥有的所有皮肤的列表
+
+        Args:
+            uid (int): 用户的 ID
+            aid (int | None, optional): 限定的小哥的范围. Defaults to None.
+
+        Returns:
+            list[int]: 用户拥有的所有皮肤
+        """
+
+        query = select(SkinRecord.skin_id).filter(SkinRecord.user_id == uid)
+        if aid is not None:
+            query = query.join(Skin, Skin.data_id == SkinRecord.skin_id).filter(
+                Skin.award_id == aid
+            )
+
+        return list((await self.session.execute(query)).scalars())
+
+    async def use(self, uid: int, aid: int, sid: int | None):
+        """添加一个使用记录
+
+        Args:
+            uid (int): 用户 ID
+            aid (int): 小哥的 ID
+            sid (int | None): 皮肤的 ID，None 表示不使用
+        """
+        clear = (
+            update(SkinRecord)
+            .where(
+                SkinRecord.user_id == uid,
+                Skin.data_id == SkinRecord.skin_id,
+                Skin.award_id == aid,
+            )
+            .values({SkinRecord.selected: 0})
+        )
+        await self.session.execute(clear)
+        if sid is not None:
+            await self.session.execute(
+                update(SkinRecord)
+                .where(SkinRecord.skin_id == sid, SkinRecord.user_id == uid)
+                .values({SkinRecord.selected: 1})
+            )

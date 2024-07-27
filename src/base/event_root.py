@@ -2,6 +2,7 @@
 和根事件监听器有关的模块
 """
 
+from loguru import logger
 from nonebot import on_notice, on_type  # type: ignore
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -9,15 +10,19 @@ from nonebot.adapters.onebot.v11 import (
     LifecycleMetaEvent,
     NoticeEvent,
     PrivateMessageEvent,
+    NotifyEvent,
 )
 
 from src.base.command_events import GroupContext, PrivateContext
 from src.base.event_manager import EventManager
 from src.base.onebot_events import (
     GroupMessageEmojiLike,
+    GroupPoke,
+    GroupPokeContext,
     GroupStickEmojiContext,
     OnebotStartedContext,
 )
+from src.base.onebot_tools import record_last_context
 from src.common.config import config
 
 
@@ -38,11 +43,13 @@ def activate_root(event_root: EventManager):
     async def _(bot: Bot, event: GroupMessageEvent):
         if config.enable_white_list and event.group_id not in config.white_list_groups:
             return
+        record_last_context(event.user_id, event.group_id)
 
         await event_root.throw(GroupContext(event, bot))
 
     @privateMessageHandler.handle()
     async def _(bot: Bot, event: PrivateMessageEvent):
+        record_last_context(event.user_id, None)
         await event_root.throw(PrivateContext(event, bot))
 
     @notice_group_msg_emoji_like_handler.handle()
@@ -51,6 +58,20 @@ def activate_root(event_root: EventManager):
             await event_root.throw(
                 GroupStickEmojiContext(GroupMessageEmojiLike(**event.model_dump()), bot)
             )
+        if event.notice_type == "notify" and isinstance(event, NotifyEvent):
+            if event.sub_type == "poke":
+                await event_root.throw(
+                    GroupPokeContext(
+                        GroupPoke(
+                            time=event.time,
+                            self_id=event.self_id,
+                            group_id=event.group_id,
+                            user_id=event.user_id,
+                            target_id=getattr(event, "target_id"),
+                        ),
+                        bot,
+                    )
+                )
 
     @onebot_startup_hander.handle()
     async def _(bot: Bot, event: LifecycleMetaEvent):

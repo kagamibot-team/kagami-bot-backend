@@ -8,8 +8,8 @@ import pathlib
 import shutil
 import zipfile
 from sqlalchemy import select, update
-from src.base.db import get_session
 from src.common.times import now_datetime
+from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Award, Skin
 
 
@@ -38,8 +38,8 @@ async def collect_images():
     将图像资源文件整理并置放到对应的文件夹，并将先前的图片文件备份到 Backup 中
     """
 
-    session = get_session()
-    async with session.begin():
+    async with get_unit_of_work() as uow:
+        session = uow.session
         query = select(Award.data_id, Award.image)
         awards = (await session.execute(query)).tuples()
 
@@ -56,7 +56,7 @@ async def collect_images():
                 await session.execute(
                     update(Award)
                     .where(Award.data_id == did)
-                    .values(img_path=str(img_path))
+                    .values(img_path=img_path.as_posix())
                 )
             applied.add(img_path)
 
@@ -84,7 +84,9 @@ async def collect_images():
                     shutil.move(img_path, target_path)
                 img_path = target_path
                 await session.execute(
-                    update(Skin).where(Skin.data_id == did).values(image=str(img_path))
+                    update(Skin)
+                    .where(Skin.data_id == did)
+                    .values(image=img_path.as_posix())
                 )
             applied.add(img_path)
 
@@ -97,8 +99,6 @@ async def collect_images():
             if fp not in applied:
                 target_path = backup_dir / fp.name
                 move_file(fp, target_path)
-
-        await session.commit()
 
 
 def pack_save_task(zfp: pathlib.Path):

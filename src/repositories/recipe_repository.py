@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import Award
 from src.models.recipe_history import RecipeHistory
-from src.models.statics import Level
+from src.models.level import Level
 
 from ..base.exceptions import ObjectAlreadyExistsException, RecipeMissingException
 from ..base.repository import DBRepository
