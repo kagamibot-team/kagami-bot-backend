@@ -11,7 +11,7 @@ from src.common.download import download, writeData
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
 from src.models.models import *
-from src.models.statics import level_repo
+from src.models.level import level_repo
 from src.repositories.inventory_repository import InventoryRepository
 from src.ui.base.strange import make_strange
 from src.ui.base.tools import image_to_bytes

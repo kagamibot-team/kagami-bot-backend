@@ -17,7 +17,7 @@ from src.common.decorators.command_decorators import (
 from src.common.lang.zh import la
 from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Award, AwardAltName, Skin, SkinAltName, SkinRecord
-from src.models.statics import level_repo
+from src.models.level import level_repo
 from src.ui.base.basics import Fonts, pile, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
 from src.ui.deprecated.ref_book import skin_book
@@ -88,7 +88,7 @@ async def _(ctx: OnebotContext, _: Arparma):
         "./res/blank_placeholder.png",
     )
 
-    name = await ctx.getSenderName()
+    name = await ctx.get_sender_name()
     area_title = render_text(
         text=f"{name} 的皮肤进度：",
         color="#FFFFFF",

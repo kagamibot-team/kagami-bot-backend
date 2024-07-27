@@ -1,7 +1,7 @@
 from loguru import logger
 from pydantic import BaseModel
 
-from src.models.statics import Level
+from src.models.level import Level
 
 from .award import AwardInfo
 from .user import UserData

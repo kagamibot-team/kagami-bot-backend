@@ -6,17 +6,9 @@ import qrcode.constants
 import qrcode.main
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import UniMessage
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.base.command_events import GroupContext, OnebotContext
-from src.base.event_root import root
-from src.common.dataclasses.shop_data import (
-    ProductData,
-    ShopBuildingEvent,
-    ShopBuyEvent,
-    ShopData,
-)
+from src.base.command_events import OnebotContext
+from src.base.exceptions import SoldOutException
 from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
@@ -25,27 +17,33 @@ from src.common.decorators.command_decorators import (
 from src.common.lang.zh import la
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
-from src.models.models import User
+from src.models.shop import ShopFreezed, ShopProductFreezed, build_xjshop
 from src.ui.base.basics import Fonts, paste_image, pile, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
-from src.ui.deprecated.product import product_box
+from src.ui.components.awards import ref_book_box_raw
+from src.ui.views.user import UserData
 
 
-async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: ShopData):
+async def product_box(product: ShopProductFreezed):
+    return ref_book_box_raw(
+        color=product.background_color,
+        image=product.image,
+        new=False,
+        notation_bottom="",
+        notation_top="",
+        name=product.title,
+        name_bottom=product.description,
+    )
+
+
+async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
     titles: list[PIL.Image.Image] = []
     boxes: list[PIL.Image.Image] = []
-
-    name = await ctx.getSenderName()
-    if isinstance(ctx, GroupContext):
-        name = await ctx.getSenderName()
-
-    res = await session.execute(select(User.money).filter(User.qq_id == ctx.sender_id))
-    res = res.scalar_one_or_none() or 0.0
 
     titles.append(
         render_text(
             text=(
-                f"欢迎来到小镜商店，{name}！您拥有{int(res)}{la.unit.money}。\n"
+                f"欢迎来到小镜商店，{user.name}！您拥有{int(money)}{la.unit.money}。\n"
                 "输入“小镜商店 购买 {商品名}”就可以购买了。\n"
             ),
             width=808 - 80 * 2,
@@ -55,7 +53,7 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
         )
     )
 
-    for group, products in shop.products.items():
+    for group, products in shop.items():
         boxes.append(
             render_text(
                 text=group,
@@ -84,94 +82,31 @@ async def send_shop_message(ctx: OnebotContext, session: AsyncSession, shop: Sho
         [area_title, area_box], 40, "left", "#9B9690", 464, 80, 80, 60
     )
     image.paste(PIL.Image.open("./res/kagami_shop.png"), (0, 0))
-    await ctx.send(UniMessage.image(raw=image_to_bytes(image)))
+
+    return UniMessage().image(raw=image_to_bytes(image))
 
 
-@listenOnebot()
-@matchAlconna(
-    Alconna(
-        "re:(小镜的?|xj) ?(shop|小店|商店)",
-        Option(
-            "买",
-            alias=["购买", "购入", "buy"],
-            args=Arg("商品名列表", MultiVar(str, flag="+")),
-        ),
-    )
-)
-@withLoading()
-async def _(ctx: OnebotContext, res: Arparma[Any]):
-    buys = res.query[list[str]]("商品名列表")
+async def shop_buy_message(
+    user: UserData,
+    products: list[ShopProductFreezed],
+    cost: float,
+    remain: float,
+):
+    buy_result = "小镜的 Shop 销售小票\n"
+    buy_result += "--------------------\n"
+    buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
+    buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
+    buy_result += f"客户：{user.name}\n"
+    buy_result += f"编号：{user.qqid}\n"
+    buy_result += "--------------------\n\n"
 
-    async with get_unit_of_work(ctx.sender_id) as uow:
-        session = uow.session
-        uid = await uow.users.get_uid(ctx.sender_id)
-        shop_data = ShopData()
-        shop_data_evt = ShopBuildingEvent(shop_data, ctx.sender_id, uid, session)
-        await root.emit(shop_data_evt)
-
-        if buys is None:
-            await send_shop_message(ctx, session, shop_data)
-            return
-
-        name = await ctx.getSenderName()
-
-        if isinstance(ctx, GroupContext):
-            name = await ctx.getSenderName()
-
-        buy_result = "小镜的 Shop 销售小票\n"
-        buy_result += "--------------------\n"
-        buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
-        buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
-        buy_result += f"客户：{name}\n"
-        buy_result += f"编号：{ctx.sender_id}\n"
-        buy_result += "--------------------\n\n"
-
-        money_left_query = select(User.money).filter(User.data_id == uid)
-        money_left = (await session.execute(money_left_query)).scalar_one()
-
-        money_sum = 0.0
-        products: list[ProductData] = []
-
-        for buy in set(buys):
-            for product in shop_data.iterate():
-                if buy == product.title or buy in product.alias:
-                    if product.sold_out:
-                        buy_result += f"- {product.title} 已售罄\n"
-                        break
-
-                    buy_result += f"- {product.title} {product.price}{la.unit.money}\n"
-                    money_sum += product.price
-                    products.append(product)
-                    break
-            else:
-                buy_result += f"- {buy} 未找到\n"
-                continue
-
-        if money_sum <= money_left:
-            for product in products:
-                evt = ShopBuyEvent(product, ctx.sender_id, uid, session)
-                await root.emit(evt)
-
-            money_update_query = (
-                update(User)
-                .where(User.data_id == uid)
-                .values(money=money_left - money_sum)
-            )
-            await session.execute(money_update_query)
+    for product in products:
+        buy_result += f"- {product.title}  {product.price} {la.unit.money}\n"
 
     buy_result += "\n"
-    buy_result += f"总计：{money_sum}{la.unit.money}\n"
-
-    if money_sum > money_left:
-        await ctx.reply("你什么也没买到……因为你薯片不够了")
-        return
-
-    if money_sum == 0:
-        await ctx.reply("你什么也没买到……小镜找不到你要买的东西，或者它们都卖光了")
-        return
-
-    buy_result += f"实付：{money_sum}{la.unit.money}\n"
-    buy_result += f"余额：{money_left - money_sum}{la.unit.money}\n"
+    buy_result += f"总计：{cost}{la.unit.money}\n"
+    buy_result += f"实付：{cost}{la.unit.money}\n"
+    buy_result += f"余额：{remain}{la.unit.money}\n"
     buy_result += "--------------------\n"
     buy_result += "  本次消费已结帐\n"
     buy_result += "  欢迎下次光临\n"
@@ -206,5 +141,53 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
     qr = qimg.resize((180, 180), PIL.Image.LANCZOS)
 
     base.paste(qr, (98, base.height - 240))
+    return UniMessage.image(raw=image_to_bytes(base))
 
-    await ctx.send(UniMessage.image(raw=image_to_bytes(base)))
+
+@listenOnebot()
+@matchAlconna(
+    Alconna(
+        "re:(小镜的?|xj) ?(shop|小店|商店)",
+        Option(
+            "买",
+            alias=["购买", "购入", "buy"],
+            args=Arg("商品名列表", MultiVar(str, flag="+")),
+        ),
+    )
+)
+@withLoading()
+async def _(ctx: OnebotContext, res: Arparma[Any]):
+    buys = res.query[list[str]]("商品名列表") or []
+
+    if len(buys) == 0:
+        async with get_unit_of_work(ctx.sender_id) as uow:
+            uid = await uow.users.get_uid(ctx.sender_id)
+            shop = await build_xjshop(uow)
+            user = UserData(
+                uid=uid, qqid=str(ctx.sender_id), name=await ctx.sender_name
+            )
+            freezed_shop = await shop.freeze(uow, uid)
+            money = await uow.users.get_money(uid)
+        msg = await shop_default_message(user, freezed_shop, money)
+        await ctx.send(msg)
+    else:
+        async with get_unit_of_work(ctx.sender_id) as uow:
+            uid = await uow.users.get_uid(ctx.sender_id)
+            shop = await build_xjshop(uow)
+            user = UserData(
+                uid=uid, qqid=str(ctx.sender_id), name=await ctx.sender_name
+            )
+
+            costs: float = 0
+            prods: list[ShopProductFreezed] = []
+            for n in buys:
+                prod = shop[n]
+                if await prod.is_sold_out(uow, uid):
+                    raise SoldOutException(await prod.title(uow, uid))
+
+                costs += await prod.price(uow, uid)
+                prods.append(await prod.freeze(uow, uid))
+                await prod.gain(uow, uid)
+            remain = await uow.users.use_money(uid, costs)
+            print(prods)
+        await ctx.send(await shop_buy_message(user, prods, costs, remain))

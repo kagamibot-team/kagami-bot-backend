@@ -149,13 +149,13 @@ class OnebotContext(Generic[TE]):
     def sender_id(self):
         return self.event.user_id
 
-    async def getSenderName(self) -> str:
+    async def get_sender_name(self) -> str:
         info = await self.bot.call_api("get_stranger_info", user_id=self.sender_id)
         return info["nick"]
 
     @property
     def sender_name(self):
-        return self.getSenderName()
+        return self.get_sender_name()
 
     async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
         message = UniMessage(message)
@@ -222,7 +222,7 @@ class GroupContext(OnebotContext[GroupMessageEvent]):
     def group_id(self):
         return self.event.group_id
 
-    async def getSenderName(self):
+    async def get_sender_name(self):
         sender = self.sender_id
         info = await self.bot.call_api(
             "get_group_member_info", group_id=self.event.group_id, user_id=sender

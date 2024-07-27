@@ -9,7 +9,7 @@ from src.common.dataclasses.shop_data import (
 )
 from src.logic.catch_time import calculateTime
 from src.models.models import Award, Skin, SkinRecord, User
-from src.models.statics import level_repo
+from src.models.level import level_repo
 
 
 @root.listen(ShopBuildingEvent)

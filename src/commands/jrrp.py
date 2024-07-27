@@ -33,7 +33,7 @@ async def _(ctx: GroupContext, _):
     async with get_unit_of_work(qqid) as uow:
         aid = await get_daily(uow)
         info = await get_award_info(uow, aid)
-        name = await ctx.getSenderName()
+        name = await ctx.get_sender_name()
 
     titles: list[PIL.Image.Image] = []
     titles.append(

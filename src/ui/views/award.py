@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from src.models.statics import Level
+from src.models.level import Level
 
 
 class AwardInfo(BaseModel):

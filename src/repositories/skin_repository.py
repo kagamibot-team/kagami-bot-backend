@@ -46,6 +46,23 @@ class SkinRepository(DBRepository[Skin]):
         q = select(Skin.name, Skin.description, Skin.image).filter(Skin.data_id == sid)
         return (await self.session.execute(q)).tuples().one()
 
+    async def all(self) -> list[tuple[int, int, str, str, str, float]]:
+        """获得所有皮肤的信息
+
+        Returns:
+            tuple[int, int, str, str, str, float]: 皮肤 ID，对应小哥 ID，名字，描述，图，价格
+        """
+
+        q = select(
+            Skin.data_id,
+            Skin.award_id,
+            Skin.name,
+            Skin.description,
+            Skin.image,
+            Skin.price,
+        )
+        return list((await self.session.execute(q)).tuples().all())
+
     async def get_sid(self, name: str) -> int | None:
         """根据名字获得皮肤的 ID
 

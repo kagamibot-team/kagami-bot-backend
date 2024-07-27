@@ -71,8 +71,14 @@ def ref_book_box_raw(
     notation_top: str,
     name: str,
     name_bottom: str,
+    sold_out: bool = False,
 ) -> PIL.Image.Image:
     box = display_box_raw(color, image, new)
+
+    if sold_out:
+        so = PIL.Image.open("./res/sold_out.png")
+        so = so.convert("RGBA")
+        paste_image(box, so, 0, 0)
 
     bl_notation = render_text(
         text=notation_bottom,

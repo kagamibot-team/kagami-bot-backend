@@ -11,7 +11,7 @@ from src.common.decorators.command_decorators import (
 from src.common.lang.zh import la
 from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Award
-from src.models.statics import level_repo
+from src.models.level import level_repo
 
 
 @listenOnebot()

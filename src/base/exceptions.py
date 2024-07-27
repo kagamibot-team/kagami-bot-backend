@@ -102,3 +102,15 @@ class MultipleObjectFoundException(KagamiCoreException):
     @property
     def message(self) -> str:
         return f"你说的 {self.obj_name} 对应的对象太多了，请具体一点"
+
+
+class SoldOutException(KagamiCoreException):
+    """当一个商品卖光时抛出的异常"""
+
+    def __init__(self, obj_name: str) -> None:
+        super().__init__()
+        self.obj_name = obj_name
+
+    @property
+    def message(self) -> str:
+        return f"啊哦！{self.obj_name} 卖光了！"

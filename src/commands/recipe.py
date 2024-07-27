@@ -127,7 +127,7 @@ async def _(ctx: OnebotContext, res: Arparma):
     if n1 is None or n2 is None or n3 is None:
         return
 
-    username = await ctx.getSenderName()
+    username = await ctx.get_sender_name()
 
     async with get_unit_of_work(qqid=ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)

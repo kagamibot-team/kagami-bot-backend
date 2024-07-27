@@ -4,7 +4,7 @@ import PIL
 import PIL.Image
 from typing_extensions import deprecated
 
-from src.models.statics import Level
+from src.models.level import Level
 from src.ui.components.awards import display_box as _display_box
 from src.ui.views.award import AwardInfo
 from utils.threading import make_async

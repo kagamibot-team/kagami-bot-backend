@@ -91,6 +91,44 @@ class UserRepository(DBRepository[User]):
             .split(",")
         )
 
+    async def set_flags(self, uid: int, flags: set[str]):
+        """设置一个用户的 Flags
+
+        Args:
+            uid (int): 用户
+            flags (set[str]): Flags 集合
+        """
+
+        await self.session.execute(
+            update(User)
+            .where(User.data_id == uid)
+            .values({User.feature_flag: ",".join(flags)})
+        )
+
+    async def add_flag(self, uid: int, flag: str):
+        """为一个用户启用 Flag
+
+        Args:
+            uid (int): 用户
+            flag (str): Flag
+        """
+
+        await self.set_flags(uid, (await self.get_flags(uid)) | {flag})
+
+    async def add_slot_count(self, uid: int, count: int = 1):
+        """为一个用户添加一个卡槽
+
+        Args:
+            uid (int): 用户 ID
+            count (int, optional): 卡槽数量. Defaults to 1.
+        """
+
+        await self.session.execute(
+            update(User)
+            .where(User.data_id == uid)
+            .values({User.pick_max_cache: User.pick_max_cache + count})
+        )
+
     async def do_have_flag(self, uid: int, flag: str):
         return flag in await self.get_flags(uid)
 

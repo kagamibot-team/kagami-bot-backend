@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from src.models.models import Award
 from src.common.data.awards import get_statistics
 from src.common.rd import get_random
-from src.models.statics import level_repo
+from src.models.level import level_repo
 
 
 async def pickAwards(session: AsyncSession, uid: int, count: int) -> Picks:
