@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+import PIL
+import PIL.Image
+import PIL.ImageFilter
 from pydantic import BaseModel
 
 from src.base.exceptions import ObjectNotFoundException
@@ -75,11 +78,21 @@ class SkinProduct(ShopProduct):
     def type(self):
         return "皮肤"
 
+    @property
+    def cache(self) -> Path:
+        return Path("./data/temp") / (
+            "blurred_" + hex(hash(Path(self._image).read_bytes()))[2:] + ".png"
+        )
+
     async def title(self, uow: UnitOfWork, uid: int):
         return "皮肤" + self._title
 
     async def image(self, uow: UnitOfWork, uid: int):
-        return Path(self._image)
+        if not self.cache.exists():
+            raw = PIL.Image.open(self._image)
+            raw = raw.filter(PIL.ImageFilter.BoxBlur(100))
+            raw.save(self.cache)
+        return self.cache
 
     async def description(self, uow: UnitOfWork, uid: int):
         return f"{self._aname}的皮肤"

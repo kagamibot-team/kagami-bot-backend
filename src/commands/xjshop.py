@@ -33,6 +33,7 @@ async def product_box(product: ShopProductFreezed):
         notation_top="",
         name=product.title,
         name_bottom=product.description,
+        sold_out=product.is_sold_out,
     )
 
 
