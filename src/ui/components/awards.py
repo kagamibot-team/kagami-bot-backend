@@ -8,7 +8,7 @@ from loguru import logger
 
 from src.ui.base.basics import Fonts
 from src.ui.base.tools import hex_to_rgb, mix_color, rgb_to_hex
-from src.ui.views.award import AwardInfo
+from src.ui.views.award import AwardDisplay, AwardInfo
 
 from ..base.basics import (
     apply_mask,
@@ -130,27 +130,31 @@ def ref_book_box_raw(
     return block
 
 
-def ref_book_box(data: AwardInfo | None) -> PIL.Image.Image:
+def ref_book_box(data: AwardDisplay | None) -> PIL.Image.Image:
     if data is None:
         return ref_book_box_raw(
             "#696361", "./res/blank_placeholder.png", False, "", "", "？？？", ""
         )
     return ref_book_box_raw(
-        data.level.color,
-        data.image,
+        data.info.color,
+        data.info.image,
         data.new,
         data.notation,
         data.notation2,
-        data.name,
+        data.info.name,
         data.name_notation,
     )
 
 
-def display_box(data: AwardInfo | None) -> PIL.Image.Image:
+def display_box(data: AwardDisplay | AwardInfo | None) -> PIL.Image.Image:
     """
     渲染 DisplayBox
     """
 
     if data is None:
         return display_box_raw("#696361", "./res/blank_placeholder.png", False)
-    return display_box_raw(data.level.color, data.image, data.new)
+    
+    if isinstance(data, AwardInfo):
+        data = AwardDisplay(info=data)
+
+    return display_box_raw(data.info.color, data.info.image, data.new)

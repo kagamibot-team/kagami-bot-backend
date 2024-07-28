@@ -16,6 +16,7 @@ from src.logic.daily import get_daily
 from src.ui.base.basics import Fonts, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
 from src.ui.components.catch import catch
+from src.ui.views.award import AwardDisplay
 
 
 @listenGroup()
@@ -61,7 +62,7 @@ async def _(ctx: GroupContext, _):
         )
     )
 
-    area_box = catch(info)
+    area_box = catch(AwardDisplay(info=info))
 
     area_title = vertical_pile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
     img = vertical_pile([area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80)

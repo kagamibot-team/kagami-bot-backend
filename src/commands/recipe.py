@@ -14,6 +14,7 @@ from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.ui.pages.recipe import render_merge_message
+from src.ui.views.award import GotAwardDisplay
 from src.ui.views.recipe import MergeResult, MergeStatus
 from src.ui.views.user import UserData
 
@@ -158,13 +159,12 @@ async def _(ctx: OnebotContext, res: Arparma):
             info = await generate_random_info()
             add = get_random().randint(1, 100)
             do_xb = False
-            info.notation = f"+{add}"
+            data = GotAwardDisplay(info=info, count=add, is_new=False)
         else:
             info = await get_award_info(uow, aid, uid)
             add = get_random().randint(1, 3)
             do_xb = info.level.lid in (4, 5)
-            info.notation = f"+{add}"
-            info.new = await uow.inventories.get_stats(uid, aid) == 0
+            data = GotAwardDisplay(info=info, count=add, is_new=await uow.inventories.get_stats(uid, aid) == 0)
             await uow.inventories.give(uid, aid, add)
 
         if isinstance(ctx, GroupContext):
@@ -189,7 +189,7 @@ async def _(ctx: OnebotContext, res: Arparma):
             ),
             successed=status,
             inputs=(info1, info2, info3),
-            output=info,
+            output=data,
             cost_money=cost,
             remain_money=int(after),
         )

@@ -23,7 +23,7 @@ from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import pickAwards
 from src.logic.catch_time import uow_calculate_time
-from src.ui.views.award import AwardInfo
+from src.ui.views.award import GotAwardDisplay
 from src.ui.views.catch import CatchMesssage, CatchResultMessage
 from src.ui.views.user import UserData
 
@@ -77,14 +77,15 @@ async def picks(
         await root.emit(pick_event)
 
         spent_count = 0
-        catchs: list[AwardInfo] = []
+        catchs: list[GotAwardDisplay] = []
 
         for aid, pick in pick_result.awards.items():
             spent_count += pick.delta
             await uow.inventories.give(uid, aid, pick.delta)
             info = await get_award_info(uow, aid, uid)
-            info.new = pick.beforeStats == 0
-            info.notation = f"+{pick.delta}"
+            info = GotAwardDisplay(
+                info=info, count=pick.delta, is_new=pick.beforeStats == 0
+            )
             catchs.append(info)
 
         await uow.users.update_catch_time(
@@ -132,11 +133,11 @@ async def handle_xb(msg: CatchMesssage):
 
     data: list[str] = []
     for info in msg.catchs:
-        if info.level.lid not in (4, 5):
+        if info.info.level.lid not in (4, 5):
             continue
 
         new_hint = "（新）" if info.new else ""
-        data.append(f"{info.name} ×{info.notation[1:]}{new_hint}")
+        data.append(f"{info.info.name} ×{info.notation[1:]}{new_hint}")
 
     if len(data) > 0:
         LocalStorageManager.instance().data.add_xb(

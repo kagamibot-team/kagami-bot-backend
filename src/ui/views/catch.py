@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from .award import AwardInfo
+from .award import AwardInfo, GotAwardDisplay
 from .user import UserData
 
 
@@ -50,7 +50,7 @@ class CatchResultMessage(CatchMesssage):
     money_sum: int
     "在抓之后的总钱数"
 
-    catchs: list[AwardInfo]
+    catchs: list[GotAwardDisplay]
     "抓小哥的条目"
 
     @property

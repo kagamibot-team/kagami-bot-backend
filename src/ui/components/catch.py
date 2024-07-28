@@ -6,17 +6,17 @@ from imagetext_py import TextAlign
 
 from src.ui.base.basics import Fonts, paste_image, render_text
 from src.ui.components.awards import display_box
-from src.ui.views.award import AwardInfo
+from src.ui.views.award import AwardDisplay
 
 
-def catch(data: AwardInfo) -> PIL.Image.Image:
+def catch(data: AwardDisplay) -> PIL.Image.Image:
     """
     渲染 AwardDetail
     """
 
     left_display = display_box(data)
     rightDescription = render_text(
-        text=data.description,
+        text=data.info.description,
         width=567,
         color="#ffffff",
         font=[Fonts.VONWAON_BITMAP_16, Fonts.MAPLE_UI],
@@ -25,17 +25,17 @@ def catch(data: AwardInfo) -> PIL.Image.Image:
         paragraph_spacing=15,
     )
     rightTitle = render_text(
-        text=data.display_name,
+        text=data.info.display_name,
         font_size=43,
         color="#ffffff",
         font=[Fonts.JINGNAN_JUNJUN, Fonts.ALIMAMA_SHU_HEI, Fonts.MAPLE_UI],
     )
     rightStar = render_text(
-        text=data.level.display_name,
+        text=data.info.level.display_name,
         width=400,
         font_size=43,
         align=TextAlign.Right,
-        color=data.level.color,
+        color=data.info.level.color,
         font=Fonts.MAPLE_UI,
     )
     leftNotation = render_text(

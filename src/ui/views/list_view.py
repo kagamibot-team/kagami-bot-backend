@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from src.models.level import Level
 
-from .award import AwardInfo
+from .award import AwardInfo, StorageDisplay
 from .user import UserData
 
 
@@ -19,7 +19,7 @@ class ListView(BaseModel):
     在界面中排列的小哥图鉴
     """
 
-    awards: list[AwardInfo | None]
+    awards: list[StorageDisplay | None]
     "小哥的图鉴，如果留空则为未知"
 
 
@@ -62,7 +62,7 @@ class UserStorageView(BaseModel):
     user: UserData | None
     "玩家数据"
 
-    awards: list[tuple[Level, list[AwardInfo | None]]] = []
+    awards: list[tuple[Level, list[StorageDisplay | None]]] = []
     "一个玩家所有的小哥"
 
     limited_level: Level | None = None
@@ -118,7 +118,7 @@ class UserStorageView(BaseModel):
             if show_progress:
                 title += f"：{len([a for a in awards if a is not None])}/{len(awards)}"
             if not show_all:
-                awards: list[AwardInfo | None] = [
+                awards: list[StorageDisplay | None] = [
                     award for award in awards if award is not None
                 ]
 
@@ -132,11 +132,11 @@ class UserStorageView(BaseModel):
         docs: list[ListView | str | int | TitleView] = [
             TitleView(title=self.storage_title, size=80)
         ]
-        awards: list[AwardInfo | None] = []
+        awards: list[StorageDisplay | None] = []
         for _, awds in self.awards:
             awards += sorted(
                 [i for i in awds if i is not None],
-                key=lambda x: (-_try_int(x.notation), x.aid, x.sorting),
+                key=lambda x: (-x.storage, x.info.aid, x.info.sorting),
             )
         docs.append(ListView(awards=awards))
         return ListViewDocument(docs=docs)
