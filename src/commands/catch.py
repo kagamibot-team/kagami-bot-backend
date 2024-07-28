@@ -4,9 +4,10 @@ import time
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import At, Reply, Text
 
+from src.common.dataclasses.game_events import UserTryCatchEvent
 from src.ui.pages.catch import render_catch_message
 from src.base.command_events import OnebotContext
-from src.base.event_root import root
+from src.base.event_root import root, throw_event
 from src.base.exceptions import KagamiRangeError
 from src.base.local_storage import Action, LocalStorageManager, XBRecord
 from src.common.data.awards import get_award_info
@@ -121,6 +122,7 @@ async def picks(
             )
 
     await handle_xb(msg)
+    await throw_event(UserTryCatchEvent(user_data=user, catch_view=msg))
     return msg
 
 
