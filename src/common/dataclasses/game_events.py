@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+from src.ui.views.award import GotAwardDisplay
 from src.ui.views.catch import CatchMesssage, CatchResultMessage
 from src.ui.views.user import UserData
 
@@ -34,3 +35,9 @@ class UserTryCatchEvent(UserDataUpdatedEvent):
     @property
     def successed(self):
         return isinstance(self.catch_view, CatchResultMessage)
+    
+    @property
+    def results(self) -> list[GotAwardDisplay]:
+        if not isinstance(self.catch_view, CatchResultMessage):
+            return []
+        return self.catch_view.catchs

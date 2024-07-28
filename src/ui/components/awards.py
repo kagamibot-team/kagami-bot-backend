@@ -153,7 +153,7 @@ def display_box(data: AwardDisplay | AwardInfo | None) -> PIL.Image.Image:
 
     if data is None:
         return display_box_raw("#696361", "./res/blank_placeholder.png", False)
-    
+
     if isinstance(data, AwardInfo):
         data = AwardDisplay(info=data)
 

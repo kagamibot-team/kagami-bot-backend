@@ -164,7 +164,11 @@ async def _(ctx: OnebotContext, res: Arparma):
             info = await get_award_info(uow, aid, uid)
             add = get_random().randint(1, 3)
             do_xb = info.level.lid in (4, 5)
-            data = GotAwardDisplay(info=info, count=add, is_new=await uow.inventories.get_stats(uid, aid) == 0)
+            data = GotAwardDisplay(
+                info=info,
+                count=add,
+                is_new=await uow.inventories.get_stats(uid, aid) == 0,
+            )
             await uow.inventories.give(uid, aid, add)
 
         if isinstance(ctx, GroupContext):

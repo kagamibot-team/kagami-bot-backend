@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from .award import AwardInfo, GotAwardDisplay
+from .award import GotAwardDisplay
 from .user import UserData
 
 
@@ -19,7 +19,7 @@ class CatchMesssage(BaseModel):
     "开了多少个槽位"
 
     next_time: float
-    "下次槽位恢复的时间"
+    "下次槽位恢复的剩余时间"
 
     group_id: int | None
     "群号"

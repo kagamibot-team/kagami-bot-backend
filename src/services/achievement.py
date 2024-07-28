@@ -3,7 +3,11 @@ from abc import ABC, abstractmethod
 
 from pydantic import BaseModel
 
-from src.common.dataclasses.game_events import DummyEvent, UserDataUpdatedEvent
+from src.common.dataclasses.game_events import (
+    DummyEvent,
+    UserDataUpdatedEvent,
+    UserTryCatchEvent,
+)
 from src.core.unit_of_work import UnitOfWork
 
 
@@ -20,7 +24,7 @@ class Achievement(BaseModel, ABC):
     def flag(self) -> str:
         """用于记录用户是否达成成就的 Flag"""
         return f"flag_achievement_{base64.b64encode(self.name.encode()).decode()}"
-    
+
     async def have_got(self, uow: UnitOfWork, uid: int) -> bool:
         """判断一个用户有没有拿到一个成就
 
@@ -77,6 +81,28 @@ class Achievement(BaseModel, ABC):
         return msg
 
 
+class NoPriseAchievement(Achievement):
+    prise_description: str | None = None
+
+    async def prise(self, uow: UnitOfWork, uid: int) -> None:
+        return
+
+
+class AlwaysDisplayAchievement(Achievement):
+    async def check_can_display(self, uow: UnitOfWork, uid: int) -> bool:
+        return True
+
+
+class NeverDisplayAchievement(Achievement):
+    async def check_can_display(self, uow: UnitOfWork, uid: int) -> bool:
+        return False
+
+
+class DisplayWhenAchievedAchievement(Achievement):
+    async def check_can_display(self, uow: UnitOfWork, uid: int) -> bool:
+        return await self.have_got(uow, uid)
+
+
 class DummyAchievement(Achievement):
     """
     只能由 DummyEvent 触发的成就。这里的奖励还没有定义，需要子类再进行定义
@@ -92,7 +118,7 @@ class DummyAchievement(Achievement):
         return event.data == self.dummy_data
 
 
-class TestAchievement(DummyAchievement):
+class TestAchievement(DummyAchievement, NoPriseAchievement):
     """
     嗯这玩意是用于测试的，所以不给奖励
     """
@@ -105,8 +131,53 @@ class TestAchievement(DummyAchievement):
     async def check_can_display(self, uow: UnitOfWork, uid: int) -> bool:
         return self.can_display
 
-    async def prise(self, uow: UnitOfWork, uid: int) -> None:
-        pass
+
+class AllOneStarAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
+    name: str = "七(一)星连珠"
+    description: str = "嗯……一次性抽到七个一星！？"
+
+    async def validate_achievement(
+        self, uow: UnitOfWork, event: UserDataUpdatedEvent
+    ) -> bool:
+        if not isinstance(event, UserTryCatchEvent):
+            return False
+        if not event.successed:
+            return False
+        count = 0
+        for r in event.results:
+            if r.info.level.lid == 1:
+                count += r.count
+        return count >= 7
+
+
+class NiceCatchAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
+    name: str = "欧皇附体"
+    description: str = "一次抓到了两个同一个四星（或者以上）"
+
+    async def validate_achievement(
+        self, uow: UnitOfWork, event: UserDataUpdatedEvent
+    ) -> bool:
+        if not isinstance(event, UserTryCatchEvent):
+            return False
+        if not event.successed:
+            return False
+        for r in event.results:
+            if r.info.level.lid == 4 or r.info.level.lid == 5:
+                if r.count >= 2:
+                    return True
+        return False
+
+
+class TimerAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
+    name: str = "读秒大师"
+    description: str = "什么！剩余零秒？！"
+
+    async def validate_achievement(
+        self, uow: UnitOfWork, event: UserDataUpdatedEvent
+    ) -> bool:
+        if not isinstance(event, UserTryCatchEvent):
+            return False
+        return event.catch_view.next_time < 1
 
 
 class AchievementService:
@@ -156,5 +227,8 @@ async def get_achievement_service(uow: UnitOfWork) -> AchievementService:
     service = AchievementService()
 
     service.register(TestAchievement())
+    service.register(AllOneStarAchievement())
+    service.register(NiceCatchAchievement())
+    service.register(TimerAchievement())
 
     return service
