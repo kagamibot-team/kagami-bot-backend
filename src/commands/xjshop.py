@@ -17,7 +17,7 @@ from src.common.decorators.command_decorators import (
 from src.common.lang.zh import la
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
-from src.models.shop import ShopFreezed, ShopProductFreezed, build_xjshop
+from src.services.shop import ShopFreezed, ShopProductFreezed, build_xjshop
 from src.ui.base.basics import Fonts, paste_image, pile, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
 from src.ui.components.awards import ref_book_box_raw
@@ -44,7 +44,7 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
     titles.append(
         render_text(
             text=(
-                f"欢迎来到小镜商店，{user.name}！您拥有{int(money)}{la.unit.money}。\n"
+                f"欢迎来到小镜商店，{user.name}！您拥有{int(money)}薯片。\n"
                 "输入“小镜商店 购买 {商品名}”就可以购买了。\n"
             ),
             width=808 - 80 * 2,
@@ -102,12 +102,12 @@ async def shop_buy_message(
     buy_result += "--------------------\n\n"
 
     for product in products:
-        buy_result += f"- {product.title}  {product.price} {la.unit.money}\n"
+        buy_result += f"- {product.title}  {product.price} 薯片\n"
 
     buy_result += "\n"
-    buy_result += f"总计：{cost}{la.unit.money}\n"
-    buy_result += f"实付：{cost}{la.unit.money}\n"
-    buy_result += f"余额：{remain}{la.unit.money}\n"
+    buy_result += f"总计：{cost}薯片\n"
+    buy_result += f"实付：{cost}薯片\n"
+    buy_result += f"余额：{remain}薯片\n"
     buy_result += "--------------------\n"
     buy_result += "  本次消费已结帐\n"
     buy_result += "  欢迎下次光临\n"

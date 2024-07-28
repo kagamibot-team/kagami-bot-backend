@@ -2,15 +2,15 @@
 和根事件监听器有关的模块
 """
 
-from loguru import logger
+from typing import Any
 from nonebot import on_notice, on_type  # type: ignore
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
     LifecycleMetaEvent,
     NoticeEvent,
-    PrivateMessageEvent,
     NotifyEvent,
+    PrivateMessageEvent,
 )
 
 from src.base.command_events import GroupContext, PrivateContext
@@ -77,6 +77,18 @@ def activate_root(event_root: EventManager):
     async def _(bot: Bot, event: LifecycleMetaEvent):
         if event.sub_type == "connect":
             await event_root.throw(OnebotStartedContext(bot))
+
+
+async def throw_event(event: Any):
+    await root.throw(event)
+
+
+async def emit_event(event: Any):
+    await root.emit(event)
+
+
+async def listen(event_type: type[Any]):
+    return root.listen(event_type)
 
 
 root = EventManager()

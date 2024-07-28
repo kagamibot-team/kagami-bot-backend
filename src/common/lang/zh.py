@@ -13,11 +13,6 @@ class Loading:
     kz = "抓小哥机正在运作中……"
 
 
-class Display:
-    award_unknown_name = "???"
-    skin_using = "使用中"
-
-
 class Unit:
     second = "秒"
     minute = "分钟"
@@ -383,7 +378,6 @@ class About:
 
 
 class La:
-    disp = Display()
     loading = Loading()
     unit = Unit()
     msg = Messages()

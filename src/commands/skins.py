@@ -81,7 +81,7 @@ async def _(ctx: OnebotContext, _: Arparma):
 
     _boxes: list[tuple[str, str, str, str, str]] = []
     _un = (
-        la.disp.award_unknown_name,
+        "???",
         "",
         "",
         "#696361",
@@ -103,7 +103,7 @@ async def _(ctx: OnebotContext, _: Arparma):
             _boxes.append(_un)
             continue
 
-        notation = la.disp.skin_using if owned[sid] == 1 else ""
+        notation = "使用中" if owned[sid] == 1 else ""
         _boxes.append((sname, aname, notation, level_repo.levels[lid].color, img))
 
     boxes: list[PIL.Image.Image] = []
