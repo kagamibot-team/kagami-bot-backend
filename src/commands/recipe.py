@@ -50,8 +50,9 @@ async def _(ctx: OnebotContext, res: Arparma):
             raise ObjectNotFoundException("配方", f"{n1} + {n2} + {n3}")
 
         info = await get_award_info(uow, re[0])
+        modified = await uow.recipes.is_modified(a1, a2, a3)
 
-        await ctx.reply(f"{n1}+{n2}+{n3} 合成 {info.name}，概率为 {re[1]*100}%")
+        await ctx.reply(f"{n1}+{n2}+{n3} 合成 {info.name}，概率为 {re[1]*100}%，modified={modified}")
 
 
 @listenOnebot()
@@ -73,20 +74,23 @@ async def _(ctx: OnebotContext, res: Arparma):
             Arg("posi", float),
             alias=["-p", "概率", "频率", "收获率", "合成率", "成功率"],
         ),
+        Option("--reset", alias=["重置"]),
     )
 )
 async def _(ctx: OnebotContext, res: Arparma):
-    n1 = res.query[str]("name1")
-    n2 = res.query[str]("name2")
-    n3 = res.query[str]("name3")
-
-    if n1 is None or n2 is None or n3 is None:
-        return
+    n1 = res.query[str]("name1", "")
+    n2 = res.query[str]("name2", "")
+    n3 = res.query[str]("name3", "")
 
     async with get_unit_of_work() as uow:
         a1 = await uow.awards.get_aid_strong(n1)
         a2 = await uow.awards.get_aid_strong(n2)
         a3 = await uow.awards.get_aid_strong(n3)
+
+        if res.exist("reset"):
+            await uow.recipes.reset_recipe(a1, a2, a3)
+            await ctx.reply("ok.")
+            return
 
         n4 = res.query[str]("name4")
         a4 = None if n4 is None else await uow.awards.get_aid_strong(n4)
