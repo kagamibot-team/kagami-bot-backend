@@ -29,6 +29,15 @@ class Config(BaseModel):
     autosave_interval: float = 600
     "数据库自动保存间隔，在 SQLite 数据库时启用，为负数时不自动保存"
 
+    salt: str = ""
+    """
+    用于合成小哥时得到随机数的盐，你可以理解成地图种子。
+    
+    在生产环境，为保证小哥配方不会被破解，请设置一个奇怪的值。
+
+    （老 盐 同 志）
+    """
+
 
 config = get_plugin_config(Config)
 

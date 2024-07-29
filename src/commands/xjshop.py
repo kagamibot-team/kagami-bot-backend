@@ -14,7 +14,6 @@ from src.common.decorators.command_decorators import (
     matchAlconna,
     withLoading,
 )
-from src.common.lang.zh import la
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.services.shop import ShopFreezed, ShopProductFreezed, build_xjshop
@@ -29,11 +28,12 @@ async def product_box(product: ShopProductFreezed):
         color=product.background_color,
         image=product.image,
         new=False,
-        notation_bottom="",
+        notation_bottom=str(product.price) + "薯片",
         notation_top="",
         name=product.title,
         name_bottom=product.description,
         sold_out=product.is_sold_out,
+        smaller_size=True,
     )
 
 
