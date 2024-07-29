@@ -172,7 +172,7 @@ class AwardRepository(DBRepository[Award]):
         query = update(Award).where(Award.data_id == aid)
         if name is not None:
             query = query.values(name=name)
-        if description is not None:
+        if description is not None and len(description) > 0:
             query = query.values(description=description)
         if lid is not None:
             query = query.values(level_id=lid)

@@ -11,27 +11,6 @@ from src.core.unit_of_work import get_unit_of_work
 
 
 @listenOnebot()
-@matchLiteral("给小哥不是给")
-async def _(ctx: OnebotContext):
-    async with get_unit_of_work(ctx.sender_id) as uow:
-        uid = await uow.users.get_uid(ctx.sender_id)
-        if not await uow.skin_inventory.give(uid, 18):
-            await ctx.reply(UniMessage("获取成功！"), ref=True, at=False)
-        if not await uow.skin_inventory.select(uid, 18):
-            await ctx.reply(UniMessage("切换成功！"), ref=True, at=False)
-
-
-@listenOnebot()
-@matchLiteral("给小哥是给")
-async def _(ctx: OnebotContext):
-    async with get_unit_of_work(ctx.sender_id) as uow:
-        uid = await uow.users.get_uid(ctx.sender_id)
-        if await uow.skin_inventory.get_using(uid, 84) is not None:
-            await uow.skin_inventory.clear(uid, 84)
-            await ctx.reply(UniMessage("切换成功！"), ref=True, at=False)
-
-
-@listenOnebot()
 @matchLiteral("哇嘎嘎嘎")
 async def _(ctx: OnebotContext):
     async with get_unit_of_work(ctx.sender_id) as uow:
