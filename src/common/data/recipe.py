@@ -8,6 +8,7 @@ from loguru import logger
 from sqlalchemy import func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.common import config
 from src.common.rd import get_random
 from src.models.models import Award, Recipe
 
@@ -49,7 +50,7 @@ async def generate_random_result(
     )  # b0越小越赚，先减去综合实力，再减去最高等级增益
 
     # 抽取一个等级
-    r = Recipe.get_random_object(a1, a2, a3).betavariate(a0, b0)
+    r = Recipe.get_random_object(a1, a2, a3, ("STAGE-1", config.config.salt)).betavariate(a0, b0)
     lid: int | None = None
     lid = math.ceil(r * 5)
 
@@ -71,7 +72,7 @@ async def generate_random_result(
         Award.is_special_get_only == False,  # pylint: disable=singleton-comparison
     )
     aids = (await session.execute(query)).scalars().all()
-    aid = Recipe.get_random_object(a1, a2, a3).choice(aids)
+    aid = Recipe.get_random_object(a1, a2, a3, ("STAGE-2", config.config.salt)).choice(aids)
 
     return aid, poss
 

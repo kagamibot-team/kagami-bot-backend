@@ -24,6 +24,10 @@ ShopFreezed = dict[str, list[ShopProductFreezed]]
 
 
 class ShopProduct(ABC):
+    """
+    各种商店的商品的元类
+    """
+
     @abstractmethod
     async def title(self, uow: UnitOfWork, uid: int) -> str:
         """商品的标题"""
@@ -186,6 +190,26 @@ class MergeMachine(ShopProduct):
         await uow.users.add_flag(uid, "合成")
 
 
+# class SignHint(ShopProduct):
+#     @property
+#     def type(self):
+#         return "道具"
+
+#     async def title(self, uow: UnitOfWork, uid: int) -> str:
+#         return "签到提醒"
+
+#     async def description(self, uow: UnitOfWork, uid: int) -> str:
+#         return "小镜会在合适的时候提醒你记得签到的，如果她还能找得到你"
+
+#     async def background_color(self, uow: UnitOfWork, uid: int):
+#         return "#9e9d95"
+
+#     async def price(self, uow: UnitOfWork, uid: int):
+#         return 800
+
+#     async def
+
+
 class ShopService:
     products: dict[str, list[ShopProduct]]
 
@@ -223,6 +247,7 @@ async def build_xjshop(uow: UnitOfWork) -> ShopService:
     # 注册道具
     service.register(MergeMachine())
     service.register(AddSlots())
+    # service.register(SignHint())
 
     # 注册皮肤信息
     for sid, aid, sname, _, simage, price in await uow.skins.all():

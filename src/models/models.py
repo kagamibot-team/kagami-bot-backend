@@ -1,5 +1,6 @@
 import os
 import random
+from typing import Hashable
 
 from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column
@@ -133,7 +134,9 @@ class Recipe(Base, BaseMixin):
     )
 
     @staticmethod
-    def get_random_object(a1: int, a2: int, a3: int) -> random.Random:
+    def get_random_object(
+        a1: int, a2: int, a3: int, salt: Hashable = None
+    ) -> random.Random:
         """获得一个合成配方组的 Random 对象
 
         Args:
@@ -142,7 +145,7 @@ class Recipe(Base, BaseMixin):
             a3 (int): 第三个小哥
         """
 
-        return random.Random(hash((a1, a2, a3)))
+        return random.Random(hash((a1, a2, a3, salt)))
 
 
 __all__ = [
