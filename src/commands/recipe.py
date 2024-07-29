@@ -1,10 +1,12 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
 from src.base.command_events import GroupContext, OnebotContext
+from src.base.event_root import throw_event
 from src.base.exceptions import ObjectNotFoundException
 from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.data.awards import generate_random_info, get_award_info, use_award
 from src.common.data.recipe import try_merge
+from src.common.dataclasses.game_events import MergeEvent
 from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
@@ -185,12 +187,14 @@ async def _(ctx: OnebotContext, res: Arparma):
         else:
             status = MergeStatus.what
 
+        user = UserData(
+            uid=uid,
+            qqid=str(ctx.sender_id),
+            name=username,
+        )
+
         merge_info = MergeResult(
-            user=UserData(
-                uid=uid,
-                qqid=str(ctx.sender_id),
-                name=username,
-            ),
+            user=user,
             successed=status,
             inputs=(info1, info2, info3),
             output=data,
@@ -199,6 +203,7 @@ async def _(ctx: OnebotContext, res: Arparma):
         )
 
     await ctx.send(await render_merge_message(merge_info))
+    await throw_event(MergeEvent(user_data=user, merge_view=merge_info))
 
     if isinstance(ctx, GroupContext) and do_xb:
         get_localdata().add_xb(

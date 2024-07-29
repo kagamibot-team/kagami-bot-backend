@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 from src.ui.views.award import GotAwardDisplay
 from src.ui.views.catch import CatchMesssage, CatchResultMessage
+from src.ui.views.recipe import MergeResult
 from src.ui.views.user import UserData
 
 
@@ -41,3 +42,11 @@ class UserTryCatchEvent(UserDataUpdatedEvent):
         if not isinstance(self.catch_view, CatchResultMessage):
             return []
         return self.catch_view.catchs
+
+
+class MergeEvent(UserDataUpdatedEvent):
+    """
+    合成小哥的时候触发的事件
+    """
+
+    merge_view: MergeResult
