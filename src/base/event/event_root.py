@@ -14,15 +14,15 @@ from nonebot.adapters.onebot.v11 import (
 )
 
 from src.base.command_events import GroupContext, PrivateContext
-from src.base.event_manager import EventManager
-from src.base.onebot_events import (
+from src.base.event.event_manager import EventManager
+from src.base.onebot.onebot_events import (
     GroupMessageEmojiLike,
     GroupPoke,
     GroupPokeContext,
     GroupStickEmojiContext,
     OnebotStartedContext,
 )
-from src.base.onebot_tools import record_last_context
+from src.base.onebot.onebot_tools import record_last_context
 from src.common.config import config
 
 
@@ -85,10 +85,6 @@ async def throw_event(event: Any):
 
 async def emit_event(event: Any):
     await root.emit(event)
-
-
-async def listen(event_type: type[Any]):
-    return root.listen(event_type)
 
 
 root = EventManager()

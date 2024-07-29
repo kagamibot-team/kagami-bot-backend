@@ -11,7 +11,7 @@ from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import select, update
 
 from src.base.command_events import GroupContext
-from src.base.onebot_api import get_group_member_info, send_private_msg, set_group_ban
+from src.base.onebot.onebot_api import get_group_member_info, send_private_msg, set_group_ban
 from src.common.decorators.command_decorators import (
     listenGroup,
     matchAlconna,

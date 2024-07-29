@@ -1,8 +1,6 @@
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.models import Award
-
 from ..base.repository import DBRepository
 from ..models import Inventory
 

@@ -6,7 +6,7 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext
 from src.base.local_storage import LocalStorageManager
-from src.base.onebot_enum import QQEmoji
+from src.base.onebot.onebot_enum import QQEmoji
 from src.common.data.awards import get_award_info
 from src.common.decorators.command_decorators import listenGroup, matchRegex
 from src.common.rd import get_random

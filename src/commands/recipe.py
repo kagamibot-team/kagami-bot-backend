@@ -1,7 +1,7 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
 from src.base.command_events import GroupContext, OnebotContext
-from src.base.event_root import throw_event
+from src.base.event.event_root import throw_event
 from src.base.exceptions import ObjectNotFoundException
 from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.data.awards import generate_random_info, get_award_info, use_award

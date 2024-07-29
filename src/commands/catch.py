@@ -7,7 +7,7 @@ from nonebot_plugin_alconna import At, Reply, Text
 from src.common.dataclasses.game_events import UserTryCatchEvent
 from src.ui.pages.catch import render_catch_message
 from src.base.command_events import OnebotContext
-from src.base.event_root import root, throw_event
+from src.base.event.event_root import root, throw_event
 from src.base.exceptions import KagamiRangeError
 from src.base.local_storage import Action, LocalStorageManager, XBRecord
 from src.common.data.awards import get_award_info

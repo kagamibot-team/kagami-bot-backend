@@ -20,8 +20,8 @@ import PIL.Image
 import requests
 from pydantic import BaseModel
 
-from src.base.onebot_basic import MessageLike, OnebotBotProtocol, handle_input_message
-from src.base.onebot_enum import QQEmoji, QQStatus
+from src.base.onebot.onebot_basic import MessageLike, OnebotBotProtocol, handle_input_message
+from src.base.onebot.onebot_enum import QQEmoji, QQStatus
 
 
 async def send_group_msg(

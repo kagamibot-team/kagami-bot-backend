@@ -2,8 +2,8 @@ from typing import Any
 
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.event_root import root
-from src.base.onebot_tools import tell
+from src.base.event.event_root import root
+from src.base.onebot.onebot_tools import tell
 from src.common.dataclasses.game_events import UserDataUpdatedEvent
 from src.core.unit_of_work import get_unit_of_work
 from src.services.achievement import Achievement, get_achievement_service

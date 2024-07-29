@@ -1,7 +1,7 @@
 import nonebot
 
-from src.base.onebot_api import get_group_list, send_group_msg, send_private_msg
-from src.base.onebot_basic import MessageLike, OnebotBotProtocol
+from src.base.onebot.onebot_api import get_group_list, send_group_msg, send_private_msg
+from src.base.onebot.onebot_basic import MessageLike, OnebotBotProtocol
 from src.common.config import config
 
 LAST_CONTEXT_RECORDER: dict[int, int] = {}

@@ -21,18 +21,18 @@ from nonebot_plugin_alconna import Segment, Text
 from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING  # type: ignore
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 
-from src.base.onebot_api import (
+from src.base.onebot.onebot_api import (
     delete_msg,
     send_group_msg,
     send_private_msg,
     set_msg_emoji_like,
 )
-from src.base.onebot_basic import (
+from src.base.onebot.onebot_basic import (
     MessageLike,
     OnebotBotProtocol,
     export_msg,
 )
-from src.base.onebot_enum import QQEmoji
+from src.base.onebot.onebot_enum import QQEmoji
 
 
 class _ForwardMessageData(TypedDict):

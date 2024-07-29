@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any, Awaitable, Callable
 
-from src.base.event_root import root
+from src.base.event.event_root import root
 
 
 class IntervalEvent:
