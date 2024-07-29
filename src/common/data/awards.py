@@ -91,7 +91,7 @@ async def get_award_info(
 
 
 async def get_a_list_of_award_storage(
-    uow: UnitOfWork, uid: int | None, aids: list[int], show_notation2: bool = True
+    uow: UnitOfWork, uid: int | None, aids: list[int], show_notation2: bool = True, show_notation1: bool = True
 ) -> list[StorageDisplay | None]:
     """用来获取多个小哥的基础信息
 
@@ -105,8 +105,8 @@ async def get_a_list_of_award_storage(
             StorageDisplay(
                 storage=0,
                 stats=0,
-                do_show_notation2=False,
-                do_show_notation1=False,
+                do_show_notation2=show_notation2,
+                do_show_notation1=show_notation1,
                 info=award_info_from_uow(uow, *info)[1],
             )
             for info in _basics
@@ -121,9 +121,6 @@ async def get_a_list_of_award_storage(
             continue
 
         aid = info.info.aid
-        info.do_show_notation1 = True
-        info.do_show_notation2 = show_notation2
-
         sto, use = await uow.inventories.get_inventory(uid, aid)
         if sto + use == 0:
             basics[i] = None
