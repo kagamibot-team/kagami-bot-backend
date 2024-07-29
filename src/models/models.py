@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Hashable
+from collections.abc import Hashable
 
 from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column
