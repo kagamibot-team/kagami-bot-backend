@@ -1,4 +1,5 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
+from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext, OnebotContext
 from src.base.event.event_root import throw_event
@@ -135,7 +136,7 @@ async def _(ctx: OnebotContext):
                 f"概率为 {posi*100}%"
             )
 
-    await ctx.send("\n".join(msg))
+    await ctx.send(UniMessage.text("\n".join(msg)))
 
 
 @listenOnebot()
