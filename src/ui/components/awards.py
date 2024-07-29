@@ -72,6 +72,7 @@ def ref_book_box_raw(
     name: str,
     name_bottom: str,
     sold_out: bool = False,
+    smaller_size: bool = False,  # 呵呵，这条是补丁，在商店里面的字体大小不能很大
 ) -> PIL.Image.Image:
     box = display_box_raw(color, image, new)
 
@@ -85,7 +86,7 @@ def ref_book_box_raw(
         width=170,
         color="#FFFFFF",
         font=Fonts.MARU_MONICA,
-        font_size=48,
+        font_size=36 if smaller_size else 48,
         stroke=2,
         stroke_color="#000000",
         margin_bottom=5,
@@ -124,7 +125,7 @@ def ref_book_box_raw(
     paste_image(block, box, 18, 18)
     paste_image(block, title, 18, 170)
     paste_image(block, title2, 18, 194)
-    paste_image(block, bl_notation, 23, 105)
+    paste_image(block, bl_notation, 23, 117 if smaller_size else 105)
     paste_image(block, tl_notation, 23, 23)
 
     return block

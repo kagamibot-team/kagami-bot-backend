@@ -152,7 +152,7 @@ class AllOneStarAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
 
 class NiceCatchAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
     name: str = "欧皇附体"
-    description: str = "一次抓到了两个同一个四星（或者以上）"
+    description: str = "一次抓到了两个四星（或者以上）"
 
     async def validate_achievement(
         self, uow: UnitOfWork, event: UserDataUpdatedEvent
@@ -161,11 +161,12 @@ class NiceCatchAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
             return False
         if not event.successed:
             return False
+
+        count = 0
         for r in event.results:
             if r.info.level.lid in (4, 5):
-                if r.count >= 2:
-                    return True
-        return False
+                count += r.count
+        return count >= 2
 
 
 class TimerAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
@@ -178,6 +179,23 @@ class TimerAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
         if not isinstance(event, UserTryCatchEvent):
             return False
         return event.catch_view.next_time < 1
+
+
+class TripleAchivement(NoPriseAchievement, AlwaysDisplayAchievement):
+    name: str = "三 小 哥"
+    description: str = "一次抓到三个同一个小哥？"
+
+    async def validate_achievement(
+        self, uow: UnitOfWork, event: UserDataUpdatedEvent
+    ) -> bool:
+        if not isinstance(event, UserTryCatchEvent):
+            return False
+        if not event.successed:
+            return False
+        for r in event.results:
+            if r.count >= 3:
+                return True
+        return False
 
 
 class AchievementService:
@@ -230,5 +248,6 @@ async def get_achievement_service(uow: UnitOfWork) -> AchievementService:
     service.register(AllOneStarAchievement())
     service.register(NiceCatchAchievement())
     service.register(TimerAchievement())
+    service.register(TripleAchivement())
 
     return service
