@@ -30,7 +30,7 @@ class SkinRepository(DBRepository[Skin]):
         u = (
             update(Skin)
             .where(Skin.data_id == data_id)
-            .values(image=Path(image).as_posix())
+            .values({Skin.image: Path(image).as_posix()})
         )
         await self.session.execute(u)
 
@@ -106,7 +106,11 @@ class SkinRepository(DBRepository[Skin]):
             int: 皮肤的 ID
         """
 
-        q = insert(Skin).values(award_id=aid, name=name).returning(Skin.data_id)
+        q = (
+            insert(Skin)
+            .values({Skin.award_id: aid, Skin.name: name})
+            .returning(Skin.data_id)
+        )
         return (await self.session.execute(q)).scalar_one()
 
     async def set_alias(self, sid: int, name: str):
@@ -116,7 +120,14 @@ class SkinRepository(DBRepository[Skin]):
             sid (int): 皮肤的 ID
             name (str): 别名
         """
-        await self.session.execute(insert(SkinAltName).values(skin_id=sid, name=name))
+        await self.session.execute(
+            insert(SkinAltName).values(
+                {
+                    SkinAltName.skin_id: sid,
+                    SkinAltName.name: name,
+                }
+            )
+        )
 
     async def remove_alias(self, name: str):
         """删除一个皮肤的别名

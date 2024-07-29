@@ -40,7 +40,9 @@ async def _(ctx: OnebotStartedContext):
             ).scalar_one()
 
         if glob != (lv := get_latest_version()):
-            await session.execute(update(Global).values(last_reported_version=lv))
+            await session.execute(
+                update(Global).values({Global.last_reported_version: lv})
+            )
             msg = f"刚刚推送了版本 {lv} 的更新，内容如下：\n"
 
             for upd_msg in la.about.update[lv]:

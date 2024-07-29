@@ -53,7 +53,10 @@ class UserRepository(DBRepository[User]):
             update(User)
             .where(User.data_id == uid)
             .values(
-                pick_count_remain=count_remain, pick_count_last_calculated=last_calc
+                {
+                    User.pick_count_remain: count_remain,
+                    User.pick_count_last_calculated: last_calc,
+                }
             )
         )
 
@@ -155,7 +158,7 @@ class UserRepository(DBRepository[User]):
         """
 
         await self.session.execute(
-            update(User).where(User.data_id == uid).values(money=money)
+            update(User).where(User.data_id == uid).values({User.money: money})
         )
 
     async def add_money(self, uid: int, money: float):
@@ -218,7 +221,9 @@ class UserRepository(DBRepository[User]):
             update(User)
             .where(User.data_id == uid)
             .values(
-                last_sign_in_time=last_sign_in_time,
-                sign_in_count=sign_in_count,
+                {
+                    User.last_sign_in_time: last_sign_in_time,
+                    User.sign_in_count: sign_in_count,
+                }
             )
         )

@@ -134,9 +134,11 @@ class RecipeRepository(DBRepository[Recipe]):
                 Recipe.award3 == aid3,
             )
             .values(
-                result=aidres,
-                possibility=possibility,
-                modified=1,
+                {
+                    Recipe.result: aidres,
+                    Recipe.possibility: possibility,
+                    Recipe.modified: 1,
+                }
             )
         )
 
@@ -194,9 +196,11 @@ class RecipeRepository(DBRepository[Recipe]):
         if the_true_first_uid is not None:
             await self.session.execute(
                 insert(RecipeHistory).values(
-                    source=str(group_id),
-                    recipe=rid,
-                    first=the_true_first_uid,
+                    {
+                        RecipeHistory.source: str(group_id),
+                        RecipeHistory.recipe: rid,
+                        RecipeHistory.first: the_true_first_uid,
+                    }
                 )
             )
 
@@ -217,9 +221,11 @@ class RecipeRepository(DBRepository[Recipe]):
         if first is None:
             await self.session.execute(
                 insert(RecipeHistory).values(
-                    source=str(group_id),
-                    recipe=rid,
-                    first=uid,
+                    {
+                        RecipeHistory.source: str(group_id),
+                        RecipeHistory.recipe: rid,
+                        RecipeHistory.first: uid,
+                    }
                 )
             )
 

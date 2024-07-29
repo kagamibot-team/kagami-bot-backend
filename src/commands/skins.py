@@ -260,12 +260,12 @@ async def _(ctx: OnebotContext, res: Arparma):
 
         if newName is not None:
             await session.execute(
-                update(Skin).where(Skin.data_id == sid).values(name=newName)
+                update(Skin).where(Skin.data_id == sid).values({Skin.name: newName})
             )
 
         if price is not None:
             await session.execute(
-                update(Skin).where(Skin.data_id == sid).values(price=price)
+                update(Skin).where(Skin.data_id == sid).values({Skin.price: price})
             )
 
         if _description is not None:
@@ -273,7 +273,7 @@ async def _(ctx: OnebotContext, res: Arparma):
             await session.execute(
                 update(Skin)
                 .where(Skin.data_id == sid)
-                .values(extra_description=description)
+                .values({Skin.description: description})
             )
 
         if image is not None:
@@ -283,7 +283,7 @@ async def _(ctx: OnebotContext, res: Arparma):
             else:
                 fp = await downloadSkinImage(sid, imageUrl)
                 await session.execute(
-                    update(Skin).where(Skin.data_id == sid).values(image=fp)
+                    update(Skin).where(Skin.data_id == sid).values({Skin.image: fp})
                 )
 
     await ctx.send("ok.")

@@ -134,8 +134,10 @@ async def goodnight(ctx: GroupContext, res: Arparma):
                     update(User)
                     .where(User.data_id == uid)
                     .values(
-                        last_sleep_early_time=time.time(),
-                        sleep_early_count=sleep_count + 1,
+                        {
+                            User.last_sleep_early_time: dt.timestamp(),
+                            User.sleep_early_count: sleep_count + 1,
+                        }
                     )
                 )
                 money = await uow.users.get_money(uid)

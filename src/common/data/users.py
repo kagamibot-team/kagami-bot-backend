@@ -14,7 +14,9 @@ async def get_user_flags(session: AsyncSession, uid: int) -> set[str]:
 
 async def set_user_flags(session: AsyncSession, uid: int, flags: set[str]):
     await session.execute(
-        update(User).where(User.data_id == uid).values(feature_flag=",".join(flags))
+        update(User)
+        .where(User.data_id == uid)
+        .values({User.feature_flag: ",".join(flags)})
     )
 
 

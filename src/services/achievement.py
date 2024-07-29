@@ -162,7 +162,7 @@ class NiceCatchAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
         if not event.successed:
             return False
         for r in event.results:
-            if r.info.level.lid == 4 or r.info.level.lid == 5:
+            if r.info.level.lid in (4, 5):
                 if r.count >= 2:
                     return True
         return False

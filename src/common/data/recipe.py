@@ -104,7 +104,13 @@ async def get_merge_result(
     result, possibility = await generate_random_result(session, a1, a2, a3)
     await session.execute(
         insert(Recipe).values(
-            award1=a1, award2=a2, award3=a3, result=result, possibility=possibility
+            {
+                Recipe.award1: a1,
+                Recipe.award2: a2,
+                Recipe.award3: a3,
+                Recipe.result: result,
+                Recipe.possibility: possibility,
+            }
         )
     )
     await session.flush()
