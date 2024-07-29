@@ -1,19 +1,19 @@
 from pathlib import Path
 from nonebot_plugin_alconna import At, Emoji, Text, UniMessage
 from src.base.command_events import GroupContext, OnebotContext
-from src.base.event_root import root
-from src.base.onebot_api import (
+from src.base.event.event_root import root
+from src.base.onebot.onebot_api import (
     get_name,
     send_group_msg,
     send_private_msg,
-    set_msg_emoji_like,
 )
-from src.base.onebot_basic import OnebotBotProtocol
-from src.base.onebot_enum import QQEmoji
-from src.base.onebot_events import GroupPokeContext
+from src.base.onebot.onebot_basic import OnebotBotProtocol
+from src.base.onebot.onebot_enum import QQEmoji
+from src.base.onebot.onebot_events import GroupPokeContext
 from src.common.decorators.command_decorators import listenOnebot
 from src.common.config import config
 from src.common.rd import get_random
+from src.core.unit_of_work import get_unit_of_work
 
 
 def __match_char(c: str):
@@ -109,9 +109,10 @@ async def _(ctx: OnebotContext):
 
     rep_name = "在"
     sender = ctx.sender_id
-    custom_replies = config.custom_replies
-    if (k := str(sender)) in custom_replies.keys():
-        rep_name = custom_replies[k]
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        custom_reply = await uow.users.name(qqid=sender)
+    if custom_reply is not None:
+        rep_name = custom_reply
 
     _output = UniMessage.text(rep_name + msg0o)
 
@@ -132,7 +133,8 @@ async def reply_call(
     bot: OnebotBotProtocol, group: int | None, sender: int, sender_name: str
 ):
     at_back = UniMessage.at(str(sender))
-    special_name = config.custom_replies.get(str(sender), "")
+    async with get_unit_of_work(sender) as uow:
+        special_name = await uow.users.name(qqid=sender)
 
     _special = (
         (
@@ -143,7 +145,7 @@ async def reply_call(
             f"爱你！{special_name}！"
             + UniMessage.emoji(id="66").emoji(id="66").emoji(id="66"),
         )
-        if len(special_name) > 0
+        if special_name
         else ()
     )
 

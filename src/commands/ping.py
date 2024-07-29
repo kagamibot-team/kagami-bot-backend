@@ -5,15 +5,13 @@
 import asyncio
 import datetime
 import re
-import time
 
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar
 from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import select, update
 
 from src.base.command_events import GroupContext
-from src.base.onebot_api import get_group_member_info, send_private_msg, set_group_ban
-from src.common.config import config
+from src.base.onebot.onebot_api import get_group_member_info, send_private_msg, set_group_ban
 from src.common.decorators.command_decorators import (
     listenGroup,
     matchAlconna,
@@ -134,13 +132,17 @@ async def goodnight(ctx: GroupContext, res: Arparma):
                     update(User)
                     .where(User.data_id == uid)
                     .values(
-                        last_sleep_early_time=time.time(),
-                        sleep_early_count=sleep_count + 1,
+                        {
+                            User.last_sleep_early_time: dt.timestamp(),
+                            User.sleep_early_count: sleep_count + 1,
+                        }
                     )
                 )
                 money = await uow.users.get_money(uid)
                 await uow.users.set_money(uid, money + awards)
             count = sleep_count + 1
+
+        name = await uow.users.name(qqid=ctx.sender_id)
 
     if target_time is None:
         await ctx.reply("现在不是睡觉的时候吧……", ref=True, at=False)
@@ -150,10 +152,8 @@ async def goodnight(ctx: GroupContext, res: Arparma):
     await set_group_ban(ctx.bot, ctx.event.group_id, ctx.sender_id, delta)
 
     rep_name = ""
-    sender = ctx.sender_id
-    custom_replies = config.custom_replies
-    if (k := str(sender)) in custom_replies.keys():
-        rep_name = custom_replies[k] + "！"
+    if name is not None:
+        rep_name = name + "！"
 
     await ctx.reply(
         UniMessage(f"晚安！{rep_name}")

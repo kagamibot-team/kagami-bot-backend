@@ -10,6 +10,7 @@ from src.common.decorators.command_decorators import listenOnebot, matchAlconna
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
 from src.ui.pages.catch import render_award_info_message
+from src.ui.views.award import AwardDisplay, StorageDisplay
 
 
 @listenOnebot()
@@ -34,13 +35,12 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         aid = await uow.awards.get_aid_strong(name)
         sid = None
         uid = await uow.users.get_uid(ctx.sender_id)
-        notation = ""
+        sto: int | None = None
 
         if not do_admin:
             sto = await uow.inventories.get_stats(uid, aid)
             if sto <= 0:
                 raise DoNotHaveException(name)
-            notation = str(sto)
 
         if skin_name is not None:
             sid = await uow.skins.get_sid_strong(skin_name)
@@ -50,11 +50,20 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         if do_admin:
             uid = None
         info = await get_award_info(uow, aid, uid, sid)
-        info.new = False
-        info.notation = notation
+
+        if sto is not None:
+            dt = StorageDisplay(
+                info=info,
+                storage=sto,
+                stats=0,
+                do_show_notation1=True,
+                do_show_notation2=False,
+            )
+        else:
+            dt = AwardDisplay(info=info)
 
     if do_display:
-        msg = await render_award_info_message(info)
+        msg = await render_award_info_message(dt)
         await ctx.send(msg)
     else:
         msg = (

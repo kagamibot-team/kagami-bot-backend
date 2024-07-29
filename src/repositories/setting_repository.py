@@ -34,7 +34,9 @@ class SettingRepository(DBRepository[Global]):
         设置抓取间隔
         """
         await self.assure_one()
-        await self.session.execute(update(Global).values(catch_interval=interval))
+        await self.session.execute(
+            update(Global).values({Global.catch_interval: interval})
+        )
 
     async def get_last_version(self):
         """
@@ -50,4 +52,6 @@ class SettingRepository(DBRepository[Global]):
         设置上次的版本号
         """
         await self.assure_one()
-        await self.session.execute(update(Global).values(last_reported_version=version))
+        await self.session.execute(
+            update(Global).values({Global.last_reported_version: version})
+        )

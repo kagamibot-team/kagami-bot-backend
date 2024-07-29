@@ -2,27 +2,27 @@
 和根事件监听器有关的模块
 """
 
-from loguru import logger
+from typing import Any
 from nonebot import on_notice, on_type  # type: ignore
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
     LifecycleMetaEvent,
     NoticeEvent,
-    PrivateMessageEvent,
     NotifyEvent,
+    PrivateMessageEvent,
 )
 
 from src.base.command_events import GroupContext, PrivateContext
-from src.base.event_manager import EventManager
-from src.base.onebot_events import (
+from src.base.event.event_manager import EventManager
+from src.base.onebot.onebot_events import (
     GroupMessageEmojiLike,
     GroupPoke,
     GroupPokeContext,
     GroupStickEmojiContext,
     OnebotStartedContext,
 )
-from src.base.onebot_tools import record_last_context
+from src.base.onebot.onebot_tools import record_last_context
 from src.common.config import config
 
 
@@ -77,6 +77,14 @@ def activate_root(event_root: EventManager):
     async def _(bot: Bot, event: LifecycleMetaEvent):
         if event.sub_type == "connect":
             await event_root.throw(OnebotStartedContext(bot))
+
+
+async def throw_event(event: Any):
+    await root.throw(event)
+
+
+async def emit_event(event: Any):
+    await root.emit(event)
 
 
 root = EventManager()

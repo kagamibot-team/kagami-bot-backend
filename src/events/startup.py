@@ -4,7 +4,7 @@ import nonebot
 from loguru import logger
 
 from src.base.db import DatabaseManager
-from src.base.event_timer import addInterval
+from src.base.event.event_timer import addInterval
 from src.common.config import config
 
 driver = nonebot.get_driver()

@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from src.base.event_root import root
+from src.base.event.event_root import root
 from src.common.data.skins import give_skin, use_skin
 from src.common.dataclasses.catch_data import PicksEvent
 from src.common.rd import get_random

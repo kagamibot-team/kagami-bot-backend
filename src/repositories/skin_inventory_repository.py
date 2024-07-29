@@ -71,7 +71,7 @@ class SkinInventoryRepository(DBRepository[SkinRecord]):
                     select(Skin.data_id).join(SkinRecord).where(Skin.award_id == aid)
                 ),
             )
-            .values(selected=0)
+            .values({SkinRecord.selected: 0})
         )
 
     async def select(self, uid: int, sid: int) -> bool:
@@ -100,7 +100,7 @@ class SkinInventoryRepository(DBRepository[SkinRecord]):
                 SkinRecord.user_id == uid,
                 SkinRecord.skin_id == sid,
             )
-            .values(selected=1)
+            .values({SkinRecord.selected: 1})
         )
         return False
 
@@ -117,7 +117,12 @@ class SkinInventoryRepository(DBRepository[SkinRecord]):
 
         if not await self.do_user_have(uid, sid):
             await self.session.execute(
-                insert(SkinRecord).values(user_id=uid, skin_id=sid)
+                insert(SkinRecord).values(
+                    {
+                        SkinRecord.user_id: uid,
+                        SkinRecord.skin_id: sid,
+                    }
+                )
             )
             await self.session.flush()
             return False

@@ -12,7 +12,7 @@ from types import ModuleType
 from loguru import logger
 from nonebot import get_driver
 
-from src.base.event_root import root
+from src.base.event.event_root import root
 from utils.collections import PriorityList
 
 loaded_modules: list[ModuleType] = []
@@ -22,7 +22,10 @@ to_load_parents = (
     ("src", "events"),
     ("src", "logic"),
     ("src", "repositories"),
-    ("src", "ui"),
+    ("src", "services"),
+    ("src", "ui", "components"),
+    ("src", "ui", "pages"),
+    ("src", "ui", "views"),
 )
 
 

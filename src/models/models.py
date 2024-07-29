@@ -79,6 +79,10 @@ class User(Base, BaseMixin):
     last_sleep_early_time: Mapped[float] = mapped_column(default=0, server_default="0")
     sleep_early_count: Mapped[int] = mapped_column(default=0, server_default="0")
 
+    # 20240729 追加
+    # 用户的特殊称呼不再在配置文件中设置，太麻烦了
+    special_call: Mapped[str] = mapped_column(default="", server_default="")
+
 
 class SkinRecord(Base, BaseMixin):
     __tablename__ = "catch_skin_inventory"

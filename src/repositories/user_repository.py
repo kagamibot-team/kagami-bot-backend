@@ -53,7 +53,10 @@ class UserRepository(DBRepository[User]):
             update(User)
             .where(User.data_id == uid)
             .values(
-                pick_count_remain=count_remain, pick_count_last_calculated=last_calc
+                {
+                    User.pick_count_remain: count_remain,
+                    User.pick_count_last_calculated: last_calc,
+                }
             )
         )
 
@@ -155,7 +158,7 @@ class UserRepository(DBRepository[User]):
         """
 
         await self.session.execute(
-            update(User).where(User.data_id == uid).values(money=money)
+            update(User).where(User.data_id == uid).values({User.money: money})
         )
 
     async def add_money(self, uid: int, money: float):
@@ -218,7 +221,41 @@ class UserRepository(DBRepository[User]):
             update(User)
             .where(User.data_id == uid)
             .values(
-                last_sign_in_time=last_sign_in_time,
-                sign_in_count=sign_in_count,
+                {
+                    User.last_sign_in_time: last_sign_in_time,
+                    User.sign_in_count: sign_in_count,
+                }
             )
+        )
+
+    async def name(
+        self, *, uid: int | None = None, qqid: int | None = None
+    ) -> str | None:
+        """
+        获得一个玩家的特殊名字
+        """
+
+        if uid is None and qqid is None:
+            raise ValueError("uid 和 qqid 至少需要指定一个")
+
+        q = select(User.special_call)
+        if uid is not None:
+            q = q.filter(User.data_id == uid)
+        if qqid is not None:
+            await self.assure(qqid)
+            q = q.filter(User.qq_id == str(qqid))
+
+        result = (await self.session.execute(q)).scalar_one()
+        if result == "":
+            return None
+        return result
+
+    async def set_name(self, uid: int, call: str | None):
+        """
+        设置一个玩家的特殊名字
+        """
+
+        call = call or ""
+        await self.session.execute(
+            update(User).where(User.data_id == uid).values({User.special_call: call})
         )

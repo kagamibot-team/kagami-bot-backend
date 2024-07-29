@@ -2,7 +2,7 @@ from enum import Enum
 
 from pydantic import BaseModel
 
-from .award import AwardInfo
+from .award import AwardInfo, GotAwardDisplay
 from .user import UserData
 
 
@@ -20,7 +20,7 @@ class MergeResult(BaseModel):
     user: UserData
     successed: MergeStatus
     inputs: tuple[AwardInfo, AwardInfo, AwardInfo]
-    output: AwardInfo
+    output: GotAwardDisplay
     cost_money: int
     remain_money: int
 

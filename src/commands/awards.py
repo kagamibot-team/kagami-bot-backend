@@ -5,7 +5,7 @@ from nonebot_plugin_alconna import At, Image
 
 from src.base.command_events import GroupContext, OnebotContext
 from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
-from src.common.data.awards import download_award_image, get_a_list_of_award_info
+from src.common.data.awards import download_award_image, get_a_list_of_award_storage
 from src.common.decorators.command_decorators import (
     listenGroup,
     listenOnebot,
@@ -205,7 +205,7 @@ async def get_storage_view(
         if level_name is not None and level != view.limited_level:
             continue
         aids = await uow.awards.get_aids(level.lid)
-        infos = await get_a_list_of_award_info(
+        infos = await get_a_list_of_award_storage(
             uow, uid, aids, show_notation2=show_notation2
         )
         view.awards.append((level, infos))

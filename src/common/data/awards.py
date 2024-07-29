@@ -15,7 +15,7 @@ from src.models.level import level_repo
 from src.repositories.inventory_repository import InventoryRepository
 from src.ui.base.strange import make_strange
 from src.ui.base.tools import image_to_bytes
-from src.ui.views.award import AwardInfo
+from src.ui.views.award import AwardInfo, StorageDisplay
 from utils.threading import make_async
 
 
@@ -50,8 +50,6 @@ def award_info_from_uow(
         image=Path(image),
         sid=None,
         skin_name=None,
-        new=False,
-        notation="",
         sorting=sorting,
         is_special_get_only=is_special_get_only,
     )
@@ -73,7 +71,6 @@ async def get_award_info(
     aname, desc, lid, img = await uow.awards.get_info(aid)
     level = uow.levels.get_by_id(lid)
     sname = None
-    new = False
 
     if uid:
         sid = await uow.skin_inventory.get_using(uid, aid)
@@ -90,23 +87,30 @@ async def get_award_info(
         image=Path(img),
         sid=sid,
         skin_name=sname,
-        new=new,
-        notation="",
     )
 
 
-async def get_a_list_of_award_info(
+async def get_a_list_of_award_storage(
     uow: UnitOfWork, uid: int | None, aids: list[int], show_notation2: bool = True
-) -> list[AwardInfo | None]:
+) -> list[StorageDisplay | None]:
     """用来获取多个小哥的基础信息
 
     Args:
         uow (UnitOfWork): 工作单元
-        aids (list[AwardInfo | None]): 小哥 ID 列表
+        aids (list[StorageDisplay | None]): 小哥 ID 列表
     """
     _basics = await uow.awards.get_list_of_award_info(aids)
-    basics: list[AwardInfo | None] = list(
-        (award_info_from_uow(uow, *info)[1] for info in _basics)
+    basics: list[StorageDisplay | None] = list(
+        (
+            StorageDisplay(
+                storage=0,
+                stats=0,
+                do_show_notation2=False,
+                do_show_notation1=False,
+                info=award_info_from_uow(uow, *info)[1],
+            )
+            for info in _basics
+        )
     )
     if uid is None:
         return basics
@@ -116,22 +120,24 @@ async def get_a_list_of_award_info(
         if info is None:
             continue
 
-        aid = info.aid
+        aid = info.info.aid
+        info.do_show_notation1 = True
+        info.do_show_notation2 = show_notation2
 
         sto, use = await uow.inventories.get_inventory(uid, aid)
         if sto + use == 0:
             basics[i] = None
             continue
 
-        info.notation = str(sto)
-        info.notation2 = str(sto + use) if show_notation2 else ""
+        info.storage = sto
+        info.stats = sto + use
         if aid in using:
             sid = using[aid]
-            info.sid = sid
+            info.info.sid = sid
             sname, sdesc, img = await uow.skins.get_info(sid)
-            info.skin_name = sname
-            info.description = sdesc.strip() or info.description
-            info.image = Path(img)
+            info.info.skin_name = sname
+            info.info.description = sdesc.strip() or info.info.description
+            info.info.image = Path(img)
 
     return basics
 
@@ -153,8 +159,6 @@ async def generate_random_info():
         level=level_repo.levels[0],
         sid=None,
         skin_name=None,
-        new=False,
-        notation="",
     )
 
 

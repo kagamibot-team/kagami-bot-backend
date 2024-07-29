@@ -1,8 +1,6 @@
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.models import Award
-
 from ..base.repository import DBRepository
 from ..models import Inventory
 
@@ -27,7 +25,7 @@ class InventoryRepository(DBRepository[Inventory]):
         query = (
             update(Inventory)
             .where(Inventory.user_id == uid, Inventory.award_id == aid)
-            .values(storage=storage, used=used)
+            .values({Inventory.storage: storage, Inventory.used: used})
             .returning(Inventory.data_id)
         )
 
@@ -45,7 +43,12 @@ class InventoryRepository(DBRepository[Inventory]):
             # 这时候没有库存，很有可能是更新失败的情景，我们创建一个新的行
             await self.session.execute(
                 insert(Inventory).values(
-                    storage=storage, used=used, user_id=uid, award_id=aid
+                    {
+                        Inventory.storage: storage,
+                        Inventory.used: used,
+                        Inventory.user_id: uid,
+                        Inventory.award_id: aid,
+                    }
                 )
             )
 

@@ -42,7 +42,7 @@ async def use_skin(session: AsyncSession, uid: int, sid: int):
     query = (
         update(SkinRecord)
         .where(SkinRecord.skin_id == sid, SkinRecord.user_id == uid)
-        .values(selected=1)
+        .values({SkinRecord.selected: 1})
     )
     await session.execute(query)
 
@@ -62,7 +62,7 @@ async def unuse_all_skins(session: AsyncSession, uid: int, aid: int):
             Skin.data_id == SkinRecord.skin_id,
             Skin.award_id == aid,
         )
-        .values(selected=0)
+        .values({SkinRecord.selected: 0})
     )
     await session.execute(query)
 

@@ -11,12 +11,17 @@
 请保证调用的 API 在 NapNeko 中有相应实现
 """
 
+import asyncio
 import datetime
+from io import BytesIO
 
+import PIL
+import PIL.Image
+import requests
 from pydantic import BaseModel
 
-from src.base.onebot_basic import MessageLike, OnebotBotProtocol, handle_input_message
-from src.base.onebot_enum import QQEmoji, QQStatus
+from src.base.onebot.onebot_basic import MessageLike, OnebotBotProtocol, handle_input_message
+from src.base.onebot.onebot_enum import QQEmoji, QQStatus
 
 
 async def send_group_msg(
@@ -140,3 +145,21 @@ async def set_group_ban(
         user_id=user_id,
         duration=duration,
     )
+
+
+async def get_avatar_image(user_id: int):
+    """获取头像
+
+    Args:
+        user_id (int): QQ 号
+
+    Returns:
+        PIL.Image.Image: PIL 的图像对象
+    """
+    loop = asyncio.get_event_loop()
+    req = await loop.run_in_executor(
+        None,
+        requests.get,
+        f"http://q.qlogo.cn/headimg_dl?dst_uin={user_id}&spec=640&img_type=jpg",
+    )
+    return PIL.Image.open(BytesIO(req.content), "r")

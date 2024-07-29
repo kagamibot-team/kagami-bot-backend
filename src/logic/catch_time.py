@@ -35,7 +35,12 @@ async def updateUserTime(
     await session.execute(
         update(User)
         .where(User.data_id == uid)
-        .values(pick_count_remain=count_remain, pick_count_last_calculated=last_calc)
+        .values(
+            {
+                User.pick_count_remain: count_remain,
+                User.pick_count_last_calculated: last_calc,
+            }
+        )
     )
 
 

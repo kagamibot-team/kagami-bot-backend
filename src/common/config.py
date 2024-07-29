@@ -14,9 +14,6 @@ class Config(BaseModel):
     my_name: list[str] = ["小镜", "柊镜"]
     "小镜 Bot 的名字"
 
-    custom_replies: dict[str, str] = {}
-    "在发送「小镜！！！」的时候，遇到特殊的 QQ 号，回复特殊的内容"
-
     predraw_images: int = 0
     "是否预先画好小哥的图片"
 

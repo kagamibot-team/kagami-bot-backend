@@ -134,9 +134,11 @@ class RecipeRepository(DBRepository[Recipe]):
                 Recipe.award3 == aid3,
             )
             .values(
-                result=aidres,
-                possibility=possibility,
-                modified=1,
+                {
+                    Recipe.result: aidres,
+                    Recipe.possibility: possibility,
+                    Recipe.modified: 1,
+                }
             )
         )
 
@@ -151,6 +153,28 @@ class RecipeRepository(DBRepository[Recipe]):
 
         await self.session.execute(query)
         await self.session.flush()
+
+    async def reset_recipe(self, aid1: int, aid2: int, aid3: int) -> None:
+        """重置配方到初始状态，即删除这个配方"""
+
+        aid1, aid2, aid3 = sorted([aid1, aid2, aid3])
+        await self.session.execute(
+            delete(Recipe).where(
+                Recipe.award1 == aid1, Recipe.award2 == aid2, Recipe.award3 == aid3
+            )
+        )
+        await self.session.flush()
+
+    async def is_modified(self, aid1: int, aid2: int, aid3: int) -> bool:
+        """检查一个配方是否被更改"""
+
+        aid1, aid2, aid3 = sorted([aid1, aid2, aid3])
+
+        query = select(Recipe.modified).filter(
+            Recipe.award1 == aid1, Recipe.award2 == aid2, Recipe.award3 == aid3
+        )
+
+        return (await self.session.execute(query)).scalar_one_or_none() == 1
 
     async def clear_history(self, rid: int):
         """清除某个合成配方所有的合成历史
@@ -194,9 +218,11 @@ class RecipeRepository(DBRepository[Recipe]):
         if the_true_first_uid is not None:
             await self.session.execute(
                 insert(RecipeHistory).values(
-                    source=str(group_id),
-                    recipe=rid,
-                    first=the_true_first_uid,
+                    {
+                        RecipeHistory.source: str(group_id),
+                        RecipeHistory.recipe: rid,
+                        RecipeHistory.first: the_true_first_uid,
+                    }
                 )
             )
 
@@ -217,9 +243,11 @@ class RecipeRepository(DBRepository[Recipe]):
         if first is None:
             await self.session.execute(
                 insert(RecipeHistory).values(
-                    source=str(group_id),
-                    recipe=rid,
-                    first=uid,
+                    {
+                        RecipeHistory.source: str(group_id),
+                        RecipeHistory.recipe: rid,
+                        RecipeHistory.first: uid,
+                    }
                 )
             )
 

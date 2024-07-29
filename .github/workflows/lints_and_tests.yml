@@ -1,6 +1,6 @@
 name: 云测试
 
-on: [pull_request,push]
+on: [push]
 
 jobs:
   build:
