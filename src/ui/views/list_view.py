@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from src.models.level import Level
 
-from .award import AwardInfo, StorageDisplay
+from .award import StorageDisplay
 from .user import UserData
 
 
@@ -114,6 +114,10 @@ class UserStorageView(BaseModel):
         "图鉴列表"
         ls: list[ListView | TitleView] = []
         for level, awards in self.awards:
+            if level.lid == 0:
+                awards = [a for a in awards if a is not None and a.stats != 0]
+                if len(awards) == 0:
+                    continue
             title = f"{level.display_name}"
             if show_progress:
                 title += f"：{len([a for a in awards if a is not None])}/{len(awards)}"
@@ -135,7 +139,7 @@ class UserStorageView(BaseModel):
         awards: list[StorageDisplay | None] = []
         for _, awds in self.awards:
             awards += sorted(
-                [i for i in awds if i is not None],
+                [i for i in awds if i is not None and i.storage > 0],
                 key=lambda x: (-x.storage, x.info.aid, x.info.sorting),
             )
         docs.append(ListView(awards=awards))
