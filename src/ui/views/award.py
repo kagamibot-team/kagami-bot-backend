@@ -84,7 +84,7 @@ class StorageDisplay(AwardDisplay):
 
     @property
     def notation(self):
-        return str(self.storage)
+        return str(self.storage) if self.do_show_notation1 else ""
 
     @property
     def notation2(self):

@@ -187,6 +187,23 @@ class RecipeRepository(DBRepository[Recipe]):
             delete(RecipeHistory).where(RecipeHistory.recipe == rid)
         )
 
+    async def get_all_special(self):
+        """
+        获取所有特殊配方
+
+        返回的 tuple 顺序是三个输入 aid，一个输出 aid，一个概率
+        """
+
+        query = select(
+            Recipe.award1,
+            Recipe.award2,
+            Recipe.award3,
+            Recipe.result,
+            Recipe.possibility,
+        ).filter(Recipe.modified == 1)
+
+        return list((await self.session.execute(query)).tuples().all())
+
     async def limit_one_history(self, group_id: int | str, rid: int):
         """限制数据库中的合成历史只保留最旧的一个
 

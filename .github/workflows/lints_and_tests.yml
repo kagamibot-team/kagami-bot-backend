@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
+    if: github.ref_protected == false
     steps:
     - uses: actions/checkout@v4
     - name: 构建 Python 环境 ${{ matrix.python-version }}

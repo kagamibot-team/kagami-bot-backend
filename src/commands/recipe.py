@@ -10,6 +10,7 @@ from src.common.dataclasses.game_events import MergeEvent
 from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
+    matchLiteral,
     requireAdmin,
 )
 from src.common.rd import get_random
@@ -52,7 +53,9 @@ async def _(ctx: OnebotContext, res: Arparma):
         info = await get_award_info(uow, re[0])
         modified = await uow.recipes.is_modified(a1, a2, a3)
 
-        await ctx.reply(f"{n1}+{n2}+{n3} 合成 {info.name}，概率为 {re[1]*100}%，modified={modified}")
+        await ctx.reply(
+            f"{n1}+{n2}+{n3} 合成 {info.name}，概率为 {re[1]*100}%，modified={modified}"
+        )
 
 
 @listenOnebot()
@@ -114,6 +117,25 @@ async def _(ctx: OnebotContext, res: Arparma):
     async with get_unit_of_work() as uow:
         await uow.recipes.clear_not_modified(force=res.exist("--force"))
     await ctx.reply("ok.")
+
+
+@listenOnebot()
+@requireAdmin()
+@matchLiteral("::所有特殊配方")
+async def _(ctx: OnebotContext):
+    async with get_unit_of_work() as uow:
+        msg: list[str] = []
+        for aid1, aid2, aid3, aid, posi in await uow.recipes.get_all_special():
+            info1 = await get_award_info(uow, aid1)
+            info2 = await get_award_info(uow, aid2)
+            info3 = await get_award_info(uow, aid3)
+            info = await get_award_info(uow, aid)
+            msg.append(
+                f"{info1.name}+{info2.name}+{info3.name} 合成 {info.name}，"
+                f"概率为 {posi*100}%"
+            )
+
+    await ctx.send("\n".join(msg))
 
 
 @listenOnebot()

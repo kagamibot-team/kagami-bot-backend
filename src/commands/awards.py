@@ -194,6 +194,7 @@ async def get_storage_view(
     uow: UnitOfWork,
     userdata: UserData | None,
     level_name: str | None,
+    show_notation1: bool = True,
     show_notation2: bool = True,
 ) -> UserStorageView:
     uid = None if userdata is None else userdata.uid
@@ -206,7 +207,11 @@ async def get_storage_view(
             continue
         aids = await uow.awards.get_aids(level.lid)
         infos = await get_a_list_of_award_storage(
-            uow, uid, aids, show_notation2=show_notation2
+            uow,
+            uid,
+            aids,
+            show_notation2=show_notation2,
+            show_notation1=show_notation1,
         )
         view.awards.append((level, infos))
     return view
@@ -278,5 +283,11 @@ async def _(ctx: OnebotContext, _: Arparma):
 async def _(ctx: OnebotContext, res: Arparma):
     levelName = res.query[str]("等级名字")
     async with get_unit_of_work(ctx.sender_id) as uow:
-        view = await get_storage_view(uow, None, levelName)
+        view = await get_storage_view(
+            uow,
+            None,
+            levelName,
+            show_notation1=False,
+            show_notation2=False,
+        )
     await ctx.send(await render_progress_message(view))

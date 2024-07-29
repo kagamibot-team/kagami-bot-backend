@@ -114,7 +114,7 @@ class UserStorageView(BaseModel):
         "图鉴列表"
         ls: list[ListView | TitleView] = []
         for level, awards in self.awards:
-            if level.lid == 0:
+            if level.lid == 0 and self.user is not None:
                 awards = [a for a in awards if a is not None and a.stats != 0]
                 if len(awards) == 0:
                     continue
