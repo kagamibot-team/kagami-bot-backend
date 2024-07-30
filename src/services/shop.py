@@ -139,13 +139,13 @@ class AddSlots(ShopProduct):
         return "增加卡槽上限"
 
     async def description(self, uow: UnitOfWork, uid: int) -> str:
-        return f"增加卡槽上限至{await self._slots(uow, uid)}"
+        return f"增加卡槽上限至{await self._slots(uow, uid) + 1}"
 
     async def image(self, uow: UnitOfWork, uid: int):
         return Path("./res/add1.png")
 
     async def price(self, uow: UnitOfWork, uid: int) -> float:
-        return 25 * (2 ** ((await self._slots(uow, uid)) - 1))
+        return 25 * (2 ** (await self._slots(uow, uid)))
 
     async def is_sold_out(self, uow: UnitOfWork, uid: int) -> bool:
         return False
