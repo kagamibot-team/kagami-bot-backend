@@ -19,74 +19,75 @@ from src.ui.components.catch import catch
 from src.ui.views.award import AwardDisplay
 
 
-@listenGroup()
-@matchRegex("^(小镜|xj)(今日人品|jrrp)$")
-async def _(ctx: GroupContext, _):
-    qqid = ctx.sender_id
-    dt = now_datetime()
+# @listenGroup()
+# @matchRegex("^(小镜|xj)(今日人品|jrrp)$")
+# async def _(ctx: GroupContext, _):
+#     qqid = ctx.sender_id
+#     dt = now_datetime()
 
-    if qqid is None:
-        qqid = 0
+#     if qqid is None:
+#         qqid = 0
 
-    today_user: random.Random = random.Random(str(qqid) + "-" + str(dt.date()))
-    jrrp = today_user.randint(1, 100)
+#     today_user: random.Random = random.Random(str(qqid) + "-" + str(dt.date()))
+#     jrrp = today_user.randint(1, 100)
 
-    async with get_unit_of_work(qqid) as uow:
-        aid = await get_daily(uow)
-        info = await get_award_info(uow, aid)
-        name = await ctx.get_sender_name()
+#     async with get_unit_of_work(qqid) as uow:
+#         aid = await get_daily(uow)
+#         info = await get_award_info(uow, aid)
+#         name = await ctx.get_sender_name()
 
-    titles: list[PIL.Image.Image] = []
-    titles.append(
-        render_text(
-            text=(f"玩家 {name} ："),
-            color="#9B9690",
-            font=Fonts.ALIMAMA_SHU_HEI,
-            font_size=48,
-        )
-    )
-    titles.append(
-        render_text(
-            text=f"您的今日人品是： {str(jrrp)}！",
-            color="#63605C",
-            font=Fonts.JINGNAN_BOBO_HEI,
-            font_size=80,
-        )
-    )
-    titles.append(
-        render_text(
-            text="本次今日小哥是：",
-            color="#63605C",
-            font=Fonts.JINGNAN_BOBO_HEI,
-            font_size=80,
-        )
-    )
+#     titles: list[PIL.Image.Image] = []
+#     titles.append(
+#         render_text(
+#             text=(f"玩家 {name} ："),
+#             color="#9B9690",
+#             font=Fonts.ALIMAMA_SHU_HEI,
+#             font_size=48,
+#         )
+#     )
+#     titles.append(
+#         render_text(
+#             text=f"您的今日人品是： {str(jrrp)}！",
+#             color="#63605C",
+#             font=Fonts.JINGNAN_BOBO_HEI,
+#             font_size=80,
+#         )
+#     )
+#     # titles.append(
+#     #     render_text(
+#     #         text="本次今日小哥是：",
+#     #         color="#63605C",
+#     #         font=Fonts.JINGNAN_BOBO_HEI,
+#     #         font_size=80,
+#     #     )
+#     # )
 
-    area_box = catch(AwardDisplay(info=info))
+#     # area_box = catch(AwardDisplay(info=info))
 
-    area_title = vertical_pile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
-    img = vertical_pile([area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80)
-    await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
+#     area_title = vertical_pile(titles, 0, "left", "#EEEBE3", 0, 0, 0, 0)
+#     # img = vertical_pile([area_title, area_box], 30, "left", "#EEEBE3", 60, 80, 80, 80)
+#     img = vertical_pile([area_title], 30, "left", "#EEEBE3", 60, 80, 80, 80)
+#     await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
-    if isinstance(ctx, GroupContext):
-        if jrrp == 100:
-            await ctx.stickEmoji(QQEmoji.比心)
-        elif jrrp >= 90:
-            await ctx.stickEmoji(QQEmoji.庆祝)
-        elif jrrp >= 80:
-            await ctx.stickEmoji(QQEmoji.赞)
-        elif jrrp >= 60:
-            await ctx.stickEmoji(QQEmoji.棒棒糖)
-        elif jrrp >= 40:
-            await ctx.stickEmoji(QQEmoji.托腮)
-        elif jrrp >= 20:
-            await ctx.stickEmoji(QQEmoji.糗大了)
-        elif jrrp >= 10:
-            await ctx.stickEmoji(QQEmoji.笑哭)
-        elif jrrp > 1:
-            await ctx.stickEmoji(QQEmoji.泪奔)
-        else:
-            await ctx.stickEmoji(QQEmoji.Emoji猴)
+#     if isinstance(ctx, GroupContext):
+#         if jrrp == 100:
+#             await ctx.stickEmoji(QQEmoji.比心)
+#         elif jrrp >= 90:
+#             await ctx.stickEmoji(QQEmoji.庆祝)
+#         elif jrrp >= 80:
+#             await ctx.stickEmoji(QQEmoji.赞)
+#         elif jrrp >= 60:
+#             await ctx.stickEmoji(QQEmoji.棒棒糖)
+#         elif jrrp >= 40:
+#             await ctx.stickEmoji(QQEmoji.托腮)
+#         elif jrrp >= 20:
+#             await ctx.stickEmoji(QQEmoji.糗大了)
+#         elif jrrp >= 10:
+#             await ctx.stickEmoji(QQEmoji.笑哭)
+#         elif jrrp > 1:
+#             await ctx.stickEmoji(QQEmoji.泪奔)
+#         else:
+#             await ctx.stickEmoji(QQEmoji.Emoji猴)
 
 
 @listenGroup()
@@ -116,7 +117,7 @@ async def _(ctx: GroupContext, _):
         await uow.users.add_money(uid, moneydelta)
         await uow.users.set_sign_in_info(uid, time.time(), count)
 
-    await ctx.reply(f"签到成功！你已经连续签到 {count} 天了，得到了 {moneydelta} 薯片")
+    await ctx.reply(f"签到成功！你已经连续签到 {count} 天了。\n您的今日人品是 {moneydelta} ，获得了对应量的薯片！")
     no = LocalStorageManager.instance().data.sign(ctx.event.group_id)
     LocalStorageManager.instance().save()
     if no == 1:
@@ -125,3 +126,23 @@ async def _(ctx: GroupContext, _):
         await ctx.stickEmoji(QQEmoji.胜利)
     elif no == 3:
         await ctx.stickEmoji(QQEmoji.OK)
+
+    if isinstance(ctx, GroupContext):
+        if moneydelta == 100:
+            await ctx.stickEmoji(QQEmoji.比心)
+        elif moneydelta >= 90:
+            await ctx.stickEmoji(QQEmoji.庆祝)
+        elif moneydelta >= 80:
+            await ctx.stickEmoji(QQEmoji.赞)
+        elif moneydelta >= 60:
+            await ctx.stickEmoji(QQEmoji.棒棒糖)
+        elif moneydelta >= 40:
+            await ctx.stickEmoji(QQEmoji.托腮)
+        elif moneydelta >= 20:
+            await ctx.stickEmoji(QQEmoji.糗大了)
+        elif moneydelta >= 10:
+            await ctx.stickEmoji(QQEmoji.笑哭)
+        elif moneydelta > 1:
+            await ctx.stickEmoji(QQEmoji.泪奔)
+        else:
+            await ctx.stickEmoji(QQEmoji.Emoji猴)
