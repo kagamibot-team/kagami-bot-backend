@@ -38,13 +38,14 @@ async def generate_random_result(
     lid1 = await _get_lid(session, a1)
     lid2 = await _get_lid(session, a2)
     lid3 = await _get_lid(session, a3)
+    lidm = max(lid1, lid2, lid3)
 
     # 如果含有零星小哥，那么合成产物一定是零星小哥（lid=0），我们对于「成功」产物，就随机生成一个值返回吧。
     if lid1 == 0 or lid2 == 0 or lid3 == 0:
         # 小哥的 data_id 是 5
         return 5, 0.0
 
-    a0 = max(lid1, lid2, lid3)
+    a0 = lidm
     b0 = (
         7 - ((lid1**2 + lid2**2 + lid3**2) / 3) ** (1 / 2) - a0 / 10
     )  # b0越小越赚，先减去综合实力，再减去最高等级增益
@@ -53,6 +54,8 @@ async def generate_random_result(
     r = Recipe.get_random_object(a1, a2, a3, ("STAGE-1", config.config.salt)).betavariate(a0, b0)
     lid: int | None = None
     lid = math.ceil(r * 5)
+    if lid < lidm - 1:
+        lid = lidm - 1
 
     logger.info(f"{lid1}+{lid2}+{lid3}={lid} ({r}, [{a0}, {b0}])")
 
@@ -61,11 +64,11 @@ async def generate_random_result(
 
     poss = 1 - lid / 9  # 基础概率，由产物等级决定 (0.88, 0.77, 0.66, 0.55, 0.44)
     poss = poss ** (
-        1 + (lid - max(lid1, lid2, lid3)) / 5
+        1 + (lid - lidm) / 5
     )  # 综合概率，由产物等级与材料最高级之差影响，升级则降低概率
     poss = poss * fvi  # 最终概率，由配方珍贵程度影响，影响程度较小
 
-    logger.info(f"{1 - lid/8}^(1 + {lid - max(lid1, lid2, lid3)}/5)*{fvi} = {poss}")
+    logger.info(f"{1 - lid/8}^(1 + {lid - lidm}/5)*{fvi} = {poss}")
 
     query = select(Award.data_id).filter(
         Award.level_id == lid,
