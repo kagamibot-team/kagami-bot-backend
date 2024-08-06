@@ -15,7 +15,6 @@ from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
     matchRegex,
-    withLoading,
 )
 from src.common.lang.zh import la
 from src.common.times import now_datetime
@@ -153,7 +152,6 @@ async def handle_xb(msg: CatchMesssage):
 @matchAlconna(
     Alconna("re:(抓小哥|zhua|抓抓)", Arg("count", int, flags=[ArgFlag.OPTIONAL]))
 )
-@withLoading(la.loading.zhua)
 async def _(ctx: OnebotContext, result: Arparma):
     count = result.query[int]("count")
     if count is None:
@@ -169,7 +167,6 @@ async def _(ctx: OnebotContext, result: Arparma):
 
 @listenOnebot()
 @matchRegex("^(狂抓|kz|狂抓小哥)$")
-@withLoading(la.loading.kz)
 async def _(ctx: OnebotContext, _):
     msg = await picks(
         ctx.sender_id,

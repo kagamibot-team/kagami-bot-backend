@@ -14,7 +14,6 @@ from src.common.decorators.command_decorators import (
     matchLiteral,
     matchRegex,
     requireAdmin,
-    withLoading,
 )
 from src.common.get_local_ip import get_ip
 from src.common.save_file_handler import pack_save
@@ -40,7 +39,6 @@ async def _(ctx: OnebotContext):
 @matchRegex(
     "^:: ?(导出|输出|保存|发送|生成|构建|建造|吐出|献出) ?(你(自己)?的)? ?(存档|文件|心脏|大脑)$"
 )
-@withLoading()
 async def _(ctx: GroupContext, _):
     await DatabaseManager.get_single().manual_checkpoint()
     fp = await pack_save()
