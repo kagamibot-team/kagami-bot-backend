@@ -39,10 +39,10 @@ async def send_group_msg(
 ):
     lock = lock_pool.setdefault(group_id, asyncio.Lock())
     await lock.acquire()
+    await asyncio.sleep(get_random().random() * 0.2 + 0.5)
     result = await bot.call_api(
         "send_group_msg", group_id=group_id, message=handle_input_message(message)
     )
-    await asyncio.sleep(get_random().random() * 0.2 + 0.5)
     lock.release()
     return result
 
