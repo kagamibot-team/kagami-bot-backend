@@ -134,6 +134,11 @@ class UserRepository(DBRepository[User]):
 
     async def do_have_flag(self, uid: int, flag: str):
         return flag in await self.get_flags(uid)
+    
+    async def remove_flag(self, uid: int, flag: str):
+        flags = await self.get_flags(uid)
+        flags.remove(flag)
+        await self.set_flags(uid, flags)
 
     async def get_money(self, uid: int) -> float:
         """获得用户现在有多少薯片

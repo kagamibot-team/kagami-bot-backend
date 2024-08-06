@@ -4,15 +4,13 @@ import time
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import At, Reply, Text
 
-from src.common.dataclasses.game_events import UserTryCatchEvent
-from src.ui.pages.catch import render_catch_message
 from src.base.command_events import OnebotContext
 from src.base.event.event_root import root, throw_event
 from src.base.exceptions import KagamiRangeError
 from src.base.local_storage import Action, LocalStorageManager, XBRecord
 from src.common.data.awards import get_award_info
-from src.common.data.users import add_user_flag, get_user_flags
 from src.common.dataclasses.catch_data import PicksEvent
+from src.common.dataclasses.game_events import UserTryCatchEvent
 from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
@@ -24,6 +22,7 @@ from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import pickAwards
 from src.logic.catch_time import uow_calculate_time
+from src.ui.pages.catch import render_catch_message
 from src.ui.views.award import GotAwardDisplay
 from src.ui.views.catch import CatchMesssage, CatchResultMessage
 from src.ui.views.user import UserData
@@ -67,7 +66,7 @@ async def picks(
         count = min(user_time.pickRemain, count)
         count = max(0, count)
 
-        pick_result = await pickAwards(uow.session, uid, count)
+        pick_result = await pickAwards(uow, uid, count)
         pick_event = PicksEvent(
             uid=uid,
             group_id=group_id,
@@ -190,8 +189,8 @@ async def _(ctx: OnebotContext):
         return
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
-        flags_before = await get_user_flags(uow.session, uid)
-        await add_user_flag(uow.session, uid, "是")
+        flags_before = await uow.users.get_flags(uid)
+        await uow.users.add_flag(uid, "是")
         utime = await uow_calculate_time(uow, uid)
     if utime.pickRemain > 0:
         msg = await picks(
