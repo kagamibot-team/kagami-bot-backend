@@ -7,6 +7,7 @@ from arclet.alconna import Alconna, Arparma
 from arclet.alconna.exceptions import ArgumentMissing, ParamsUnmatched
 from loguru import logger
 from nonebot import get_driver
+from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext, OnebotContext, PrivateContext
@@ -248,6 +249,8 @@ def kagami_exception_handler():
                 await ctx.reply(str(e.args))
             except KagamiCoreException as e:
                 await ctx.reply(e.message)
+            except ActionFailed as e:
+                logger.opt(exception=e).exception(e)
             except Exception as e:  #!pylint: disable=W0703
                 logger.opt(exception=e).exception(e)
                 await ctx.reply(
