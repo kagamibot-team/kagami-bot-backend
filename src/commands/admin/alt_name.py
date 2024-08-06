@@ -1,5 +1,3 @@
-from typing import Literal
-
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
 from src.base.command_events import OnebotContext
@@ -26,7 +24,7 @@ from src.core.unit_of_work import get_unit_of_work
         Arg("别名", str),
         Option(
             "类型",
-            Arg("类型名", Literal["小哥"] | Literal["皮肤"]),
+            Arg("类型名", str),
             alias=["--type", "-t"],
         ),
     )

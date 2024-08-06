@@ -7,6 +7,7 @@ from arclet.alconna import Alconna, Arparma
 from arclet.alconna.exceptions import ArgumentMissing, ParamsUnmatched
 from loguru import logger
 from nonebot import get_driver
+from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext, OnebotContext, PrivateContext
@@ -33,7 +34,11 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
         func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
     ):
         async def inner(ctx: TC_co):
-            result = rule.parse(ctx.message)
+            try:
+                result = rule.parse(ctx.message)
+            except SyntaxError as e:
+                logger.warning(e)
+                return None
 
             if result.error_info is not None and isinstance(
                 result.error_info, (ArgumentMissing, ParamsUnmatched)
@@ -244,6 +249,8 @@ def kagami_exception_handler():
                 await ctx.reply(str(e.args))
             except KagamiCoreException as e:
                 await ctx.reply(e.message)
+            except ActionFailed as e:
+                logger.opt(exception=e).exception(e)
             except Exception as e:  #!pylint: disable=W0703
                 logger.opt(exception=e).exception(e)
                 await ctx.reply(

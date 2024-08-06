@@ -122,6 +122,8 @@ async def _(ctx: OnebotContext):
                 return
             _output += UniMessage.text(msg.text)
         elif isinstance(msg, Emoji):
+            if msg.id == "415":
+                continue
             _output += msg
         else:
             return

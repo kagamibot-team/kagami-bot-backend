@@ -20,8 +20,16 @@ import PIL.Image
 import requests
 from pydantic import BaseModel
 
-from src.base.onebot.onebot_basic import MessageLike, OnebotBotProtocol, handle_input_message
+from src.base.onebot.onebot_basic import (
+    MessageLike,
+    OnebotBotProtocol,
+    handle_input_message,
+)
 from src.base.onebot.onebot_enum import QQEmoji, QQStatus
+from src.common.rd import get_random
+
+
+lock_pool: dict[int, asyncio.Lock] = {}
 
 
 async def send_group_msg(
@@ -29,9 +37,14 @@ async def send_group_msg(
     group_id: int,
     message: MessageLike,
 ):
-    return await bot.call_api(
+    lock = lock_pool.setdefault(group_id, asyncio.Lock())
+    await lock.acquire()
+    result = await bot.call_api(
         "send_group_msg", group_id=group_id, message=handle_input_message(message)
     )
+    await asyncio.sleep(get_random().random() * 0.2 + 0.5)
+    lock.release()
+    return result
 
 
 async def send_private_msg(

@@ -54,8 +54,7 @@ async def generate_random_result(
     r = Recipe.get_random_object(a1, a2, a3, ("STAGE-1", config.config.salt)).betavariate(a0, b0)
     lid: int | None = None
     lid = math.ceil(r * 5)
-    if lid < lidm - 1:
-        lid = lidm - 1
+    lid = max(lid, lidm - 1)
 
     logger.info(f"{lid1}+{lid2}+{lid3}={lid} ({r}, [{a0}, {b0}])")
 

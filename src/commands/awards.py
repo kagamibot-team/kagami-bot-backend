@@ -141,19 +141,32 @@ async def _(ctx: OnebotContext, res: Arparma):
 
 @listenGroup()
 @requireAdmin()
-@matchAlconna(Alconna(["::"], "给薯片", Arg("对方", int | At), Arg("数量", int)))
+@matchAlconna(Alconna(["::"], "给薯片", Arg("对方", int), Arg("数量", int)))
 async def _(ctx: GroupContext, res: Arparma[Any]):
     target = res.query("对方")
     number = res.query[int]("数量")
     if target is None or number is None:
         return
-    if isinstance(target, At):
-        target = int(target.target)
     assert isinstance(target, int)
 
     async with get_unit_of_work() as uow:
         uid = await uow.users.get_uid(target)
         await uow.users.add_money(uid, number)
+
+    await ctx.reply("给了。", at=False, ref=True)
+
+
+@listenOnebot()
+@requireAdmin()
+@matchAlconna(Alconna(["::"], "全部给薯片", Arg("数量", int)))
+async def _(ctx: OnebotContext, res: Arparma[Any]):
+    number = res.query[int]("数量")
+    if number is None:
+        return
+
+    async with get_unit_of_work() as uow:
+        for uid in await uow.users.all_users():
+            await uow.users.add_money(uid, number)
 
     await ctx.reply("给了。", at=False, ref=True)
 
@@ -164,7 +177,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
     Alconna(
         ["::"],
         "给小哥",
-        Arg("对方", int | At),
+        Arg("对方", int),
         Arg("名称", str),
         Arg("数量", int, flags=[ArgFlag.OPTIONAL]),
     )
@@ -175,8 +188,6 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
     number = res.query[int]("数量")
     if target is None or name is None:
         return
-    if isinstance(target, At):
-        target = int(target.target)
     assert isinstance(target, int)
 
     if number is None:
