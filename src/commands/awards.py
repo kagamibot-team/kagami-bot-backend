@@ -123,7 +123,8 @@ async def _(ctx: OnebotContext, res: Arparma):
             if levelName is not None
             else None
         )
-        special = special in ("是", "1", "true", "t", "y", "yes")
+        if special is not None:
+            special = special in ("是", "1", "true", "t", "y", "yes", "T")
         image = image.url if image is not None else None
         image = await download_award_image(aid, image) if image is not None else None
         await uow.awards.modify(
