@@ -259,3 +259,10 @@ class UserRepository(DBRepository[User]):
         await self.session.execute(
             update(User).where(User.data_id == uid).values({User.special_call: call})
         )
+
+    async def all_users(self) -> list[int]:
+        """
+        获得所有用户的 UID
+        """
+
+        return list((await self.session.execute(select(User.data_id))).scalars())

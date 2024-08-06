@@ -156,6 +156,21 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
     await ctx.reply("给了。", at=False, ref=True)
 
 
+@listenOnebot()
+@requireAdmin()
+@matchAlconna(Alconna(["::"], "全部给薯片", Arg("数量", int)))
+async def _(ctx: OnebotContext, res: Arparma[Any]):
+    number = res.query[int]("数量")
+    if number is None:
+        return
+
+    async with get_unit_of_work() as uow:
+        for uid in await uow.users.all_users():
+            await uow.users.add_money(uid, number)
+
+    await ctx.reply("给了。", at=False, ref=True)
+
+
 @listenGroup()
 @requireAdmin()
 @matchAlconna(
