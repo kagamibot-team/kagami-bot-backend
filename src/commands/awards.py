@@ -141,14 +141,12 @@ async def _(ctx: OnebotContext, res: Arparma):
 
 @listenGroup()
 @requireAdmin()
-@matchAlconna(Alconna(["::"], "给薯片", Arg("对方", int | At), Arg("数量", int)))
+@matchAlconna(Alconna(["::"], "给薯片", Arg("对方", int), Arg("数量", int)))
 async def _(ctx: GroupContext, res: Arparma[Any]):
     target = res.query("对方")
     number = res.query[int]("数量")
     if target is None or number is None:
         return
-    if isinstance(target, At):
-        target = int(target.target)
     assert isinstance(target, int)
 
     async with get_unit_of_work() as uow:
@@ -164,7 +162,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
     Alconna(
         ["::"],
         "给小哥",
-        Arg("对方", int | At),
+        Arg("对方", int),
         Arg("名称", str),
         Arg("数量", int, flags=[ArgFlag.OPTIONAL]),
     )
@@ -175,8 +173,6 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
     number = res.query[int]("数量")
     if target is None or name is None:
         return
-    if isinstance(target, At):
-        target = int(target.target)
     assert isinstance(target, int)
 
     if number is None:

@@ -33,7 +33,11 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
         func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
     ):
         async def inner(ctx: TC_co):
-            result = rule.parse(ctx.message)
+            try:
+                result = rule.parse(ctx.message)
+            except SyntaxError as e:
+                logger.warning(e)
+                return None
 
             if result.error_info is not None and isinstance(
                 result.error_info, (ArgumentMissing, ParamsUnmatched)
