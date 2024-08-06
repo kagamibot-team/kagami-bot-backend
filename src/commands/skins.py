@@ -12,7 +12,6 @@ from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
     requireAdmin,
-    withLoading,
 )
 from src.common.lang.zh import la
 from src.core.unit_of_work import get_unit_of_work
@@ -62,7 +61,6 @@ async def _(ctx: OnebotContext, result: Arparma):
 
 @listenOnebot()
 @matchAlconna(Alconna("re:(pfjd|pftj|皮肤图鉴|皮肤进度|皮肤收集进度)"))
-@withLoading()
 async def _(ctx: OnebotContext, _: Arparma):
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
@@ -135,7 +133,6 @@ async def _(ctx: OnebotContext, _: Arparma):
         Arg("name", str, flags=[ArgFlag.OPTIONAL]),
     )
 )
-@withLoading()
 async def _(ctx: OnebotContext, res: Arparma):
     name = res.query[str]("name")
 

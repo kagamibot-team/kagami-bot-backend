@@ -11,7 +11,6 @@ from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
     requireAdmin,
-    withLoading,
 )
 from src.common.lang.zh import la
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
@@ -123,7 +122,8 @@ async def _(ctx: OnebotContext, res: Arparma):
             if levelName is not None
             else None
         )
-        special = special in ("是", "1", "true", "t", "y", "yes")
+        if special is not None:
+            special = special in ("是", "1", "true", "t", "y", "yes", "T")
         image = image.url if image is not None else None
         image = await download_award_image(aid, image) if image is not None else None
         await uow.awards.modify(
@@ -240,7 +240,6 @@ async def get_storage_view(
         ),
     )
 )
-@withLoading(la.loading.zhuajd)
 async def _(ctx: OnebotContext, res: Arparma):
     levelName = res.query[str]("等级名字")
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -259,7 +258,6 @@ async def _(ctx: OnebotContext, res: Arparma):
 
 @listenOnebot()
 @matchAlconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
-@withLoading(la.loading.kc)
 async def _(ctx: OnebotContext, _: Arparma):
     async with get_unit_of_work(ctx.sender_id) as uow:
         view = await get_storage_view(
@@ -290,7 +288,6 @@ async def _(ctx: OnebotContext, _: Arparma):
         ),
     )
 )
-@withLoading(la.loading.all_xg)
 async def _(ctx: OnebotContext, res: Arparma):
     levelName = res.query[str]("等级名字")
     async with get_unit_of_work(ctx.sender_id) as uow:

@@ -182,29 +182,6 @@ def listenOnebot(manager: EventManager = root):
     return wrapper
 
 
-def withLoading(text: str = "请稍候……"):
-    """在命令执行时添加加载动画（科  目  三）
-
-    Args:
-        text (str, optional): 附带的文本，默认是 "请稍候……"。
-    """
-
-    def wrapper(func: Callable[[TC_co, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC_co, *args: Unpack[TA]):
-            receipt = await ctx.reply(
-                UniMessage().text(text).image(path=pathlib.Path("./res/科目三.gif"))
-            )
-            try:
-                msg = await func(ctx, *args)
-                return msg
-            finally:
-                await receipt.recall()
-
-        return inner
-
-    return wrapper
-
-
 def interval_at_start(interval: float, skip_first: bool = True):
     """在 Bot 上线时创建定时任务
 
@@ -274,7 +251,6 @@ __all__ = [
     "listenGroup",
     "listenPrivate",
     "listenOnebot",
-    "withLoading",
     "interval_at_start",
     "timeout_at_start",
 ]

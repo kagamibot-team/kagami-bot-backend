@@ -162,7 +162,8 @@ async def _(ctx: OnebotContext, res: Arparma):
         uid = await uow.users.get_uid(ctx.sender_id)
 
         if not await uow.users.do_have_flag(uid, "合成"):
-            await ctx.reply("先去小镜商店买了机器使用凭证，你才能碰这台机器。")
+            username = await ctx.get_sender_name()
+            await ctx.reply("你没有买小哥合成凭证，被门口的保安拦住了。")
             return
 
         a1 = await uow.awards.get_aid_strong(n1)

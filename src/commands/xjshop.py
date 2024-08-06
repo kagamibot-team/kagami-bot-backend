@@ -12,7 +12,6 @@ from src.base.exceptions import SoldOutException
 from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
-    withLoading,
 )
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
@@ -156,7 +155,6 @@ async def shop_buy_message(
         ),
     )
 )
-@withLoading()
 async def _(ctx: OnebotContext, res: Arparma[Any]):
     buys = res.query[list[str]]("商品名列表") or []
 
