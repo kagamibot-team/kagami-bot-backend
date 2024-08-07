@@ -89,7 +89,8 @@ class User(Base, BaseMixin):
 
     # 20240807 追加
     # 和卡池有关的字段
-    using_packs: Mapped[str] = mapped_column(default="", server_default="")
+    own_packs: Mapped[str] = mapped_column(default="", server_default="")
+    using_pack: Mapped[str] = mapped_column(default="", server_default="")
 
 
 class SkinRecord(Base, BaseMixin):

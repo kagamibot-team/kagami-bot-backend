@@ -44,7 +44,6 @@ class AwardPack(ABC):
         """
         获得这个卡池下所有的小哥的 ID
         """
-        ...
 
     async def contain_level(self, uow: UnitOfWork, lid: int) -> bool:
         return lid in await uow.awards.group_by_level(await self.get_all_id(uow))
@@ -72,7 +71,7 @@ class NamedAwardPack(AwardPack, ABC):
         return await uow.awards.get_all_awards_in_pack(self.pack_id)
 
     async def check_using(self, uow: UnitOfWork, uid: int) -> bool:
-        return await uow.users.do_hanging_pack(uid, self.pack_id)
+        return await uow.users.hanging_pack(uid) == self.pack_id
 
 
 class DefaultAwardPack(AwardPack):
