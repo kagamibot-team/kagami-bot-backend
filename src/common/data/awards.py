@@ -65,7 +65,7 @@ async def get_award_info(
     if uid is not None and sid is not None:
         raise ValueError("请不要同时启用 uid 和 sid 两个参数")
 
-    aname, desc, lid, img = await uow.awards.get_info(aid)
+    aname, desc, lid, img, sorting, is_special_get_only = await uow.awards.get_info(aid)
     level = uow.levels.get_by_id(lid)
     sname = None
 
@@ -84,6 +84,8 @@ async def get_award_info(
         image=Path(img),
         sid=sid,
         skin_name=sname,
+        sorting=sorting,
+        is_special_get_only=is_special_get_only,
     )
 
 

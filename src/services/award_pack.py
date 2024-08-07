@@ -221,6 +221,6 @@ def get_award_pack_service() -> AwardPackService:
     service = AwardPackService()
 
     service.register(DefaultAwardPack())
-    service.register(NamedAwardPack("测试猎场"))
+    service.register(NamedAwardPack("猎场：小秘封活动记录"))
 
     return service

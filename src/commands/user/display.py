@@ -6,7 +6,7 @@ from nonebot_plugin_alconna import UniMessage
 from src.base.command_events import OnebotContext
 from src.base.exceptions import DoNotHaveException
 from src.common.data.awards import get_award_info
-from src.common.decorators.command_decorators import listenOnebot, matchAlconna
+from src.common.decorators.command_decorators import listenOnebot, matchAlconna, matchLiteral, requireAdmin
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
 from src.ui.pages.catch import render_award_info_message
@@ -50,6 +50,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         if do_admin:
             uid = None
         info = await get_award_info(uow, aid, uid, sid)
+        pack = await uow.awards.get_pack(aid)
 
         if sto is not None:
             dt = StorageDisplay(
@@ -65,6 +66,17 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
     if do_display:
         msg = await render_award_info_message(dt)
         await ctx.send(msg)
+    elif do_admin:
+        msg = (
+            UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
+            .image(raw=info.image_bytes)
+            .text(
+                f"\nsorting={info.sorting}; special={info.is_special_get_only};"
+                f"\npack={pack};"
+                f"\n{info.description}"
+            )
+        )
+        await ctx.reply(msg)
     else:
         msg = (
             UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
@@ -72,3 +84,12 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
             .text(f"\n{info.description}")
         )
         await ctx.reply(msg)
+
+
+@listenOnebot()
+@requireAdmin()
+@matchLiteral("::抓不到的小哥")
+async def _(ctx: OnebotContext):
+    async with get_unit_of_work() as uow:
+        list = await uow.awards.get_all_special_aids()
+    await ctx.reply(str(list))

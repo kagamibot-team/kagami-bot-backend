@@ -103,20 +103,22 @@ class AwardRepository(DBRepository[Award]):
             raise ObjectNotFoundException("小哥", name)
         return aid
 
-    async def get_info(self, aid: int) -> tuple[str, str, int, str]:
+    async def get_info(self, aid: int) -> tuple[str, str, int, str, int, bool]:
         """获取一个小哥的基础信息
 
         Args:
             aid (int): 小哥的 ID
 
         Returns:
-            tuple[str, str, int, str]: 名字、描述、等级 ID 和图片
+            tuple[str, str, int, str, int, bool]: 名字、描述、等级 ID 和图片，排序，是否抽得到
         """
         query = select(
             Award.name,
             Award.description,
             Award.level_id,
             Award.image,
+            Award.sorting,
+            Award.is_special_get_only,
         ).filter(Award.data_id == aid)
         return (await self.session.execute(query)).tuples().one()
 
@@ -267,3 +269,22 @@ class AwardRepository(DBRepository[Award]):
             .where(Award.data_id == aid)
             .values({Award.belong_pack: pack_name})
         )
+
+    async def get_pack(self, aid: int) -> str | None:
+        """
+        获取一个小哥在哪个猎场
+        """
+
+        query = select(Award.belong_pack).filter(Award.data_id == aid)
+        result = (await self.session.execute(query)).scalar_one()
+        if result == "":
+            result = None
+        return result
+    
+    async def get_all_special_aids(self) -> set[str]:
+        """
+        获得所有无法抓到的小哥的名字
+        """
+
+        query = select(Award.name).filter(Award.is_special_get_only.is_(True))
+        return set((await self.session.execute(query)).scalars())
