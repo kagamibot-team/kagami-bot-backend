@@ -1,25 +1,6 @@
 from packaging.version import Version
 
 
-class Messages:
-    default_reply = "在"
-
-
-class Loading:
-    zhuajd = "正在回想你遇到过的小哥……"
-    kc = "正在清点仓库里的小哥数量……"
-    all_xg = "正在生成图片……"
-    zhua = "抓小哥机正在运作中……"
-    kz = "抓小哥机正在运作中……"
-
-
-class Unit:
-    second = "秒"
-    minute = "分钟"
-    hour = "小时"
-    money = "薯片"
-
-
 class About:
     about = "关于抓小哥：\n以后再写，详见 https://github.com/Passthem-desu/passthem-bot"
     help_header = "===== 抓小哥帮助 ====="
@@ -426,9 +407,6 @@ class About:
 
 
 class La:
-    loading = Loading()
-    unit = Unit()
-    msg = Messages()
     about = About()
 
 

@@ -296,3 +296,13 @@ class UserRepository(DBRepository[User]):
         if val == "":
             return None
         return val
+
+    async def hang_pack(self, uid: int, pack_name: str | None):
+        """
+        挂载一个卡池
+        """
+
+        pack_name = pack_name or ""
+        await self.session.execute(
+            update(User).where(User.data_id == uid).values({User.using_pack: pack_name})
+        )

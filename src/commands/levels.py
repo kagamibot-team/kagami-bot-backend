@@ -38,6 +38,6 @@ async def _(ctx: OnebotContext, _):
         else:
             prob = f"权重{weight}"
 
-        message += f"\n- {name}[{color_code}] {prob} 奖励 {price}{la.unit.money} 共有 {counts[lid]} 小哥"
+        message += f"\n- {name}[{color_code}] {prob} 奖励 {price}薯片 共有 {counts[lid]} 小哥"
 
     await ctx.send(message)
