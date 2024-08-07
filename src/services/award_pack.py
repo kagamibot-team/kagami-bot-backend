@@ -61,7 +61,7 @@ class AwardPack(ABC):
         return lid in await uow.awards.group_by_level(await self.get_all_ids(uow))
 
 
-class NamedAwardPack(AwardPack, ABC):
+class NamedAwardPack(AwardPack):
     """
     可以由用户切换的卡池包
     """
