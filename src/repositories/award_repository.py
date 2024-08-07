@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Sequence, cast
+from typing import Iterable, Sequence, cast
 
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -207,3 +207,48 @@ class AwardRepository(DBRepository[Award]):
             Award.sorting,
         ).where(Award.data_id.in_(aids))
         return (await self.session.execute(query)).tuples().all()
+
+    async def get_all_awards_in_pack(self, pack_name: str) -> set[int]:
+        """
+        获得所有在一个卡池中的小哥
+        """
+
+        query = select(Award.data_id).filter(Award.belong_pack == pack_name)
+        return set((await self.session.execute(query)).scalars().all())
+
+    async def get_all_default_awards(self) -> set[int]:
+        """获得所有默认卡池的小哥
+
+        Returns:
+            set[int]: 默认小哥的 ID 集合
+        """
+
+        query = select(Award.data_id).filter(
+            Award.is_special_get_only.is_(False), Award.belong_pack == ""
+        )
+        return set((await self.session.execute(query)).scalars().all())
+
+    async def group_by_level(self, aids: Iterable[int]) -> dict[int, set[int]]:
+        """
+        根据等级给小哥分类
+        """
+
+        result: dict[int, set[int]] = {}
+        query = select(Award.data_id, Award.level_id).filter(Award.data_id.in_(aids))
+
+        for aid, lid in (await self.session.execute(query)).tuples().all():
+            result.setdefault(lid, set())
+            result[lid].add(aid)
+
+        return result
+
+    async def get_lid(self, aid: int) -> int:
+        """
+        获得一个小哥的等级 ID
+        """
+
+        return (
+            await self.session.execute(
+                select(Award.level_id).filter(Award.data_id == aid)
+            )
+        ).scalar_one()

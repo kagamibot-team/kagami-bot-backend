@@ -271,3 +271,17 @@ class UserRepository(DBRepository[User]):
         """
 
         return list((await self.session.execute(select(User.data_id))).scalars())
+
+    async def get_using_packs(self, uid: int) -> set[str]:
+        return set(
+            (
+                await self.session.execute(
+                    select(User.using_packs).filter(User.data_id == uid)
+                )
+            )
+            .scalar_one()
+            .split(",")
+        )
+    
+    async def do_hanging_pack(self, uid: int, pack_name: str) -> bool:
+        return pack_name in await self.get_using_packs(uid)

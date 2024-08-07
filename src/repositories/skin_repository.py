@@ -150,3 +150,18 @@ class SkinRepository(DBRepository[Skin]):
                 select(Skin.award_id).filter(Skin.data_id == sid)
             )
         ).scalar_one()
+
+    async def get_all_sids_of_one_award(self, aid: int):
+        """
+        获得一个小哥含有的全部小哥
+        """
+
+        return set(
+            (
+                await self.session.execute(
+                    select(Skin.data_id).filter(Skin.award_id == aid)
+                )
+            )
+            .scalars()
+            .all()
+        )
