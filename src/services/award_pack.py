@@ -96,9 +96,6 @@ class DefaultAwardPack(AwardPack):
     默认的小哥卡池
     """
 
-    def __init__(self) -> None:
-        super().__init__()
-
     async def get_source_and_ids(self, uow: UnitOfWork) -> dict[Source, set[int]]:
         return {BASE_SOURCE: await uow.awards.get_all_default_awards()}
 
@@ -133,6 +130,14 @@ class AwardPackService:
 
     def register(self, pack: AwardPack):
         self.packs.append(pack)
+
+    def exist_name(self, pack_name: str):
+        for pack in self.packs:
+            if isinstance(pack, NamedAwardPack):
+                if pack_name == pack.pack_id:
+                    return True
+
+        return False
 
     async def get_all_available_pack(self, uow: UnitOfWork, uid: int) -> set[AwardPack]:
         """
@@ -216,5 +221,6 @@ def get_award_pack_service() -> AwardPackService:
     service = AwardPackService()
 
     service.register(DefaultAwardPack())
+    service.register(NamedAwardPack("测试猎场"))
 
     return service

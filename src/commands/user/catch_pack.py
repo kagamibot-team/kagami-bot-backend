@@ -4,7 +4,7 @@ from src.core.unit_of_work import get_unit_of_work
 
 
 @listenOnebot()
-@matchLiteral("切换卡池")
+@matchLiteral("切换猎场")
 async def _(ctx: OnebotContext):
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
@@ -22,6 +22,6 @@ async def _(ctx: OnebotContext):
 
         await uow.users.hang_pack(uid, result)
 
-    result = result or "默认"
+    result = result or "默认猎场"
 
-    await ctx.reply(f"已经切换到 {result} 卡池了")
+    await ctx.reply(f"已经切换到 {result} 了")

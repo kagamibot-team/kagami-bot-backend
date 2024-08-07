@@ -254,3 +254,16 @@ class AwardRepository(DBRepository[Award]):
                 select(Award.level_id).filter(Award.data_id == aid)
             )
         ).scalar_one()
+
+    async def set_pack(self, aid: int, pack_name: str | None):
+        """
+        设置一个小哥属于哪个猎场
+        """
+
+        pack_name = pack_name or ""
+
+        await self.session.execute(
+            update(Award)
+            .where(Award.data_id == aid)
+            .values({Award.belong_pack: pack_name})
+        )
