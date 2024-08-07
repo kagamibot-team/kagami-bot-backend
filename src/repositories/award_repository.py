@@ -224,7 +224,9 @@ class AwardRepository(DBRepository[Award]):
         """
 
         query = select(Award.data_id).filter(
-            Award.is_special_get_only.is_(False), Award.belong_pack == ""
+            Award.is_special_get_only.is_(False),
+            Award.belong_pack == "",
+            Award.level_id > 0,
         )
         return set((await self.session.execute(query)).scalars().all())
 

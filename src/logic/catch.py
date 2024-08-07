@@ -23,6 +23,8 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
 
     picked: list[int] = []
     pack_service = get_award_pack_service()
+    levels = await pack_service.get_all_available_levels(uow, uid)
+    weights = [level.weight for level in levels]
 
     # 开始抓小哥
     for _ in range(count):
@@ -36,14 +38,11 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
                 picked.append(shi)
                 continue
 
-        lids = [1, 2, 3, 4, 5]
-        weights = [uow.levels.get_by_id(lid).weight for lid in lids]
-        lid = get_random().choices(lids, weights)[0]
-
-        aids = await pack_service.random_choose_source(uow, uid, get_random(), lid)
-        lid_aid_map = await uow.awards.group_by_level(aids)
-
-        aid = get_random().choice(list(lid_aid_map[lid]))
+        level = get_random().choices(levels, weights)[0]
+        aids = await pack_service.random_choose_source(
+            uow, uid, get_random(), level.lid
+        )
+        aid = get_random().choice(list(aids))
         picked.append(aid)
 
     met_35 = False
