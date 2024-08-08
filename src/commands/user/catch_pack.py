@@ -1,9 +1,14 @@
 from src.base.command_events import OnebotContext
-from src.common.decorators.command_decorators import listenOnebot, matchLiteral
+from src.common.decorators.command_decorators import (
+    debugOnly,
+    listenOnebot,
+    matchLiteral,
+)
 from src.core.unit_of_work import get_unit_of_work
 
 
 @listenOnebot()
+@debugOnly()
 @matchLiteral("切换猎场")
 async def _(ctx: OnebotContext):
     async with get_unit_of_work(ctx.sender_id) as uow:

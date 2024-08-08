@@ -2,6 +2,7 @@ from typing import Any
 from src.base.command_events import OnebotContext
 from src.base.exceptions import ObjectNotFoundException
 from src.common.decorators.command_decorators import (
+    debugOnly,
     listenOnebot,
     matchAlconna,
     requireAdmin,
@@ -14,6 +15,7 @@ from src.services.award_pack import get_award_pack_service
 
 
 @listenOnebot()
+@debugOnly()
 @requireAdmin()
 @matchAlconna(
     Alconna(
