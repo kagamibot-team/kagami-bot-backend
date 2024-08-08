@@ -155,7 +155,7 @@ async def _(ctx: OnebotContext, result: Arparma):
 
 
 @listenOnebot()
-@matchRegex("^(狂抓|kz|狂抓小哥)$")
+@matchRegex("^(狂抓|kz|狂抓小哥|kZ|Kz|KZ)$")
 async def _(ctx: OnebotContext, _):
     msg = await picks(
         ctx.sender_id,
