@@ -49,7 +49,7 @@ class AwardRepository(DBRepository[Award]):
         Returns:
             int: 添加了的小哥的 ID
         """
-        award = Award(level_id=lid, name=name)
+        award = Award(level_id=lid, name=name, is_special_get_only=True)
         await self.add(award)
         await self.session.flush()
 
