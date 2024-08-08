@@ -49,7 +49,7 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
             width=808 - 80 * 2,
             color="#FFFFFF",
             font=Fonts.HARMONYOS_SANS_BLACK,
-            font_size=28,
+            font_size=32,
         )
     )
 
