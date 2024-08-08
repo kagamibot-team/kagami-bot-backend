@@ -11,7 +11,6 @@ from src.common.decorators.command_decorators import (
 )
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.models.level import level_repo
-from src.services.award_pack import get_award_pack_service
 from src.ui.pages.storage import render_progress_message, render_storage_message
 from src.ui.views.list_view import UserStorageView
 from src.ui.views.user import UserData
@@ -99,7 +98,6 @@ async def _(ctx: OnebotContext, res: Arparma):
             Arg("排序优先度", int),
             alias=["--priority", "优先度", "-p", "-P"],
         ),
-        Option("所在猎场", Arg("所在猎场名", str), alias=["--pack", "猎场"]),
     )
 )
 async def _(ctx: OnebotContext, res: Arparma):
@@ -110,7 +108,6 @@ async def _(ctx: OnebotContext, res: Arparma):
     image = res.query[Image]("图片")
     special = res.query[str]("特殊性")
     sorting = res.query[int]("排序优先度")
-    pack = res.query[str]("所在猎场名")
 
     assert name is not None
 
@@ -134,14 +131,6 @@ async def _(ctx: OnebotContext, res: Arparma):
             special=special,
             sorting=sorting,
         )
-
-        if pack is not None:
-            pack_service = get_award_pack_service()
-            if pack in ("默认", "默认猎场"):
-                pack = None
-            if pack is not None and not pack_service.exist_name(pack):
-                raise ObjectNotFoundException("猎场", pack)
-            await uow.awards.set_pack(aid, pack)
 
     await ctx.reply("ok.")
 

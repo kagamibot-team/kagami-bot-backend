@@ -213,9 +213,16 @@ class AwardRepository(DBRepository[Award]):
     async def get_all_awards_in_pack(self, pack_name: str) -> set[int]:
         """
         获得所有在一个卡池中的小哥
+
+        # 注意力！！！！111
+        我拥了 contains 关键字，底层原理是使用 LIKE 表达式，我担心
+        会有注入攻击的风险。虽然它说有一个什么 AUTO ESCAPE 之类的
+        机制，但是出于担心，还是尽量不要把这个方法暴露在用户侧吧！
         """
 
-        query = select(Award.data_id).filter(Award.belong_pack == pack_name)
+        query = select(Award.data_id).filter(
+            Award.belong_pack.concat(",").contains(pack_name + ",")
+        )
         return set((await self.session.execute(query)).scalars().all())
 
     async def get_all_default_awards(self) -> set[int]:
@@ -257,34 +264,53 @@ class AwardRepository(DBRepository[Award]):
             )
         ).scalar_one()
 
-    async def set_pack(self, aid: int, pack_name: str | None):
+    async def set_packs(self, aid: int, packs: set[str]):
         """
-        设置一个小哥属于哪个猎场
+        设置一个小哥属于哪些猎场
         """
 
-        pack_name = pack_name or ""
+        value = ",".join(packs) or ""
 
         await self.session.execute(
-            update(Award)
-            .where(Award.data_id == aid)
-            .values({Award.belong_pack: pack_name})
+            update(Award).where(Award.data_id == aid).values({Award.belong_pack: value})
         )
 
-    async def get_pack(self, aid: int) -> str | None:
+    async def get_packs(self, aid: int) -> set[str]:
         """
         获取一个小哥在哪个猎场
         """
 
         query = select(Award.belong_pack).filter(Award.data_id == aid)
-        result = (await self.session.execute(query)).scalar_one()
-        if result == "":
-            result = None
+        result = set((await self.session.execute(query)).scalar_one().split(","))
+        if result == set(("",)):
+            result = set()
         return result
-    
+
+    async def add_pack(self, aid: int, pack: str):
+        """
+        给小哥添加一个猎场
+        """
+        packs = await self.get_packs(aid)
+        packs.add(pack)
+        await self.set_packs(aid, packs)
+
+    async def remove_pack(self, aid: int, pack: str):
+        """
+        去除掉小哥的一个猎场
+        """
+        packs = await self.get_packs(aid)
+        packs.remove(pack)
+        await self.set_packs(aid, packs)
+
     async def get_all_special_aids(self) -> set[str]:
         """
         获得所有无法抓到的小哥的名字
         """
 
-        query = select(Award.name).filter(Award.is_special_get_only.is_(True))
-        return set((await self.session.execute(query)).scalars())
+        query1 = select(Award.name).filter(Award.is_special_get_only.is_(True))
+        set1 = set((await self.session.execute(query1)).scalars())
+
+        query2 = select(Award.name).filter(Award.belong_pack != "")
+        set2 = set((await self.session.execute(query2)).scalars())
+
+        return set1 | set2

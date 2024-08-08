@@ -6,7 +6,12 @@ from nonebot_plugin_alconna import UniMessage
 from src.base.command_events import OnebotContext
 from src.base.exceptions import DoNotHaveException
 from src.common.data.awards import get_award_info
-from src.common.decorators.command_decorators import listenOnebot, matchAlconna, matchLiteral, requireAdmin
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchAlconna,
+    matchLiteral,
+    requireAdmin,
+)
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
 from src.ui.pages.catch import render_award_info_message
@@ -50,7 +55,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         if do_admin:
             uid = None
         info = await get_award_info(uow, aid, uid, sid)
-        pack = await uow.awards.get_pack(aid)
+        packs = await uow.awards.get_packs(aid)
 
         if sto is not None:
             dt = StorageDisplay(
@@ -72,7 +77,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
             .image(raw=info.image_bytes)
             .text(
                 f"\nsorting={info.sorting}; special={info.is_special_get_only};"
-                f"\npack={pack};"
+                f"\npack={packs};"
                 f"\n{info.description}"
             )
         )
