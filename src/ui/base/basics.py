@@ -335,4 +335,4 @@ def draw_rounded_rectangle(
 
 
 def paste_image(raw: PIL.Image.Image, src: PIL.Image.Image, x: int, y: int):
-    raw.paste(src, (x, y), src.convert("RGBA"))
+    raw.alpha_composite(src, (x, y))

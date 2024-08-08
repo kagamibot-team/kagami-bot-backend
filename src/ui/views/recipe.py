@@ -223,10 +223,11 @@ class MergeResult(BaseModel):
         if self.result_level == 0 and not self.is_shit:
             return self.random.choice(MOKIE_MESSAGES_ZERO)
 
-        if self.result_level == 9:
+        if self.output.info.aid == 9:
             # 小华
             return self.random.choice(MOKIE_MESSAGES_XIAOHUA)
-        elif self.result_level in (34, 98):
+
+        if self.output.info.aid in (34, 98):
             # 小水瓶子和小可怜
             return self.random.choice(MOKIE_MESSAGES_LOVE)
 

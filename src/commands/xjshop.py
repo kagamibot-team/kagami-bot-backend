@@ -125,7 +125,7 @@ async def shop_buy_message(
         draw_emoji=False,
     )
 
-    base = PIL.Image.new("RGB", image.size, "#FFFFFF")
+    base = PIL.Image.new("RGBA", image.size, "#FFFFFF")
     paste_image(base, image, 0, 0)
 
     qrc = qrcode.main.QRCode(
