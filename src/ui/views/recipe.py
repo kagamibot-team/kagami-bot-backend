@@ -160,6 +160,21 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
     },
 }
 
+MOKIE_MESSAGES_XIAOHUA = (
+    MokieMessage(text="像我吧。", image=MokieImage.normal),
+    MokieMessage(text="哎这些东西真不知道哪来的。", image=MokieImage.normal),
+)
+"小华"
+
+MOKIE_MESSAGES_LOVE = (
+    MokieMessage(text="送我送我送我送我送我。", image=MokieImage.normal),
+    MokieMessage(text="喜欢。", image=MokieImage.normal),
+)
+"榆木华厨的"
+
+MOKIE_MESSAGES_ZERO = (MokieMessage(text="...", image=MokieImage.wtf),)
+"合成了隐藏的小哥？！"
+
 
 class MergeResult(BaseModel):
     """
@@ -206,7 +221,14 @@ class MergeResult(BaseModel):
     @property
     def ymh_message(self) -> MokieMessage:
         if self.result_level == 0 and not self.is_shit:
-            return MokieMessage(text="...", image=MokieImage.wtf)
+            return self.random.choice(MOKIE_MESSAGES_ZERO)
+
+        if self.result_level == 9:
+            # 小华
+            return self.random.choice(MOKIE_MESSAGES_XIAOHUA)
+        elif self.result_level in (34, 98):
+            # 小水瓶子和小可怜
+            return self.random.choice(MOKIE_MESSAGES_LOVE)
 
         _ms = MOKIE_MESSAGES.get(self.input_highest_level, {})
         _msls = _ms.get(self.result_level, ())
