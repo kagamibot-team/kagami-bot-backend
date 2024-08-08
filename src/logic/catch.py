@@ -1,11 +1,7 @@
-from loguru import logger
-from sqlalchemy import func, select
-
 from src.common.dataclasses import Pick, Picks
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
-from src.models.level import level_repo
-from src.models.models import Award
+from src.services.award_pack import get_award_pack_service
 
 
 async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
@@ -25,57 +21,55 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
     picks = Picks(awards={}, money=0, uid=uid)
     assert count >= 0
 
+    picked: list[int] = []
+    pack_service = get_award_pack_service()
+    levels = await pack_service.get_all_available_levels(uow, uid)
+    weights = [level.weight for level in levels]
+
     # 开始抓小哥
     for _ in range(count):
+        # 对是小哥进行特判
         if await uow.users.do_have_flag(uid, "是"):
             await uow.users.remove_flag(uid, "是")
             shi = await uow.awards.get_aid("是小哥")
             if shi is None:
                 pass
-            elif shi in picks.awards.keys():
-                picks.awards[shi].delta += 1
-                picks.money += uow.levels.get_by_id(1).awarding
-                continue
             else:
-                picks.awards[shi] = Pick(
-                    beforeStats=await uow.inventories.get_stats(uid, shi),
-                    delta=1,
-                    level=0,
-                )
-                picks.money += uow.levels.get_by_id(1).awarding
+                picked.append(shi)
                 continue
 
-        level = get_random().choices(
-            level_repo.sorted, [l.weight for l in level_repo.sorted]
-        )[0]
-
-        # 这里是在数据库中随机抽取该等级的小哥的操作
-        # 据说有速度更快的写法……
-        query = (
-            select(Award.data_id)
-            .filter(
-                Award.level_id == level.lid,
-                Award.is_special_get_only.is_not(True),
-            )
-            .order_by(func.random())
-            .limit(1)
+        level = get_random().choices(levels, weights)[0]
+        aids = await pack_service.random_choose_source(
+            uow, uid, get_random(), level.lid
         )
+        aid = get_random().choice(list(aids))
+        picked.append(aid)
 
-        aid = (await uow.session.execute(query)).scalar_one_or_none()
+    met_35 = False
 
-        if aid is None:
-            logger.warning(f"没有小哥在 ID 为 {level} 的等级中")
-            continue
-
-        if aid in picks.awards.keys():
-            picks.awards[aid].delta += 1
-        else:
+    for aid in picked:
+        if aid not in picks.awards:
             picks.awards[aid] = Pick(
                 beforeStats=await uow.inventories.get_stats(uid, aid),
-                delta=1,
-                level=level.lid,
+                delta=0,
+                level=await uow.awards.get_lid(aid),
             )
 
-        picks.money += level.awarding
+        picks.awards[aid].delta += 1
+        picks.money += uow.levels.get_by_id(picks.awards[aid].level).awarding
 
+        if picks.awards[aid].beforeStats == 0:
+            picks.money += 20
+        elif aid == 35 and not met_35:
+            # 处理百变小哥
+            met_35 = True
+            sids = await uow.skins.get_all_sids_of_one_award(35)
+            sids = [
+                sid
+                for sid in sids
+                if not await uow.skin_inventory.do_user_have(uid, sid)
+            ]
+            if len(sids) > 0:
+                sid = get_random().choice(sids)
+                await uow.skin_inventory.give(uid, sid)
     return picks

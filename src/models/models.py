@@ -32,6 +32,9 @@ class Award(Base, BaseMixin):
     level_id = Column(Integer, index=True)
     is_special_get_only: Mapped[bool] = mapped_column(default=False, server_default="0")
 
+    # 20240807 追加和卡池有关的若干字段
+    belong_pack: Mapped[str] = mapped_column(default="", server_default="")
+
 
 class AwardAltName(Base, BaseMixin, AltNameMixin):
     """
@@ -83,6 +86,11 @@ class User(Base, BaseMixin):
     # 20240729 追加
     # 用户的特殊称呼不再在配置文件中设置，太麻烦了
     special_call: Mapped[str] = mapped_column(default="", server_default="")
+
+    # 20240807 追加
+    # 和卡池有关的字段
+    own_packs: Mapped[str] = mapped_column(default="", server_default="")
+    using_pack: Mapped[str] = mapped_column(default="", server_default="")
 
 
 class SkinRecord(Base, BaseMixin):

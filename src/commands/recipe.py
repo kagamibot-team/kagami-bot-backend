@@ -227,6 +227,7 @@ async def _(ctx: OnebotContext, res: Arparma):
             output=data,
             cost_money=cost,
             remain_money=int(after),
+            merge_time=now_datetime().timestamp(),
         )
 
     await ctx.send(await render_merge_message(merge_info))

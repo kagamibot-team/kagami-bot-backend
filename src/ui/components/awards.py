@@ -121,7 +121,7 @@ def ref_book_box_raw(
         align=TextAlign.Center,
     )
 
-    block = PIL.Image.new("RGB", (216, 210), "#9B9690")
+    block = PIL.Image.new("RGBA", (216, 210), "#9B9690")
     paste_image(block, box, 18, 18)
     paste_image(block, title, 18, 170)
     paste_image(block, title2, 18, 194)

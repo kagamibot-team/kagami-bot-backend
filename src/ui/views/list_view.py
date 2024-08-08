@@ -119,7 +119,7 @@ class UserStorageView(BaseModel):
                 if len(awards) == 0:
                     continue
             title = f"{level.display_name}"
-            if show_progress:
+            if show_progress and level.lid != 0:
                 title += f"：{len([a for a in awards if a is not None])}/{len(awards)}"
             if not show_all:
                 awards: list[StorageDisplay | None] = [

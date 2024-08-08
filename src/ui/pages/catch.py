@@ -66,7 +66,7 @@ async def render_catch_result_message(data: CatchResultMessage) -> UniMessage[An
 
 async def render_catch_failed_message(data: CatchMesssage) -> UniMessage[Any]:
     return UniMessage.at(data.user.qqid).text(
-        f"小哥还没长成，请再等{data.timedelta_text}吧！"
+        f" 小哥还没长成，请再等{data.timedelta_text}吧！"
     )
 
 

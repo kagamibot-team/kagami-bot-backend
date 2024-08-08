@@ -5,18 +5,16 @@ from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import At, Reply, Text
 
 from src.base.command_events import OnebotContext
-from src.base.event.event_root import root, throw_event
+from src.base.event.event_root import throw_event
 from src.base.exceptions import KagamiRangeError
 from src.base.local_storage import Action, LocalStorageManager, XBRecord
 from src.common.data.awards import get_award_info
-from src.common.dataclasses.catch_data import PicksEvent
 from src.common.dataclasses.game_events import UserTryCatchEvent
 from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
     matchRegex,
 )
-from src.common.lang.zh import la
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import pickAwards
@@ -66,15 +64,6 @@ async def picks(
         count = max(0, count)
 
         pick_result = await pickAwards(uow, uid, count)
-        pick_event = PicksEvent(
-            uid=uid,
-            group_id=group_id,
-            picks=pick_result,
-            session=uow.session,
-        )
-
-        await root.emit(pick_event)
-
         spent_count = 0
         catchs: list[GotAwardDisplay] = []
 
@@ -166,7 +155,7 @@ async def _(ctx: OnebotContext, result: Arparma):
 
 
 @listenOnebot()
-@matchRegex("^(狂抓|kz|狂抓小哥)$")
+@matchRegex("^(狂抓|kz|狂抓小哥|kZ|Kz|KZ)$")
 async def _(ctx: OnebotContext, _):
     msg = await picks(
         ctx.sender_id,

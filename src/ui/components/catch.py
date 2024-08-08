@@ -9,7 +9,7 @@ from src.ui.components.awards import display_box
 from src.ui.views.award import AwardDisplay
 
 
-def catch(data: AwardDisplay) -> PIL.Image.Image:
+def catch(data: AwardDisplay, background: str = "#9B9690") -> PIL.Image.Image:
     """
     渲染 AwardDetail
     """
@@ -62,7 +62,7 @@ def catch(data: AwardDisplay) -> PIL.Image.Image:
     )
 
     block = PIL.Image.new(
-        "RGB", (800, max(180, rightDescription.height + 89)), "#9B9690"
+        "RGBA", (800, max(180, rightDescription.height + 89)), background
     )
     paste_image(block, left_display, 18, 18)
     paste_image(block, rightTitle, 212, 18)

@@ -1,25 +1,6 @@
 from packaging.version import Version
 
 
-class Messages:
-    default_reply = "在"
-
-
-class Loading:
-    zhuajd = "正在回想你遇到过的小哥……"
-    kc = "正在清点仓库里的小哥数量……"
-    all_xg = "正在生成图片……"
-    zhua = "抓小哥机正在运作中……"
-    kz = "抓小哥机正在运作中……"
-
-
-class Unit:
-    second = "秒"
-    minute = "分钟"
-    hour = "小时"
-    money = "薯片"
-
-
 class About:
     about = "关于抓小哥：\n以后再写，详见 https://github.com/Passthem-desu/passthem-bot"
     help_header = "===== 抓小哥帮助 ====="
@@ -266,6 +247,13 @@ class About:
             "调整了一些发送消息的时机",
             "移除了开头的跳舞，准备试验现在能不能让 bot 更加稳定",
         ],
+        "0.9.0": [
+            "优化了合成的界面",
+            "调整了一些消息的文字",
+            "为 kz 指令添加了大写的匹配",
+            "去除了一个特性",
+            "调大了小镜商店的字号",
+        ],
     }
     update_dev: dict[str, list[str]] = {
         "0.4.5": [
@@ -422,13 +410,15 @@ class About:
         "0.8.6": [
             "无底层更改",
         ],
+        "0.9.0": [
+            "以默认猎场的思路重写了抓小哥的逻辑",
+            "利用现有的代码验证了猎场开发的可行性，但是暂时不开放和猎场有关的内容到生产环境",
+            "修改了图片合成的算法，现在生成的图片在处理半透明时会更加清晰",
+        ],
     }
 
 
 class La:
-    loading = Loading()
-    unit = Unit()
-    msg = Messages()
     about = About()
 
 

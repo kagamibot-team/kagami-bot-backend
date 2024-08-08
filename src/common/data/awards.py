@@ -4,15 +4,12 @@
 
 from pathlib import Path
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.base.exceptions import LackException
 from src.common.download import download, writeData
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
 from src.models.models import *
 from src.models.level import level_repo
-from src.repositories.inventory_repository import InventoryRepository
 from src.ui.base.strange import make_strange
 from src.ui.base.tools import image_to_bytes
 from src.ui.views.award import AwardInfo, StorageDisplay
@@ -68,7 +65,7 @@ async def get_award_info(
     if uid is not None and sid is not None:
         raise ValueError("请不要同时启用 uid 和 sid 两个参数")
 
-    aname, desc, lid, img = await uow.awards.get_info(aid)
+    aname, desc, lid, img, sorting, is_special_get_only = await uow.awards.get_info(aid)
     level = uow.levels.get_by_id(lid)
     sname = None
 
@@ -87,11 +84,17 @@ async def get_award_info(
         image=Path(img),
         sid=sid,
         skin_name=sname,
+        sorting=sorting,
+        is_special_get_only=is_special_get_only,
     )
 
 
 async def get_a_list_of_award_storage(
-    uow: UnitOfWork, uid: int | None, aids: list[int], show_notation2: bool = True, show_notation1: bool = True
+    uow: UnitOfWork,
+    uid: int | None,
+    aids: list[int],
+    show_notation2: bool = True,
+    show_notation1: bool = True,
 ) -> list[StorageDisplay | None]:
     """用来获取多个小哥的基础信息
 
@@ -171,20 +174,6 @@ async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
     sto, _ = await uow.inventories.give(uid, aid, -count)
     if sto < 0:
         raise LackException((await get_award_info(uow, aid)).name, count, sto + count)
-
-
-async def get_statistics(session: AsyncSession, uid: int, aid: int):
-    """获得迄今为止一共抓到了多少小哥
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户在数据库中的 ID
-        aid (int): 小哥在数据库中的 ID
-
-    Returns:
-        int: 累计的小哥数量
-    """
-    return await InventoryRepository(session).get_stats(uid, aid)
 
 
 async def download_award_image(aid: int, url: str):

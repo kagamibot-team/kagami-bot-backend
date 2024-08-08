@@ -134,7 +134,7 @@ class UserRepository(DBRepository[User]):
 
     async def do_have_flag(self, uid: int, flag: str):
         return flag in await self.get_flags(uid)
-    
+
     async def remove_flag(self, uid: int, flag: str):
         flags = await self.get_flags(uid)
         flags.remove(flag)
@@ -271,3 +271,38 @@ class UserRepository(DBRepository[User]):
         """
 
         return list((await self.session.execute(select(User.data_id))).scalars())
+
+    async def get_own_packs(self, uid: int) -> set[str]:
+        return set(
+            (
+                await self.session.execute(
+                    select(User.own_packs).filter(User.data_id == uid)
+                )
+            )
+            .scalar_one()
+            .split(",")
+        )
+
+    async def do_have_pack(self, uid: int, pack_name: str) -> bool:
+        return pack_name in await self.get_own_packs(uid)
+
+    async def hanging_pack(self, uid: int) -> str | None:
+        val = (
+            await self.session.execute(
+                select(User.using_pack).filter(User.data_id == uid)
+            )
+        ).scalar_one()
+
+        if val == "":
+            return None
+        return val
+
+    async def hang_pack(self, uid: int, pack_name: str | None):
+        """
+        挂载一个卡池
+        """
+
+        pack_name = pack_name or ""
+        await self.session.execute(
+            update(User).where(User.data_id == uid).values({User.using_pack: pack_name})
+        )

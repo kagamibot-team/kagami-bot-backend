@@ -253,7 +253,7 @@ async def build_xjshop(uow: UnitOfWork) -> ShopService:
     for sid, aid, sname, _, simage, price in await uow.skins.all():
         if price <= 0:
             continue
-        aname, _, lid, _ = await uow.awards.get_info(aid)
+        aname, _, lid, _, _, _ = await uow.awards.get_info(aid)
         level = uow.levels.get_by_id(lid)
         service.register(SkinProduct(sid, sname, simage, aname, price, level.color))
 
