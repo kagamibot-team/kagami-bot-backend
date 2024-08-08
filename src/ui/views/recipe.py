@@ -20,14 +20,20 @@ class MokieImage(Enum):
     """
 
     normal = "通常"
-    laugh = "滑稽"
+    funny = "滑稽"
     astonish = "惊讶"
     xiaoge = "小哥"
     wtf = "黑化"
+    laugh = "嘲讽"
+    jealous = "咬牙切齿"
 
     @property
     def image_url(self) -> Path:
         return Path(f"./res/mokie/榆木华 表情 {self.value}.png")
+
+
+for i in MokieImage:
+    assert i.image_url.exists()
 
 
 class MokieMessage(BaseModel):
@@ -56,22 +62,22 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="实用配方！", image=MokieImage.normal),
         ),
         4: (
-            MokieMessage(text="厉害啊。", image=MokieImage.normal),
-            MokieMessage(text="给你赚到了。", image=MokieImage.normal),
+            MokieMessage(text="厉害啊。", image=MokieImage.astonish),
+            MokieMessage(text="给你赚到了。", image=MokieImage.astonish),
         ),
         5: (
             MokieMessage(text="你牛逼。", image=MokieImage.normal),
             MokieMessage(text="求送我。", image=MokieImage.normal),
         ),
         0: (
-            MokieMessage(text="嗯こ。", image=MokieImage.normal),
-            MokieMessage(text="就这点薯片你想怎样？", image=MokieImage.normal),
+            MokieMessage(text="嗯こ。", image=MokieImage.laugh),
+            MokieMessage(text="就这点薯片你想怎样？", image=MokieImage.laugh),
         ),
     },
     2: {
         1: (
             MokieMessage(text="不如粑粑。", image=MokieImage.normal),
-            MokieMessage(text="还有必要记配方吗？", image=MokieImage.normal),
+            MokieMessage(text="还有必要记配方吗？", image=MokieImage.laugh),
         ),
         2: (
             MokieMessage(
@@ -84,22 +90,22 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="以后绝对用得到的。", image=MokieImage.normal),
         ),
         4: (
-            MokieMessage(text="好好好。", image=MokieImage.normal),
+            MokieMessage(text="好好好。", image=MokieImage.astonish),
             MokieMessage(text="狠狠跳步喽！", image=MokieImage.normal),
         ),
         5: (
-            MokieMessage(text="我也想要。", image=MokieImage.normal),
-            MokieMessage(text="恭喜你啊。（咬牙切齿）", image=MokieImage.normal),
+            MokieMessage(text="我也想要。", image=MokieImage.astonish),
+            MokieMessage(text="恭喜你啊。（咬牙切齿）", image=MokieImage.jealous),
         ),
         0: (
-            MokieMessage(text="没亏多少。", image=MokieImage.normal),
-            MokieMessage(text="下次一定！", image=MokieImage.normal),
+            MokieMessage(text="没亏多少。", image=MokieImage.laugh),
+            MokieMessage(text="下次一定！", image=MokieImage.laugh),
         ),
     },
     3: {
         2: (
-            MokieMessage(text="下次别合了。", image=MokieImage.normal),
-            MokieMessage(text="吃一堑，长一智。", image=MokieImage.normal),
+            MokieMessage(text="下次别合了。", image=MokieImage.laugh),
+            MokieMessage(text="吃一堑，长一智。", image=MokieImage.laugh),
         ),
         3: (
             MokieMessage(text="感觉作用有限，配方。", image=MokieImage.normal),
@@ -110,12 +116,12 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="算是成功了吧。", image=MokieImage.normal),
         ),
         5: (
-            MokieMessage(text="还不错哦。", image=MokieImage.normal),
+            MokieMessage(text="还不错哦。", image=MokieImage.astonish),
             MokieMessage(text="小赚！", image=MokieImage.normal),
         ),
         0: (
-            MokieMessage(text="胜败乃兵家常事！", image=MokieImage.normal),
-            MokieMessage(text="我以前死在这过很多次。", image=MokieImage.normal),
+            MokieMessage(text="胜败乃兵家常事！", image=MokieImage.laugh),
+            MokieMessage(text="我以前死在这过很多次。", image=MokieImage.laugh),
         ),
     },
     4: {
@@ -132,8 +138,8 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="不经历风雨，怎能见彩虹？", image=MokieImage.normal),
         ),
         0: (
-            MokieMessage(text="必要的牺牲。", image=MokieImage.normal),
-            MokieMessage(text="其实不要的可以给我。", image=MokieImage.normal),
+            MokieMessage(text="必要的牺牲。", image=MokieImage.laugh),
+            MokieMessage(text="其实不要的可以给我。", image=MokieImage.laugh),
         ),
     },
     5: {
@@ -148,27 +154,27 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="大手笔啊。", image=MokieImage.normal),
         ),
         0: (
-            MokieMessage(text="没必要。", image=MokieImage.normal),
-            MokieMessage(text="自己留着点吧。", image=MokieImage.normal),
+            MokieMessage(text="没必要。", image=MokieImage.laugh),
+            MokieMessage(text="自己留着点吧。", image=MokieImage.laugh),
         ),
     },
     0: {
         0: (
-            MokieMessage(text="这是什么？合一下。", image=MokieImage.normal),
-            MokieMessage(text="唉。", image=MokieImage.normal),
+            MokieMessage(text="这是什么？合一下。", image=MokieImage.laugh),
+            MokieMessage(text="唉。", image=MokieImage.laugh),
         ),
     },
 }
 
 MOKIE_MESSAGES_XIAOHUA = (
-    MokieMessage(text="像我吧。", image=MokieImage.normal),
+    MokieMessage(text="像我吧。", image=MokieImage.xiaoge),
     MokieMessage(text="哎这些东西真不知道哪来的。", image=MokieImage.normal),
 )
 "小华"
 
 MOKIE_MESSAGES_LOVE = (
-    MokieMessage(text="送我送我送我送我送我。", image=MokieImage.normal),
-    MokieMessage(text="喜欢。", image=MokieImage.normal),
+    MokieMessage(text="送我送我送我送我送我。", image=MokieImage.astonish),
+    MokieMessage(text="喜欢。", image=MokieImage.astonish),
 )
 "榆木华厨的"
 

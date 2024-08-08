@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from src.common.dataclasses.game_events import (
     DummyEvent,
+    MergeEvent,
     UserDataUpdatedEvent,
     UserTryCatchEvent,
 )
@@ -198,6 +199,30 @@ class TripleAchivement(NoPriseAchievement, AlwaysDisplayAchievement):
         return False
 
 
+class MergeTripleAchievement(DisplayWhenAchievedAchievement):
+    name: str = "合成：三小哥"
+    description: str = "用三个小哥合成三小哥"
+    prise_description: str | None = "50 薯片"
+
+    async def validate_achievement(
+        self, uow: UnitOfWork, event: UserDataUpdatedEvent
+    ) -> bool:
+        if not isinstance(event, MergeEvent):
+            return False
+        view = event.merge_view
+        if (
+            view.inputs[0].aid == 5
+            and view.inputs[1].aid == 5
+            and view.inputs[2].aid == 5
+        ):
+            if view.output.info.aid == 25:
+                return True
+        return False
+
+    async def prise(self, uow: UnitOfWork, uid: int) -> None:
+        await uow.users.add_money(uid, 50)
+
+
 class AchievementService:
     achievements: list[Achievement]
 
@@ -249,5 +274,6 @@ async def get_achievement_service(uow: UnitOfWork) -> AchievementService:
     service.register(NiceCatchAchievement())
     service.register(TimerAchievement())
     service.register(TripleAchivement())
+    service.register(MergeTripleAchievement())
 
     return service
