@@ -14,7 +14,7 @@ from src.ui.base.basics import (
     render_text,
     vertical_pile,
 )
-from src.ui.base.tools import image_to_bytes
+from src.ui.base.tools import hex_to_rgb, image_to_bytes, mix_color, rgb_to_hex
 from src.ui.components.awards import display_box
 from src.ui.components.catch import catch
 from src.ui.views.recipe import MergeResult
@@ -60,6 +60,8 @@ def render_merge_image(data: MergeResult):
         font=Fonts.HARMONYOS_SANS_BLACK,
         font_size=24,
         margin_top=12,
+        stroke=2,
+        stroke_color="#000000",
     )
 
     document = horizontal_pile(
@@ -98,12 +100,35 @@ def render_merge_image(data: MergeResult):
 
     msg = data.ymh_message
 
-    background = PIL.Image.new("RGBA", foreground.size, "#8332D3")
+    color = [
+        "#000000",
+        "#2a68bc",
+        "#2a68bc",
+        "#2a68bc",
+        "#7E2FCE",
+        "#7E2FCE",
+    ][data.output.info.level.lid]
+
+    background = PIL.Image.new(
+        "RGBA",
+        foreground.size,
+        rgb_to_hex(mix_color(hex_to_rgb(color), (255, 255, 255), 0)),
+    )
 
     draw = PIL.ImageDraw.Draw(background)
-    draw.ellipse((-1200, -1200, 1200, 1200), "#9149D8")
-    draw.ellipse((-900, -900, 900, 900), "#9A56DD")
-    draw.ellipse((-600, -600, 600, 600), "#9D5DDD")
+    if color != "#000000" or data.output.info.aid == 89:
+        draw.ellipse(
+            (-1200, -1200, 1200, 1200),
+            rgb_to_hex(mix_color(hex_to_rgb(color), (255, 255, 255), 0.1)),
+        )
+        draw.ellipse(
+            (-900, -900, 900, 900),
+            rgb_to_hex(mix_color(hex_to_rgb(color), (255, 255, 255), 0.2)),
+        )
+        draw.ellipse(
+            (-600, -600, 600, 600),
+            rgb_to_hex(mix_color(hex_to_rgb(color), (255, 255, 255), 0.3)),
+        )
 
     top0 = area_title_1.height - 78
 
@@ -121,7 +146,7 @@ def render_merge_image(data: MergeResult):
     )
     top = 190 + (180 - ymh_text.height) / 2 + top0
 
-    paste_image(background, ymh, 550 + top0, 60)
+    paste_image(background, ymh, 550, 60 + top0)
     paste_image(
         background, PIL.Image.open(Path("./res/mokie/榆木华对话框.png")), 0, top0
     )
