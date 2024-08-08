@@ -27,4 +27,4 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
             if await a.check_can_display(uow, uid):
                 display.append(get_single_achievement_msg(a, await a.have_got(uow, uid)))
 
-    await ctx.send(f"{await ctx.sender_name} 达成的成就\n\n" + "\n\n".join(display))
+    await ctx.send(f"{await ctx.sender_name} 成就\n\n" + "\n\n".join(display))
