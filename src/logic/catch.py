@@ -18,6 +18,8 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
         Picks: 抓小哥结果的记录
     """
 
+    up_pool_posibility = {1: 0.1, 2: 0.2, 3: 0.4, 4: 0.5, 5: 0.6}
+
     picks = Picks(awards={}, money=0, uid=uid)
     assert count >= 0
 
@@ -47,6 +49,15 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
 
         level = get_random().choices(levels, weights)[0]
         limited_aids = aids[level.lid]
+
+        using_up = await uow.up_pool.get_using(uid)
+        if using_up is not None:
+            if get_random().random() < up_pool_posibility[level.lid]:
+                _aids = await uow.up_pool.get_aids(using_up)
+                if len(_aids) > 0:
+                    _grouped = await uow.awards.group_by_level(_aids)
+                    limited_aids = _grouped[level.lid]
+
         aid = get_random().choice(list(limited_aids))
         picked.append(aid)
 

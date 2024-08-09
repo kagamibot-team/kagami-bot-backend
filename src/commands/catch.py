@@ -88,6 +88,8 @@ async def picks(
             name=qqname,
         )
 
+        pack_id = await uow.user_pack.get_using(uid)
+
         if spent_count > 0:
             msg = CatchResultMessage(
                 user=user,
@@ -98,6 +100,7 @@ async def picks(
                 money_sum=int(await uow.money.get(uid)),
                 catchs=catchs,
                 group_id=group_id,
+                pack_id=pack_id,
             )
         else:
             msg = CatchMesssage(
@@ -106,6 +109,7 @@ async def picks(
                 slot_sum=user_time.pickMax,
                 next_time=user_time.pickLastUpdated + user_time.interval - time.time(),
                 group_id=group_id,
+                pack_id=pack_id,
             )
 
     await handle_xb(msg)

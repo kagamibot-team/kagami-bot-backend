@@ -125,3 +125,16 @@ class NoAwardException(KagamiCoreException):
     @property
     def message(self) -> str:
         return "现在的猎场没有小哥哦！去其他猎场看看吧！"
+
+
+class PackNotMatchException(KagamiCoreException):
+    """当前的猎场并不是需要的猎场时的报错"""
+
+    def __init__(self, current: int, required: int) -> None:
+        super().__init__()
+        self.current = current
+        self.required = required
+
+    @property
+    def message(self) -> str:
+        return f"你现在并不在 {self.required} 猎场，你现在在 {self.current} 猎场"

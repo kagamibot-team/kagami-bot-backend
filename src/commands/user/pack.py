@@ -1,6 +1,11 @@
 from typing import Any
 from src.base.command_events import OnebotContext
-from src.base.exceptions import ObjectNotFoundException
+from src.base.exceptions import (
+    DoNotHaveException,
+    ObjectNotFoundException,
+    PackNotMatchException,
+    SoldOutException,
+)
 from src.common.decorators.command_decorators import (
     listenOnebot,
     matchAlconna,
@@ -38,6 +43,17 @@ from src.core.unit_of_work import get_unit_of_work
                 "去往",
             ],
         ),
+        Option(
+            "购买升级",
+            Arg("升级名1", str),
+            alias=["买升级", "购买猎场升级", "买猎场升级"],
+        ),
+        Option(
+            "切换升级",
+            Arg("升级名2", str, flags=[ArgFlag.OPTIONAL]),
+            alias=["切换猎场升级"],
+        ),
+        Option("我的升级"),
     )
 )
 async def _(ctx: OnebotContext, res: Arparma[Any]):
@@ -64,8 +80,10 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         if res.find("切换猎场"):
             index = res.query[int]("猎场序号")
             if index is not None:
-                if index <= 0 or index > count:
+                if index <= 0 or index > max_count:
                     raise ObjectNotFoundException(obj_name=f"{index}号猎场")
+                if index > count:
+                    raise DoNotHaveException(f"{index}号猎场")
                 await uow.user_pack.set_using(uid, index)
             else:
                 index = current + 1
@@ -74,7 +92,59 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
                 index += 1
                 assert 0 < index <= count
                 await uow.user_pack.set_using(uid, index)
+            await uow.up_pool.set_using(uid, None)
             await ctx.reply(f"已经切换到 {index} 号猎场了")
+            return
+
+        if res.find("购买升级"):
+            name = res.query[str]("升级名1")
+            assert name is not None
+            upid = await uow.up_pool.get_upid_strong(name)
+            if upid in await uow.up_pool.get_own(uid):
+                raise SoldOutException(name)
+            info = await uow.up_pool.get_pool_info(upid)
+            if not info.display or info.cost < 0:
+                raise ObjectNotFoundException("猎场升级", name)
+            await uow.money.use(uid, info.cost)
+            await uow.up_pool.add_own(uid, upid)
+            await ctx.reply(f"已经购买了猎场升级 {name}")
+            return
+
+        if res.find("切换升级"):
+            name = res.query[str]("升级名2")
+            if name is not None:
+                upid = await uow.up_pool.get_upid_strong(name)
+                if upid not in await uow.up_pool.get_own(uid):
+                    raise DoNotHaveException(f"猎场 {name}")
+                info = await uow.up_pool.get_pool_info(upid)
+                if (req := info.belong_pack) != (
+                    curr := await uow.user_pack.get_using(uid)
+                ):
+                    raise PackNotMatchException(curr, req)
+            else:
+                upids = list(
+                    await uow.up_pool.get_own(uid, await uow.user_pack.get_using(uid))
+                )
+                curr = await uow.up_pool.get_using(uid)
+                if curr not in upids:
+                    upid = upids[0] if len(upids) != 0 else None
+                elif curr == upids[-1]:
+                    upid = None
+                else:
+                    upid = upids[upids.index(curr) + 1]
+
+            await uow.up_pool.set_using(uid, upid)
+            if upid is None:
+                await ctx.reply("已经将当前猎场切换到默认了")
+            else:
+                info = await uow.up_pool.get_pool_info(upid)
+                await ctx.reply(f"已经将当前猎场升级为：{info.name}")
+            return
+
+        if res.find("我的升级"):
+            curr = await uow.user_pack.get_using(uid)
+            owns = await uow.up_pool.get_own(uid, curr)
+            await ctx.reply(str(owns))
             return
 
     # Fallback: 没有执行任何指令时，展示默认界面

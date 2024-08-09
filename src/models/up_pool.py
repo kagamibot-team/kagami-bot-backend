@@ -38,3 +38,15 @@ class UpPoolAwardRelationship(Base, BaseMixin):
 
     pool_id = Column(Integer, ForeignKey("catch_up_pool.data_id", ondelete="CASCADE"))
     aid = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+
+
+class UpPoolInventory(Base, BaseMixin):
+    """
+    用户和猎场升级之间的关系
+    """
+
+    __tablename__ = "catch_up_pool_inventory"
+    __table_args__ = (Index("catch_up_pool_inventory_index", "uid", "pool_id", unique=True),)
+
+    uid = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
+    pool_id = Column(Integer, ForeignKey("catch_up_pool.data_id", ondelete="CASCADE"))
