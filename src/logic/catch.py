@@ -1,3 +1,4 @@
+from src.base.exceptions import NoAwardException
 from src.common.dataclasses import Pick, Picks
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
@@ -28,6 +29,9 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
 
     levels = [uow.levels.get_by_id(i) for i in aids]
     weights = [level.weight for level in levels]
+
+    if len(levels) == 0:
+        raise NoAwardException()
 
     # 开始抓小哥
     for _ in range(count):

@@ -51,3 +51,20 @@ class SettingRepository(DBRepository):
         await self.session.execute(
             update(Global).values({Global.last_reported_version: version})
         )
+
+    async def get_pack_count(self) -> int:
+        """
+        获得现在开放了几个猎场
+        """
+        await self.assure_one()
+        res = await self.session.execute(select(Global.opened_pack).limit(1))
+        return res.scalar_one()
+
+    async def set_pack_count(self, count: int):
+        """
+        设置现在开放了几个猎场
+        """
+        await self.assure_one()
+        await self.session.execute(
+            update(Global).values({Global.opened_pack: max(1, count)})
+        )
