@@ -9,7 +9,7 @@ from nonebot_plugin_alconna import UniMessage
 from src.ui.base.basics import Fonts, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
 from src.ui.components.catch import catch
-from src.ui.views.award import AwardDisplay, AwardInfo
+from src.ui.views.award import AwardDisplay
 from src.ui.views.catch import CatchMesssage, CatchResultMessage
 from utils.threading import make_async
 
@@ -27,7 +27,7 @@ def render_catch_result_image(data: CatchResultMessage) -> PIL.Image.Image:
         render_text(
             text=data.title,
             color="#63605C",
-            font=Fonts.JINGNAN_BOBO_HEI,
+            font=[Fonts.JINGNAN_BOBO_HEI, Fonts.HARMONYOS_SANS_BLACK],
             font_size=96,
             width=800,
         )
