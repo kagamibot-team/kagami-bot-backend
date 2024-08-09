@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import Iterable, Sequence, cast
+from typing import Iterable, Sequence
 
 from sqlalchemy import delete, insert, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.exceptions import ObjectNotFoundException
 
@@ -10,13 +9,10 @@ from ..base.repository import DBRepository
 from ..models import Award, AwardAltName
 
 
-class AwardRepository(DBRepository[Award]):
+class AwardRepository(DBRepository):
     """
     小哥的仓库
     """
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Award)
 
     async def get_all_images(self) -> dict[int, str]:
         """获得目前含有的所有图片
@@ -49,11 +45,18 @@ class AwardRepository(DBRepository[Award]):
         Returns:
             int: 添加了的小哥的 ID
         """
-        award = Award(level_id=lid, name=name, is_special_get_only=True)
-        await self.add(award)
+        await self.session.execute(
+            insert(Award).values(
+                {
+                    Award.level_id: lid,
+                    Award.name: name,
+                    Award.pack_id: 0,
+                }
+            )
+        )
         await self.session.flush()
 
-        return cast(int, award.data_id)
+        return await self.get_aid_strong(name)
 
     async def get_aid(self, name: str) -> int | None:
         """根据名字找到一个小哥的 ID
@@ -103,14 +106,14 @@ class AwardRepository(DBRepository[Award]):
             raise ObjectNotFoundException("小哥", name)
         return aid
 
-    async def get_info(self, aid: int) -> tuple[str, str, int, str, int, bool]:
+    async def get_info(self, aid: int) -> tuple[str, str, int, str, int, int]:
         """获取一个小哥的基础信息
 
         Args:
             aid (int): 小哥的 ID
 
         Returns:
-            tuple[str, str, int, str, int, bool]: 名字、描述、等级 ID 和图片，排序，是否抽得到
+            tuple[str, str, int, str, int, int]: 名字、描述、等级 ID 和图片，排序，是否抽得到
         """
         query = select(
             Award.name,
@@ -118,7 +121,7 @@ class AwardRepository(DBRepository[Award]):
             Award.level_id,
             Award.image,
             Award.sorting,
-            Award.is_special_get_only,
+            Award.pack_id,
         ).filter(Award.data_id == aid)
         return (await self.session.execute(query)).tuples().one()
 
@@ -129,7 +132,14 @@ class AwardRepository(DBRepository[Award]):
             aid (int): 小哥的 ID
             name (str): 别名
         """
-        await self.session.execute(insert(AwardAltName).values(award_id=aid, name=name))
+        await self.session.execute(
+            insert(AwardAltName).values(
+                {
+                    AwardAltName.award_id: aid,
+                    AwardAltName.name: name,
+                }
+            )
+        )
 
     async def remove_alias(self, name: str):
         """移除一个小哥的别名
@@ -156,7 +166,7 @@ class AwardRepository(DBRepository[Award]):
         description: str | None = None,
         lid: int | None = None,
         image: str | Path | None = None,
-        special: bool | None = None,
+        pack_id: int | None = None,
         sorting: int | None = None,
     ):
         """修改一个小哥的信息
@@ -167,77 +177,25 @@ class AwardRepository(DBRepository[Award]):
             description (str | None): 描述
             lid (int | None): 等级 ID
             image (str | Path | None): 图片
-            special (bool | None): 是否是特殊的小哥，即无法被抽到与合成到
+            pack_id (int | None): 小哥所在的猎场，0 代表所有，-1 代表不出现
             sorting (int | None): 排序的优先级
         """
 
         query = update(Award).where(Award.data_id == aid)
         if name is not None:
-            query = query.values(name=name)
+            query = query.values({Award.name: name})
         if description is not None and len(description) > 0:
-            query = query.values(description=description)
+            query = query.values({Award.description: description})
         if lid is not None:
-            query = query.values(level_id=lid)
+            query = query.values({Award.level_id: lid})
         if image is not None:
-            query = query.values(image=Path(image).as_posix())
-        if special is not None:
-            query = query.values(is_special_get_only=special)
+            query = query.values({Award.image: Path(image).as_posix()})
+        if pack_id is not None:
+            query = query.values({Award.pack_id: pack_id})
         if sorting is not None:
-            query = query.values(sorting=sorting)
+            query = query.values({Award.sorting: sorting})
 
         await self.session.execute(query)
-
-    async def get_list_of_award_info(
-        self, aids: list[int]
-    ) -> Sequence[tuple[int, str, str, int, str, bool, int]]:
-        """获取多个小哥的基础信息
-
-        Args:
-            aids (list[int]): 小哥的 ID 列表
-
-        Returns:
-            Sequence[tuple[int, str, str, int, str, bool, int]]: 小哥 ID 和基础信息
-        """
-
-        query = select(
-            Award.data_id,
-            Award.name,
-            Award.description,
-            Award.level_id,
-            Award.image,
-            Award.is_special_get_only,
-            Award.sorting,
-        ).where(Award.data_id.in_(aids))
-        return (await self.session.execute(query)).tuples().all()
-
-    async def get_all_awards_in_pack(self, pack_name: str) -> set[int]:
-        """
-        获得所有在一个卡池中的小哥
-
-        # 注意力！！！！111
-        我拥了 contains 关键字，底层原理是使用 LIKE 表达式，我担心
-        会有注入攻击的风险。虽然它说有一个什么 AUTO ESCAPE 之类的
-        机制，但是出于担心，还是尽量不要把这个方法暴露在用户侧吧！
-        """
-
-        query = select(Award.data_id).filter(
-            Award.belong_pack.concat(",").contains(pack_name + ",")
-        )
-        return set((await self.session.execute(query)).scalars().all())
-
-    async def get_all_default_awards(self) -> set[int]:
-        """获得所有默认卡池的小哥
-
-        Returns:
-            set[int]: 默认小哥的 ID 集合
-        """
-
-        query = select(Award.data_id).filter(
-            Award.is_special_get_only.is_(False),
-            Award.belong_pack == "",
-            Award.level_id > 0,
-        )
-        return set((await self.session.execute(query)).scalars().all())
 
     async def group_by_level(self, aids: Iterable[int]) -> dict[int, set[int]]:
         """
@@ -264,53 +222,62 @@ class AwardRepository(DBRepository[Award]):
             )
         ).scalar_one()
 
-    async def set_packs(self, aid: int, packs: set[str]):
+    async def get_list_of_award_info(
+        self, aids: list[int]
+    ) -> Sequence[tuple[int, str, str, int, str, int, int]]:
+        """获取多个小哥的基础信息
+
+        Args:
+            aids (list[int]): 小哥的 ID 列表
+
+        Returns:
+            Sequence[tuple[int, str, str, int, str, int, int]]: 小哥 ID 和基础信息
+        """
+
+        query = select(
+            Award.data_id,
+            Award.name,
+            Award.description,
+            Award.level_id,
+            Award.image,
+            Award.pack_id,
+            Award.sorting,
+        ).where(Award.data_id.in_(aids))
+        return (await self.session.execute(query)).tuples().all()
+
+    async def get_all_awards_in_pack(self, pack_id: int) -> set[int]:
+        """
+        获得一个猎场中的所有小哥
+        """
+
+        query1 = select(Award.data_id).filter(Award.pack_id == pack_id)
+        set1 = set((await self.session.execute(query1)).scalars().all())
+        query2 = select(Award.data_id).filter(Award.pack_id == 0)
+        set2 = set((await self.session.execute(query2)).scalars().all())
+
+        return set1 | set2
+
+    async def set_pack(self, aid: int, pack_id: int):
         """
         设置一个小哥属于哪些猎场
         """
 
-        value = ",".join(packs) or ""
-
         await self.session.execute(
-            update(Award).where(Award.data_id == aid).values({Award.belong_pack: value})
+            update(Award).where(Award.data_id == aid).values({Award.pack_id: pack_id})
         )
 
-    async def get_packs(self, aid: int) -> set[str]:
+    async def get_pack(self, aid: int) -> int:
         """
         获取一个小哥在哪个猎场
         """
 
-        query = select(Award.belong_pack).filter(Award.data_id == aid)
-        result = set((await self.session.execute(query)).scalar_one().split(","))
-        if result == set(("",)):
-            result = set()
-        return result
-
-    async def add_pack(self, aid: int, pack: str):
-        """
-        给小哥添加一个猎场
-        """
-        packs = await self.get_packs(aid)
-        packs.add(pack)
-        await self.set_packs(aid, packs)
-
-    async def remove_pack(self, aid: int, pack: str):
-        """
-        去除掉小哥的一个猎场
-        """
-        packs = await self.get_packs(aid)
-        packs.remove(pack)
-        await self.set_packs(aid, packs)
+        query = select(Award.pack_id).filter(Award.data_id == aid)
+        return (await self.session.execute(query)).scalar_one()
 
     async def get_all_special_aids(self) -> set[str]:
         """
         获得所有无法抓到的小哥的名字
         """
 
-        query1 = select(Award.name).filter(Award.is_special_get_only.is_(True))
-        set1 = set((await self.session.execute(query1)).scalars())
-
-        query2 = select(Award.name).filter(Award.belong_pack != "")
-        set2 = set((await self.session.execute(query2)).scalars())
-
-        return set1 | set2
+        query = select(Award.name).filter(Award.pack_id < 0)
+        return set((await self.session.execute(query)).scalars())

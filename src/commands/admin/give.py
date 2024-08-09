@@ -23,7 +23,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
 
     async with get_unit_of_work() as uow:
         uid = await uow.users.get_uid(target)
-        await uow.users.add_money(uid, number)
+        await uow.money.add(uid, number)
 
     await ctx.reply("给了。", at=False, ref=True)
 
@@ -38,7 +38,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
 
     async with get_unit_of_work() as uow:
         for uid in await uow.users.all_users():
-            await uow.users.add_money(uid, number)
+            await uow.money.add(uid, number)
 
     await ctx.reply("给了。", at=False, ref=True)
 

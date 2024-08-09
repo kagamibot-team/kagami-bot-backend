@@ -1,5 +1,4 @@
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import insert, select, update
 
 from src.base.exceptions import LackException
 
@@ -7,13 +6,10 @@ from ..base.repository import DBRepository
 from ..models import User
 
 
-class UserRepository(DBRepository[User]):
+class UserRepository(DBRepository):
     """
     和玩家数据有关的仓库
     """
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, User)
 
     async def assure(self, qqid: int | str) -> None:
         """
@@ -24,8 +20,8 @@ class UserRepository(DBRepository[User]):
 
         if result is None:
             # 创建一个新的用户
-            user = User(qq_id=str(qqid))
-            await self.add(user)
+            await self.session.execute(insert(User).values({User.qq_id: str(qqid)}))
+            await self.session.flush()
 
     async def get_uid(self, qqid: int | str) -> int:
         """根据用户的 qqid 获取用户的 data_id
@@ -83,41 +79,6 @@ class UserRepository(DBRepository[User]):
             .one()
         )
 
-    async def get_flags(self, uid: int) -> set[str]:
-        return set(
-            (
-                await self.session.execute(
-                    select(User.feature_flag).filter(User.data_id == uid)
-                )
-            )
-            .scalar_one()
-            .split(",")
-        )
-
-    async def set_flags(self, uid: int, flags: set[str]):
-        """设置一个用户的 Flags
-
-        Args:
-            uid (int): 用户
-            flags (set[str]): Flags 集合
-        """
-
-        await self.session.execute(
-            update(User)
-            .where(User.data_id == uid)
-            .values({User.feature_flag: ",".join(flags)})
-        )
-
-    async def add_flag(self, uid: int, flag: str):
-        """为一个用户启用 Flag
-
-        Args:
-            uid (int): 用户
-            flag (str): Flag
-        """
-
-        await self.set_flags(uid, (await self.get_flags(uid)) | {flag})
-
     async def add_slot_count(self, uid: int, count: int = 1):
         """为一个用户添加一个卡槽
 
@@ -131,68 +92,6 @@ class UserRepository(DBRepository[User]):
             .where(User.data_id == uid)
             .values({User.pick_max_cache: User.pick_max_cache + count})
         )
-
-    async def do_have_flag(self, uid: int, flag: str):
-        return flag in await self.get_flags(uid)
-
-    async def remove_flag(self, uid: int, flag: str):
-        flags = await self.get_flags(uid)
-        flags.remove(flag)
-        await self.set_flags(uid, flags)
-
-    async def get_money(self, uid: int) -> float:
-        """获得用户现在有多少薯片
-
-        Args:
-            uid (int): 用户 ID
-
-        Returns:
-            float: 薯片数量
-        """
-
-        return (
-            await self.session.execute(select(User.money).filter(User.data_id == uid))
-        ).scalar_one()
-
-    async def set_money(self, uid: int, money: float):
-        """设置用户要有多少薯片
-
-        Args:
-            uid (int): 用户 ID
-            money (float): 薯片数量
-        """
-
-        await self.session.execute(
-            update(User).where(User.data_id == uid).values({User.money: money})
-        )
-
-    async def add_money(self, uid: int, money: float):
-        """增加用户的薯片数量
-
-        Args:
-            uid (int): 用户 ID
-            money (float): 薯片数量
-        """
-
-        await self.set_money(uid, (await self.get_money(uid)) + money)
-
-    async def use_money(self, uid: int, money: float, report: bool = True) -> float:
-        """消耗薯片
-
-        Args:
-            uid (int): 用户 ID
-            money (float): 数量
-            report (bool, optional): 是否在钱不够时抛出异常
-
-        Returns:
-            float: 使用后剩余的钱的数量
-        """
-
-        current = await self.get_money(uid)
-        if current - money < 0 and report:
-            raise LackException("薯片", money, current)
-        await self.set_money(uid, current - money)
-        return current - money
 
     async def get_sign_in_info(self, uid: int) -> tuple[float, int]:
         """获得用户上次签到时间和签到次数
@@ -272,37 +171,141 @@ class UserRepository(DBRepository[User]):
 
         return list((await self.session.execute(select(User.data_id))).scalars())
 
-    async def get_own_packs(self, uid: int) -> set[str]:
+
+class MoneyRepository(DBRepository):
+    async def get(self, uid: int) -> float:
+        """获得用户现在有多少薯片
+
+        Args:
+            uid (int): 用户 ID
+
+        Returns:
+            float: 薯片数量
+        """
+
+        return (
+            await self.session.execute(select(User.money).filter(User.data_id == uid))
+        ).scalar_one()
+
+    async def set(self, uid: int, money: float):
+        """设置用户要有多少薯片
+
+        Args:
+            uid (int): 用户 ID
+            money (float): 薯片数量
+        """
+
+        await self.session.execute(
+            update(User).where(User.data_id == uid).values({User.money: money})
+        )
+
+    async def add(self, uid: int, money: float):
+        """增加用户的薯片数量
+
+        Args:
+            uid (int): 用户 ID
+            money (float): 薯片数量
+        """
+
+        await self.set(uid, (await self.get(uid)) + money)
+
+    async def use(self, uid: int, money: float, report: bool = True) -> float:
+        """消耗薯片
+
+        Args:
+            uid (int): 用户 ID
+            money (float): 数量
+            report (bool, optional): 是否在钱不够时抛出异常
+
+        Returns:
+            float: 使用后剩余的钱的数量
+        """
+
+        current = await self.get(uid)
+        if current - money < 0 and report:
+            raise LackException("薯片", money, current)
+        await self.set(uid, current - money)
+        return current - money
+
+
+class UserFlagRepository(DBRepository):
+    async def get(self, uid: int) -> set[str]:
         return set(
             (
                 await self.session.execute(
-                    select(User.own_packs).filter(User.data_id == uid)
+                    select(User.feature_flag).filter(User.data_id == uid)
                 )
             )
             .scalar_one()
             .split(",")
         )
 
-    async def do_have_pack(self, uid: int, pack_name: str) -> bool:
-        return pack_name in await self.get_own_packs(uid)
+    async def set(self, uid: int, flags: set[str]):
+        """设置一个用户的 Flags
 
-    async def hanging_pack(self, uid: int) -> str | None:
-        val = (
-            await self.session.execute(
-                select(User.using_pack).filter(User.data_id == uid)
-            )
-        ).scalar_one()
-
-        if val == "":
-            return None
-        return val
-
-    async def hang_pack(self, uid: int, pack_name: str | None):
-        """
-        挂载一个卡池
+        Args:
+            uid (int): 用户
+            flags (set[str]): Flags 集合
         """
 
-        pack_name = pack_name or ""
         await self.session.execute(
-            update(User).where(User.data_id == uid).values({User.using_pack: pack_name})
+            update(User)
+            .where(User.data_id == uid)
+            .values({User.feature_flag: ",".join(flags)})
         )
+
+    async def add(self, uid: int, flag: str):
+        """为一个用户启用 Flag
+
+        Args:
+            uid (int): 用户
+            flag (str): Flag
+        """
+
+        await self.set(uid, (await self.get(uid)) | {flag})
+
+    async def have(self, uid: int, flag: str):
+        return flag in await self.get(uid)
+
+    async def remove(self, uid: int, flag: str):
+        flags = await self.get(uid)
+        flags.remove(flag)
+        await self.set(uid, flags)
+
+
+class UserPackRepository(DBRepository):
+    async def get_count(self, uid: int) -> int:
+        """
+        获得一个用户现在买了几个猎场
+        """
+
+        q = select(User.bought_pack_count).filter(User.data_id == uid)
+        return (await self.session.execute(q)).scalar_one()
+
+    async def set_count(self, uid: int, count: int) -> None:
+        """
+        设置用户购买了多少个猎场
+        """
+
+        q = (
+            update(User)
+            .where(User.data_id == uid)
+            .values({User.bought_pack_count: count})
+        )
+        await self.session.execute(q)
+
+    async def get_using(self, uid: int) -> int:
+        """
+        获得用户目前在第几个猎场
+        """
+
+        q = select(User.using_pack).filter(User.data_id == uid)
+        return (await self.session.execute(q)).scalar_one()
+
+    async def set_using(self, uid: int, idx: int) -> None:
+        """
+        设置用户目前在第几个猎场
+        """
+
+        q = update(User).where(User.data_id == uid).values({User.using_pack: idx})
+        await self.session.execute(q)

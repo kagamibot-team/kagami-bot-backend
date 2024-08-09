@@ -1,5 +1,4 @@
 from sqlalchemy import delete, insert, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import Award
 from src.models.recipe_history import RecipeHistory
@@ -10,13 +9,10 @@ from ..base.repository import DBRepository
 from ..models import Recipe
 
 
-class RecipeRepository(DBRepository[Recipe]):
+class RecipeRepository(DBRepository):
     """
     小哥合成配方的仓库
     """
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Recipe)
 
     async def get_recipe(
         self, aid1: int, aid2: int, aid3: int
@@ -83,14 +79,16 @@ class RecipeRepository(DBRepository[Recipe]):
         aid1, aid2, aid3 = sorted([aid1, aid2, aid3])
         if await self.get_recipe(aid1, aid2, aid3) is not None:
             raise ObjectAlreadyExistsException(f"Recipe<{aid1}, {aid2}, {aid3}>")
-        await self.add(
-            Recipe(
-                award1=aid1,
-                award2=aid2,
-                award3=aid3,
-                result=aidres,
-                possibility=possibility,
-                modified=1 if modified else 0,
+        await self.session.execute(
+            insert(Recipe).values(
+                {
+                    Recipe.award1: aid1,
+                    Recipe.award2: aid2,
+                    Recipe.award3: aid3,
+                    Recipe.result: aidres,
+                    Recipe.possibility: possibility,
+                    Recipe.modified: 1 if modified else 0,
+                }
             )
         )
 

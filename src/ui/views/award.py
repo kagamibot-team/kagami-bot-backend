@@ -14,7 +14,7 @@ class AwardInfo(BaseModel):
     sid: int | None = None
     skin_name: str | None = None
     sorting: int = 0
-    is_special_get_only: bool = False
+    pack_id: int = 1
 
     @property
     def color(self):

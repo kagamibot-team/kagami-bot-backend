@@ -23,7 +23,7 @@ def award_info_from_uow(
     description: str,
     level_id: int,
     image: str,
-    is_special_get_only: bool,
+    pack_id: int,
     sorting: int,
 ) -> tuple[int, AwardInfo]:
     """
@@ -36,7 +36,7 @@ def award_info_from_uow(
         description (str): 小哥描述
         level_id (int): 小哥等级
         image (str): 小哥图片
-        is_special_get_only (bool): 是否只能通过特殊方式获得
+        pack_id (int): 是否只能通过特殊方式获得
         sorting (int): 排序
     """
     return aid, AwardInfo(
@@ -48,7 +48,7 @@ def award_info_from_uow(
         sid=None,
         skin_name=None,
         sorting=sorting,
-        is_special_get_only=is_special_get_only,
+        pack_id=pack_id,
     )
 
 
@@ -65,7 +65,7 @@ async def get_award_info(
     if uid is not None and sid is not None:
         raise ValueError("请不要同时启用 uid 和 sid 两个参数")
 
-    aname, desc, lid, img, sorting, is_special_get_only = await uow.awards.get_info(aid)
+    aname, desc, lid, img, sorting, pack_id = await uow.awards.get_info(aid)
     level = uow.levels.get_by_id(lid)
     sname = None
 
@@ -85,7 +85,7 @@ async def get_award_info(
         sid=sid,
         skin_name=sname,
         sorting=sorting,
-        is_special_get_only=is_special_get_only,
+        pack_id=pack_id,
     )
 
 

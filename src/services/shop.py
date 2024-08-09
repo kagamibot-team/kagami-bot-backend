@@ -181,13 +181,13 @@ class MergeMachine(ShopProduct):
         return Path("./res/merge_machine.png")
 
     async def is_sold_out(self, uow: UnitOfWork, uid: int) -> bool:
-        return await uow.users.do_have_flag(uid, "合成")
+        return await uow.user_flag.have(uid, "合成")
 
     def match(self, name: str) -> bool:
         return name in ["小哥合成凭证", "合成小哥凭证", "合成凭证", "合成"]
 
     async def gain(self, uow: UnitOfWork, uid: int):
-        await uow.users.add_flag(uid, "合成")
+        await uow.user_flag.add(uid, "合成")
 
 
 # class SignHint(ShopProduct):

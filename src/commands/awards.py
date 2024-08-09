@@ -88,11 +88,7 @@ async def _(ctx: OnebotContext, res: Arparma):
             compact=True,
         ),
         Option("图片", Arg("图片", Image), alias=["--image", "照片", "-i", "-I"]),
-        Option(
-            "特殊性",
-            Arg("特殊性", str),
-            alias=["--special", "特殊", "-s", "-S", "是否特殊"],
-        ),
+        Option("猎场", Arg("猎场", int), alias=["--packs", "所在猎场"]),
         Option(
             "排序优先度",
             Arg("排序优先度", int),
@@ -106,7 +102,7 @@ async def _(ctx: OnebotContext, res: Arparma):
     levelName = res.query[str]("等级名字")
     _description = res.query[tuple[str]]("描述") or ()
     image = res.query[Image]("图片")
-    special = res.query[str]("特殊性")
+    pack_id = res.query[int]("猎场")
     sorting = res.query[int]("排序优先度")
 
     assert name is not None
@@ -118,8 +114,6 @@ async def _(ctx: OnebotContext, res: Arparma):
             if levelName is not None
             else None
         )
-        if special is not None:
-            special = special in ("是", "1", "true", "t", "y", "yes", "T")
         image = image.url if image is not None else None
         image = await download_award_image(aid, image) if image is not None else None
         await uow.awards.modify(
@@ -128,7 +122,7 @@ async def _(ctx: OnebotContext, res: Arparma):
             description="".join(_description),
             lid=lid,
             image=image,
-            special=special,
+            pack_id=pack_id,
             sorting=sorting,
         )
 

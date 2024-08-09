@@ -166,7 +166,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
                 uid=uid, qqid=str(ctx.sender_id), name=await ctx.sender_name
             )
             freezed_shop = await shop.freeze(uow, uid)
-            money = await uow.users.get_money(uid)
+            money = await uow.money.get(uid)
         msg = await shop_default_message(user, freezed_shop, money)
         await ctx.send(msg)
     else:
@@ -187,6 +187,6 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
                 costs += await prod.price(uow, uid)
                 prods.append(await prod.freeze(uow, uid))
                 await prod.gain(uow, uid)
-            remain = await uow.users.use_money(uid, costs)
+            remain = await uow.money.use(uid, costs)
             print(prods)
         await ctx.send(await shop_buy_message(user, prods, costs, remain))

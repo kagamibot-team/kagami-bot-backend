@@ -19,7 +19,7 @@ across different repositories.
 该模块的思路源自 ChatGPT。
 """
 
-from typing import Generic, Type, TypeVar
+from typing import TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,19 +28,13 @@ from ..models import Base
 T = TypeVar("T", bound="Base")
 
 
-class DBRepository(Generic[T]):
+class DBRepository:
     """
     基础的数据库仓库，用于管理一个特定的数据库表。
     """
 
-    def __init__(self, session: AsyncSession, model: Type[T]) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         self.session = session
-        self.model = model
-
-    async def add(self, obj: T) -> T:
-        self.session.add(obj)
-        await self.session.flush()
-        return obj
 
 
 __all__ = ["DBRepository"]

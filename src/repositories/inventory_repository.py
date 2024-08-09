@@ -1,17 +1,13 @@
 from sqlalchemy import delete, insert, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..base.repository import DBRepository
 from ..models import Inventory
 
 
-class InventoryRepository(DBRepository[Inventory]):
+class InventoryRepository(DBRepository):
     """
     和玩家的小哥库存有关的仓库
     """
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Inventory)
 
     async def set_inventory(self, uid: int, aid: int, storage: int, used: int):
         """设置玩家的小哥库存

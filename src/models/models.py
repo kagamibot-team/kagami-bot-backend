@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import *
 from .recipe_history import RecipeHistory
+from .up_pool import UpPool
 
 DEFAULT_IMG = os.path.join(".", "res", "default.png")
 
@@ -20,6 +21,7 @@ class Global(Base, BaseMixin):
 
     catch_interval: Mapped[float] = mapped_column(default=3600)
     last_reported_version: Mapped[str] = mapped_column(default="", server_default="")
+    opened_pack: Mapped[int] = mapped_column(default=1, server_default="1")
 
 
 class Award(Base, BaseMixin):
@@ -30,10 +32,7 @@ class Award(Base, BaseMixin):
     description: Mapped[str] = mapped_column(default="")
     sorting: Mapped[int] = mapped_column(default=0)
     level_id = Column(Integer, index=True)
-    is_special_get_only: Mapped[bool] = mapped_column(default=False, server_default="0")
-
-    # 20240807 追加和卡池有关的若干字段
-    belong_pack: Mapped[str] = mapped_column(default="", server_default="")
+    pack_id = Column(Integer, index=True, default=1, server_default="1")
 
 
 class AwardAltName(Base, BaseMixin, AltNameMixin):
@@ -87,10 +86,14 @@ class User(Base, BaseMixin):
     # 用户的特殊称呼不再在配置文件中设置，太麻烦了
     special_call: Mapped[str] = mapped_column(default="", server_default="")
 
-    # 20240807 追加
-    # 和卡池有关的字段
-    own_packs: Mapped[str] = mapped_column(default="", server_default="")
-    using_pack: Mapped[str] = mapped_column(default="", server_default="")
+    bought_pack_count: Mapped[int] = mapped_column(default=1, server_default="1")
+    using_pack: Mapped[int] = mapped_column(default=1, server_default="1")
+
+    using_up_pool = Column(
+        Integer,
+        ForeignKey("catch_up_pool.data_id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
 
 class SkinRecord(Base, BaseMixin):
@@ -167,4 +170,5 @@ __all__ = [
     "SkinAltName",
     "Recipe",
     "RecipeHistory",
+    "UpPool",
 ]
