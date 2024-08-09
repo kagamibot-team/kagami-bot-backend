@@ -1,17 +1,13 @@
-from sqlalchemy import delete, func, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete, func, insert, select, update
 
 from ..base.repository import DBRepository
 from ..models import Global
 
 
-class SettingRepository(DBRepository[Global]):
+class SettingRepository(DBRepository):
     """
     和游戏全局设置项有关的仓库
     """
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Global)
 
     async def assure_one(self):
         """保证只有一个 GlobalSettings 对象"""
@@ -20,7 +16,7 @@ class SettingRepository(DBRepository[Global]):
 
         if counts != 1:
             await self.session.execute(delete(Global))
-            await self.add(Global())
+            await self.session.execute(insert(Global))
 
     async def get_interval(self):
         """
@@ -54,4 +50,21 @@ class SettingRepository(DBRepository[Global]):
         await self.assure_one()
         await self.session.execute(
             update(Global).values({Global.last_reported_version: version})
+        )
+
+    async def get_pack_count(self) -> int:
+        """
+        获得现在开放了几个猎场
+        """
+        await self.assure_one()
+        res = await self.session.execute(select(Global.opened_pack).limit(1))
+        return res.scalar_one()
+
+    async def set_pack_count(self, count: int):
+        """
+        设置现在开放了几个猎场
+        """
+        await self.assure_one()
+        await self.session.execute(
+            update(Global).values({Global.opened_pack: max(1, count)})
         )

@@ -138,8 +138,8 @@ async def goodnight(ctx: GroupContext, res: Arparma):
                         }
                     )
                 )
-                money = await uow.users.get_money(uid)
-                await uow.users.set_money(uid, money + awards)
+                money = await uow.money.get(uid)
+                await uow.money.set(uid, money + awards)
             count = sleep_count + 1
 
         name = await uow.users.name(qqid=ctx.sender_id)

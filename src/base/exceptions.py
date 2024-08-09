@@ -12,14 +12,17 @@ class KagamiCoreException(Exception):
 class ObjectNotFoundException(KagamiCoreException):
     """当找不到某个对象时抛出此异常"""
 
-    def __init__(self, obj_type: str, obj_name: str) -> None:
+    def __init__(self, obj_type: str | None = None, obj_name: str = "") -> None:
         super().__init__()
         self.obj_type = obj_type
         self.obj_name = obj_name
 
     @property
     def message(self) -> str:
-        return f"我好像没找到你说的 {self.obj_name} 的那个 {self.obj_type}"
+        msg = f"我好像没找到你说的 {self.obj_name}"
+        if self.obj_type is not None:
+            msg += f" 的那个 {self.obj_type}"
+        return msg
 
 
 class RecipeMissingException(KagamiCoreException):
@@ -114,3 +117,24 @@ class SoldOutException(KagamiCoreException):
     @property
     def message(self) -> str:
         return f"啊哦！{self.obj_name} 卖光了！"
+
+
+class NoAwardException(KagamiCoreException):
+    """当前猎场没有小哥时抛出的异常"""
+
+    @property
+    def message(self) -> str:
+        return "现在的猎场没有小哥哦！去其他猎场看看吧！"
+
+
+class PackNotMatchException(KagamiCoreException):
+    """当前的猎场并不是需要的猎场时的报错"""
+
+    def __init__(self, current: int, required: int) -> None:
+        super().__init__()
+        self.current = current
+        self.required = required
+
+    @property
+    def message(self) -> str:
+        return f"你现在并不在 {self.required} 猎场，你现在在 {self.current} 猎场"

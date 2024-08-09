@@ -165,7 +165,6 @@ async def reply_call(
             at_back + " 干嘛……",
             "再戳要坏掉了！",
             "哼",
-            f"嗯哼 {sender_name}",
             "awa",
             "qaq",
             "李在赣神魔！",

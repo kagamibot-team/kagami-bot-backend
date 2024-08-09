@@ -1,17 +1,13 @@
 from sqlalchemy import insert, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..base.repository import DBRepository
 from ..models.models import Skin, SkinRecord
 
 
-class SkinInventoryRepository(DBRepository[SkinRecord]):
+class SkinInventoryRepository(DBRepository):
     """
     和皮肤记录有关的仓库
     """
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, SkinRecord)
 
     async def do_user_have(self, uid: int, sid: int) -> bool:
         """获得一个用户是否拥有一个皮肤

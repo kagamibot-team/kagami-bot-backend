@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from sqlalchemy import delete, insert, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.exceptions import ObjectNotFoundException
 from src.models.models import SkinAltName
@@ -10,13 +9,10 @@ from ..base.repository import DBRepository
 from ..models import Skin
 
 
-class SkinRepository(DBRepository[Skin]):
+class SkinRepository(DBRepository):
     """
     皮肤的仓库
     """
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Skin)
 
     async def delete(self, data_id: int) -> None:
         d = delete(Skin).where(Skin.data_id == data_id)

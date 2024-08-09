@@ -81,12 +81,14 @@ async def picks(
             user_time.pickRemain - spent_count,
             user_time.pickLastUpdated,
         )
-        await uow.users.add_money(uid, pick_result.money)
+        await uow.money.add(uid, pick_result.money)
         user = UserData(
             uid=uid,
             qqid=str(qqid),
             name=qqname,
         )
+
+        pack_id = await uow.user_pack.get_using(uid)
 
         if spent_count > 0:
             msg = CatchResultMessage(
@@ -95,9 +97,10 @@ async def picks(
                 slot_sum=user_time.pickMax,
                 next_time=user_time.pickLastUpdated + user_time.interval - time.time(),
                 money_changed=int(pick_result.money),
-                money_sum=int(await uow.users.get_money(uid)),
+                money_sum=int(await uow.money.get(uid)),
                 catchs=catchs,
                 group_id=group_id,
+                pack_id=pack_id,
             )
         else:
             msg = CatchMesssage(
@@ -106,6 +109,7 @@ async def picks(
                 slot_sum=user_time.pickMax,
                 next_time=user_time.pickLastUpdated + user_time.interval - time.time(),
                 group_id=group_id,
+                pack_id=pack_id,
             )
 
     await handle_xb(msg)
@@ -175,8 +179,8 @@ async def _(ctx: OnebotContext):
         return
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
-        flags_before = await uow.users.get_flags(uid)
-        await uow.users.add_flag(uid, "是")
+        flags_before = await uow.user_flag.get(uid)
+        await uow.user_flag.add(uid, "是")
         utime = await uow_calculate_time(uow, uid)
     if utime.pickRemain > 0:
         msg = await picks(

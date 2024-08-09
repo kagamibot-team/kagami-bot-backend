@@ -24,6 +24,9 @@ class CatchMesssage(BaseModel):
     group_id: int | None
     "群号"
 
+    pack_id: int
+    "现在在哪个猎场"
+
     @property
     def timedelta_text(self):
         "倒计时"
@@ -56,7 +59,10 @@ class CatchResultMessage(CatchMesssage):
     @property
     def title(self):
         "标题"
-        return self.user.name + " 的一抓"
+        lmt = f"[{self.pack_id}号猎场]"
+        if self.pack_id == 1:
+            lmt = ""
+        return lmt + self.user.name + " 的一抓"
 
     @property
     def details(self):

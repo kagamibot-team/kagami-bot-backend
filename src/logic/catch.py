@@ -1,7 +1,7 @@
+from src.base.exceptions import NoAwardException
 from src.common.dataclasses import Pick, Picks
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
-from src.services.award_pack import get_award_pack_service
 
 
 async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
@@ -18,19 +18,28 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
         Picks: 抓小哥结果的记录
     """
 
+    up_pool_posibility = {1: 0.1, 2: 0.2, 3: 0.4, 4: 0.5, 5: 0.6}
+
     picks = Picks(awards={}, money=0, uid=uid)
     assert count >= 0
 
     picked: list[int] = []
-    pack_service = get_award_pack_service()
-    levels = await pack_service.get_all_available_levels(uow, uid)
+
+    pack_id = await uow.user_pack.get_using(uid)
+    aids_set = await uow.awards.get_all_awards_in_pack(pack_id)
+    aids = await uow.awards.group_by_level(aids_set)
+
+    levels = [uow.levels.get_by_id(i) for i in aids]
     weights = [level.weight for level in levels]
+
+    if len(levels) == 0:
+        raise NoAwardException()
 
     # 开始抓小哥
     for _ in range(count):
         # 对是小哥进行特判
-        if await uow.users.do_have_flag(uid, "是"):
-            await uow.users.remove_flag(uid, "是")
+        if await uow.user_flag.have(uid, "是"):
+            await uow.user_flag.remove(uid, "是")
             shi = await uow.awards.get_aid("是小哥")
             if shi is None:
                 pass
@@ -39,10 +48,17 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
                 continue
 
         level = get_random().choices(levels, weights)[0]
-        aids = await pack_service.random_choose_source(
-            uow, uid, get_random(), level.lid
-        )
-        aid = get_random().choice(list(aids))
+        limited_aids = aids[level.lid]
+
+        using_up = await uow.up_pool.get_using(uid)
+        if using_up is not None:
+            if get_random().random() < up_pool_posibility[level.lid]:
+                _aids = await uow.up_pool.get_aids(using_up)
+                if len(_aids) > 0:
+                    _grouped = await uow.awards.group_by_level(_aids)
+                    limited_aids = _grouped[level.lid]
+
+        aid = get_random().choice(list(limited_aids))
         picked.append(aid)
 
     met_35 = False

@@ -161,7 +161,7 @@ async def _(ctx: OnebotContext, res: Arparma):
     async with get_unit_of_work(qqid=ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
 
-        if not await uow.users.do_have_flag(uid, "合成"):
+        if not await uow.user_flag.have(uid, "合成"):
             username = await ctx.get_sender_name()
             await ctx.reply("你没有买小哥合成凭证，被门口的保安拦住了。")
             return
@@ -181,7 +181,7 @@ async def _(ctx: OnebotContext, res: Arparma):
         for aid, use in using.items():
             await use_award(uow, uid, aid, use)
 
-        after = await uow.users.use_money(uid, cost)
+        after = await uow.money.use(uid, cost)
 
         aid, succeed = await try_merge(uow.session, uid, a1, a2, a3)
         if aid == -1:

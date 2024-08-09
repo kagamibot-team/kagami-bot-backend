@@ -37,7 +37,7 @@ class Achievement(BaseModel, ABC):
             bool: 是否拿到了这个成就
         """
 
-        return await uow.users.do_have_flag(uid, self.flag)
+        return await uow.user_flag.have(uid, self.flag)
 
     @abstractmethod
     async def validate_achievement(
@@ -220,7 +220,7 @@ class MergeTripleAchievement(DisplayWhenAchievedAchievement):
         return False
 
     async def prise(self, uow: UnitOfWork, uid: int) -> None:
-        await uow.users.add_money(uid, 50)
+        await uow.money.add(uid, 50)
 
 
 class AchievementService:
@@ -251,7 +251,7 @@ class AchievementService:
                 continue
             if await a.validate_achievement(uow, event):
                 await a.prise(uow, event.uid)
-                await uow.users.add_flag(event.uid, a.flag)
+                await uow.user_flag.add(event.uid, a.flag)
                 achieved.append(a)
 
         return achieved
