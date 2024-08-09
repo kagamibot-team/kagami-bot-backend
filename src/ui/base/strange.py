@@ -53,7 +53,7 @@ def make_strange(
             left = w * i
             top = h * j
             source = get_random().choice(sources)
-            res = source.crop((left, top, left + w, top + h))
+            res = source.crop((left, top, left + w, top + h)).convert("RGBA")
             if premix_background:
                 _res = PIL.Image.new(
                     "RGBA",
