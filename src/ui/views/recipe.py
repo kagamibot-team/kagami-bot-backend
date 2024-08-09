@@ -225,8 +225,25 @@ class MergeResult(BaseModel):
         return Random(hash(self.merge_time))
 
     @property
+    def have_strange_in_input(self):
+        "输入的有奇怪的小哥么"
+
+        for i in self.inputs:
+            if i.level.lid == 0 and i.aid != 89:
+                return True
+        return False
+
+    @property
+    def result_is_strange(self):
+        return self.result_level == 0 and not self.is_shit
+
+    @property
+    def is_strange(self):
+        return self.have_strange_in_input or self.result_is_strange
+
+    @property
     def ymh_message(self) -> MokieMessage:
-        if self.result_level == 0 and not self.is_shit:
+        if self.is_strange:
             return self.random.choice(MOKIE_MESSAGES_ZERO)
 
         if self.output.info.aid == 9:

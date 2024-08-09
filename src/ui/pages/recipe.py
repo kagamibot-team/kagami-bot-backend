@@ -116,7 +116,7 @@ def render_merge_image(data: MergeResult):
     )
 
     draw = PIL.ImageDraw.Draw(background)
-    if color != "#000000" or data.output.info.aid == 89:
+    if not data.is_strange:
         draw.ellipse(
             (-1200, -1200, 1200, 1200),
             rgb_to_hex(mix_color(hex_to_rgb(color), (255, 255, 255), 0.1)),
