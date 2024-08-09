@@ -1,13 +1,18 @@
 from typing import Any
 from src.base.command_events import OnebotContext
 from src.base.exceptions import ObjectNotFoundException
-from src.common.decorators.command_decorators import listenOnebot, matchAlconna
+from src.common.decorators.command_decorators import (
+    listenOnebot,
+    matchAlconna,
+    requireAdmin,
+)
 from arclet.alconna import Alconna, Arg, Arparma, Option, ArgFlag
 
 from src.core.unit_of_work import get_unit_of_work
 
 
 @listenOnebot()
+@requireAdmin()
 @matchAlconna(
     Alconna(
         "re:(小L|小l|xl)?(猎场|lc)",
