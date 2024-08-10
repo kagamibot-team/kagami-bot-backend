@@ -2,6 +2,7 @@
 和根事件监听器有关的模块
 """
 
+import time
 from typing import Any
 from nonebot import on_notice, on_type  # type: ignore
 from nonebot.adapters.onebot.v11 import (
@@ -26,6 +27,28 @@ from src.base.onebot.onebot_tools import record_last_context
 from src.common.config import config
 
 
+MESSAGE_LAST_TIME: dict[int, float] = {}
+
+
+def check_last_time(sender: int | None) -> bool:
+    """用于消息限制频率
+
+    Args:
+        sender (int): 消息的发送者的 ID
+
+    Returns:
+        bool: 是否达到了频率限制
+    """
+
+    sender = sender or 0
+
+    last_time = MESSAGE_LAST_TIME.get(sender, 0)
+    now = time.time()
+    MESSAGE_LAST_TIME[sender] = now
+
+    return now - last_time < 1
+
+
 def activate_root(event_root: EventManager):
     """激活事件监听器，让事件监听器挂载到 Nonebot 原生的事件上
 
@@ -43,12 +66,16 @@ def activate_root(event_root: EventManager):
     async def _(bot: Bot, event: GroupMessageEvent):
         if config.enable_white_list and event.group_id not in config.white_list_groups:
             return
+        if check_last_time(event.sender.user_id):
+            return
         record_last_context(event.user_id, event.group_id)
 
         await event_root.throw(GroupContext(event, bot))
 
     @privateMessageHandler.handle()
     async def _(bot: Bot, event: PrivateMessageEvent):
+        if check_last_time(event.sender.user_id):
+            return
         record_last_context(event.user_id, None)
         await event_root.throw(PrivateContext(event, bot))
 
