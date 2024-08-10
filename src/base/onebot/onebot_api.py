@@ -14,6 +14,7 @@
 import asyncio
 import datetime
 from io import BytesIO
+from typing import Any
 
 import PIL
 import PIL.Image
@@ -117,15 +118,15 @@ async def get_name(
     bot: OnebotBotProtocol, qqid: int | str, group_id: int | None
 ) -> str:
     try:
-        info = await bot.call_api("get_stranger_info", user_id=qqid)
-        name = info["nick"]
+        info: dict[str, Any] = await bot.call_api("get_stranger_info", user_id=qqid)
+        name: str = info.get("nick", "")
 
         if group_id is not None:
             info = await bot.call_api(
                 "get_group_member_info", group_id=group_id, user_id=qqid
             )
-            name = info["nickname"]
-            name = info["card"] or name
+            name: str = info.get("nickname", "")
+            name = info.get("card", "") or name
 
         return name
     except ActionFailed:

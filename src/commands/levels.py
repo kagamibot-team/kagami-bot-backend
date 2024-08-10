@@ -7,7 +7,6 @@ from src.common.decorators.command_decorators import (
     matchRegex,
     requireAdmin,
 )
-from src.common.lang.zh import la
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import level_repo
 from src.models.models import Award
@@ -38,6 +37,8 @@ async def _(ctx: OnebotContext, _):
         else:
             prob = f"权重{weight}"
 
-        message += f"\n- {name}[{color_code}] {prob} 奖励 {price}薯片 共有 {counts[lid]} 小哥"
+        message += (
+            f"\n- {name}[{color_code}] {prob} 奖励 {price}薯片 共有 {counts[lid]} 小哥"
+        )
 
     await ctx.send(message)

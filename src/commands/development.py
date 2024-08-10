@@ -50,6 +50,20 @@ async def _(ctx: GroupContext, _):
     )
 
 
+@listenGroup()
+@requireAdmin()
+@matchRegex("^::导出日志$")
+async def _(ctx: GroupContext, _):
+    await DatabaseManager.get_single().manual_checkpoint()
+    fp = Path("./data/log.log")
+    await ctx.bot.call_api(
+        "upload_group_file",
+        group_id=ctx.event.group_id,
+        file=str(fp.absolute()),
+        name=fp.name,
+    )
+
+
 @listenOnebot()
 @requireAdmin()
 @matchLiteral("::reload-script")

@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 from nonebot_plugin_alconna import At, Emoji, Text, UniMessage
 from src.base.command_events import GroupContext, OnebotContext
 from src.base.event.event_root import root
@@ -188,9 +189,17 @@ async def reply_call(
         await send_group_msg(bot, group, message)
 
 
+LAST_POKE_TIME: dict[int, float] = {}
+
+
 @root.listen(GroupPokeContext)
 async def _(ctx: GroupPokeContext):
     if ctx.event.target_id == ctx.event.self_id:
+        last = LAST_POKE_TIME.get(ctx.event.user_id, 0.0)
+        curr = time.time()
+        if curr - last < 1:
+            return
+        LAST_POKE_TIME[ctx.event.user_id] = curr
         await reply_call(
             ctx.bot,
             ctx.event.group_id,
