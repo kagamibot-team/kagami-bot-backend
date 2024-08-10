@@ -23,6 +23,7 @@ from nonebot_plugin_alconna.uniseg.message import UniMessage
 
 from src.base.onebot.onebot_api import (
     delete_msg,
+    get_name,
     send_group_msg,
     send_private_msg,
     set_msg_emoji_like,
@@ -150,8 +151,7 @@ class OnebotContext(Generic[TE]):
         return self.event.user_id
 
     async def get_sender_name(self) -> str:
-        info = await self.bot.call_api("get_stranger_info", user_id=self.sender_id)
-        return info["nick"]
+        return await get_name(self.bot, self.sender_id, None)
 
     @property
     def sender_name(self):
@@ -223,13 +223,7 @@ class GroupContext(OnebotContext[GroupMessageEvent]):
         return self.event.group_id
 
     async def get_sender_name(self):
-        sender = self.sender_id
-        info = await self.bot.call_api(
-            "get_group_member_info", group_id=self.event.group_id, user_id=sender
-        )
-        name: str = info["nickname"]
-        name = info["card"] or name
-        return name
+        return await get_name(self.bot, self.sender_id, self.group_id)
 
     async def _send(self, message: MessageLike):
         return await send_group_msg(self.bot, self.event.group_id, message)
