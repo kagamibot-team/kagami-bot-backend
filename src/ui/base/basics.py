@@ -215,10 +215,10 @@ def render_text(
 
     # 先预处理一些量，这些量需要同时适配旧接口
     if isinstance(font, Fonts):
-        font = FontDB.Query(font.name)
-    elif isinstance(font, str):
+        font = [font, Fonts.HARMONYOS_SANS_BLACK, Fonts.MAPLE_UI]
+    if isinstance(font, str):
         font = FontDB.Query(font)
-    elif isinstance(font, list):
+    if isinstance(font, list):
         font = FontDB.Query(" ".join((f.name for f in font)))
 
     if isinstance(color, str):

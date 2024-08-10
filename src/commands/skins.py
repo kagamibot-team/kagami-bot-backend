@@ -13,7 +13,6 @@ from src.common.decorators.command_decorators import (
     matchAlconna,
     requireAdmin,
 )
-from src.common.lang.zh import la
 from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Award, AwardAltName, Skin, SkinAltName, SkinRecord
 from src.models.level import level_repo
