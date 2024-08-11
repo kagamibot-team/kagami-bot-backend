@@ -73,7 +73,7 @@ async def generate_random_result(
 
     query = select(Award.data_id).filter(
         Award.level_id == lid,
-        Award.pack_id > 0,
+        Award.main_pack_id > 0,
     )
     aids = (await session.execute(query)).scalars().all()
     aid = Recipe.get_random_object(a1, a2, a3, ("STAGE-2", config.config.salt)).choice(

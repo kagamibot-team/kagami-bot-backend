@@ -4,7 +4,12 @@ from sqlalchemy import delete, insert, select, update
 from src.base.exceptions import ObjectNotFoundException
 from src.base.repository import DBRepository
 from src.models.models import Award, User
-from src.models.up_pool import UpPool, UpPoolAwardRelationship, UpPoolInventory
+from src.models.up_pool import (
+    PackAwardRelationship,
+    UpPool,
+    UpPoolAwardRelationship,
+    UpPoolInventory,
+)
 
 
 class UpPoolInfo(BaseModel):
@@ -13,6 +18,87 @@ class UpPoolInfo(BaseModel):
     cost: int
     display: int
     enabled: bool
+
+
+class PackRepository(DBRepository):
+    async def get_main_aids_of_pack(self, pack: int) -> set[int]:
+        """
+        获得所有将主猎场设置为 pack 的小哥 ID
+        """
+        q = select(Award.data_id).filter(Award.main_pack_id == pack)
+        r = await self.session.execute(q)
+        return set(r.scalars())
+
+    async def get_other_aids_of_pack(self, pack: int) -> set[int]:
+        """
+        使用 Relationship 表关联猎场和小哥的那些小哥 ID
+        """
+        q = select(PackAwardRelationship.aid).filter(PackAwardRelationship.pack == pack)
+        r = await self.session.execute(q)
+        return set(r.scalars())
+
+    async def get_aids_without_main_pack(self) -> set[int]:
+        """
+        获得那些主要猎场不大于 0 的那些小哥，这些都是特殊的小哥
+        """
+        q = select(Award.data_id).filter(Award.main_pack_id <= 0)
+        r = await self.session.execute(q)
+        return set(r.scalars())
+
+    async def get_aids_without_relationship(self) -> set[int]:
+        """
+        获得那些没有 Relationship 表关联猎场的那些小哥
+        """
+        q1 = select(Award.data_id)
+        q2 = select(PackAwardRelationship.aid)
+        r1 = await self.session.execute(q1)
+        r2 = await self.session.execute(q2)
+        return set(r1.scalars()) - set(r2.scalars())
+
+    async def get_linked_packs(self, aid: int) -> set[int]:
+        """
+        获得一个小哥使用 Relationship 关联的猎场集合
+        """
+        q = select(PackAwardRelationship.pack).filter(PackAwardRelationship.aid == aid)
+        r = await self.session.execute(q)
+        return set(r.scalars())
+
+    async def get_main_pack(self, aid: int) -> int:
+        """
+        获得一个小哥绑定的主猎场
+        """
+        q = select(Award.main_pack_id).filter(Award.data_id == aid)
+        r = await self.session.execute(q)
+        return r.scalar_one()
+
+    async def set_main_pack(self, aid: int, pack: int):
+        """
+        设置一个小哥的主要猎场
+        """
+        q = update(Award).where(Award.data_id == aid).values({Award.main_pack_id: pack})
+        await self.session.execute(q)
+
+    async def add_linked_pack(self, aid: int, pack: int):
+        """
+        添加一个小哥的关联猎场
+        """
+        if pack not in await self.get_linked_packs(aid):
+            q = insert(PackAwardRelationship).values(
+                {
+                    PackAwardRelationship.aid: aid,
+                    PackAwardRelationship.pack: pack,
+                }
+            )
+            await self.session.execute(q)
+            await self.session.flush()
+
+    async def remove_linked_pack(self, aid: int, pack: int):
+        """
+        删去一个小哥的关联猎场
+        """
+        q = delete(PackAwardRelationship).where(
+            PackAwardRelationship.aid == aid, PackAwardRelationship.pack == pack
+        )
 
 
 class UpPoolRepository(DBRepository):
