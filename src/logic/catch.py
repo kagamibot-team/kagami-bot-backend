@@ -2,6 +2,7 @@ from src.base.exceptions import NoAwardException
 from src.common.dataclasses import Pick, Picks
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
+from src.services.pool import PoolService
 
 
 async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
@@ -25,8 +26,9 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
 
     picked: list[int] = []
 
-    pack_id = await uow.user_pack.get_using(uid)
-    aids_set = await uow.awards.get_all_awards_in_pack(pack_id)
+    pool_service = PoolService(uow)
+
+    aids_set = await pool_service.get_aids(uid)
     aids = await uow.awards.group_by_level(aids_set)
 
     levels = [uow.levels.get_by_id(i) for i in aids]
@@ -50,13 +52,12 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
         level = get_random().choices(levels, weights)[0]
         limited_aids = aids[level.lid]
 
-        using_up = await uow.up_pool.get_using(uid)
-        if using_up is not None:
-            if get_random().random() < up_pool_posibility[level.lid]:
-                _aids = await uow.up_pool.get_aids(using_up)
-                if len(_aids) > 0:
-                    _grouped = await uow.awards.group_by_level(_aids)
-                    limited_aids = _grouped[level.lid]
+        if get_random().random() < up_pool_posibility[level.lid]:
+            _aids = await pool_service.get_up_aids(uid)
+            _grouped = await uow.awards.group_by_level(_aids)
+            _limited = _grouped[level.lid]
+            if len(_limited) > 0:
+                limited_aids = _grouped[level.lid]
 
         aid = get_random().choice(list(limited_aids))
         picked.append(aid)

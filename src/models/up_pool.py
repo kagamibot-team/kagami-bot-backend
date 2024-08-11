@@ -82,3 +82,11 @@ class PackAwardRelationship(Base, BaseMixin):
         ForeignKey("catch_award.data_id", ondelete="CASCADE"),
         index=True,
     )
+
+
+__all__ = [
+    "UpPool",
+    "UpPoolAwardRelationship",
+    "UpPoolInventory",
+    "PackAwardRelationship",
+]

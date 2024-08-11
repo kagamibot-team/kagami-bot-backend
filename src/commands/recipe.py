@@ -183,7 +183,7 @@ async def _(ctx: OnebotContext, res: Arparma):
 
         after = await uow.money.use(uid, cost)
 
-        aid, succeed = await try_merge(uow.session, uid, a1, a2, a3)
+        aid, succeed = await try_merge(uow, uid, a1, a2, a3)
         if aid == -1:
             info = await generate_random_info()
             add = get_random().randint(1, 100)

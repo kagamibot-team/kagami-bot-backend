@@ -4,12 +4,7 @@ from sqlalchemy import delete, insert, select, update
 from src.base.exceptions import ObjectNotFoundException
 from src.base.repository import DBRepository
 from src.models.models import Award, User
-from src.models.up_pool import (
-    PackAwardRelationship,
-    UpPool,
-    UpPoolAwardRelationship,
-    UpPoolInventory,
-)
+from src.models.up_pool import *
 
 
 class UpPoolInfo(BaseModel):
@@ -29,7 +24,7 @@ class PackRepository(DBRepository):
         r = await self.session.execute(q)
         return set(r.scalars())
 
-    async def get_other_aids_of_pack(self, pack: int) -> set[int]:
+    async def get_linked_aids_of_pack(self, pack: int) -> set[int]:
         """
         使用 Relationship 表关联猎场和小哥的那些小哥 ID
         """

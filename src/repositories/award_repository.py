@@ -263,3 +263,11 @@ class AwardRepository(DBRepository):
 
         query = select(Award.main_pack_id).filter(Award.data_id == aid)
         return (await self.session.execute(query)).scalar_one()
+
+    async def get_all_mergeable_zeros(self) -> set[int]:
+        """
+        获得所有可以合成的零星小哥
+        """
+        q = select(Award.data_id).filter(Award.level_id == 0)
+        r = await self.session.execute(q)
+        return set(r.scalars())

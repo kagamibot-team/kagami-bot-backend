@@ -164,10 +164,11 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
 @requireAdmin()
 @matchAlconna(Alconna(["::"], "展示猎场", Arg("序号", int)))
 async def _(ctx: OnebotContext, res: Arparma[Any]):
-    pack_id = res.query[int]("序号")
-    assert pack_id is not None
+    pack = res.query[int]("序号")
+    assert pack is not None
 
     async with get_unit_of_work() as uow:
-        all_aids = await uow.awards.get_all_awards_in_pack(pack_id)
+        main_aids = await uow.pack.get_main_aids_of_pack(pack)
+        linked_aids = await uow.pack.get_linked_aids_of_pack(pack)
 
-    await ctx.reply(str(all_aids))
+    await ctx.send(f"MAIN={main_aids}\nLINKED={linked_aids}")

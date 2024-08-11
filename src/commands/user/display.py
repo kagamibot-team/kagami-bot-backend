@@ -14,6 +14,7 @@ from src.common.decorators.command_decorators import (
 )
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
+from src.services.pool import PoolService
 from src.ui.pages.catch import render_award_info_message
 from src.ui.views.award import AwardDisplay, StorageDisplay
 
@@ -75,7 +76,9 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         msg = (
             UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
             .image(raw=info.image_bytes)
-            .text(f"\nsorting={info.sorting};\npack={pack};\n{info.description}")
+            .text(
+                f"id={info.aid}\nsorting={info.sorting};\npack={pack};\n{info.description}"
+            )
         )
         await ctx.reply(msg)
     else:
@@ -92,5 +95,6 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
 @matchLiteral("::抓不到的小哥")
 async def _(ctx: OnebotContext):
     async with get_unit_of_work() as uow:
-        list = await uow.awards.get_all_special_aids()
+        service = PoolService(uow)
+        list = await service.get_uncatchable_aids()
     await ctx.reply(str(list))
