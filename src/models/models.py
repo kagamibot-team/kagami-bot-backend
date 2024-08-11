@@ -32,7 +32,7 @@ class Award(Base, BaseMixin):
     description: Mapped[str] = mapped_column(default="")
     sorting: Mapped[int] = mapped_column(default=0)
     level_id = Column(Integer, index=True)
-    pack_id = Column(Integer, index=True, default=1, server_default="1")
+    main_pack_id = Column(Integer, index=True, default=1, server_default="1")
 
 
 class AwardAltName(Base, BaseMixin, AltNameMixin):
@@ -86,14 +86,18 @@ class User(Base, BaseMixin):
     # 用户的特殊称呼不再在配置文件中设置，太麻烦了
     special_call: Mapped[str] = mapped_column(default="", server_default="")
 
-    bought_pack_count: Mapped[int] = mapped_column(default=1, server_default="1")
     using_pack: Mapped[int] = mapped_column(default=1, server_default="1")
+    "用户正在使用的猎场"
 
     using_up_pool = Column(
         Integer,
         ForeignKey("catch_up_pool.data_id", ondelete="SET NULL"),
         nullable=True,
     )
+    "用户挂载的猎场升级，可能为空"
+
+    own_packs: Mapped[str] = mapped_column(default="1", server_default="'1'")
+    "用户有哪些猎场"
 
 
 class SkinRecord(Base, BaseMixin):

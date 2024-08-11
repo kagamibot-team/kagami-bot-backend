@@ -34,10 +34,15 @@ class UpPoolAwardRelationship(Base, BaseMixin):
 
     __tablename__ = "catch_up_pool_relationship"
 
-    __table_args__ = (Index("catch_up_pool_rel_index", "aid", "pool_id", unique=True),)
-
-    pool_id = Column(Integer, ForeignKey("catch_up_pool.data_id", ondelete="CASCADE"))
-    aid = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+    pool_id = Column(
+        Integer,
+        ForeignKey("catch_up_pool.data_id", ondelete="CASCADE"),
+        index=True,
+    )
+    aid = Column(
+        Integer,
+        ForeignKey("catch_award.data_id", ondelete="CASCADE"),
+    )
 
 
 class UpPoolInventory(Base, BaseMixin):
@@ -46,7 +51,34 @@ class UpPoolInventory(Base, BaseMixin):
     """
 
     __tablename__ = "catch_up_pool_inventory"
-    __table_args__ = (Index("catch_up_pool_inventory_index", "uid", "pool_id", unique=True),)
+    __table_args__ = (
+        Index("catch_up_pool_inventory_index", "uid", "pool_id", unique=True),
+    )
 
-    uid = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
-    pool_id = Column(Integer, ForeignKey("catch_up_pool.data_id", ondelete="CASCADE"))
+    uid = Column(
+        Integer,
+        ForeignKey("catch_user_data.data_id", ondelete="CASCADE"),
+        index=True,
+    )
+    pool_id = Column(
+        Integer,
+        ForeignKey("catch_up_pool.data_id", ondelete="CASCADE"),
+        index=True,
+    )
+
+
+class PackAwardRelationship(Base, BaseMixin):
+    """
+    猎场和小哥的多对多关系，记录猎场容纳的小哥。
+    就是说，这里记录的是，一个猎场，除了主猎场在这个猎场的小哥，
+    还有哪些小哥需要记录。
+    """
+
+    __tablename__ = "catch_pack_award_relationship"
+
+    pack: Mapped[int] = mapped_column(index=True)
+    aid = Column(
+        Integer,
+        ForeignKey("catch_award.data_id", ondelete="CASCADE"),
+        index=True,
+    )
