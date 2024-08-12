@@ -5,6 +5,7 @@ from src.base.exceptions import (
 )
 from src.core.unit_of_work import UnitOfWork
 from src.repositories.up_pool_repository import UpPoolInfo
+from loguru import logger
 
 
 class PoolService:
@@ -35,15 +36,18 @@ class PoolService:
         # 验证1: 用户不能拥有超过系统设定的猎场的量
         for pack in own_packs:
             if pack > max_count:
+                logger.warning(f"用户 {uid} 拥有 {pack}，但这个猎场并未开放")
                 own_packs.remove(pack)
 
         # 验证2: 用户至少有一个猎场
-        if len(own_packs) == 0:
+        if len(own_packs) == 0 or 1 not in own_packs:
+            logger.warning(f"用户 {uid} 没有 1 猎场，已默认赐予它一个猎场")
             own_packs.add(1)
         await self.uow.user_pack.set_own(uid, own_packs)
 
         # 验证3: 用户不能处于自己没买的猎场
         if current_pack not in own_packs:
+            logger.warning(f"用户 {uid} 在自己没有买的猎场中")
             current_pack = 1
             await self.uow.user_pack.set_using(uid, current_pack)
 
@@ -51,10 +55,11 @@ class PoolService:
         if current_up is not None:
             info = await self.uow.up_pool.get_pool_info(current_up)
             if (
-                not info.enabled
-                or info.belong_pack != current_pack
-                or not current_pack in await self.uow.up_pool.get_own(uid)
+                (not info.enabled)
+                or (info.belong_pack != current_pack)
+                or (current_up not in await self.uow.up_pool.get_own(uid))
             ):
+                logger.warning(f"用户 {uid} 挂载的猎场up和当前猎场不符")
                 await self.uow.up_pool.set_using(uid, None)
 
     async def get_current_pack(self, uid: int) -> int:
