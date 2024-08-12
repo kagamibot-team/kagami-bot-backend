@@ -314,3 +314,23 @@ class UpPoolRepository(DBRepository):
         )
         await self.session.execute(q)
         await self.session.flush()
+
+    async def get_pools_of_pack(
+        self, pack: int, require_enabled: bool = False
+    ) -> set[int]:
+        """
+        获得一个猎场的所有猎场升级的 ID
+        """
+        q = select(UpPool.data_id).filter(UpPool.belong_pack == pack)
+        if require_enabled:
+            q = q.filter(UpPool.enabled.is_(True))
+        r = await self.session.execute(q)
+        return set(r.scalars())
+
+    async def is_pool_hangup(self, upid: int) -> bool:
+        """
+        判断一个猎场是否被挂载上来
+        """
+        q = select(UpPool.enabled).filter(UpPool.data_id == upid)
+        r = await self.session.execute(q)
+        return r.scalar_one()

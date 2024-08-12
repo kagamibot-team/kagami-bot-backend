@@ -245,25 +245,6 @@ class AwardRepository(DBRepository):
         ).where(Award.data_id.in_(aids))
         return (await self.session.execute(query)).tuples().all()
 
-    async def set_pack(self, aid: int, pack_id: int):
-        """
-        设置一个小哥属于哪些猎场
-        """
-
-        await self.session.execute(
-            update(Award)
-            .where(Award.data_id == aid)
-            .values({Award.main_pack_id: pack_id})
-        )
-
-    async def get_pack(self, aid: int) -> int:
-        """
-        获取一个小哥在哪个猎场
-        """
-
-        query = select(Award.main_pack_id).filter(Award.data_id == aid)
-        return (await self.session.execute(query)).scalar_one()
-
     async def get_all_mergeable_zeros(self) -> set[int]:
         """
         获得所有可以合成的零星小哥

@@ -10,6 +10,8 @@ from src.common.decorators.command_decorators import (
     requireAdmin,
 )
 from src.core.unit_of_work import get_unit_of_work
+from src.repositories.up_pool_repository import UpPoolInfo
+from src.services.pool import PoolService
 
 
 @listenOnebot()
@@ -87,8 +89,6 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
             Arg("价格数", int),
             alias=["价钱", "金钱", "薯片", "消耗", "--cost", "-c"],
         ),
-        Option("展示", Arg("展示规则", str), alias=["展示规则", "--display", "-d"]),
-        Option("启用", Arg("是否启用", str), alias=["是否启用", "--enable", "-e"]),
         Option("添加小哥", Arg("添加小哥名", str), alias=["增加小哥", "--add", "-a"]),
         Option(
             "去除小哥",
@@ -102,25 +102,9 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
     nname = res.query[str]("新名字")
     pack = res.query[int]("所属猎场")
     cost = res.query[int]("价格数")
-    disp = res.query[str]("展示规则")
-    enab = res.query[str]("是否启用")
 
     add = res.query[str]("添加小哥名")
     sub = res.query[str]("去除小哥名")
-
-    _disp: int | None = None
-    _enab: bool | None = None
-
-    if disp is not None:
-        if disp in ("T", "t", "Y", "y", "是", "展示"):
-            _disp = 1
-        if disp in ("F", "f", "N", "n", "否", "不展示", "不"):
-            _disp = 0
-    if enab is not None:
-        if enab in ("T", "t", "Y", "y", "是", "展示"):
-            _enab = True
-        if enab in ("F", "f", "N", "n", "否", "不展示", "不"):
-            _enab = False
 
     async with get_unit_of_work() as uow:
         upid = await uow.up_pool.get_upid_strong(rname)
@@ -133,8 +117,6 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
             belong_pack=pack,
             name=nname,
             cost=cost,
-            display=_disp,
-            enabled=_enab,
         )
 
         if add is not None:
@@ -162,6 +144,43 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
 
 @listenOnebot()
 @requireAdmin()
+@matchAlconna(Alconna(["::"], "re:上架猎场[uU][pP]", Arg("名字", str)))
+async def _(ctx: OnebotContext, res: Arparma[Any]):
+    name = res.query[str]("名字") or ""
+
+    async with get_unit_of_work() as uow:
+        service = PoolService(uow)
+        rs = await service.hang_up_pool(name)
+
+    await ctx.reply(f"已经将 {name} 的上架设置为 {rs} 状态了，同一猎场其他的已经下架")
+
+
+@listenOnebot()
+@requireAdmin()
+@matchAlconna(Alconna(["::"], "添加关联猎场", Arg("小哥名", str), Arg("猎场ID", int)))
+async def _(ctx: OnebotContext, res: Arparma[Any]):
+    name = res.query[str]("小哥名") or ""
+    pack = res.query[int]("猎场名") or -1
+    async with get_unit_of_work() as uow:
+        service = PoolService(uow)
+        await service.add_award_linked_pack(name, pack)
+    await ctx.reply("ok.")
+
+
+@listenOnebot()
+@requireAdmin()
+@matchAlconna(Alconna(["::"], "删除关联猎场", Arg("小哥名", str), Arg("猎场ID", int)))
+async def _(ctx: OnebotContext, res: Arparma[Any]):
+    name = res.query[str]("小哥名") or ""
+    pack = res.query[int]("猎场名") or -1
+    async with get_unit_of_work() as uow:
+        service = PoolService(uow)
+        await service.remove_award_linked_pack(name, pack)
+    await ctx.reply("ok.")
+
+
+@listenOnebot()
+@requireAdmin()
 @matchAlconna(Alconna(["::"], "展示猎场", Arg("序号", int)))
 async def _(ctx: OnebotContext, res: Arparma[Any]):
     pack = res.query[int]("序号")
@@ -170,5 +189,9 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
     async with get_unit_of_work() as uow:
         main_aids = await uow.pack.get_main_aids_of_pack(pack)
         linked_aids = await uow.pack.get_linked_aids_of_pack(pack)
+        pool_ids = await uow.up_pool.get_pools_of_pack(pack)
+        pools: list[UpPoolInfo] = list()
+        for pool in pool_ids:
+            pools.append(await uow.up_pool.get_pool_info(pool))
 
-    await ctx.send(f"MAIN={main_aids}\nLINKED={linked_aids}")
+    await ctx.send(f"MAIN={main_aids}\nLINKED={linked_aids}\nCONTAIN_POOLS={pools}")

@@ -56,7 +56,9 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         if do_admin:
             uid = None
         info = await get_award_info(uow, aid, uid, sid)
-        pack = await uow.awards.get_pack(aid)
+
+        main_pack = await uow.pack.get_main_pack(aid)
+        linked_pack = await uow.pack.get_linked_packs(aid)
 
         if sto is not None:
             dt = StorageDisplay(
@@ -77,7 +79,9 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
             UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
             .image(raw=info.image_bytes)
             .text(
-                f"id={info.aid}\nsorting={info.sorting};\npack={pack};\n{info.description}"
+                f"id={info.aid}; sorting={info.sorting};\n"
+                f"main_pack={main_pack}; linked={linked_pack};\n"
+                f"{info.description}"
             )
         )
         await ctx.reply(msg)
