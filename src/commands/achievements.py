@@ -2,8 +2,8 @@ from typing import Any
 
 from arclet.alconna import Alconna, Arparma
 
-from src.base.command_events import OnebotContext
-from src.common.decorators.command_decorators import listenOnebot, matchAlconna
+from src.base.command_events import GroupContext
+from src.common.decorators.command_decorators import listen_message, match_alconna
 from src.core.unit_of_work import get_unit_of_work
 from src.services.achievement import Achievement, get_achievement_service
 
@@ -16,9 +16,9 @@ def get_single_achievement_msg(achievement: Achievement, achieved: bool) -> str:
     return msg
 
 
-@listenOnebot()
-@matchAlconna(Alconna("re:(我的|my)(成就|cj)"))
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+@listen_message()
+@match_alconna(Alconna("re:(我的|my)(成就|cj)"))
+async def _(ctx: GroupContext, res: Arparma[Any]):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = await get_achievement_service(uow)
         uid = await uow.users.get_uid(ctx.sender_id)

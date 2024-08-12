@@ -7,11 +7,11 @@ import qrcode.main
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.command_events import OnebotContext
+from src.base.command_events import GroupContext
 from src.base.exceptions import SoldOutException
 from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
+    listen_message,
+    match_alconna,
 )
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
@@ -144,8 +144,8 @@ async def shop_buy_message(
     return UniMessage.image(raw=image_to_bytes(base))
 
 
-@listenOnebot()
-@matchAlconna(
+@listen_message()
+@match_alconna(
     Alconna(
         "re:(小镜的?|xj) ?(shop|小店|商店)",
         Option(
@@ -155,7 +155,7 @@ async def shop_buy_message(
         ),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+async def _(ctx: GroupContext, res: Arparma[Any]):
     buys = res.query[list[str]]("商品名列表") or []
 
     if len(buys) == 0:

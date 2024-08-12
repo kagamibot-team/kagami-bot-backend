@@ -15,7 +15,6 @@ from nonebot.adapters.onebot.v11 import (
     MessageSegment,
     MessageEvent,
     GroupMessageEvent,
-    PrivateMessageEvent,
 )
 from nonebot_plugin_alconna import Segment, Text
 from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING  # type: ignore
@@ -25,7 +24,6 @@ from src.base.onebot.onebot_api import (
     delete_msg,
     get_name,
     send_group_msg,
-    send_private_msg,
     set_msg_emoji_like,
 )
 from src.base.onebot.onebot_basic import (
@@ -258,19 +256,7 @@ class GroupContext(OnebotContext[GroupMessageEvent]):
         return info["role"] == "admin" or info["role"] == "owner"
 
 
-class PrivateContext(OnebotContext[PrivateMessageEvent]):
-    async def _send(self, message: MessageLike):
-        return await send_private_msg(self.bot, self.event.user_id, message)
-
-    async def _send_forward(self, messages: list[_ForwardMessageNode]) -> Any:
-        return await self.bot.call_api(
-            "send_private_forward_msg", group_id=self.event.user_id, messages=messages
-        )
-
-
 __all__ = [
     "GroupContext",
-    "PrivateContext",
-    "OnebotContext",
     "forwardMessage",
 ]

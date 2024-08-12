@@ -6,8 +6,8 @@ import PIL
 import PIL.Image
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.command_events import OnebotContext
-from src.common.decorators.command_decorators import listenOnebot, matchRegex
+from src.base.command_events import GroupContext
+from src.common.decorators.command_decorators import listen_message, match_regex
 from src.common.lang.zh import get_latest_versions, la
 from src.ui.base.basics import Fonts, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
@@ -46,9 +46,9 @@ def constructHelpMessage(helps: list[str]) -> UniMessage:
     return UniMessage().text(text)
 
 
-@listenOnebot()
-@matchRegex("^(抓小哥|zhua) ?(更新|gx|upd|update)$")
-async def _(ctx: OnebotContext, *_):
+@listen_message()
+@match_regex("^(抓小哥|zhua) ?(更新|gx|upd|update)$")
+async def _(ctx: GroupContext, *_):
     count = 3
     shortHistory = get_latest_versions(count)
     sections: list[PIL.Image.Image] = []
@@ -87,15 +87,15 @@ async def _(ctx: OnebotContext, *_):
     await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
 
-@listenOnebot()
-@matchRegex("^:: ?(抓小哥|zhua) ?(更新|gx|upd|update)$")
-async def _(ctx: OnebotContext, *_):
+@listen_message()
+@match_regex("^:: ?(抓小哥|zhua) ?(更新|gx|upd|update)$")
+async def _(ctx: GroupContext, *_):
     await ctx.send(constructUpdateMessage(updateHistoryDev))
 
 
-@listenOnebot()
-@matchRegex("^(抓小哥|zhua) ?(帮助|help)$")
-async def _(ctx: OnebotContext, *_):
+@listen_message()
+@match_regex("^(抓小哥|zhua) ?(帮助|help)$")
+async def _(ctx: GroupContext, *_):
     sections: list[PIL.Image.Image] = []
 
     title = render_text(
@@ -132,13 +132,13 @@ async def _(ctx: OnebotContext, *_):
     await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
 
-@listenOnebot()
-@matchRegex("^:: ?(抓小哥|zhua)? ?(帮助|help)$")
-async def _(ctx: OnebotContext, *_):
+@listen_message()
+@match_regex("^:: ?(抓小哥|zhua)? ?(帮助|help)$")
+async def _(ctx: GroupContext, *_):
     await ctx.send(constructHelpMessage(helpAdmin))
 
 
-@listenOnebot()
-@matchRegex("^(关于 ?抓小哥|zhua ?about)$")
-async def _(ctx: OnebotContext, *_):
+@listen_message()
+@match_regex("^(关于 ?抓小哥|zhua ?about)$")
+async def _(ctx: GroupContext, *_):
     await ctx.send(UniMessage().text(la.about.about))

@@ -2,21 +2,21 @@ from typing import Any
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 
-from src.base.command_events import OnebotContext
+from src.base.command_events import GroupContext
 from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-    matchRegex,
-    requireAdmin,
+    listen_message,
+    match_alconna,
+    match_regex,
+    require_admin,
 )
 from src.core.unit_of_work import get_unit_of_work
 from src.services.pool import PoolService
 
 
-@listenOnebot()
-@requireAdmin()
-@matchRegex("^(小[lL]|xl)?(猎场|lc)$")
-async def _(ctx: OnebotContext, _):
+@listen_message()
+@require_admin()
+@match_regex("^(小[lL]|xl)?(猎场|lc)$")
+async def _(ctx: GroupContext, _):
     message: list[str] = []
 
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -40,10 +40,10 @@ async def _(ctx: OnebotContext, _):
     await ctx.reply(f"{'\n\n'.join(message)}")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchRegex("^(猎场|lc)([Uu][Pp])$")
-async def _(ctx: OnebotContext, _):
+@listen_message()
+@require_admin()
+@match_regex("^(猎场|lc)([Uu][Pp])$")
+async def _(ctx: GroupContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
         uid = await uow.users.get_uid(ctx.sender_id)
@@ -61,10 +61,10 @@ async def _(ctx: OnebotContext, _):
     await ctx.reply(f"当前 {pack} 号猎场的猎场 Up：{name}")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL])))
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+@listen_message()
+@require_admin()
+@match_alconna(Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL])))
+async def _(ctx: GroupContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
@@ -73,10 +73,10 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
     await ctx.reply(f"[测试中]已经切换到 {idx} 号猎场了")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(Alconna("购买猎场", Arg("猎场序号", int)))
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+@listen_message()
+@require_admin()
+@match_alconna(Alconna("购买猎场", Arg("猎场序号", int)))
+async def _(ctx: GroupContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
     assert dest is not None
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -86,10 +86,10 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
     await ctx.reply(f"[测试中]成功购买了 {dest} 号猎场")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchRegex("^切换(猎场)?[uU][pP]池?$")
-async def _(ctx: OnebotContext, _):
+@listen_message()
+@require_admin()
+@match_regex("^切换(猎场)?[uU][pP]池?$")
+async def _(ctx: GroupContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
         uid = await uow.users.get_uid(ctx.sender_id)
@@ -97,10 +97,10 @@ async def _(ctx: OnebotContext, _):
     await ctx.reply(f"[测试中]切换了猎场up，UPID={upid}")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchRegex("^购买(猎场)?[uU][pP]池?$")
-async def _(ctx: OnebotContext, _):
+@listen_message()
+@require_admin()
+@match_regex("^购买(猎场)?[uU][pP]池?$")
+async def _(ctx: GroupContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
         uid = await uow.users.get_uid(ctx.sender_id)

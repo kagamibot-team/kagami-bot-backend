@@ -11,10 +11,14 @@ from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import select, update
 
 from src.base.command_events import GroupContext
-from src.base.onebot.onebot_api import get_group_member_info, send_private_msg, set_group_ban
+from src.base.onebot.onebot_api import (
+    get_group_member_info,
+    send_private_msg,
+    set_group_ban,
+)
 from src.common.decorators.command_decorators import (
-    listenGroup,
-    matchAlconna,
+    listen_message,
+    match_alconna,
     requireOperatorInGroup,
 )
 from src.common.rd import get_random
@@ -35,8 +39,8 @@ GET_UP_TIME_PRESETS = {
 }
 
 
-@listenGroup()
-@matchAlconna(
+@listen_message()
+@match_alconna(
     Alconna(
         "小镜晚安",
         Arg("getup_time", MultiVar(str, "*"), seps=" "),
