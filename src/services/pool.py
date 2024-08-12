@@ -126,7 +126,7 @@ class PoolService:
         if pack is not None:
             if pack <= 0 or pack > max_count:
                 raise ObjectNotFoundException(obj_name=f"{pack} 号猎场")
-            elif pack not in available:
+            if pack not in available:
                 raise DoNotHaveException(f"{pack} 号猎场")
         elif len(available) == 1 or current not in available:
             pack = available[0]

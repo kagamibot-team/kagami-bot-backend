@@ -190,7 +190,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         main_aids = await uow.pack.get_main_aids_of_pack(pack)
         linked_aids = await uow.pack.get_linked_aids_of_pack(pack)
         pool_ids = await uow.up_pool.get_pools_of_pack(pack)
-        pools: list[UpPoolInfo] = list()
+        pools: list[UpPoolInfo] = []
         for pool in pool_ids:
             pools.append(await uow.up_pool.get_pool_info(pool))
 
