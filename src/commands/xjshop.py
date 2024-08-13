@@ -7,7 +7,7 @@ import qrcode.main
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import SoldOutException
 from src.common.command_decorators import (
     listen_message,
@@ -155,7 +155,7 @@ async def shop_buy_message(
         ),
     )
 )
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     buys = res.query[list[str]]("商品名列表") or []
 
     if len(buys) == 0:

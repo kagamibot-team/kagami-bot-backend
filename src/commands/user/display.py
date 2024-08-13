@@ -3,7 +3,7 @@ from typing import Any
 from arclet.alconna import Alconna, Arg, Arparma, Option
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import DoNotHaveException
 from src.common.data.awards import get_award_info
 from src.common.command_decorators import (
@@ -29,7 +29,7 @@ from src.ui.views.award import AwardDisplay, StorageDisplay
         Option("条目", alias=["--display", "-d"]),
     )
 )
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     name = res.query[str]("名字")
     if name is None:
         return
@@ -97,7 +97,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_literal("::抓不到的小哥")
-async def _(ctx: GroupContext):
+async def _(ctx: MessageContext):
     async with get_unit_of_work() as uow:
         service = PoolService(uow)
         list = await service.get_uncatchable_aids()

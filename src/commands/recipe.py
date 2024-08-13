@@ -1,6 +1,6 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
-from src.base.command_events import GroupContext, GroupContext
+from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_root import throw_event
 from src.base.exceptions import ObjectNotFoundException
 from src.base.local_storage import Action, XBRecord, get_localdata
@@ -33,7 +33,7 @@ from src.ui.views.user import UserData
         Arg("name3", str),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     n1 = res.query[str]("name1")
     n2 = res.query[str]("name2")
     n3 = res.query[str]("name3")
@@ -80,7 +80,7 @@ async def _(ctx: GroupContext, res: Arparma):
         Option("--reset", alias=["重置"]),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     n1 = res.query[str]("name1", "")
     n2 = res.query[str]("name2", "")
     n3 = res.query[str]("name3", "")
@@ -113,7 +113,7 @@ async def _(ctx: GroupContext, res: Arparma):
         Option("--force", alias=["-f", "强制"]),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     async with get_unit_of_work() as uow:
         await uow.recipes.clear_not_modified(force=res.exist("--force"))
     await ctx.reply("ok.")
@@ -122,7 +122,7 @@ async def _(ctx: GroupContext, res: Arparma):
 @listen_message()
 @require_admin()
 @match_literal("::所有特殊配方")
-async def _(ctx: GroupContext):
+async def _(ctx: MessageContext):
     async with get_unit_of_work() as uow:
         msg: list[str] = []
         for aid1, aid2, aid3, aid, posi in await uow.recipes.get_all_special():

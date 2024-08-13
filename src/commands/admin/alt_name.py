@@ -1,6 +1,6 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import (
     MultipleObjectFoundException,
     ObjectAlreadyExistsException,
@@ -29,7 +29,7 @@ from src.core.unit_of_work import get_unit_of_work
         ),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     rname = res.query[str]("名字")
     aname = res.query[str]("别名")
     tname = res.query[str]("类型名")
@@ -66,7 +66,7 @@ async def _(ctx: GroupContext, res: Arparma):
 @listen_message()
 @require_admin()
 @match_alconna(Alconna(["::"], "re:(删除|移除)别名", Arg("别名", str)))
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     aname = res.query[str]("别名")
     if aname is None:
         return

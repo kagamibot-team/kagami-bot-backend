@@ -2,7 +2,7 @@ from typing import Any
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.common.command_decorators import (
     listen_message,
     match_alconna,
@@ -16,7 +16,7 @@ from src.services.pool import PoolService
 @listen_message()
 @require_admin()
 @match_regex("^(小[lL]|xl)?(猎场|lc)$")
-async def _(ctx: GroupContext, _):
+async def _(ctx: MessageContext, _):
     message: list[str] = []
 
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -43,7 +43,7 @@ async def _(ctx: GroupContext, _):
 @listen_message()
 @require_admin()
 @match_regex("^(猎场|lc)([Uu][Pp])$")
-async def _(ctx: GroupContext, _):
+async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
         uid = await uow.users.get_uid(ctx.sender_id)
@@ -64,7 +64,7 @@ async def _(ctx: GroupContext, _):
 @listen_message()
 @require_admin()
 @match_alconna(Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL])))
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
@@ -76,7 +76,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_alconna(Alconna("购买猎场", Arg("猎场序号", int)))
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
     assert dest is not None
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -89,7 +89,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_regex("^切换(猎场)?[uU][pP]池?$")
-async def _(ctx: GroupContext, _):
+async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
         uid = await uow.users.get_uid(ctx.sender_id)
@@ -100,7 +100,7 @@ async def _(ctx: GroupContext, _):
 @listen_message()
 @require_admin()
 @match_regex("^购买(猎场)?[uU][pP]池?$")
-async def _(ctx: GroupContext, _):
+async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
         uid = await uow.users.get_uid(ctx.sender_id)

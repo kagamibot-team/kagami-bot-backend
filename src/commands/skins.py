@@ -5,7 +5,7 @@ from loguru import logger
 from nonebot_plugin_alconna import Image, UniMessage
 from sqlalchemy import select, update
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import DoNotHaveException, ObjectAlreadyExistsException
 from src.common.data.skins import downloadSkinImage
 from src.common.command_decorators import (
@@ -23,7 +23,7 @@ from src.ui.components.awards import ref_book_box_raw
 
 @listen_message()
 @match_alconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("name", str)))
-async def _(ctx: GroupContext, result: Arparma):
+async def _(ctx: MessageContext, result: Arparma):
     name = result.query[str]("name")
     assert name is not None
 
@@ -60,7 +60,7 @@ async def _(ctx: GroupContext, result: Arparma):
 
 @listen_message()
 @match_alconna(Alconna("re:(pfjd|pftj|皮肤图鉴|皮肤进度|皮肤收集进度)"))
-async def _(ctx: GroupContext, _: Arparma):
+async def _(ctx: MessageContext, _: Arparma):
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
         session = uow.session
@@ -132,7 +132,7 @@ async def _(ctx: GroupContext, _: Arparma):
         Arg("name", str, flags=[ArgFlag.OPTIONAL]),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("name")
 
     async with get_unit_of_work() as uow:
@@ -201,7 +201,7 @@ async def _(ctx: GroupContext, res: Arparma):
         Arg("皮肤名", str),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     aname = res.query[str]("小哥名")
     sname = res.query[str]("皮肤名")
     if aname is None or sname is None:
@@ -242,7 +242,7 @@ async def _(ctx: GroupContext, res: Arparma):
         ),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("皮肤原名")
     assert name is not None
     newName = res.query[str]("皮肤新名字")
@@ -294,7 +294,7 @@ async def _(ctx: GroupContext, res: Arparma):
         Arg("皮肤原名", str),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("皮肤原名")
     assert name is not None
     async with get_unit_of_work() as uow:

@@ -1,7 +1,7 @@
 from pathlib import Path
 import time
 from nonebot_plugin_alconna import At, Emoji, Text, UniMessage
-from src.base.command_events import GroupContext, GroupContext
+from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_root import root
 from src.base.onebot.onebot_api import (
     get_name,
@@ -88,7 +88,7 @@ def __match_str(s: str):
 
 
 @listen_message()
-async def _(ctx: GroupContext):
+async def _(ctx: MessageContext):
     message = ctx.message
     if len(message) == 0:
         return
@@ -225,5 +225,5 @@ async def _(ctx: GroupContext):
             await ctx.sender_name,
         )
 
-        if get_random().random() < 0.1 and isinstance(ctx, GroupContext):
+        if get_random().random() < 0.1:
             await ctx.stickEmoji(QQEmoji.跳跳)

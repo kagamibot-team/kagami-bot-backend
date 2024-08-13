@@ -2,13 +2,13 @@ import re
 
 from nonebot_plugin_alconna import At, Emoji, Text, UniMessage
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.common.command_decorators import debug_only, listen_message
 
 
 @listen_message()
 @debug_only()
-async def repeat(ctx: GroupContext):
+async def repeat(ctx: MessageContext):
     message = ctx.message
     if len(message) == 0:
         return

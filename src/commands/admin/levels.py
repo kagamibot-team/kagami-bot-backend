@@ -1,7 +1,7 @@
 from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import func, select
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.common.command_decorators import (
     listen_message,
     match_regex,
@@ -15,7 +15,7 @@ from src.models.models import Award
 @listen_message()
 @require_admin()
 @match_regex("^:: ?(所有|全部) ?(等级|级别) ?$")
-async def _(ctx: GroupContext, _):
+async def _(ctx: MessageContext, _):
     async with get_unit_of_work() as uow:
         query = select(
             Award.level_id,

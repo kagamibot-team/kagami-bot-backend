@@ -2,7 +2,7 @@ from typing import Any
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma, Option
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import KagamiRangeError, ObjectAlreadyExistsException
 from src.common.command_decorators import (
     listen_message,
@@ -23,7 +23,7 @@ from src.services.pool import PoolService
         Option("开放猎场数", Arg("猎场数", int), alias=["猎场数", "-n"]),
     )
 )
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     pack_count: int | None = res.query[int]("猎场数")
 
     async with get_unit_of_work() as uow:
@@ -44,7 +44,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
         Arg("价格", int, flags=[ArgFlag.OPTIONAL]),
     )
 )
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     name = res.query[str]("名称") or ""
     pack = res.query[int]("所属猎场") or 0
     cost = res.query[int]("价格") or -1
@@ -67,7 +67,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
         Arg("名字", str),
     )
 )
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     name = res.query[str]("名字") or ""
     async with get_unit_of_work() as uow:
         upid = await uow.up_pool.get_upid_strong(name)
@@ -97,7 +97,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
         ),
     )
 )
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     rname = res.query[str]("原名") or ""
     nname = res.query[str]("新名字")
     pack = res.query[int]("猎场 ID")
@@ -130,7 +130,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_alconna(Alconna(["::"], "展示猎场up", Arg("名字", str)))
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     name = res.query[str]("名字") or ""
 
     async with get_unit_of_work() as uow:
@@ -145,7 +145,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_alconna(Alconna(["::"], "re:上架猎场[uU][pP]", Arg("名字", str)))
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     name = res.query[str]("名字") or ""
 
     async with get_unit_of_work() as uow:
@@ -158,7 +158,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_alconna(Alconna(["::"], "添加关联猎场", Arg("小哥名", str), Arg("猎场ID", int)))
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     name = res.query[str]("小哥名") or ""
     pack = res.query[int]("猎场ID") or -1
     async with get_unit_of_work() as uow:
@@ -170,7 +170,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_alconna(Alconna(["::"], "删除关联猎场", Arg("小哥名", str), Arg("猎场ID", int)))
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     name = res.query[str]("小哥名") or ""
     pack = res.query[int]("猎场ID") or -1
     async with get_unit_of_work() as uow:
@@ -182,7 +182,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_alconna(Alconna(["::"], "展示猎场", Arg("序号", int)))
-async def _(ctx: GroupContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     pack = res.query[int]("序号")
     assert pack is not None
 

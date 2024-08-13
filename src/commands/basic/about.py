@@ -6,7 +6,7 @@ import PIL
 import PIL.Image
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.common.command_decorators import listen_message, match_regex
 from src.common.lang.zh import get_latest_versions, la
 from src.ui.base.basics import Fonts, render_text, vertical_pile
@@ -48,7 +48,7 @@ def constructHelpMessage(helps: list[str]) -> UniMessage:
 
 @listen_message()
 @match_regex("^(抓小哥|zhua) ?(更新|gx|upd|update)$")
-async def _(ctx: GroupContext, *_):
+async def _(ctx: MessageContext, *_):
     count = 3
     shortHistory = get_latest_versions(count)
     sections: list[PIL.Image.Image] = []
@@ -89,13 +89,13 @@ async def _(ctx: GroupContext, *_):
 
 @listen_message()
 @match_regex("^:: ?(抓小哥|zhua) ?(更新|gx|upd|update)$")
-async def _(ctx: GroupContext, *_):
+async def _(ctx: MessageContext, *_):
     await ctx.send(constructUpdateMessage(updateHistoryDev))
 
 
 @listen_message()
 @match_regex("^(抓小哥|zhua) ?(帮助|help)$")
-async def _(ctx: GroupContext, *_):
+async def _(ctx: MessageContext, *_):
     sections: list[PIL.Image.Image] = []
 
     title = render_text(
@@ -134,11 +134,11 @@ async def _(ctx: GroupContext, *_):
 
 @listen_message()
 @match_regex("^:: ?(抓小哥|zhua)? ?(帮助|help)$")
-async def _(ctx: GroupContext, *_):
+async def _(ctx: MessageContext, *_):
     await ctx.send(constructHelpMessage(helpAdmin))
 
 
 @listen_message()
 @match_regex("^(关于 ?抓小哥|zhua ?about)$")
-async def _(ctx: GroupContext, *_):
+async def _(ctx: MessageContext, *_):
     await ctx.send(UniMessage().text(la.about.about))

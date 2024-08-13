@@ -1,7 +1,7 @@
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import Image
 
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
 from src.common.data.awards import download_award_image, get_a_list_of_award_storage
 from src.common.command_decorators import (
@@ -26,7 +26,7 @@ from src.ui.views.user import UserData
         Arg("level", str),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     aname = res.query[str]("name")
     lname = res.query[str]("level")
     assert aname is not None
@@ -52,7 +52,7 @@ async def _(ctx: GroupContext, res: Arparma):
         Arg("name", str),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("name")
     assert name is not None
 
@@ -96,7 +96,7 @@ async def _(ctx: GroupContext, res: Arparma):
         ),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("小哥原名")
     newName = res.query[str]("小哥新名字")
     levelName = res.query[str]("等级名字")
@@ -168,7 +168,7 @@ async def get_storage_view(
         ),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     levelName = res.query[str]("等级名字")
     async with get_unit_of_work(ctx.sender_id) as uow:
         view = await get_storage_view(
@@ -186,7 +186,7 @@ async def _(ctx: GroupContext, res: Arparma):
 
 @listen_message()
 @match_alconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
-async def _(ctx: GroupContext, _: Arparma):
+async def _(ctx: MessageContext, _: Arparma):
     async with get_unit_of_work(ctx.sender_id) as uow:
         view = await get_storage_view(
             uow,
@@ -216,7 +216,7 @@ async def _(ctx: GroupContext, _: Arparma):
         ),
     )
 )
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     levelName = res.query[str]("等级名字")
     async with get_unit_of_work(ctx.sender_id) as uow:
         view = await get_storage_view(

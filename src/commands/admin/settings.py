@@ -1,4 +1,4 @@
-from src.base.command_events import GroupContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import KagamiRangeError
 from src.common.command_decorators import (
     listen_message,
@@ -13,7 +13,7 @@ from arclet.alconna import Alconna, Arg, Arparma
 @listen_message()
 @require_admin()
 @match_alconna(Alconna(["::"], "re:(更改|改变|设置)周期", Arg("interval", int)))
-async def _(ctx: GroupContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     interval = res.query[int]("interval")
     assert interval is not None
     if interval < 0:
