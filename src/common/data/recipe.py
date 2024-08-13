@@ -5,27 +5,21 @@
 import math
 
 from loguru import logger
-from sqlalchemy import func, insert, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common import config
 from src.common.rd import get_random
-from src.models.models import Award, Recipe
-
-
-async def _get_lid(session: AsyncSession, a: int):
-    return (
-        await session.execute(select(Award.level_id).filter(Award.data_id == a))
-    ).scalar_one()
+from src.core.unit_of_work import UnitOfWork
+from src.models.models import Recipe
+from src.services.pool import PoolService
 
 
 async def generate_random_result(
-    session: AsyncSession, a1: int, a2: int, a3: int
+    uow: UnitOfWork, a1: int, a2: int, a3: int
 ) -> tuple[int, float]:
     """生成一个随机的合成配方
 
     Args:
-        session (AsyncSession): 数据库会话
+        uow (UnitOfWork): 数据库会话
         a1 (int): 第一个小哥 aid
         a2 (int): 第二个小哥 aid
         a3 (int): 第三个小哥 aid
@@ -34,10 +28,12 @@ async def generate_random_result(
         tuple[int, float]: 合成出来的小哥 aid 和合成概率
     """
 
+    service = PoolService(uow)
+
     # 获得三个小哥的等级 ID
-    lid1 = await _get_lid(session, a1)
-    lid2 = await _get_lid(session, a2)
-    lid3 = await _get_lid(session, a3)
+    lid1 = await uow.awards.get_lid(a1)
+    lid2 = await uow.awards.get_lid(a2)
+    lid3 = await uow.awards.get_lid(a3)
     lidm = max(lid1, lid2, lid3)
 
     # 如果含有零星小哥，那么合成产物一定是零星小哥（lid=0），我们对于「成功」产物，就随机生成一个值返回吧。
@@ -71,11 +67,13 @@ async def generate_random_result(
 
     logger.info(f"{1 - lid/8}^(1 + {lid - lidm}/5)*{fvi} = {poss}")
 
-    query = select(Award.data_id).filter(
-        Award.level_id == lid,
-        Award.pack_id > 0,
-    )
-    aids = (await session.execute(query)).scalars().all()
+    targets1 = await service.get_target_aids(a1)
+    targets2 = await service.get_target_aids(a2)
+    targets3 = await service.get_target_aids(a3)
+    targets = targets1 | targets2 | targets3
+    grouped = await uow.awards.group_by_level(targets)
+
+    aids = list(grouped[lid])
     aid = Recipe.get_random_object(a1, a2, a3, ("STAGE-2", config.config.salt)).choice(
         aids
     )
@@ -84,12 +82,12 @@ async def generate_random_result(
 
 
 async def get_merge_result(
-    session: AsyncSession, a1: int, a2: int, a3: int
+    uow: UnitOfWork, a1: int, a2: int, a3: int
 ) -> tuple[int, float]:
     """获得一个合成配方合成的结果的 data_id，在计算时会进行排序使该合成为无序配方
 
     Args:
-        session (AsyncSession): 数据库会话
+        uow (UnitOfWork): 数据库会话
         a1 (int): 第一个小哥 aid
         a2 (int): 第二个小哥 aid
         a3 (int): 第三个小哥 aid
@@ -100,37 +98,22 @@ async def get_merge_result(
 
     a1, a2, a3 = sorted((a1, a2, a3))
 
-    query = select(Recipe.result, Recipe.possibility).filter(
-        Recipe.award1 == a1, Recipe.award2 == a2, Recipe.award3 == a3
-    )
-    result = (await session.execute(query)).tuples().one_or_none()
+    recipe = await uow.recipes.get_recipe(a1, a2, a3)
+    if recipe is not None:
+        return recipe
 
-    if result is not None:
-        return result
-
-    result, possibility = await generate_random_result(session, a1, a2, a3)
-    await session.execute(
-        insert(Recipe).values(
-            {
-                Recipe.award1: a1,
-                Recipe.award2: a2,
-                Recipe.award3: a3,
-                Recipe.result: result,
-                Recipe.possibility: possibility,
-            }
-        )
-    )
-    await session.flush()
+    result, possibility = await generate_random_result(uow, a1, a2, a3)
+    await uow.recipes.add_recipe(a1, a2, a3, result, possibility, False)
     return result, possibility
 
 
 async def try_merge(
-    session: AsyncSession, uid: int, a1: int, a2: int, a3: int
+    uow: UnitOfWork, uid: int, a1: int, a2: int, a3: int
 ) -> tuple[int, bool]:
     """进行一次小哥合成，并返回合成的结果
 
     Args:
-        session (AsyncSession): 数据库会话
+        uow (UnitOfWork): 数据库会话
         uid (int): 用户的 uid，在未来可能会有跟幸运值有关的判断
         a1 (int): 第一个小哥 aid
         a2 (int): 第二个小哥 aid
@@ -140,7 +123,7 @@ async def try_merge(
         tuple[int, bool]: 合成出来的小哥的 aid，以及是否成功了
     """
 
-    result, possibility = await get_merge_result(session, a1, a2, a3)
+    result, possibility = await get_merge_result(uow, a1, a2, a3)
 
     if get_random().random() <= possibility:
         return result, True
@@ -153,12 +136,6 @@ async def try_merge(
         # 对此时有特殊情况，是乱码小哥
         return -1, False
 
-    query = (
-        select(Award.data_id)
-        .filter(Award.level_id == 0)
-        .order_by(func.random())
-        .limit(1)
-    )
-    result = (await session.execute(query)).scalar_one()
+    result = get_random().choice(list(await uow.awards.get_all_mergeable_zeros()))
 
     return result, False

@@ -1,21 +1,21 @@
 from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import func, select
 
-from src.base.command_events import OnebotContext
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchRegex,
-    requireAdmin,
+from src.base.command_events import MessageContext
+from src.common.command_decorators import (
+    listen_message,
+    match_regex,
+    require_admin,
 )
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import level_repo
 from src.models.models import Award
 
 
-@listenOnebot()
-@requireAdmin()
-@matchRegex("^:: ?(所有|全部) ?(等级|级别) ?$")
-async def _(ctx: OnebotContext, _):
+@listen_message()
+@require_admin()
+@match_regex("^:: ?(所有|全部) ?(等级|级别) ?$")
+async def _(ctx: MessageContext, _):
     async with get_unit_of_work() as uow:
         query = select(
             Award.level_id,

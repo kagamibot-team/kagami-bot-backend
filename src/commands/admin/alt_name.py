@@ -1,22 +1,22 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
-from src.base.command_events import OnebotContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import (
     MultipleObjectFoundException,
     ObjectAlreadyExistsException,
     ObjectNotFoundException,
 )
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-    requireAdmin,
+from src.common.command_decorators import (
+    listen_message,
+    match_alconna,
+    require_admin,
 )
 from src.core.unit_of_work import get_unit_of_work
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         ["::"],
         "re:(更改|设置|设定|调整|创建|添加)(别名|别名)",
@@ -29,7 +29,7 @@ from src.core.unit_of_work import get_unit_of_work
         ),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     rname = res.query[str]("名字")
     aname = res.query[str]("别名")
     tname = res.query[str]("类型名")
@@ -63,10 +63,10 @@ async def _(ctx: OnebotContext, res: Arparma):
     await ctx.send("ok.")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(Alconna(["::"], "re:(删除|移除)别名", Arg("别名", str)))
-async def _(ctx: OnebotContext, res: Arparma):
+@listen_message()
+@require_admin()
+@match_alconna(Alconna(["::"], "re:(删除|移除)别名", Arg("别名", str)))
+async def _(ctx: MessageContext, res: Arparma):
     aname = res.query[str]("别名")
     if aname is None:
         return

@@ -1,17 +1,17 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
-from src.base.command_events import GroupContext, OnebotContext
+from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_root import throw_event
 from src.base.exceptions import ObjectNotFoundException
 from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.data.awards import generate_random_info, get_award_info, use_award
 from src.common.data.recipe import try_merge
 from src.common.dataclasses.game_events import MergeEvent
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-    matchLiteral,
-    requireAdmin,
+from src.common.command_decorators import (
+    listen_message,
+    match_alconna,
+    match_literal,
+    require_admin,
 )
 from src.common.rd import get_random
 from src.common.times import now_datetime
@@ -22,9 +22,9 @@ from src.ui.views.recipe import MergeResult, MergeStatus
 from src.ui.views.user import UserData
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         "re:(查配方|查询配方|查找配方|cpf|pf)",
         ["::"],
@@ -33,7 +33,7 @@ from src.ui.views.user import UserData
         Arg("name3", str),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     n1 = res.query[str]("name1")
     n2 = res.query[str]("name2")
     n3 = res.query[str]("name3")
@@ -58,9 +58,9 @@ async def _(ctx: OnebotContext, res: Arparma):
         )
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         "re:(更改|改变|设置|调整|添加|新增|增加)(合成)?配方",
         ["::"],
@@ -80,7 +80,7 @@ async def _(ctx: OnebotContext, res: Arparma):
         Option("--reset", alias=["重置"]),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     n1 = res.query[str]("name1", "")
     n2 = res.query[str]("name2", "")
     n3 = res.query[str]("name3", "")
@@ -104,25 +104,25 @@ async def _(ctx: OnebotContext, res: Arparma):
     await ctx.reply("ok.")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         ["::"],
         "删除所有配方",
         Option("--force", alias=["-f", "强制"]),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     async with get_unit_of_work() as uow:
         await uow.recipes.clear_not_modified(force=res.exist("--force"))
     await ctx.reply("ok.")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchLiteral("::所有特殊配方")
-async def _(ctx: OnebotContext):
+@listen_message()
+@require_admin()
+@match_literal("::所有特殊配方")
+async def _(ctx: MessageContext):
     async with get_unit_of_work() as uow:
         msg: list[str] = []
         for aid1, aid2, aid3, aid, posi in await uow.recipes.get_all_special():
@@ -138,8 +138,8 @@ async def _(ctx: OnebotContext):
     await ctx.send("所有的特殊配方：\n" + "\n".join(msg))
 
 
-@listenOnebot()
-@matchAlconna(
+@listen_message()
+@match_alconna(
     Alconna(
         "re:(合成|hc)(小哥|xg)?",
         Arg("name1", str),
@@ -147,7 +147,7 @@ async def _(ctx: OnebotContext):
         Arg("name3", str),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
 
     n1 = res.query[str]("name1")
@@ -183,7 +183,7 @@ async def _(ctx: OnebotContext, res: Arparma):
 
         after = await uow.money.use(uid, cost)
 
-        aid, succeed = await try_merge(uow.session, uid, a1, a2, a3)
+        aid, succeed = await try_merge(uow, uid, a1, a2, a3)
         if aid == -1:
             info = await generate_random_info()
             add = get_random().randint(1, 100)

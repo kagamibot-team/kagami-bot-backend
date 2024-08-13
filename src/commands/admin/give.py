@@ -2,19 +2,19 @@ from typing import Any
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 
-from src.base.command_events import OnebotContext
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-    requireAdmin,
+from src.base.command_events import MessageContext
+from src.common.command_decorators import (
+    listen_message,
+    match_alconna,
+    require_admin,
 )
 from src.core.unit_of_work import get_unit_of_work
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(Alconna(["::"], "给薯片", Arg("对方", int), Arg("数量", int)))
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+@listen_message()
+@require_admin()
+@match_alconna(Alconna(["::"], "给薯片", Arg("对方", int), Arg("数量", int)))
+async def _(ctx: MessageContext, res: Arparma[Any]):
     target = res.query("对方")
     number = res.query[int]("数量")
     if target is None or number is None:
@@ -25,13 +25,13 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         uid = await uow.users.get_uid(target)
         await uow.money.add(uid, number)
 
-    await ctx.reply("给了。", at=False, ref=True)
+    await ctx.reply("给了。")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(Alconna(["::"], "全部给薯片", Arg("数量", int)))
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+@listen_message()
+@require_admin()
+@match_alconna(Alconna(["::"], "全部给薯片", Arg("数量", int)))
+async def _(ctx: MessageContext, res: Arparma[Any]):
     number = res.query[int]("数量")
     if number is None:
         return
@@ -40,12 +40,12 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         for uid in await uow.users.all_users():
             await uow.money.add(uid, number)
 
-    await ctx.reply("给了。", at=False, ref=True)
+    await ctx.reply("给了。")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         ["::"],
         "给小哥",
@@ -54,7 +54,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         Arg("数量", int, flags=[ArgFlag.OPTIONAL]),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     target = res.query("对方")
     name = res.query[str]("名称")
     number = res.query[int]("数量")
@@ -70,12 +70,12 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         aid = await uow.awards.get_aid_strong(name)
         await uow.inventories.give(uid, aid, number, False)
 
-    await ctx.reply("给了。", at=False, ref=True)
+    await ctx.reply("给了。")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         ["::"],
         "给皮肤",
@@ -83,7 +83,7 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         Arg("名称", str),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     target = res.query[int]("对方")
     name = res.query[str]("名称")
 
@@ -95,4 +95,4 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         sid = await uow.skins.get_sid_strong(name)
         await uow.skin_inventory.give(uid, sid)
 
-    await ctx.reply("给了。", at=False, ref=True)
+    await ctx.reply("给了。")

@@ -171,6 +171,42 @@ class UserRepository(DBRepository):
 
         return list((await self.session.execute(select(User.data_id))).scalars())
 
+    async def get_sleep_early_data(self, uid: int) -> tuple[float, int]:
+        """
+        获得上一次早睡时间的时间戳
+        """
+        q = select(User.last_sleep_early_time, User.sleep_early_count).filter(
+            User.data_id == uid
+        )
+        r = await self.session.execute(q)
+        return r.tuples().one()
+
+    async def update_sleep_early_data(self, uid: int, ts: float, count: int):
+        """
+        设置上一次早睡时间的时间戳
+        """
+        q = (
+            update(User)
+            .filter(User.data_id == uid)
+            .values({User.last_sleep_early_time: ts, User.sleep_early_count: count})
+        )
+        await self.session.execute(q)
+
+    async def get_getup_time(self, uid: int) -> float:
+        """
+        获得起床时间
+        """
+        q = select(User.get_up_time).filter(User.data_id == uid)
+        r = await self.session.execute(q)
+        return r.scalar_one()
+
+    async def set_getup_time(self, uid: int, ts: float):
+        """
+        设置起床时间
+        """
+        q = update(User).where(User.data_id == uid).values({User.get_up_time: ts})
+        await self.session.execute(q)
+
 
 class MoneyRepository(DBRepository):
     async def get(self, uid: int) -> float:
@@ -274,31 +310,45 @@ class UserFlagRepository(DBRepository):
 
 
 class UserPackRepository(DBRepository):
-    async def get_count(self, uid: int) -> int:
+    async def get_own(self, uid: int) -> set[int]:
         """
-        获得一个用户现在买了几个猎场
+        获得用户现在买了几个猎场
         """
+        q = select(User.own_packs).filter(User.data_id == uid)
+        r = await self.session.execute(q)
+        return set((int(i) for i in r.scalar_one().split(",") if len(i) > 0))
 
-        q = select(User.bought_pack_count).filter(User.data_id == uid)
-        return (await self.session.execute(q)).scalar_one()
-
-    async def set_count(self, uid: int, count: int) -> None:
+    async def set_own(self, uid: int, data: set[int]):
         """
-        设置用户购买了多少个猎场
+        设置用户现在拥有哪些猎场
         """
-
         q = (
             update(User)
             .where(User.data_id == uid)
-            .values({User.bought_pack_count: count})
+            .values({User.own_packs: ",".join((str(i) for i in data))})
         )
         await self.session.execute(q)
+
+    async def add_own(self, uid: int, pack: int):
+        """
+        给用户添加猎场
+        """
+        packs = await self.get_own(uid)
+        packs.add(pack)
+        await self.set_own(uid, packs)
+
+    async def remove_own(self, uid: int, pack: int):
+        """
+        移除用户的猎场
+        """
+        packs = await self.get_own(uid)
+        packs.remove(pack)
+        await self.set_own(uid, packs)
 
     async def get_using(self, uid: int) -> int:
         """
         获得用户目前在第几个猎场
         """
-
         q = select(User.using_pack).filter(User.data_id == uid)
         return (await self.session.execute(q)).scalar_one()
 
@@ -306,6 +356,5 @@ class UserPackRepository(DBRepository):
         """
         设置用户目前在第几个猎场
         """
-
         q = update(User).where(User.data_id == uid).values({User.using_pack: idx})
         await self.session.execute(q)

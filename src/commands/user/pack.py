@@ -1,154 +1,110 @@
 from typing import Any
-from src.base.command_events import OnebotContext
-from src.base.exceptions import (
-    DoNotHaveException,
-    ObjectNotFoundException,
-    PackNotMatchException,
-    SoldOutException,
-)
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-    requireAdmin,
-)
-from arclet.alconna import Alconna, Arg, Arparma, Option, ArgFlag
 
+from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
+
+from src.base.command_events import MessageContext
+from src.common.command_decorators import (
+    listen_message,
+    match_alconna,
+    match_regex,
+    require_admin,
+)
 from src.core.unit_of_work import get_unit_of_work
+from src.services.pool import PoolService
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
-    Alconna(
-        "re:(小L|小l|xl)?(猎场|lc)",
-        Option(
-            "购买猎场",
-            alias=[
-                "买猎场",
-                "买新猎场",
-                "购置猎场",
-            ],
-        ),
-        Option(
-            "切换猎场",
-            Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL]),
-            alias=[
-                "切换",
-                "前往猎场",
-                "去往猎场",
-                "去猎场",
-                "前往",
-                "去",
-                "前去",
-                "去往",
-            ],
-        ),
-        Option(
-            "购买升级",
-            Arg("升级名1", str),
-            alias=["买升级", "购买猎场升级", "买猎场升级"],
-        ),
-        Option(
-            "切换升级",
-            Arg("升级名2", str, flags=[ArgFlag.OPTIONAL]),
-            alias=["切换猎场升级"],
-        ),
-        Option("我的升级"),
-    )
-)
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+@listen_message()
+@require_admin()
+@match_regex("^(小[lL]|xl)?(猎场|lc)$")
+async def _(ctx: MessageContext, _):
+    message: list[str] = []
+
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
-        count = await uow.user_pack.get_count(uid)
-        current = await uow.user_pack.get_using(uid)
         max_count = await uow.settings.get_pack_count()
+        bought = await uow.user_pack.get_own(uid)
+        current = await uow.user_pack.get_using(uid)
 
-        if res.find("购买猎场"):
-            if count >= max_count:
-                raise ObjectNotFoundException(obj_name=f"{count + 1}号猎场")
-            rest = await uow.money.use(uid, 1000)
-            await uow.user_pack.set_count(uid, count + 1)
-            await ctx.reply(
-                (
-                    f"你刚刚购买了 {count + 1} 号猎场，花费了 1000 薯片。"
-                    f"\n你还剩下 {rest} 薯片。"
-                    f"\n你可以输入[小L猎场 切换猎场]来切换猎场哦"
-                )
-            )
-            return
+        for i in range(1, max_count + 1):
+            main_aids = await uow.pack.get_main_aids_of_pack(i)
+            linked_aids = await uow.pack.get_linked_aids_of_pack(i)
+            count = len(main_aids | linked_aids)
+            msg = f"= {i} 号猎场 =\n"
+            if i in bought:
+                msg += "已购"
+            if i == current:
+                msg += ";当前"
+            msg += f"\n共有 {count} 小哥包含在内。"
+            message.append(msg)
 
-        if res.find("切换猎场"):
-            index = res.query[int]("猎场序号")
-            if index is not None:
-                if index <= 0 or index > max_count:
-                    raise ObjectNotFoundException(obj_name=f"{index}号猎场")
-                if index > count:
-                    raise DoNotHaveException(f"{index}号猎场")
-                await uow.user_pack.set_using(uid, index)
-            else:
-                index = current + 1
-                index -= 1
-                index %= count
-                index += 1
-                assert 0 < index <= count
-                await uow.user_pack.set_using(uid, index)
-            await uow.up_pool.set_using(uid, None)
-            await ctx.reply(f"已经切换到 {index} 号猎场了")
-            return
+    await ctx.reply("\n\n".join(message))
 
-        if res.find("购买升级"):
-            name = res.query[str]("升级名1")
-            assert name is not None
-            upid = await uow.up_pool.get_upid_strong(name)
-            if upid in await uow.up_pool.get_own(uid):
-                raise SoldOutException(name)
+
+@listen_message()
+@require_admin()
+@match_regex("^(猎场|lc)([Uu][Pp])$")
+async def _(ctx: MessageContext, _):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        service = PoolService(uow)
+        uid = await uow.users.get_uid(ctx.sender_id)
+        pack = await service.get_current_pack(uid)
+        upid = await service.get_buyable_pool(pack)
+        name = "没有"
+        if upid is not None:
             info = await uow.up_pool.get_pool_info(upid)
-            if not info.display or info.cost < 0:
-                raise ObjectNotFoundException("猎场升级", name)
-            await uow.money.use(uid, info.cost)
-            await uow.up_pool.add_own(uid, upid)
-            await ctx.reply(f"已经购买了猎场升级 {name}")
-            return
+            name = info.name
+        if upid in await uow.up_pool.get_own(uid, pack):
+            name += "(已购)"
+        if upid == await uow.up_pool.get_using(uid):
+            name += "(使用中)"
 
-        if res.find("切换升级"):
-            name = res.query[str]("升级名2")
-            if name is not None:
-                upid = await uow.up_pool.get_upid_strong(name)
-                if upid not in await uow.up_pool.get_own(uid):
-                    raise DoNotHaveException(f"猎场 {name}")
-                info = await uow.up_pool.get_pool_info(upid)
-                if (req := info.belong_pack) != (
-                    curr := await uow.user_pack.get_using(uid)
-                ):
-                    raise PackNotMatchException(curr, req)
-            else:
-                upids = list(
-                    await uow.up_pool.get_own(uid, await uow.user_pack.get_using(uid))
-                )
-                curr = await uow.up_pool.get_using(uid)
-                if curr not in upids:
-                    upid = upids[0] if len(upids) != 0 else None
-                elif curr == upids[-1]:
-                    upid = None
-                else:
-                    upid = upids[upids.index(curr) + 1]
+    await ctx.reply(f"当前 {pack} 号猎场的猎场 Up：{name}")
 
-            await uow.up_pool.set_using(uid, upid)
-            if upid is None:
-                await ctx.reply("已经将当前猎场切换到默认了")
-            else:
-                info = await uow.up_pool.get_pool_info(upid)
-                await ctx.reply(f"已经将当前猎场升级为：{info.name}")
-            return
 
-        if res.find("我的升级"):
-            curr = await uow.user_pack.get_using(uid)
-            owns = await uow.up_pool.get_own(uid, curr)
-            await ctx.reply(str(owns))
-            return
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL]))
+)
+async def _(ctx: MessageContext, res: Arparma[Any]):
+    dest = res.query[int]("猎场序号")
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        service = PoolService(uow)
+        uid = await uow.users.get_uid(ctx.sender_id)
+        idx = await service.switch_pack(uid, dest)
+    await ctx.reply(f"[测试中]已经切换到 {idx} 号猎场了")
 
-    # Fallback: 没有执行任何指令时，展示默认界面
-    await ctx.reply(
-        f"目前总共有 {max_count} 个猎场，你已经购买了 {count} 个猎场。"
-        f"现在你在 {current} 号猎场。"
-    )
+
+@listen_message()
+@require_admin()
+@match_alconna(Alconna("购买猎场", Arg("猎场序号", int)))
+async def _(ctx: MessageContext, res: Arparma[Any]):
+    dest = res.query[int]("猎场序号")
+    assert dest is not None
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        service = PoolService(uow)
+        uid = await uow.users.get_uid(ctx.sender_id)
+        await service.buy_pack(uid, dest)
+    await ctx.reply(f"[测试中]成功购买了 {dest} 号猎场")
+
+
+@listen_message()
+@require_admin()
+@match_regex("^切换(猎场)?[uU][pP]池?$")
+async def _(ctx: MessageContext, _):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        service = PoolService(uow)
+        uid = await uow.users.get_uid(ctx.sender_id)
+        upid = await service.toggle_up_pool(uid)
+    await ctx.reply(f"[测试中]切换了猎场up，UPID={upid}")
+
+
+@listen_message()
+@require_admin()
+@match_regex("^购买(猎场)?[uU][pP]池?$")
+async def _(ctx: MessageContext, _):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        service = PoolService(uow)
+        uid = await uow.users.get_uid(ctx.sender_id)
+        info = await service.buy_up_pool(uid)
+    await ctx.reply(f"[测试中]购买了猎场up，INFO={info}")

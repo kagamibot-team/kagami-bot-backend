@@ -3,23 +3,24 @@ from typing import Any
 from arclet.alconna import Alconna, Arg, Arparma, Option
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.command_events import OnebotContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import DoNotHaveException
 from src.common.data.awards import get_award_info
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-    matchLiteral,
-    requireAdmin,
+from src.common.command_decorators import (
+    listen_message,
+    match_alconna,
+    match_literal,
+    require_admin,
 )
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
+from src.services.pool import PoolService
 from src.ui.pages.catch import render_award_info_message
 from src.ui.views.award import AwardDisplay, StorageDisplay
 
 
-@listenOnebot()
-@matchAlconna(
+@listen_message()
+@match_alconna(
     Alconna(
         "展示",
         Arg("名字", str),
@@ -28,7 +29,7 @@ from src.ui.views.award import AwardDisplay, StorageDisplay
         Option("条目", alias=["--display", "-d"]),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, res: Arparma[Any]):
     name = res.query[str]("名字")
     if name is None:
         return
@@ -55,7 +56,9 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         if do_admin:
             uid = None
         info = await get_award_info(uow, aid, uid, sid)
-        pack = await uow.awards.get_pack(aid)
+
+        main_pack = await uow.pack.get_main_pack(aid)
+        linked_pack = await uow.pack.get_linked_packs(aid)
 
         if sto is not None:
             dt = StorageDisplay(
@@ -75,7 +78,11 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         msg = (
             UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
             .image(raw=info.image_bytes)
-            .text(f"\nsorting={info.sorting};\npack={pack};\n{info.description}")
+            .text(
+                f"id={info.aid}; sorting={info.sorting};\n"
+                f"main_pack={main_pack}; linked={linked_pack};\n"
+                f"{info.description}"
+            )
         )
         await ctx.reply(msg)
     else:
@@ -87,10 +94,11 @@ async def _(ctx: OnebotContext, res: Arparma[Any]):
         await ctx.reply(msg)
 
 
-@listenOnebot()
-@requireAdmin()
-@matchLiteral("::抓不到的小哥")
-async def _(ctx: OnebotContext):
+@listen_message()
+@require_admin()
+@match_literal("::抓不到的小哥")
+async def _(ctx: MessageContext):
     async with get_unit_of_work() as uow:
-        list = await uow.awards.get_all_special_aids()
+        service = PoolService(uow)
+        list = await service.get_uncatchable_aids()
     await ctx.reply(str(list))

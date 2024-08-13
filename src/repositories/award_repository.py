@@ -50,7 +50,7 @@ class AwardRepository(DBRepository):
                 {
                     Award.level_id: lid,
                     Award.name: name,
-                    Award.pack_id: 0,
+                    Award.main_pack_id: -1,
                 }
             )
         )
@@ -121,7 +121,7 @@ class AwardRepository(DBRepository):
             Award.level_id,
             Award.image,
             Award.sorting,
-            Award.pack_id,
+            Award.main_pack_id,
         ).filter(Award.data_id == aid)
         return (await self.session.execute(query)).tuples().one()
 
@@ -191,7 +191,7 @@ class AwardRepository(DBRepository):
         if image is not None:
             query = query.values({Award.image: Path(image).as_posix()})
         if pack_id is not None:
-            query = query.values({Award.pack_id: pack_id})
+            query = query.values({Award.main_pack_id: pack_id})
         if sorting is not None:
             query = query.values({Award.sorting: sorting})
 
@@ -240,44 +240,23 @@ class AwardRepository(DBRepository):
             Award.description,
             Award.level_id,
             Award.image,
-            Award.pack_id,
+            Award.main_pack_id,
             Award.sorting,
         ).where(Award.data_id.in_(aids))
         return (await self.session.execute(query)).tuples().all()
 
-    async def get_all_awards_in_pack(self, pack_id: int) -> set[int]:
+    async def get_all_mergeable_zeros(self) -> set[int]:
         """
-        获得一个猎场中的所有小哥
+        获得所有可以合成的零星小哥
         """
+        q = select(Award.data_id).filter(Award.level_id == 0)
+        r = await self.session.execute(q)
+        return set(r.scalars())
 
-        query1 = select(Award.data_id).filter(Award.pack_id == pack_id)
-        set1 = set((await self.session.execute(query1)).scalars().all())
-        query2 = select(Award.data_id).filter(Award.pack_id == 0)
-        set2 = set((await self.session.execute(query2)).scalars().all())
-
-        return set1 | set2
-
-    async def set_pack(self, aid: int, pack_id: int):
+    async def get_names(self, aids: Iterable[int]) -> dict[int, str]:
         """
-        设置一个小哥属于哪些猎场
+        获得很多小哥的名字
         """
-
-        await self.session.execute(
-            update(Award).where(Award.data_id == aid).values({Award.pack_id: pack_id})
-        )
-
-    async def get_pack(self, aid: int) -> int:
-        """
-        获取一个小哥在哪个猎场
-        """
-
-        query = select(Award.pack_id).filter(Award.data_id == aid)
-        return (await self.session.execute(query)).scalar_one()
-
-    async def get_all_special_aids(self) -> set[str]:
-        """
-        获得所有无法抓到的小哥的名字
-        """
-
-        query = select(Award.name).filter(Award.pack_id < 0)
-        return set((await self.session.execute(query)).scalars())
+        q = select(Award.data_id, Award.name).filter(Award.data_id.in_(aids))
+        r = await self.session.execute(q)
+        return dict(r.tuples().all())

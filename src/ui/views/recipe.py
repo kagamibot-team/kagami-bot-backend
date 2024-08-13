@@ -26,6 +26,8 @@ class MokieImage(Enum):
     wtf = "黑化"
     laugh = "嘲讽"
     jealous = "咬牙切齿"
+    shy = "心虚"
+    afraid = "惶恐"
 
     @property
     def image_url(self) -> Path:
@@ -52,116 +54,162 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         1: (
             MokieMessage(text="刚抓的小哥，便宜造！", image=MokieImage.normal),
             MokieMessage(text="嗯。", image=MokieImage.normal),
+            MokieMessage(text="很经常的结果。", image=MokieImage.normal),
+            MokieMessage(text="多试试吧。", image=MokieImage.normal),
         ),
         2: (
             MokieMessage(text="可以，至少升了。", image=MokieImage.normal),
             MokieMessage(text="说不定破产以后要用。", image=MokieImage.normal),
+            MokieMessage(text="不亏啊。", image=MokieImage.normal),
+            MokieMessage(text="也算三个臭皮匠吧。", image=MokieImage.normal),
         ),
         3: (
-            MokieMessage(text="哦哦有点好。", image=MokieImage.normal),
+            MokieMessage(text="哦哦有点好。", image=MokieImage.astonish),
             MokieMessage(text="实用配方！", image=MokieImage.normal),
+            MokieMessage(text="其实有点难得。", image=MokieImage.normal),
+            MokieMessage(text="好好记着哦。", image=MokieImage.normal),
         ),
         4: (
             MokieMessage(text="厉害啊。", image=MokieImage.astonish),
-            MokieMessage(text="给你赚到了。", image=MokieImage.astonish),
+            MokieMessage(text="给你赚到了。", image=MokieImage.jealous),
+            MokieMessage(text="我也记记。", image=MokieImage.astonish),
+            MokieMessage(text="开抄！", image=MokieImage.laugh),
         ),
         5: (
-            MokieMessage(text="你牛逼。", image=MokieImage.normal),
+            MokieMessage(text="你牛逼。", image=MokieImage.jealous),
             MokieMessage(text="求送我。", image=MokieImage.normal),
+            MokieMessage(text="这么强？！", image=MokieImage.astonish),
+            MokieMessage(text="你是怎么办到的！？", image=MokieImage.xiaoge),
         ),
         0: (
             MokieMessage(text="嗯こ。", image=MokieImage.laugh),
             MokieMessage(text="就这点薯片你想怎样？", image=MokieImage.laugh),
+            MokieMessage(text="收徒。", image=MokieImage.laugh),
+            MokieMessage(text="啦啦啦。", image=MokieImage.normal),
         ),
     },
     2: {
         1: (
             MokieMessage(text="不如粑粑。", image=MokieImage.normal),
             MokieMessage(text="还有必要记配方吗？", image=MokieImage.laugh),
+            MokieMessage(text="别吧兄弟。", image=MokieImage.normal),
+            MokieMessage(text="记得避雷。", image=MokieImage.normal),
         ),
         2: (
-            MokieMessage(
-                text="希望不要落到需要用这个配方的时候。", image=MokieImage.normal
-            ),
+            MokieMessage(text="希望不要落到需要用这个配方的时候。", image=MokieImage.normal),
             MokieMessage(text="一般般。", image=MokieImage.normal),
+            MokieMessage(text="好无聊——", image=MokieImage.normal),
+            MokieMessage(text="也行吧。", image=MokieImage.normal),
         ),
         3: (
             MokieMessage(text="没记的话记一下吧。", image=MokieImage.normal),
             MokieMessage(text="以后绝对用得到的。", image=MokieImage.normal),
+            MokieMessage(text="收集度上去后很常用哦。", image=MokieImage.normal),
+            MokieMessage(text="不要忽视这种配方。", image=MokieImage.normal),
         ),
         4: (
-            MokieMessage(text="好好好。", image=MokieImage.astonish),
+            MokieMessage(text="好好好。", image=MokieImage.normal),
             MokieMessage(text="狠狠跳步喽！", image=MokieImage.normal),
+            MokieMessage(text="帅！", image=MokieImage.normal),
+            MokieMessage(text="这个可以有！", image=MokieImage.astonish),
         ),
         5: (
             MokieMessage(text="我也想要。", image=MokieImage.astonish),
-            MokieMessage(text="恭喜你啊。（咬牙切齿）", image=MokieImage.jealous),
+            MokieMessage(text="大家一起来抄吧！", image=MokieImage.normal),
+            MokieMessage(text="恭喜你啊。", image=MokieImage.jealous),
+            MokieMessage(text="也就成功升了三级而已。", image=MokieImage.jealous),
         ),
         0: (
             MokieMessage(text="没亏多少。", image=MokieImage.laugh),
-            MokieMessage(text="下次一定！", image=MokieImage.laugh),
+            MokieMessage(text="不关我事哦。", image=MokieImage.shy),
+            MokieMessage(text="下次一定！", image=MokieImage.normal),
+            MokieMessage(text="多合合吧。", image=MokieImage.normal),
         ),
     },
     3: {
         2: (
-            MokieMessage(text="下次别合了。", image=MokieImage.laugh),
-            MokieMessage(text="吃一堑，长一智。", image=MokieImage.laugh),
+            MokieMessage(text="下次少合。", image=MokieImage.laugh),
+            MokieMessage(text="吃一堑，长一智。", image=MokieImage.normal),
+            MokieMessage(text="嘛，总是会遇到的啦。", image=MokieImage.laugh),
+            MokieMessage(text="知道了就可以避免了啦。", image=MokieImage.normal),
         ),
         3: (
             MokieMessage(text="感觉作用有限，配方。", image=MokieImage.normal),
             MokieMessage(text="今天天气不错。", image=MokieImage.normal),
+            MokieMessage(text="好没槽点的配方！", image=MokieImage.normal),
+            MokieMessage(text="这咋了。（模仿）", image=MokieImage.xiaoge),
         ),
         4: (
             MokieMessage(text="能用。", image=MokieImage.normal),
             MokieMessage(text="算是成功了吧。", image=MokieImage.normal),
+            MokieMessage(text="没成本更低的就用这种吧。", image=MokieImage.normal),
+            MokieMessage(text="也不算少见。", image=MokieImage.normal),
         ),
         5: (
             MokieMessage(text="还不错哦。", image=MokieImage.astonish),
-            MokieMessage(text="小赚！", image=MokieImage.normal),
+            MokieMessage(text="小赚！", image=MokieImage.astonish),
+            MokieMessage(text="多来点！", image=MokieImage.astonish),
+            MokieMessage(text="我：有点东西", image=MokieImage.astonish),
         ),
         0: (
             MokieMessage(text="胜败乃兵家常事！", image=MokieImage.laugh),
-            MokieMessage(text="我以前死在这过很多次。", image=MokieImage.laugh),
+            MokieMessage(text="我以前死在这过很多次。", image=MokieImage.normal),
+            MokieMessage(text="小华不知道哦。", image=MokieImage.normal),
+            MokieMessage(text="别怪我，怪机器。", image=MokieImage.shy),
         ),
     },
     4: {
         3: (
-            MokieMessage(text="不好。", image=MokieImage.normal),
-            MokieMessage(text="亏了。", image=MokieImage.normal),
+            MokieMessage(text="亏。", image=MokieImage.laugh),
+            MokieMessage(text="亏了。", image=MokieImage.laugh),
+            MokieMessage(text="多亏了你。", image=MokieImage.laugh),
+            MokieMessage(text="多亏了，你？", image=MokieImage.laugh),
         ),
         4: (
-            MokieMessage(text="也行。", image=MokieImage.normal),
+            MokieMessage(text="也行……？", image=MokieImage.normal),
             MokieMessage(text="还可以。", image=MokieImage.normal),
+            MokieMessage(text="换一换口味啦。", image=MokieImage.normal),
+            MokieMessage(text="这是你需要的吗？", image=MokieImage.normal),
         ),
         5: (
             MokieMessage(text="一分耕耘一分收获吧。", image=MokieImage.normal),
             MokieMessage(text="不经历风雨，怎能见彩虹？", image=MokieImage.normal),
+            MokieMessage(text="升星的钱你来出！", image=MokieImage.normal),
+            MokieMessage(text="挺敢的嘛！（才不说你很勇嘛）", image=MokieImage.normal),
         ),
         0: (
             MokieMessage(text="必要的牺牲。", image=MokieImage.laugh),
             MokieMessage(text="其实不要的可以给我。", image=MokieImage.laugh),
+            MokieMessage(text="其实就算你多扔进去几个四星，成功率也不会提高很多，貌似，我猜的。", image=MokieImage.shy),
+            MokieMessage(text="噗。", image=MokieImage.laugh),
         ),
     },
     5: {
         4: (
-            MokieMessage(
-                text="万不得已的时候我也用过这种配方。", image=MokieImage.normal
-            ),
+            MokieMessage(text="万不得已的时候我也用过这种配方。", image=MokieImage.normal),
             MokieMessage(text="嘛，回来个四星也行吧。", image=MokieImage.normal),
+            MokieMessage(text="看你抱着他们过来的时候都有点吓人！", image=MokieImage.shy),
+            MokieMessage(text="追求稳定性吗。", image=MokieImage.normal),
         ),
         5: (
-            MokieMessage(text="看得我胆战心惊的。", image=MokieImage.normal),
+            MokieMessage(text="看得我胆战心惊的。", image=MokieImage.shy),
             MokieMessage(text="大手笔啊。", image=MokieImage.normal),
+            MokieMessage(text="你是真馋了。", image=MokieImage.normal),
+            MokieMessage(text="也没啥好惊讶的，甚至。", image=MokieImage.normal),
         ),
         0: (
             MokieMessage(text="没必要。", image=MokieImage.laugh),
             MokieMessage(text="自己留着点吧。", image=MokieImage.laugh),
+            MokieMessage(text="虽然没人权但是也不能这样造他们啊。", image=MokieImage.shy),
+            MokieMessage(text="无聊和我找话吗。", image=MokieImage.shy),
         ),
     },
     0: {
         0: (
             MokieMessage(text="这是什么？合一下。", image=MokieImage.laugh),
             MokieMessage(text="唉。", image=MokieImage.laugh),
+            MokieMessage(text="你花这些薯片是为了什么呢……", image=MokieImage.laugh),
+            MokieMessage(text="别看我，是机器干掉的。", image=MokieImage.shy),
         ),
     },
 }
@@ -169,12 +217,31 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
 MOKIE_MESSAGES_XIAOHUA = (
     MokieMessage(text="像我吧。", image=MokieImage.xiaoge),
     MokieMessage(text="哎这些东西真不知道哪来的。", image=MokieImage.normal),
+    MokieMessage(text="虽然不是我，但别想什么奇怪的事。", image=MokieImage.shy),
+    MokieMessage(text="看到这个的时候，他们会想起我吗……", image=MokieImage.normal),
 )
 "小华"
 
 MOKIE_MESSAGES_LOVE = (
+    MokieMessage(text="捏。", image=MokieImage.normal),
+    MokieMessage(text="可爱。", image=MokieImage.normal),
+    MokieMessage(text="收着吧。", image=MokieImage.normal),
+    MokieMessage(text="看不腻呀。", image=MokieImage.normal),
+    MokieMessage(text="单纯很喜欢。", image=MokieImage.normal),
+    MokieMessage(text="偷偷吸了一口。", image=MokieImage.normal),
+    MokieMessage(text="请保护好他们哦。", image=MokieImage.normal),
+    MokieMessage(text="软软的，很想欺负。", image=MokieImage.normal),
+    MokieMessage(text="我一直在收集这个啦。", image=MokieImage.normal),
     MokieMessage(text="送我送我送我送我送我。", image=MokieImage.astonish),
-    MokieMessage(text="喜欢。", image=MokieImage.astonish),
+    MokieMessage(text="拿来当宠物感觉也不错吧。", image=MokieImage.normal),
+    MokieMessage(text="其实我住所后院养了好几笼。", image=MokieImage.normal),
+    MokieMessage(text="请不要把他们再扔回来合成了。", image=MokieImage.normal),
+    MokieMessage(text="第一次合出来的时候开心一整天。", image=MokieImage.normal),
+    MokieMessage(text="在家里放着一堆呢，感觉像是天堂。", image=MokieImage.normal),
+    MokieMessage(text="啊啊啊啊啊啊啊啊啊啊啊啊。（表演）", image=MokieImage.astonish),
+    MokieMessage(text="你那还有多少？我拿一百个老哥跟你换。", image=MokieImage.astonish),
+    MokieMessage(text="心情不好的时候就学我来给他们顺顺毛吧。", image=MokieImage.normal),
+    MokieMessage(text="一看到就有好多话想说，可惜一次说不完呢。", image=MokieImage.normal),
 )
 "榆木华厨的"
 

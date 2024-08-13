@@ -27,11 +27,7 @@ from src.base.onebot.onebot_basic import (
     handle_input_message,
 )
 from src.base.onebot.onebot_enum import QQEmoji, QQStatus
-from src.common.rd import get_random
 from nonebot.adapters.onebot.v11.exception import ActionFailed
-
-
-lock_pool: dict[int, asyncio.Lock] = {}
 
 
 async def send_group_msg(
@@ -39,12 +35,9 @@ async def send_group_msg(
     group_id: int,
     message: MessageLike,
 ):
-    lock = lock_pool.setdefault(0, asyncio.Lock())
-    async with lock:
-        await asyncio.sleep(get_random().random() * 0.2 + 0.4)
-        result = await bot.call_api(
-            "send_group_msg", group_id=group_id, message=handle_input_message(message)
-        )
+    result = await bot.call_api(
+        "send_group_msg", group_id=group_id, message=handle_input_message(message)
+    )
     return result
 
 
@@ -111,6 +104,7 @@ async def get_group_member_info(bot: OnebotBotProtocol, group_id: int, user_id: 
         "get_group_member_info",
         group_id=group_id,
         user_id=user_id,
+        no_cache=True,
     )
 
 
@@ -123,7 +117,10 @@ async def get_name(
 
         if group_id is not None:
             info = await bot.call_api(
-                "get_group_member_info", group_id=group_id, user_id=qqid
+                "get_group_member_info",
+                group_id=group_id,
+                user_id=qqid,
+                no_cache=True,
             )
             name: str = info.get("nickname", "")
             name = info.get("card", "") or name

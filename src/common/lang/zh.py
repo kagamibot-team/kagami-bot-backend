@@ -269,6 +269,11 @@ class About:
         "0.10.1": [
             "修复了小镜不回应某些人的问题",
         ],
+        "0.10.2": [
+            "谁出货了？给他丢粑粑小哥吧！",
+            "更改了小镜晚安的逻辑，晚安需谨慎哦！真的！！！一定要注意！！！！",
+            "榆木华：更新了研究员华的对话",
+        ],
     }
     update_dev: dict[str, list[str]] = {
         "0.4.5": [
@@ -335,7 +340,7 @@ class About:
         ],
         "0.5.12": [
             "将大部分 dataclass 迁移到 Pydantic",
-            "添加了 OnebotContext 合并转发消息和贴表情的接口",
+            "添加了 GroupContext 合并转发消息和贴表情的接口",
             "榆木华：修复 verticalPile 多一行 paddingY 的 bug",
             "榆木华：优化 drawLimitedBoxOfTextClassic 函数",
         ],
@@ -440,6 +445,11 @@ class About:
             "限制了消息的频率",
             "添加了全局的字体 Fallback",
             "添加了仅导出日志的功能",
+        ],
+        "0.10.2": [
+            "在底层取消了对私聊消息的支持，添加了 MessageContext 仅支持 UniMessage，为未来接入官方 bot 做准备",
+            "猎场底层完善，现在可以开始筹备 2 号猎场的事情了，我要开始写界面了，下次大版本更新将推出猎场功能",
+            "取消了 API 限频",
         ],
     }
 

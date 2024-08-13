@@ -1,7 +1,7 @@
 from pathlib import Path
 import time
 from nonebot_plugin_alconna import At, Emoji, Text, UniMessage
-from src.base.command_events import GroupContext, OnebotContext
+from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_root import root
 from src.base.onebot.onebot_api import (
     get_name,
@@ -11,7 +11,7 @@ from src.base.onebot.onebot_api import (
 from src.base.onebot.onebot_basic import OnebotBotProtocol
 from src.base.onebot.onebot_enum import QQEmoji
 from src.base.onebot.onebot_events import GroupPokeContext
-from src.common.decorators.command_decorators import listenOnebot
+from src.common.command_decorators import listen_message
 from src.common.config import config
 from src.common.rd import get_random
 from src.core.unit_of_work import get_unit_of_work
@@ -87,8 +87,8 @@ def __match_str(s: str):
     return True
 
 
-@listenOnebot()
-async def _(ctx: OnebotContext):
+@listen_message()
+async def _(ctx: MessageContext):
     message = ctx.message
     if len(message) == 0:
         return
@@ -208,8 +208,8 @@ async def _(ctx: GroupPokeContext):
         )
 
 
-@listenOnebot()
-async def _(ctx: OnebotContext):
+@listen_message()
+async def _(ctx: GroupContext):
     if len(ctx.message) != 1:
         return
 
@@ -225,5 +225,5 @@ async def _(ctx: OnebotContext):
             await ctx.sender_name,
         )
 
-        if get_random().random() < 0.1 and isinstance(ctx, GroupContext):
+        if get_random().random() < 0.1:
             await ctx.stickEmoji(QQEmoji.跳跳)

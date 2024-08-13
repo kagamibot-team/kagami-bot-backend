@@ -9,6 +9,10 @@ class KagamiCoreException(Exception):
         return self.message
 
 
+class KagamiStopIteration(KagamiCoreException):
+    """小镜 Bot 停止处理消息的错误类型"""
+
+
 class ObjectNotFoundException(KagamiCoreException):
     """当找不到某个对象时抛出此异常"""
 
@@ -138,3 +142,46 @@ class PackNotMatchException(KagamiCoreException):
     @property
     def message(self) -> str:
         return f"你现在并不在 {self.required} 猎场，你现在在 {self.current} 猎场"
+
+
+class SleepToLateException(KagamiCoreException):
+    """想睡太晚的时候的报错"""
+
+    @property
+    def message(self):
+        return "真能睡懒觉，要不早点起来吧"
+
+
+class SleepToEarlyException(KagamiCoreException):
+    """想睡太早的时候的报错"""
+
+    @property
+    def message(self):
+        return "嗯？你这也太早起了吧？"
+
+
+class NotSleepTimeException(KagamiCoreException):
+    """不是睡觉时间的报错"""
+
+    @property
+    def message(self):
+        return "诶，现在不是睡觉的时候吧……"
+
+
+class UnknownArgException(KagamiCoreException):
+    """想睡太早的时候的报错"""
+
+    def __init__(self, arg: str) -> None:
+        self.arg = arg
+
+    @property
+    def message(self):
+        return f"我好像没搞懂你说 {self.arg} 是什么意思……"
+
+
+class SleepingException(KagamiStopIteration):
+    """正在睡觉的报错"""
+
+    @property
+    def message(self):
+        return ""

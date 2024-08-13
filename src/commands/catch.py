@@ -4,16 +4,16 @@ import time
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import At, Reply, Text
 
-from src.base.command_events import OnebotContext
+from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event
 from src.base.exceptions import KagamiRangeError
 from src.base.local_storage import Action, LocalStorageManager, XBRecord
 from src.common.data.awards import get_award_info
 from src.common.dataclasses.game_events import UserTryCatchEvent
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-    matchRegex,
+from src.common.command_decorators import (
+    listen_message,
+    match_alconna,
+    match_regex,
 )
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
@@ -38,7 +38,7 @@ async def picks(
     - 将数据写入数据库会话中
 
     Args:
-        ctx (OnebotContext): 上下文
+        ctx (GroupContext): 上下文
         uow (UnitOfWork): 工作单元
         uid (int): 用户id
         count (int | None, optional): 抓取次数. Defaults to None.
@@ -141,11 +141,11 @@ async def handle_xb(msg: CatchMesssage):
         LocalStorageManager.instance().save()
 
 
-@listenOnebot()
-@matchAlconna(
+@listen_message()
+@match_alconna(
     Alconna("re:(抓小哥|zhua|抓抓)", Arg("count", int, flags=[ArgFlag.OPTIONAL]))
 )
-async def _(ctx: OnebotContext, result: Arparma):
+async def _(ctx: GroupContext, result: Arparma):
     count = result.query[int]("count")
     if count is None:
         count = 1
@@ -158,9 +158,9 @@ async def _(ctx: OnebotContext, result: Arparma):
     await ctx.send(await render_catch_message(msg))
 
 
-@listenOnebot()
-@matchRegex("^(狂抓|kz|狂抓小哥|kZ|Kz|KZ)$")
-async def _(ctx: OnebotContext, _):
+@listen_message()
+@match_regex("^(狂抓|kz|狂抓小哥|kZ|Kz|KZ)$")
+async def _(ctx: GroupContext, _):
     msg = await picks(
         ctx.sender_id,
         await ctx.sender_name,
@@ -169,8 +169,8 @@ async def _(ctx: OnebotContext, _):
     await ctx.send(await render_catch_message(msg))
 
 
-@listenOnebot()
-async def _(ctx: OnebotContext):
+@listen_message()
+async def _(ctx: GroupContext):
     msg = ctx.message.exclude(At).exclude(Reply)
     if not msg.only(Text):
         return
