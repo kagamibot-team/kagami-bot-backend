@@ -1,13 +1,13 @@
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import Image
 
-from src.base.command_events import OnebotContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
 from src.common.data.awards import download_award_image, get_a_list_of_award_storage
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-    requireAdmin,
+from src.common.command_decorators import (
+    listen_message,
+    match_alconna,
+    require_admin,
 )
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.models.level import level_repo
@@ -16,9 +16,9 @@ from src.ui.views.list_view import UserStorageView
 from src.ui.views.user import UserData
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         "小哥",
         ["::添加", "::创建"],
@@ -26,7 +26,7 @@ from src.ui.views.user import UserData
         Arg("level", str),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     aname = res.query[str]("name")
     lname = res.query[str]("level")
     assert aname is not None
@@ -43,16 +43,16 @@ async def _(ctx: OnebotContext, res: Arparma):
     await ctx.reply("ok.")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         "小哥",
         ["::删除", "::移除"],
         Arg("name", str),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("name")
     assert name is not None
 
@@ -62,9 +62,9 @@ async def _(ctx: OnebotContext, res: Arparma):
     await ctx.reply("ok.")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         "re:(修改|更改|调整|改变|设置|设定)小哥",
         ["::"],
@@ -96,7 +96,7 @@ async def _(ctx: OnebotContext, res: Arparma):
         ),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("小哥原名")
     newName = res.query[str]("小哥新名字")
     levelName = res.query[str]("等级名字")
@@ -156,8 +156,8 @@ async def get_storage_view(
     return view
 
 
-@listenOnebot()
-@matchAlconna(
+@listen_message()
+@match_alconna(
     Alconna(
         "re:(zhuajd|抓进度|抓小哥进度)",
         Option(
@@ -168,7 +168,7 @@ async def get_storage_view(
         ),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     levelName = res.query[str]("等级名字")
     async with get_unit_of_work(ctx.sender_id) as uow:
         view = await get_storage_view(
@@ -184,9 +184,9 @@ async def _(ctx: OnebotContext, res: Arparma):
     await ctx.send(await render_progress_message(view))
 
 
-@listenOnebot()
-@matchAlconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
-async def _(ctx: OnebotContext, _: Arparma):
+@listen_message()
+@match_alconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
+async def _(ctx: MessageContext, _: Arparma):
     async with get_unit_of_work(ctx.sender_id) as uow:
         view = await get_storage_view(
             uow,
@@ -202,9 +202,9 @@ async def _(ctx: OnebotContext, _: Arparma):
     await ctx.send(await render_storage_message(view))
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         "re:(所有|全部)小哥",
         ["::"],
@@ -216,7 +216,7 @@ async def _(ctx: OnebotContext, _: Arparma):
         ),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     levelName = res.query[str]("等级名字")
     async with get_unit_of_work(ctx.sender_id) as uow:
         view = await get_storage_view(

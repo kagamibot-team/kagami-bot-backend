@@ -3,6 +3,7 @@
 """
 
 from typing import Any
+
 from nonebot import on_notice, on_type  # type: ignore
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -10,10 +11,9 @@ from nonebot.adapters.onebot.v11 import (
     LifecycleMetaEvent,
     NoticeEvent,
     NotifyEvent,
-    PrivateMessageEvent,
 )
 
-from src.base.command_events import GroupContext, PrivateContext
+from src.base.command_events import GroupContext
 from src.base.event.event_manager import EventManager
 from src.base.onebot.onebot_events import (
     GroupMessageEmojiLike,
@@ -34,7 +34,6 @@ def activate_root(event_root: EventManager):
     """
 
     groupMessageHandler = on_type(GroupMessageEvent)
-    privateMessageHandler = on_type(PrivateMessageEvent)
 
     notice_group_msg_emoji_like_handler = on_notice()
     onebot_startup_hander = on_type(LifecycleMetaEvent)
@@ -45,22 +44,17 @@ def activate_root(event_root: EventManager):
             return
         record_last_context(event.user_id, event.group_id)
 
-        await event_root.throw(GroupContext(event, bot))
-
-    @privateMessageHandler.handle()
-    async def _(bot: Bot, event: PrivateMessageEvent):
-        record_last_context(event.user_id, None)
-        await event_root.throw(PrivateContext(event, bot))
+        await event_root.emit(GroupContext(event, bot))
 
     @notice_group_msg_emoji_like_handler.handle()
     async def _(bot: Bot, event: NoticeEvent):
         if event.notice_type == "group_msg_emoji_like":
-            await event_root.throw(
+            await event_root.emit(
                 GroupStickEmojiContext(GroupMessageEmojiLike(**event.model_dump()), bot)
             )
         if event.notice_type == "notify" and isinstance(event, NotifyEvent):
             if event.sub_type == "poke":
-                await event_root.throw(
+                await event_root.emit(
                     GroupPokeContext(
                         GroupPoke(
                             time=event.time,
@@ -76,7 +70,7 @@ def activate_root(event_root: EventManager):
     @onebot_startup_hander.handle()
     async def _(bot: Bot, event: LifecycleMetaEvent):
         if event.sub_type == "connect":
-            await event_root.throw(OnebotStartedContext(bot))
+            await event_root.emit(OnebotStartedContext(bot))
 
 
 async def throw_event(event: Any):

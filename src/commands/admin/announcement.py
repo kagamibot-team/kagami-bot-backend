@@ -1,14 +1,14 @@
 from nonebot_plugin_alconna import At, Emoji, Image, Text
 
-from src.base.command_events import OnebotContext
+from src.base.command_events import GroupContext
 from src.base.onebot.onebot_tools import broadcast
-from src.common.decorators.command_decorators import listenOnebot, requireAdmin
+from src.common.command_decorators import listen_message, require_admin
 from src.common.localize_image import localize_image
 
 
-@listenOnebot()
-@requireAdmin()
-async def _(ctx: OnebotContext):
+@listen_message()
+@require_admin()
+async def _(ctx: GroupContext):
     if len(ctx.message) == 0:
         return
 

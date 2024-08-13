@@ -2,11 +2,11 @@ from nonebot_plugin_alconna import UniMessage
 from src.base.command_events import GroupContext
 from src.base.local_storage import get_localdata
 from src.base.onebot.onebot_api import get_name
-from src.common.decorators.command_decorators import listenGroup, matchRegex
+from src.common.command_decorators import listen_message, match_regex
 
 
-@listenGroup()
-@matchRegex("(zhua|抓|抓小哥)?(xb|喜报)")
+@listen_message()
+@match_regex("(zhua|抓|抓小哥)?(xb|喜报)")
 async def _(ctx: GroupContext, _):
     _dates_message: dict[str, list[str]] = {}
 

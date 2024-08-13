@@ -1,6 +1,5 @@
-import pathlib
-import re
 from functools import partial
+import re
 from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple, Unpack
 
 from arclet.alconna import Alconna, Arparma
@@ -10,20 +9,19 @@ from nonebot import get_driver
 from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.command_events import GroupContext, OnebotContext, PrivateContext
+from src.base.command_events import GroupContext
 from src.base.event.event_manager import EventManager
 from src.base.event.event_root import root
 from src.base.event.event_timer import addInterval, addTimeout
-from src.base.exceptions import KagamiCoreException
+from src.base.exceptions import KagamiCoreException, KagamiStopIteration
 from src.base.onebot.onebot_events import OnebotStartedContext
 from src.logic.admin import isAdmin
 
 T = TypeVar("T")
-TC_co = TypeVar("TC_co", bound=OnebotContext, covariant=True)
 TA = TypeVarTuple("TA")
 
 
-def matchAlconna(rule: Alconna[Sequence[Any]]):
+def match_alconna(rule: Alconna[Sequence[Any]]):
     """匹配是否符合 Alconna 规则。
 
     Args:
@@ -31,9 +29,9 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
     """
 
     def wrapper(
-        func: Callable[[TC_co, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
+        func: Callable[[GroupContext, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
     ):
-        async def inner(ctx: TC_co):
+        async def inner(ctx: GroupContext):
             try:
                 result = rule.parse(ctx.message)
             except SyntaxError as e:
@@ -55,15 +53,15 @@ def matchAlconna(rule: Alconna[Sequence[Any]]):
     return wrapper
 
 
-def matchRegex(rule: str):
+def match_regex(rule: str):
     """匹配是否符合正则表达式。
 
     Args:
         rule (str): 正则表达式规则。
     """
 
-    def wrapper(func: Callable[[TC_co, re.Match[str]], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC_co):
+    def wrapper(func: Callable[[GroupContext, re.Match[str]], Coroutine[Any, Any, T]]):
+        async def inner(ctx: GroupContext):
             if not ctx.is_text_only():
                 return
 
@@ -79,15 +77,15 @@ def matchRegex(rule: str):
     return wrapper
 
 
-def matchLiteral(text: str):
+def match_literal(text: str):
     """匹配消息是否就是指定的文本。
 
     Args:
         text (str): 指定文本。
     """
 
-    def wrapper(func: Callable[[TC_co], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC_co):
+    def wrapper(func: Callable[[GroupContext], Coroutine[Any, Any, T]]):
+        async def inner(ctx: GroupContext):
             if not ctx.is_text_only():
                 return
 
@@ -101,11 +99,11 @@ def matchLiteral(text: str):
     return wrapper
 
 
-def requireAdmin():
+def require_admin():
     """限制只有管理员才能执行该命令。"""
 
-    def wrapper(func: Callable[[TC_co, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: TC_co, *args: Unpack[TA]):
+    def wrapper(func: Callable[[GroupContext, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: GroupContext, *args: Unpack[TA]):
             if isAdmin(ctx):
                 return await func(ctx, *args)
 
@@ -127,7 +125,7 @@ def requireOperatorInGroup():
     return wrapper
 
 
-def debugOnly():
+def debug_only():
     """限制只有 DEV 环境下才能执行该命令。"""
 
     def wrapper(func: Callable[[*TA], Coroutine[Any, Any, T]]):
@@ -140,44 +138,17 @@ def debugOnly():
     return wrapper
 
 
-def listenGroup(manager: EventManager = root):
-    """添加群聊的事件监听器
-
-    Args:
-        manager (EventManager, optional): 事件管理器，默认是 root。
-    """
-
-    def wrapper(func: Callable[[GroupContext], Coroutine[Any, Any, T]]):
-        manager.listen(GroupContext)(kagami_exception_handler()(func))
-
-    return wrapper
-
-
-def listenPrivate(manager: EventManager = root):
-    """添加私聊的事件监听器
-
-    Args:
-        manager (EventManager, optional): 事件管理器，默认是 root。
-    """
-
-    def wrapper(func: Callable[[PrivateContext], Coroutine[Any, Any, T]]):
-        manager.listen(PrivateContext)(kagami_exception_handler()(func))
-
-    return wrapper
-
-
-def listenOnebot(manager: EventManager = root):
+def listen_message(manager: EventManager = root, priority: int = 0):
     """添加 Onebot 事件监听器
 
     Args:
         manager (EventManager, optional): 事件管理器，默认是 root。
     """
 
-    def wrapper(
-        func: Callable[[GroupContext | PrivateContext], Coroutine[Any, Any, T]]
-    ):
-        listenGroup(manager)(kagami_exception_handler()(func))
-        listenPrivate(manager)(kagami_exception_handler()(func))
+    def wrapper(func: Callable[[GroupContext], Coroutine[Any, Any, T]]):
+        manager.listen(GroupContext, priority=priority)(
+            kagami_exception_handler()(func)
+        )
 
     return wrapper
 
@@ -218,14 +189,16 @@ def kagami_exception_handler():
     当有小镜 Bot 内部抛出的 KagamiCoreException 错误时，把错误告知给用户。
     """
 
-    def deco(func: Callable[[TC_co], Coroutine[None, None, T]]):
-        async def inner(ctx: TC_co) -> T | None:
+    def deco(func: Callable[[GroupContext], Coroutine[None, None, T]]):
+        async def inner(ctx: GroupContext) -> T | None:
             try:
                 return await func(ctx)
             except (ArgumentMissing, ParamsUnmatched) as e:
-                await ctx.reply(str(e.args))
+                await ctx.reply(str(e.args), ref=True, at=False)
             except KagamiCoreException as e:
-                await ctx.reply(e.message)
+                await ctx.reply(e.message, ref=True, at=False)
+                if isinstance(e, KagamiStopIteration):
+                    raise e from e
             except ActionFailed as e:
                 logger.opt(exception=e).exception(e)
             except Exception as e:  #!pylint: disable=W0703
@@ -242,15 +215,13 @@ def kagami_exception_handler():
 
 
 __all__ = [
-    "matchAlconna",
-    "matchRegex",
-    "matchLiteral",
-    "requireAdmin",
+    "match_alconna",
+    "match_regex",
+    "match_literal",
+    "require_admin",
     "requireOperatorInGroup",
-    "debugOnly",
-    "listenGroup",
-    "listenPrivate",
-    "listenOnebot",
+    "debug_only",
+    "listen_message",
     "interval_at_start",
     "timeout_at_start",
 ]

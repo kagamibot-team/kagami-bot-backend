@@ -55,7 +55,7 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
         if get_random().random() < up_pool_posibility[level.lid]:
             _aids = await pool_service.get_up_aids(uid)
             _grouped = await uow.awards.group_by_level(_aids)
-            _limited = _grouped[level.lid]
+            _limited = _grouped.get(level.lid, set())
             if len(_limited) > 0:
                 limited_aids = _grouped[level.lid]
 

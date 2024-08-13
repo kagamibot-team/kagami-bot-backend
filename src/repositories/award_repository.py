@@ -252,3 +252,11 @@ class AwardRepository(DBRepository):
         q = select(Award.data_id).filter(Award.level_id == 0)
         r = await self.session.execute(q)
         return set(r.scalars())
+
+    async def get_names(self, aids: Iterable[int]) -> dict[int, str]:
+        """
+        获得很多小哥的名字
+        """
+        q = select(Award.data_id, Award.name).filter(Award.data_id.in_(aids))
+        r = await self.session.execute(q)
+        return dict(r.tuples().all())

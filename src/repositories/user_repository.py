@@ -171,6 +171,42 @@ class UserRepository(DBRepository):
 
         return list((await self.session.execute(select(User.data_id))).scalars())
 
+    async def get_sleep_early_data(self, uid: int) -> tuple[float, int]:
+        """
+        获得上一次早睡时间的时间戳
+        """
+        q = select(User.last_sleep_early_time, User.sleep_early_count).filter(
+            User.data_id == uid
+        )
+        r = await self.session.execute(q)
+        return r.tuples().one()
+
+    async def update_sleep_early_data(self, uid: int, ts: float, count: int):
+        """
+        设置上一次早睡时间的时间戳
+        """
+        q = (
+            update(User)
+            .filter(User.data_id == uid)
+            .values({User.last_sleep_early_time: ts, User.sleep_early_count: count})
+        )
+        await self.session.execute(q)
+
+    async def get_getup_time(self, uid: int) -> float:
+        """
+        获得起床时间
+        """
+        q = select(User.get_up_time).filter(User.data_id == uid)
+        r = await self.session.execute(q)
+        return r.scalar_one()
+
+    async def set_getup_time(self, uid: int, ts: float):
+        """
+        设置起床时间
+        """
+        q = update(User).where(User.data_id == uid).values({User.get_up_time: ts})
+        await self.session.execute(q)
+
 
 class MoneyRepository(DBRepository):
     async def get(self, uid: int) -> float:

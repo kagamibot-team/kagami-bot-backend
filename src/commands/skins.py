@@ -5,13 +5,13 @@ from loguru import logger
 from nonebot_plugin_alconna import Image, UniMessage
 from sqlalchemy import select, update
 
-from src.base.command_events import OnebotContext
+from src.base.command_events import MessageContext
 from src.base.exceptions import DoNotHaveException, ObjectAlreadyExistsException
 from src.common.data.skins import downloadSkinImage
-from src.common.decorators.command_decorators import (
-    listenOnebot,
-    matchAlconna,
-    requireAdmin,
+from src.common.command_decorators import (
+    listen_message,
+    match_alconna,
+    require_admin,
 )
 from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Award, AwardAltName, Skin, SkinAltName, SkinRecord
@@ -21,9 +21,9 @@ from src.ui.base.tools import image_to_bytes
 from src.ui.components.awards import ref_book_box_raw
 
 
-@listenOnebot()
-@matchAlconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("name", str)))
-async def _(ctx: OnebotContext, result: Arparma):
+@listen_message()
+@match_alconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("name", str)))
+async def _(ctx: MessageContext, result: Arparma):
     name = result.query[str]("name")
     assert name is not None
 
@@ -58,9 +58,9 @@ async def _(ctx: OnebotContext, result: Arparma):
     await ctx.reply(f"已经将 {aname} 的皮肤切换为 {sname} 了。")
 
 
-@listenOnebot()
-@matchAlconna(Alconna("re:(pfjd|pftj|皮肤图鉴|皮肤进度|皮肤收集进度)"))
-async def _(ctx: OnebotContext, _: Arparma):
+@listen_message()
+@match_alconna(Alconna("re:(pfjd|pftj|皮肤图鉴|皮肤进度|皮肤收集进度)"))
+async def _(ctx: MessageContext, _: Arparma):
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
         session = uow.session
@@ -123,16 +123,16 @@ async def _(ctx: OnebotContext, _: Arparma):
     await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         ["::"],
         "re:(所有|全部)皮肤",
         Arg("name", str, flags=[ArgFlag.OPTIONAL]),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("name")
 
     async with get_unit_of_work() as uow:
@@ -191,9 +191,9 @@ async def _(ctx: OnebotContext, res: Arparma):
     await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         ["::"],
         "re:(创建|新增|增加|添加)皮肤",
@@ -201,7 +201,7 @@ async def _(ctx: OnebotContext, res: Arparma):
         Arg("皮肤名", str),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     aname = res.query[str]("小哥名")
     sname = res.query[str]("皮肤名")
     if aname is None or sname is None:
@@ -217,9 +217,9 @@ async def _(ctx: OnebotContext, res: Arparma):
     await ctx.reply("ok.")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         "re:(修改|更改|调整|改变|设置|设定)皮肤",
         ["::"],
@@ -242,7 +242,7 @@ async def _(ctx: OnebotContext, res: Arparma):
         ),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("皮肤原名")
     assert name is not None
     newName = res.query[str]("皮肤新名字")
@@ -285,16 +285,16 @@ async def _(ctx: OnebotContext, res: Arparma):
     await ctx.send("ok.")
 
 
-@listenOnebot()
-@requireAdmin()
-@matchAlconna(
+@listen_message()
+@require_admin()
+@match_alconna(
     Alconna(
         "re:(删除|移除|移除|删除)皮肤",
         ["::"],
         Arg("皮肤原名", str),
     )
 )
-async def _(ctx: OnebotContext, res: Arparma):
+async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("皮肤原名")
     assert name is not None
     async with get_unit_of_work() as uow:

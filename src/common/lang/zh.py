@@ -335,7 +335,7 @@ class About:
         ],
         "0.5.12": [
             "将大部分 dataclass 迁移到 Pydantic",
-            "添加了 OnebotContext 合并转发消息和贴表情的接口",
+            "添加了 GroupContext 合并转发消息和贴表情的接口",
             "榆木华：修复 verticalPile 多一行 paddingY 的 bug",
             "榆木华：优化 drawLimitedBoxOfTextClassic 函数",
         ],

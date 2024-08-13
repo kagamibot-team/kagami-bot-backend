@@ -20,7 +20,11 @@ class PackRepository(DBRepository):
         """
         获得所有将主猎场设置为 pack 的小哥 ID
         """
-        q = select(Award.data_id).filter(Award.main_pack_id == pack)
+        q = select(Award.data_id)
+        if pack >= 0:
+            q = q.filter(Award.main_pack_id == pack)
+        else:
+            q = q.filter(Award.main_pack_id < 0)
         r = await self.session.execute(q)
         return set(r.scalars())
 
@@ -36,7 +40,7 @@ class PackRepository(DBRepository):
         """
         获得那些主要猎场不大于 0 的那些小哥，这些都是特殊的小哥
         """
-        q = select(Award.data_id).filter(Award.main_pack_id <= 0)
+        q = select(Award.data_id).filter(Award.main_pack_id < 0)
         r = await self.session.execute(q)
         return set(r.scalars())
 
@@ -94,6 +98,7 @@ class PackRepository(DBRepository):
         q = delete(PackAwardRelationship).where(
             PackAwardRelationship.aid == aid, PackAwardRelationship.pack == pack
         )
+        await self.session.execute(q)
 
 
 class UpPoolRepository(DBRepository):
@@ -112,7 +117,7 @@ class UpPoolRepository(DBRepository):
                     UpPool.name: name,
                     UpPool.cost: cost,
                     UpPool.display: 0,
-                    UpPool.enabled: True,
+                    UpPool.enabled: False,
                 }
             )
         )
@@ -279,6 +284,9 @@ class UpPoolRepository(DBRepository):
         await self.session.flush()
 
     async def get_using(self, uid: int) -> int | None:
+        """
+        获取正在使用的猎场up
+        """
         query = select(User.using_up_pool).filter(User.data_id == uid)
         return (await self.session.execute(query)).scalar_one_or_none()
 
@@ -323,7 +331,7 @@ class UpPoolRepository(DBRepository):
         """
         q = select(UpPool.data_id).filter(UpPool.belong_pack == pack)
         if require_enabled:
-            q = q.filter(UpPool.enabled.is_(True))
+            q = q.filter(UpPool.enabled.is_(True), UpPool.cost > 0)
         r = await self.session.execute(q)
         return set(r.scalars())
 
