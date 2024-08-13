@@ -1,4 +1,5 @@
 import time
+import logging
 from nonebot_plugin_alconna import At, Emoji, Reply, Text, UniMessage
 from src.base.command_events import OnebotContext
 from src.common.command_decorators import listen_message
@@ -76,6 +77,11 @@ async def _(ctx: OnebotContext):
 
     p = target.pop()
     if str(p) == ctx.bot.self_id:
+        return
+    if p == ctx.sender_id:
+        # 如果是自己，就提示不能自丢。
+        msg = (UniMessage.at(ctx.sender_id).text(" 呀，你不能丢自己啊！"))
+        await ctx.send(msg)
         return
 
     # 扔粑粑
