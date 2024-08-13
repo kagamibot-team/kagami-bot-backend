@@ -25,11 +25,15 @@ async def _(ctx: OnebotStartedContext):
 
         if version != lv:
             await uow.settings.set_last_version(lv)
-            msg = f"刚刚推送了版本 {lv} 的更新，内容如下：\n"
 
+            msg = f"刚刚推送了版本 {lv} 的更新，内容如下：\n"
             for upd_msg in la.about.update[lv]:
                 msg += "\n -" + upd_msg
+            await broadcast(ctx.bot, msg)
 
+            msg2 = f"刚刚推送了版本 {lv} 的更新，内容如下：\n"
+            for upd_msg in la.about.update_dev[lv]:
+                msg2 += "\n -" + upd_msg
             await broadcast(ctx.bot, msg)
         elif get_driver().env != "dev":
             for group in config.admin_groups:
