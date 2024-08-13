@@ -1,5 +1,4 @@
 import time
-import logging
 from nonebot_plugin_alconna import At, Emoji, Reply, Text, UniMessage
 from src.base.command_events import OnebotContext
 from src.common.command_decorators import listen_message
