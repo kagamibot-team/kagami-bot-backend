@@ -4,6 +4,7 @@ from typing import Any, Callable, Coroutine, TypeVar
 
 from loguru import logger
 
+from src.base.exceptions import KagamiStopIteration
 from utils.collections import PriorityList
 
 T = TypeVar("T")
@@ -75,7 +76,10 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
         for key, vals in self.items():
             if _isinstance(evt, key):
                 for l in vals:
-                    await l(evt)
+                    try:
+                        await l(evt)
+                    except KagamiStopIteration:
+                        break
         logger.debug(f"Event {repr(evt)} emitted in {time.time() - begin}s")
 
     async def throw(self, evt: Any):

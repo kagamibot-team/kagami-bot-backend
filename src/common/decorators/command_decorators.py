@@ -13,7 +13,7 @@ from src.base.command_events import GroupContext
 from src.base.event.event_manager import EventManager
 from src.base.event.event_root import root
 from src.base.event.event_timer import addInterval, addTimeout
-from src.base.exceptions import KagamiCoreException
+from src.base.exceptions import KagamiCoreException, KagamiStopIteration
 from src.base.onebot.onebot_events import OnebotStartedContext
 from src.logic.admin import isAdmin
 
@@ -138,7 +138,7 @@ def debug_only():
     return wrapper
 
 
-def listen_message(manager: EventManager = root):
+def listen_message(manager: EventManager = root, priority: int = 0):
     """添加 Onebot 事件监听器
 
     Args:
@@ -146,7 +146,9 @@ def listen_message(manager: EventManager = root):
     """
 
     def wrapper(func: Callable[[GroupContext], Coroutine[Any, Any, T]]):
-        manager.listen(GroupContext)(kagami_exception_handler()(func))
+        manager.listen(GroupContext, priority=priority)(
+            kagami_exception_handler()(func)
+        )
 
     return wrapper
 
@@ -192,9 +194,11 @@ def kagami_exception_handler():
             try:
                 return await func(ctx)
             except (ArgumentMissing, ParamsUnmatched) as e:
-                await ctx.reply(str(e.args))
+                await ctx.reply(str(e.args), ref=True, at=False)
             except KagamiCoreException as e:
-                await ctx.reply(e.message)
+                await ctx.reply(e.message, ref=True, at=False)
+                if isinstance(e, KagamiStopIteration):
+                    raise e from e
             except ActionFailed as e:
                 logger.opt(exception=e).exception(e)
             except Exception as e:  #!pylint: disable=W0703

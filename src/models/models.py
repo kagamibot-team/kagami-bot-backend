@@ -81,6 +81,7 @@ class User(Base, BaseMixin):
     # 和早睡有关的两个字段
     last_sleep_early_time: Mapped[float] = mapped_column(default=0, server_default="0")
     sleep_early_count: Mapped[int] = mapped_column(default=0, server_default="0")
+    get_up_time: Mapped[float] = mapped_column(default=0, server_default="0")
 
     # 20240729 追加
     # 用户的特殊称呼不再在配置文件中设置，太麻烦了

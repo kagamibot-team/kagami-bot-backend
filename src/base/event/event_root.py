@@ -44,17 +44,17 @@ def activate_root(event_root: EventManager):
             return
         record_last_context(event.user_id, event.group_id)
 
-        await event_root.throw(GroupContext(event, bot))
+        await event_root.emit(GroupContext(event, bot))
 
     @notice_group_msg_emoji_like_handler.handle()
     async def _(bot: Bot, event: NoticeEvent):
         if event.notice_type == "group_msg_emoji_like":
-            await event_root.throw(
+            await event_root.emit(
                 GroupStickEmojiContext(GroupMessageEmojiLike(**event.model_dump()), bot)
             )
         if event.notice_type == "notify" and isinstance(event, NotifyEvent):
             if event.sub_type == "poke":
-                await event_root.throw(
+                await event_root.emit(
                     GroupPokeContext(
                         GroupPoke(
                             time=event.time,
@@ -70,7 +70,7 @@ def activate_root(event_root: EventManager):
     @onebot_startup_hander.handle()
     async def _(bot: Bot, event: LifecycleMetaEvent):
         if event.sub_type == "connect":
-            await event_root.throw(OnebotStartedContext(bot))
+            await event_root.emit(OnebotStartedContext(bot))
 
 
 async def throw_event(event: Any):
