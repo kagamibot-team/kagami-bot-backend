@@ -7,7 +7,7 @@ class KagamiCoreException(Exception):
 
     def __str__(self) -> str:
         return self.message
-    
+
 
 class KagamiStopIteration(KagamiCoreException):
     """小镜 Bot 停止处理消息的错误类型"""
@@ -184,4 +184,4 @@ class SleepingException(KagamiStopIteration):
 
     @property
     def message(self):
-        return f"你现在在睡觉哦……"
+        return "你现在在睡觉哦……"

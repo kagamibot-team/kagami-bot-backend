@@ -37,7 +37,7 @@ async def _(ctx: MessageContext, _):
             msg += f"\n共有 {count} 小哥包含在内。"
             message.append(msg)
 
-    await ctx.reply(f"{'\n\n'.join(message)}")
+    await ctx.reply("\n\n".join(message))
 
 
 @listen_message()
@@ -63,7 +63,9 @@ async def _(ctx: MessageContext, _):
 
 @listen_message()
 @require_admin()
-@match_alconna(Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL])))
+@match_alconna(
+    Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL]))
+)
 async def _(ctx: MessageContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
     async with get_unit_of_work(ctx.sender_id) as uow:
