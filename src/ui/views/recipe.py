@@ -26,6 +26,8 @@ class MokieImage(Enum):
     wtf = "黑化"
     laugh = "嘲讽"
     jealous = "咬牙切齿"
+    shy = "心虚"
+    afraid = "惶恐"
 
     @property
     def image_url(self) -> Path:
@@ -119,7 +121,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         ),
         0: (
             MokieMessage(text="没亏多少。", image=MokieImage.laugh),
-            MokieMessage(text="不关我事哦。", image=MokieImage.laugh),
+            MokieMessage(text="不关我事哦。", image=MokieImage.shy),
             MokieMessage(text="下次一定！", image=MokieImage.normal),
             MokieMessage(text="多合合吧。", image=MokieImage.normal),
         ),
@@ -153,7 +155,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="胜败乃兵家常事！", image=MokieImage.laugh),
             MokieMessage(text="我以前死在这过很多次。", image=MokieImage.normal),
             MokieMessage(text="小华不知道哦。", image=MokieImage.normal),
-            MokieMessage(text="别怪我，怪机器。", image=MokieImage.laugh),
+            MokieMessage(text="别怪我，怪机器。", image=MokieImage.shy),
         ),
     },
     4: {
@@ -178,7 +180,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         0: (
             MokieMessage(text="必要的牺牲。", image=MokieImage.laugh),
             MokieMessage(text="其实不要的可以给我。", image=MokieImage.laugh),
-            MokieMessage(text="其实就算你多扔进去几个四星，成功率也不会提高很多，貌似，我猜的。", image=MokieImage.laugh),
+            MokieMessage(text="其实就算你多扔进去几个四星，成功率也不会提高很多，貌似，我猜的。", image=MokieImage.shy),
             MokieMessage(text="噗。", image=MokieImage.laugh),
         ),
     },
@@ -186,11 +188,11 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         4: (
             MokieMessage(text="万不得已的时候我也用过这种配方。", image=MokieImage.normal),
             MokieMessage(text="嘛，回来个四星也行吧。", image=MokieImage.normal),
-            MokieMessage(text="看你抱着他们过来的时候都有点吓人！", image=MokieImage.normal),
+            MokieMessage(text="看你抱着他们过来的时候都有点吓人！", image=MokieImage.shy),
             MokieMessage(text="追求稳定性吗。", image=MokieImage.normal),
         ),
         5: (
-            MokieMessage(text="看得我胆战心惊的。", image=MokieImage.normal),
+            MokieMessage(text="看得我胆战心惊的。", image=MokieImage.shy),
             MokieMessage(text="大手笔啊。", image=MokieImage.normal),
             MokieMessage(text="你是真馋了。", image=MokieImage.normal),
             MokieMessage(text="也没啥好惊讶的，甚至。", image=MokieImage.normal),
@@ -198,8 +200,8 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         0: (
             MokieMessage(text="没必要。", image=MokieImage.laugh),
             MokieMessage(text="自己留着点吧。", image=MokieImage.laugh),
-            MokieMessage(text="虽然没人权但是也不能这样造他们啊。", image=MokieImage.laugh),
-            MokieMessage(text="无聊和我找话吗。", image=MokieImage.laugh),
+            MokieMessage(text="虽然没人权但是也不能这样造他们啊。", image=MokieImage.shy),
+            MokieMessage(text="无聊和我找话吗。", image=MokieImage.shy),
         ),
     },
     0: {
@@ -207,7 +209,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="这是什么？合一下。", image=MokieImage.laugh),
             MokieMessage(text="唉。", image=MokieImage.laugh),
             MokieMessage(text="你花这些薯片是为了什么呢……", image=MokieImage.laugh),
-            MokieMessage(text="别看我，是机器干掉的。", image=MokieImage.normal),
+            MokieMessage(text="别看我，是机器干掉的。", image=MokieImage.shy),
         ),
     },
 }
@@ -215,7 +217,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
 MOKIE_MESSAGES_XIAOHUA = (
     MokieMessage(text="像我吧。", image=MokieImage.xiaoge),
     MokieMessage(text="哎这些东西真不知道哪来的。", image=MokieImage.normal),
-    MokieMessage(text="虽然不是我，但别想什么奇怪的事。", image=MokieImage.normal),
+    MokieMessage(text="虽然不是我，但别想什么奇怪的事。", image=MokieImage.shy),
     MokieMessage(text="看到这个的时候，他们会想起我吗……", image=MokieImage.normal),
 )
 "小华"
@@ -239,7 +241,7 @@ MOKIE_MESSAGES_LOVE = (
     MokieMessage(text="啊啊啊啊啊啊啊啊啊啊啊啊。（表演）", image=MokieImage.astonish),
     MokieMessage(text="你那还有多少？我拿一百个老哥跟你换。", image=MokieImage.astonish),
     MokieMessage(text="心情不好的时候就学我来给他们顺顺毛吧。", image=MokieImage.normal),
-    MokieMessage(text="一看到就有好多话想说，但是一次说不完呢。", image=MokieImage.normal),
+    MokieMessage(text="一看到就有好多话想说，可惜一次说不完呢。", image=MokieImage.normal),
 )
 "榆木华厨的"
 
