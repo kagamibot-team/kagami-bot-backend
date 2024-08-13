@@ -8,7 +8,7 @@ from sqlalchemy import select, update
 from src.base.command_events import GroupContext
 from src.base.exceptions import DoNotHaveException, ObjectAlreadyExistsException
 from src.common.data.skins import downloadSkinImage
-from src.common.decorators.command_decorators import (
+from src.common.command_decorators import (
     listen_message,
     match_alconna,
     require_admin,

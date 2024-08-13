@@ -4,7 +4,7 @@ from nonebot_plugin_alconna import Image
 from src.base.command_events import GroupContext
 from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
 from src.common.data.awards import download_award_image, get_a_list_of_award_storage
-from src.common.decorators.command_decorators import (
+from src.common.command_decorators import (
     listen_message,
     match_alconna,
     require_admin,

@@ -4,7 +4,7 @@ from arclet.alconna import Alconna, Arg, ArgFlag, Arparma, Option
 
 from src.base.command_events import GroupContext
 from src.base.exceptions import KagamiRangeError, ObjectAlreadyExistsException
-from src.common.decorators.command_decorators import (
+from src.common.command_decorators import (
     listen_message,
     match_alconna,
     require_admin,

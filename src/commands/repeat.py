@@ -3,7 +3,7 @@ import re
 from nonebot_plugin_alconna import At, Emoji, Text, UniMessage
 
 from src.base.command_events import GroupContext
-from src.common.decorators.command_decorators import debug_only, listen_message
+from src.common.command_decorators import debug_only, listen_message
 
 
 @listen_message()

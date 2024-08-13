@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import (
     Any,
     Generic,
@@ -96,7 +96,37 @@ class OnebotReceipt:
         await delete_msg(self.bot, self.message_id)
 
 
-class OnebotContext(Generic[TE]):
+class MessageContext(ABC):
+    @property
+    @abstractmethod
+    def sender_id(self) -> int: ...
+
+    @abstractmethod
+    async def send(self, message: UniMessage[Any] | str) -> Any: ...
+
+    @abstractmethod
+    async def reply(self, message: UniMessage[Any] | str) -> Any: ...
+
+    @abstractmethod
+    async def get_sender_name(self) -> str: ...
+
+    @property
+    @abstractmethod
+    def message(self) -> UniMessage[Segment]: ...
+
+    @property
+    def sender_name(self):
+        return self.get_sender_name()
+
+    def is_text_only(self) -> bool:
+        return self.message.only(Text)
+
+    @property
+    def text(self):
+        return self.message.extract_plain_text()
+
+
+class OnebotContext(MessageContext, Generic[TE]):
     event: TE
     bot: OnebotBotProtocol
 
@@ -151,10 +181,6 @@ class OnebotContext(Generic[TE]):
     async def get_sender_name(self) -> str:
         return await get_name(self.bot, self.sender_id, None)
 
-    @property
-    def sender_name(self):
-        return self.get_sender_name()
-
     async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
         message = UniMessage(message)
         msg_out = export_msg(message)
@@ -206,13 +232,6 @@ class OnebotContext(Generic[TE]):
                 nodes.append({"data": {"id": int(rid_info["real_id"])}, "type": "node"})
 
         return await self._send_forward(nodes)
-
-    def is_text_only(self) -> bool:
-        return self.message.only(Text)
-
-    @property
-    def text(self):
-        return self.message.extract_plain_text()
 
 
 class GroupContext(OnebotContext[GroupMessageEvent]):

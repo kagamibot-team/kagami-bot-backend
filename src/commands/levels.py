@@ -2,7 +2,7 @@ from nonebot_plugin_alconna import UniMessage
 from sqlalchemy import func, select
 
 from src.base.command_events import GroupContext
-from src.common.decorators.command_decorators import (
+from src.common.command_decorators import (
     listen_message,
     match_regex,
     require_admin,

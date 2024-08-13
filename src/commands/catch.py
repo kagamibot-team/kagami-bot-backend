@@ -10,7 +10,7 @@ from src.base.exceptions import KagamiRangeError
 from src.base.local_storage import Action, LocalStorageManager, XBRecord
 from src.common.data.awards import get_award_info
 from src.common.dataclasses.game_events import UserTryCatchEvent
-from src.common.decorators.command_decorators import (
+from src.common.command_decorators import (
     listen_message,
     match_alconna,
     match_regex,

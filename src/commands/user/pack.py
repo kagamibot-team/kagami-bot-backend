@@ -3,7 +3,7 @@ from typing import Any
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 
 from src.base.command_events import GroupContext
-from src.common.decorators.command_decorators import (
+from src.common.command_decorators import (
     listen_message,
     match_alconna,
     match_regex,

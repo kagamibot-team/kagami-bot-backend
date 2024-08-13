@@ -8,7 +8,7 @@ from pathlib import Path
 
 from src.base.command_events import GroupContext
 from src.base.db import DatabaseManager
-from src.common.decorators.command_decorators import (
+from src.common.command_decorators import (
     listen_message,
     match_literal,
     match_regex,

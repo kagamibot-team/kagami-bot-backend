@@ -7,7 +7,7 @@ from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.data.awards import generate_random_info, get_award_info, use_award
 from src.common.data.recipe import try_merge
 from src.common.dataclasses.game_events import MergeEvent
-from src.common.decorators.command_decorators import (
+from src.common.command_decorators import (
     listen_message,
     match_alconna,
     match_literal,

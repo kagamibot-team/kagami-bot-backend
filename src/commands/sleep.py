@@ -16,7 +16,7 @@ from src.base.exceptions import (
     SleepingException,
     UnknownArgException,
 )
-from src.common.decorators.command_decorators import (
+from src.common.command_decorators import (
     listen_message,
     match_alconna,
     requireOperatorInGroup,

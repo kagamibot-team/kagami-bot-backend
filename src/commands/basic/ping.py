@@ -11,7 +11,7 @@ from src.base.onebot.onebot_api import (
 from src.base.onebot.onebot_basic import OnebotBotProtocol
 from src.base.onebot.onebot_enum import QQEmoji
 from src.base.onebot.onebot_events import GroupPokeContext
-from src.common.decorators.command_decorators import listen_message
+from src.common.command_decorators import listen_message
 from src.common.config import config
 from src.common.rd import get_random
 from src.core.unit_of_work import get_unit_of_work
