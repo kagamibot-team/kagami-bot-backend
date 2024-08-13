@@ -19,7 +19,6 @@ from src.base.exceptions import (
 from src.common.command_decorators import (
     listen_message,
     match_alconna,
-    requireOperatorInGroup,
 )
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime
@@ -98,7 +97,6 @@ async def _(ctx: OnebotContext):
         Arg("getup_time", MultiVar(str, "*"), seps=" "),
     )
 )
-@requireOperatorInGroup()
 async def goodnight(ctx: GroupContext, res: Arparma):
     arg = res.query[tuple[str]]("getup_time")
     hour, minute = parse_getup_time(arg)
@@ -170,3 +168,6 @@ async def goodnight(ctx: GroupContext, res: Arparma):
                 f"奖励早睡的孩子 {awarding} 薯片哦，你已经坚持早睡了 {count} 天了！"
             )
         )
+
+    await asyncio.sleep(get_random().random() + 0.5)
+    await ctx.reply("我不看你的消息了哦，明天见！")

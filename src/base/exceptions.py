@@ -184,4 +184,4 @@ class SleepingException(KagamiStopIteration):
 
     @property
     def message(self):
-        return "你现在在睡觉哦……"
+        return ""

@@ -196,18 +196,19 @@ def kagami_exception_handler():
             except (ArgumentMissing, ParamsUnmatched) as e:
                 await ctx.reply(str(e.args), ref=True, at=False)
             except KagamiCoreException as e:
-                await ctx.reply(e.message, ref=True, at=False)
+                if len(e.message) > 0:
+                    await ctx.reply(e.message, ref=True, at=False)
                 if isinstance(e, KagamiStopIteration):
                     raise e from e
             except ActionFailed as e:
-                logger.opt(exception=e).exception(e)
+                raise e from e
             except Exception as e:  #!pylint: disable=W0703
-                logger.opt(exception=e).exception(e)
                 await ctx.reply(
                     UniMessage().text(
                         f"程序遇到了错误：{repr(e)}\n\n如果持续遇到该错误，请与 PT 联系。肥肠抱歉！！"
                     )
                 )
+                raise e from e
 
         return inner
 
