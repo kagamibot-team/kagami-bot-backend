@@ -45,9 +45,12 @@ async def _(ctx: OnebotContext):
             for i in ("丢", "扔", "抛", "吃", "赤", "吔", "叱", "持"):
                 if i in text:
                     is_throw = True
-            for i in ("不", "别", "莫", "讨厌"):
-                if i in text:
-                    return
+            # 根据否定词的个数来判断是否表确定意义。
+            nope_count = 0
+            for i in ("不", "别", "莫", "讨厌", "勿"):
+                nope_count += text.count(i)
+            if nope_count % 2 == 1:
+                return
         elif isinstance(segment, At):
             target.add(int(segment.target))
         elif isinstance(segment, Reply):
