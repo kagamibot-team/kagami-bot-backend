@@ -79,7 +79,7 @@ async def _(ctx: OnebotContext):
         return
     if p == ctx.sender_id:
         # 如果是自己，就提示不能自丢。
-        msg = (UniMessage.at(ctx.sender_id).text(" 呀，你不能丢自己啊！"))
+        msg = UniMessage.at(user_id=str(ctx.sender_id)).text(" 呀，你不能丢自己啊！")
         await ctx.send(msg)
         return
 
