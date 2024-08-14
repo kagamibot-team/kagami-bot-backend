@@ -45,9 +45,12 @@ async def _(ctx: OnebotContext):
             for i in ("丢", "扔", "抛", "吃", "赤", "吔", "叱", "持"):
                 if i in text:
                     is_throw = True
-            for i in ("不", "别", "莫", "讨厌"):
-                if i in text:
-                    return
+            # 根据否定词的个数来判断是否表确定意义。
+            nope_count = 0
+            for i in ("不", "别", "莫", "讨厌", "勿"):
+                nope_count += text.count(i)
+            if nope_count % 2 == 1:
+                return
         elif isinstance(segment, At):
             target.add(int(segment.target))
         elif isinstance(segment, Reply):
@@ -79,8 +82,7 @@ async def _(ctx: OnebotContext):
         return
     if p == ctx.sender_id:
         # 如果是自己，就提示不能自丢。
-        msg = (UniMessage.at(ctx.sender_id).text(" 呀，你不能丢自己啊！"))
-        await ctx.send(msg)
+        await ctx.reply(UniMessage.text("呀，你不能丢自己啊！"))
         return
 
     # 扔粑粑

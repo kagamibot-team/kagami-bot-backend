@@ -193,8 +193,10 @@ def kagami_exception_handler():
         async def inner(ctx: GroupContext) -> T | None:
             try:
                 return await func(ctx)
-            except (ArgumentMissing, ParamsUnmatched) as e:
-                await ctx.reply(str(e.args), ref=True, at=False)
+            except ArgumentMissing as e:
+                await ctx.reply(f"你输入的{str(e)}了哦！", ref=True, at=False)
+            except ParamsUnmatched as e:
+                await ctx.reply(f"你输入的{str(e)}了哦！", ref=True, at=False)
             except KagamiCoreException as e:
                 if len(e.message) > 0:
                     await ctx.reply(e.message, ref=True, at=False)
