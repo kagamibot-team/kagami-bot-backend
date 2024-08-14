@@ -142,17 +142,17 @@ async def _(ctx: MessageContext):
 @match_alconna(
     Alconna(
         "re:(合成|hc)(小哥|xg)?",
-        Arg("name1", str),
-        Arg("name2", str),
-        Arg("name3", str),
+        Arg("第一个小哥", str), # 因为参数丢失的时候可能会显示名字，所以这里我改成了中文。
+        Arg("第二个小哥", str),
+        Arg("第三个小哥", str),
     )
 )
 async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
 
-    n1 = res.query[str]("name1")
-    n2 = res.query[str]("name2")
-    n3 = res.query[str]("name3")
+    n1 = res.query[str]("第一个小哥")
+    n2 = res.query[str]("第二个小哥")
+    n3 = res.query[str]("第三个小哥")
     if n1 is None or n2 is None or n3 is None:
         return
 

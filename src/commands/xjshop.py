@@ -151,12 +151,12 @@ async def shop_buy_message(
         Option(
             "买",
             alias=["购买", "购入", "buy"],
-            args=Arg("商品名列表", MultiVar(str, flag="+")),
+            args=Arg("商品名", MultiVar(str, flag="+")),
         ),
     )
 )
 async def _(ctx: MessageContext, res: Arparma[Any]):
-    buys = res.query[list[str]]("商品名列表") or []
+    buys = res.query[list[str]]("商品名") or []
 
     if len(buys) == 0:
         async with get_unit_of_work(ctx.sender_id) as uow:
