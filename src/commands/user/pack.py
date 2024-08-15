@@ -16,7 +16,7 @@ from src.services.pool import PoolService
 
 @listen_message()
 @require_admin()
-@match_regex("^(小[lL]|xl)?(猎场|lc)$")
+@match_regex("^(小[鹅lL]|x[le])?(猎场|lc)$")
 @require_awake
 async def _(ctx: MessageContext, _):
     message: list[str] = []
