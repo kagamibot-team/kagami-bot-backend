@@ -7,13 +7,6 @@ from .award import StorageDisplay
 from .user import UserData
 
 
-def _try_int(value: str | int) -> int:
-    try:
-        return int(value)
-    except ValueError:
-        return 0
-
-
 class ListView(BaseModel):
     """
     在界面中排列的小哥图鉴
