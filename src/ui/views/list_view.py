@@ -59,20 +59,33 @@ class UserStorageView(BaseModel):
     "一个玩家所有的小哥"
 
     limited_level: Level | None = None
+    limited_pack: int | None = None
+
+    @property
+    def level_limit_text(self) -> str:
+        if self.limited_level is None:
+            return ""
+        return self.limited_level.display_name
+
+    @property
+    def pack_limit_text(self) -> str:
+        if self.limited_pack is None:
+            return ""
+        return f"{self.limited_pack}猎场"
 
     @property
     def prog_title(self) -> str:
         "进度标题"
         if self.limited_level is None:
-            return f"{self.user_name}抓小哥进度：{self.progress:.2%}"
-        return f"{self.user_name}{self.limited_level.display_name}进度："
+            return (
+                f"{self.user_name}{self.pack_limit_text}抓小哥进度：{self.progress:.2%}"
+            )
+        return f"{self.user_name}{self.pack_limit_text}{self.limited_level.display_name}进度："
 
     @property
     def storage_title(self) -> str:
         "进度标题"
-        if self.limited_level is None:
-            return f"{self.user_name}库存"
-        return f"{self.user_name}{self.limited_level.display_name}库存"
+        return f"{self.user_name}{self.pack_limit_text}{self.level_limit_text}库存"
 
     @property
     def user_name(self) -> str:
@@ -95,9 +108,12 @@ class UserStorageView(BaseModel):
                 f"{level.display_name}: {level.weight} ^ {1 / param} = " f"{numerator}"
             )
             denominator += numerator
-            progress += numerator * (
-                len([a for a in awards if a is not None]) / len(awards)
-            )
+            if len(awards) != 0:
+                progress += numerator * (
+                    len([a for a in awards if a is not None]) / len(awards)
+                )
+            else:
+                progress += 1
 
         return progress / denominator if denominator != 0 else 0
 
