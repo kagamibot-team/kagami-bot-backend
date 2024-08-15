@@ -17,7 +17,6 @@ from utils.collections import PriorityList
 
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
-    ("src", "common"),
     ("src", "commands"),
     ("src", "events"),
     ("src", "logic"),
@@ -25,7 +24,6 @@ to_load_parents = (
     ("src", "services"),
     ("src", "ui", "components"),
     ("src", "ui", "pages"),
-    ("src", "ui", "views"),
 )
 
 

@@ -12,6 +12,7 @@ from src.base.exceptions import SoldOutException
 from src.common.command_decorators import (
     listen_message,
     match_alconna,
+    require_awake,
 )
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
@@ -155,6 +156,7 @@ async def shop_buy_message(
         ),
     )
 )
+@require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
     buys = res.query[list[str]]("商品名") or []
 

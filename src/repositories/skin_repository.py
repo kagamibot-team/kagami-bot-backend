@@ -6,7 +6,7 @@ from src.base.exceptions import ObjectNotFoundException
 from src.models.models import SkinAltName
 
 from ..base.repository import DBRepository
-from ..models import Skin
+from ..models.models import Skin
 
 
 class SkinRepository(DBRepository):

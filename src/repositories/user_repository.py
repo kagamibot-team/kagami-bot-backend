@@ -3,7 +3,7 @@ from sqlalchemy import insert, select, update
 from src.base.exceptions import LackException
 
 from ..base.repository import DBRepository
-from ..models import User
+from ..models.models import User
 
 
 class UserRepository(DBRepository):
