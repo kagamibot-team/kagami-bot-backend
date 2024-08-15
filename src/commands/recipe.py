@@ -12,6 +12,7 @@ from src.common.command_decorators import (
     match_alconna,
     match_literal,
     require_admin,
+    require_awake,
 )
 from src.common.rd import get_random
 from src.common.times import now_datetime
@@ -150,6 +151,7 @@ async def _(ctx: MessageContext):
         Arg("第三个小哥", str),
     )
 )
+@require_awake
 async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
 

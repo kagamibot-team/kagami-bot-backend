@@ -1,7 +1,7 @@
 import time
 from nonebot_plugin_alconna import At, Emoji, Reply, Text, UniMessage
 from src.base.command_events import OnebotContext
-from src.common.command_decorators import listen_message
+from src.common.command_decorators import listen_message, require_awake
 from src.common.data.awards import use_award
 from src.common.rd import get_random
 from nonebot.adapters.onebot.v11 import MessageSegment
@@ -13,6 +13,7 @@ FREQUENCY_LIMIT: dict[int, float] = {}
 
 
 @listen_message()
+@require_awake
 async def _(ctx: OnebotContext):
     FREQUENCY_LIMIT.setdefault(ctx.sender_id, 0)
     if time.time() - FREQUENCY_LIMIT[ctx.sender_id] < 10:

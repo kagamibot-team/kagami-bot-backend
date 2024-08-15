@@ -169,7 +169,7 @@ class NotSleepTimeException(KagamiCoreException):
 
 
 class UnknownArgException(KagamiCoreException):
-    """想睡太早的时候的报错"""
+    """不知道一个参数的意思"""
 
     def __init__(self, arg: str) -> None:
         self.arg = arg
@@ -177,11 +177,3 @@ class UnknownArgException(KagamiCoreException):
     @property
     def message(self):
         return f"我好像没搞懂你说 {self.arg} 是什么意思……"
-
-
-class SleepingException(KagamiStopIteration):
-    """正在睡觉的报错"""
-
-    @property
-    def message(self):
-        return ""
