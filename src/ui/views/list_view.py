@@ -113,7 +113,7 @@ class UserStorageView(BaseModel):
                     len([a for a in awards if a is not None]) / len(awards)
                 )
             else:
-                progress += 1
+                progress += 1 * numerator
 
         return progress / denominator if denominator != 0 else 0
 
