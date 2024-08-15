@@ -6,7 +6,7 @@ from sqlalchemy import delete, insert, select, update
 from src.base.exceptions import ObjectNotFoundException
 
 from ..base.repository import DBRepository
-from ..models import Award, AwardAltName
+from ..models.models import Award, AwardAltName
 
 
 class AwardRepository(DBRepository):

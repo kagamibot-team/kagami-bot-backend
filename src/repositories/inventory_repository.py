@@ -1,7 +1,7 @@
 from sqlalchemy import delete, insert, select, update
 
 from ..base.repository import DBRepository
-from ..models import Inventory
+from ..models.models import Inventory
 
 
 class InventoryRepository(DBRepository):
