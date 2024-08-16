@@ -58,6 +58,12 @@ class AwardInfo(BaseModel):
         return Path("./data/skins") / self.skin_image
 
     @property
+    def image_url(self) -> str:
+        if self.skin_image is None:
+            return "../file/award/" + self.award_image
+        return "../file/skin/" + self.award_image
+
+    @property
     def description(self) -> str:
         if self.skin_description is None:
             return self.award_description

@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 
-from .award import GotAwardDisplay
+from src.models.level import Level
+
+from .award import AwardInfo, GotAwardDisplay
 from .user import UserData
 
 
@@ -72,4 +74,73 @@ class CatchResultMessage(CatchMesssage):
             f"目前共有{self.money_sum}薯片。\n"
             f"剩余次数：{self.slot_remain}/{self.slot_sum}，"
             f"距下次次数恢复还要{self.timedelta_text}"
+        )
+
+
+class LevelView(BaseModel):
+    display_name: str
+    color: str
+
+    @staticmethod
+    def from_model(lv: Level) -> "LevelView":
+        return LevelView(
+            display_name=lv.display_name,
+            color=lv.color,
+        )
+
+
+class Info(BaseModel):
+    description: str
+    display_name: str
+    color: str
+    image: str
+    level: LevelView
+
+    @staticmethod
+    def from_award_info(info: AwardInfo) -> "Info":
+        return Info(
+            description=info.description,
+            display_name=info.name,
+            color=info.color,
+            image=info.image_url,
+            level=LevelView.from_model(info.level),
+        )
+
+
+class Catch(BaseModel):
+    info: Info
+    count: int
+    is_new: bool
+
+
+class SuccessfulCatchMeta(BaseModel):
+    get_chip: int
+    own_chip: int
+    remain_time: int
+    need_time: str
+
+
+class SuccessfulCatch(BaseModel):
+    name: str
+    meta: SuccessfulCatchMeta
+    catchs: list[Catch]
+
+    @staticmethod
+    def from_catch_result(data: CatchResultMessage):
+        return SuccessfulCatch(
+            name=data.user.name,
+            meta=SuccessfulCatchMeta(
+                get_chip=data.money_changed,
+                own_chip=data.money_sum,
+                remain_time=data.slot_remain,
+                need_time=data.timedelta_text,
+            ),
+            catchs=[
+                Catch(
+                    info=Info.from_award_info(d.info),
+                    count=d.count,
+                    is_new=d.is_new,
+                )
+                for d in data.catchs
+            ],
         )

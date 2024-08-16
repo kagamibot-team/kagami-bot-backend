@@ -7,10 +7,11 @@ import PIL.ImageDraw
 from nonebot_plugin_alconna import UniMessage
 
 from src.ui.base.basics import Fonts, render_text, vertical_pile
+from src.ui.base.browser import get_browser_pool
 from src.ui.base.tools import image_to_bytes
 from src.ui.components.catch import catch
 from src.ui.views.award import AwardDisplay
-from src.ui.views.catch import CatchMesssage, CatchResultMessage
+from src.ui.views.catch import CatchMesssage, CatchResultMessage, SuccessfulCatch
 from utils.threading import make_async
 
 T = TypeVar("T")
@@ -58,8 +59,8 @@ def render_catch_result_image(data: CatchResultMessage) -> PIL.Image.Image:
 
 async def render_catch_result_message(data: CatchResultMessage) -> UniMessage[Any]:
     return UniMessage.image(
-        raw=await make_async(image_to_bytes)(
-            await make_async(render_catch_result_image)(data)
+        raw=await get_browser_pool().render(
+            "zhua", SuccessfulCatch.from_catch_result(data)
         )
     )
 

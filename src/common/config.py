@@ -1,3 +1,4 @@
+from pathlib import Path
 from nonebot import get_plugin_config
 from pydantic import BaseModel
 
@@ -37,6 +38,14 @@ class Config(BaseModel):
 
     （老 盐 同 志）
     """
+
+    frontend_dist: str = "./frontend/"
+
+    @property
+    def frontend_path(self):
+        return Path(self.frontend_dist)
+
+    browser_count: int = 1
 
 
 config = get_plugin_config(Config)

@@ -12,7 +12,6 @@ from src.core.unit_of_work import UnitOfWork
 from src.models.models import *
 from src.models.level import level_repo
 from src.ui.base.strange import make_strange
-from src.ui.base.tools import image_to_bytes
 from src.ui.views.award import AwardInfo, StorageDisplay
 from utils.threading import make_async
 

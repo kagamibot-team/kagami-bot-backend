@@ -12,8 +12,10 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.webdriver import WebDriver as Chrome
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 
 from src.apis.render_ui import backend_register_data
+from src.common import config
 
 
 class BrowserRenderer:
@@ -49,7 +51,13 @@ class BrowserRenderer:
         )
 
         # 截图
-        return self.driver.get_screenshot_as_png()
+        element = WebDriverWait(self.driver, 5).until(
+            lambda d: d.find_element(By.ID, "big_box")
+        )
+        element_width: float = element.size["width"]
+        element_height: float = element.size["height"]
+        self.driver.set_window_size(element_width + 50, element_height + 50)
+        return element.screenshot_as_png
 
     async def render_link(self, link: str) -> bytes:
         async with self.lock:
@@ -87,11 +95,13 @@ class BrowserPool:
             self.renderers.append(BrowserRenderer(factory.get()))
 
     async def render(self, path: str, data: BaseModel | None = None) -> bytes:
+        query = ""
         if data is not None:
             uuid = backend_register_data(data)
+            query = f"?uuid={uuid}"
         nbdriver = nonebot.get_driver()
         port = nbdriver.config.port
-        link = f"http://127.0.0.1:{port}/kagami/pages/{path}"
+        link = f"http://127.0.0.1:{port}/kagami/pages/{path}{query}"
         for r in self.renderers:
             if not r.lock.locked():
                 return await r.render_link(link)
@@ -100,7 +110,7 @@ class BrowserPool:
         return await self.renderers[self.render_pointer].render_link(link)
 
 
-browser_pool = BrowserPool(ChromeFactory(), 1)
+browser_pool = BrowserPool(ChromeFactory(), config.config.browser_count)
 
 
 def get_browser_pool():
