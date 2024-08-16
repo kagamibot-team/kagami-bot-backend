@@ -1,0 +1,1 @@
+:root{--font-fallback: "HarmonyOS Sans SC", "Source Han Sans", "Segoe UI Variable Display", sans-serif, "MiSans L3", "TH-Tshyn-P0", "TH-Tshyn-P1", "TH-Tshyn-P2", "TH-Tshyn-P16"}body{font-family:var(--font-fallback)}#big_box{width:fit-content;border:1px solid black}

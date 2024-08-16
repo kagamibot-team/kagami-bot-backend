@@ -2,14 +2,18 @@
 利用 Selenium 渲染图像
 """
 
+import asyncio
+from abc import ABC, abstractmethod
 from asyncio import Lock
-from io import BytesIO
 
-import PIL
-import PIL.Image
+import nonebot
+from pydantic import BaseModel
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.chrome.webdriver import WebDriver as Chrome
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.support.ui import WebDriverWait
 
-from utils.threading import make_async
+from src.apis.render_ui import backend_register_data
 
 
 class BrowserRenderer:
@@ -24,14 +28,80 @@ class BrowserRenderer:
         # 访问相应接口
         self.driver.get(link)
 
-        # 等待页面加载完成，包括里面的图片
-        # [TODO] 求，坏枪帮忙写这里！！！
-        raise NotImplementedError()
+        # 等待页面加载完成
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.execute_script("return document.readyState;")
+            == "complete"
+        )
+
+        # 等待前端返回相关信号
+        WebDriverWait(self.driver, 20).until(
+            lambda driver: driver.execute_script(
+                "return window.loaded_trigger_signal !== undefined;"
+            )
+        )
+
+        # 等待图片加载完成
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.execute_script(
+                "return Array.from(document.images).every(img => img.complete);"
+            )
+        )
 
         # 截图
         return self.driver.get_screenshot_as_png()
 
-    async def render_link(self, link: str) -> PIL.Image.Image:
+    async def render_link(self, link: str) -> bytes:
         async with self.lock:
-            img_data = await make_async(self._sync_render)(link)
-        return PIL.Image.open(BytesIO(img_data)).convert("RGBA")
+            loop = asyncio.get_event_loop()
+
+            def _render():
+                return self._sync_render(link)
+
+            img_data = await loop.run_in_executor(None, _render)
+        return img_data
+
+
+class BaseBrowserDriverFactory(ABC):
+    @abstractmethod
+    def get(self) -> WebDriver: ...
+
+
+class ChromeFactory(BaseBrowserDriverFactory):
+    def get(self) -> WebDriver:
+        opt = ChromeOptions()
+        opt.add_argument("--headless")
+        opt.add_argument("--enable-webgl")
+        opt.add_argument("--allow-file-access-from-files")
+        driver = Chrome(options=opt)
+        return driver
+
+
+class BrowserPool:
+    renderers: list[BrowserRenderer]
+    render_pointer: int = -1
+
+    def __init__(self, factory: BaseBrowserDriverFactory, count: int) -> None:
+        self.renderers = []
+        for _ in range(count):
+            self.renderers.append(BrowserRenderer(factory.get()))
+
+    async def render(self, path: str, data: BaseModel | None = None) -> bytes:
+        if data is not None:
+            uuid = backend_register_data(data)
+        nbdriver = nonebot.get_driver()
+        port = nbdriver.config.port
+        link = f"http://127.0.0.1:{port}/kagami/pages/{path}"
+        for r in self.renderers:
+            if not r.lock.locked():
+                return await r.render_link(link)
+        self.render_pointer += 1
+        self.render_pointer %= len(self.renderers)
+        return await self.renderers[self.render_pointer].render_link(link)
+
+
+browser_pool = BrowserPool(ChromeFactory(), 1)
+
+
+def get_browser_pool():
+    return browser_pool
