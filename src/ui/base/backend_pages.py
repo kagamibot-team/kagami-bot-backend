@@ -5,9 +5,10 @@
 import uuid
 from pathlib import Path
 
+from fastapi.staticfiles import StaticFiles
 import nonebot
 from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from nonebot.drivers.fastapi import Driver as FastAPIDriver
 from pydantic import BaseModel
 
@@ -65,4 +66,27 @@ async def request_html(file_name: str):
     return HTMLResponse(fp.read_text(encoding="utf-8"), code)
 
 
+@router.get("/file/award/{image_name}")
+async def award_image(image_name: str):
+    fp = Path("./data/awards/") / image_name
+    if not fp.exists():
+        return HTMLResponse(
+            Path("./res/html/404.html").read_text(encoding="utf-8"), 404
+        )
+
+    # [TODO] 未来，有图片缓存以后，改造成直接获得小哥图片的形式
+    return FileResponse(fp)
+
+
+@router.get("/file/skin/{image_name}")
+async def skin_image(image_name: str):
+    fp = Path("./data/skins/") / image_name
+    if not fp.exists():
+        return HTMLResponse(
+            Path("./res/html/404.html").read_text(encoding="utf-8"), 404
+        )
+    return FileResponse(fp)
+
+
 app.include_router(router, prefix="/kagami")
+app.mount("/kagami/res", StaticFiles(directory=Path("./res/")), name="res")

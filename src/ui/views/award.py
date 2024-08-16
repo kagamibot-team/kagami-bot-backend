@@ -1,20 +1,34 @@
 from pathlib import Path
 
+import PIL
+import PIL.Image
 from pydantic import BaseModel
 
 from src.models.level import Level
 
 
+IMAGE_TEMP: dict[Path, PIL.Image.Image] = {}
+
+
 class AwardInfo(BaseModel):
+    """
+    小哥的基础信息
+    """
+
     aid: int
     name: str
-    description: str
+    award_description: str
+    award_image: str
+
     level: Level
-    image: Path | str | bytes
-    sid: int | None = None
-    skin_name: str | None = None
+
     sorting: int = 0
     pack_id: int = 1
+
+    sid: int | None = None
+    skin_name: str | None = None
+    skin_image: str | None = None
+    skin_description: str | None = None
 
     @property
     def color(self):
@@ -27,15 +41,27 @@ class AwardInfo(BaseModel):
         return self.name
 
     @property
-    def image_path(self):
-        assert isinstance(self.image, (str, Path))
-        return Path(self.image)
+    def image(self) -> PIL.Image.Image:
+        p = self.image_path
+        if p not in IMAGE_TEMP:
+            IMAGE_TEMP[p] = PIL.Image.open(p).convert("RGBA")
+        return IMAGE_TEMP[p]
 
     @property
     def image_bytes(self) -> bytes:
-        if isinstance(self.image, (str, Path)):
-            return Path(self.image).read_bytes()
-        return self.image
+        return self.image_path.read_bytes()
+
+    @property
+    def image_path(self) -> Path:
+        if self.skin_image is None:
+            return Path("./data/awards") / self.award_image
+        return Path("./data/skins") / self.skin_image
+
+    @property
+    def description(self) -> str:
+        if self.skin_description is None:
+            return self.award_description
+        return self.skin_description
 
 
 class AwardDisplay(BaseModel):
