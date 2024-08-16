@@ -9,16 +9,16 @@ import re
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.command_events import GroupContext, OnebotContext
+from src.base.command_events import GroupContext
 from src.base.exceptions import (
     NotSleepTimeException,
     SleepToLateException,
-    SleepingException,
     UnknownArgException,
 )
 from src.common.command_decorators import (
     listen_message,
     match_alconna,
+    require_awake,
 )
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime
@@ -81,15 +81,6 @@ def parse_getup_time(inp: tuple[str] | None) -> tuple[int, int]:
     return target_hour, target_minute
 
 
-@listen_message(priority=10000)
-async def _(ctx: OnebotContext):
-    async with get_unit_of_work(ctx.sender_id) as uow:
-        n = now_datetime().timestamp()
-        uid = await uow.users.get_uid(ctx.sender_id)
-        if await uow.users.get_getup_time(uid) > n:
-            raise SleepingException()
-
-
 @listen_message()
 @match_alconna(
     Alconna(
@@ -97,6 +88,7 @@ async def _(ctx: OnebotContext):
         Arg("getup_time", MultiVar(str, "*"), seps=" "),
     )
 )
+@require_awake
 async def goodnight(ctx: GroupContext, res: Arparma):
     arg = res.query[tuple[str]]("getup_time")
     hour, minute = parse_getup_time(arg)

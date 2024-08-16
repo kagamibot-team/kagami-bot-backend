@@ -2,7 +2,11 @@ from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import Image
 
 from src.base.command_events import MessageContext
-from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
+from src.base.exceptions import (
+    KagamiRangeError,
+    ObjectAlreadyExistsException,
+    ObjectNotFoundException,
+)
 from src.common.data.awards import download_award_image, get_a_list_of_award_storage
 from src.common.command_decorators import (
     listen_message,
@@ -133,6 +137,7 @@ async def get_storage_view(
     uow: UnitOfWork,
     userdata: UserData | None,
     level_name: str | None,
+    pack_id: int | None,
     show_notation1: bool = True,
     show_notation2: bool = True,
 ) -> UserStorageView:
@@ -140,11 +145,12 @@ async def get_storage_view(
     view = UserStorageView(user=userdata)
     if level_name is not None:
         view.limited_level = uow.levels.get_by_name_strong(level_name)
+    view.limited_pack = pack_id
 
     for level in uow.levels.sorted:
         if level_name is not None and level != view.limited_level:
             continue
-        aids = await uow.awards.get_aids(level.lid)
+        aids = await uow.awards.get_aids(level.lid, pack_id)
         infos = await get_a_list_of_award_storage(
             uow,
             uid,
@@ -166,11 +172,23 @@ async def get_storage_view(
             alias=["--level", "级别", "-l", "-L"],
             compact=True,
         ),
+        Option(
+            "猎场",
+            Arg("猎场序号", int),
+            alias=["--pack", "小鹅猎场", "-p", "-P"],
+            compact=True,
+        ),
     )
 )
 async def _(ctx: MessageContext, res: Arparma):
     levelName = res.query[str]("等级名字")
+    pack_id = res.query[int]("猎场序号")
     async with get_unit_of_work(ctx.sender_id) as uow:
+        if pack_id is not None:
+            # 验证 pack_id 范围，防止用户乱输
+            maxc = await uow.settings.get_pack_count()
+            if pack_id <= 0 or pack_id > maxc:
+                raise KagamiRangeError("猎场序号", f"1~{maxc} 的值", pack_id)
         view = await get_storage_view(
             uow,
             UserData(
@@ -179,6 +197,7 @@ async def _(ctx: MessageContext, res: Arparma):
                 qqid=str(ctx.sender_id),
             ),
             levelName,
+            pack_id,
         )
 
     await ctx.send(await render_progress_message(view))
@@ -195,6 +214,7 @@ async def _(ctx: MessageContext, _: Arparma):
                 name=await ctx.sender_name,
                 qqid=str(ctx.sender_id),
             ),
+            None,
             None,
             show_notation2=False,
         )
@@ -214,15 +234,23 @@ async def _(ctx: MessageContext, _: Arparma):
             alias=["--level", "级别", "-l", "-L"],
             compact=True,
         ),
+        Option(
+            "猎场",
+            Arg("猎场序号", int),
+            alias=["--pack", "小鹅猎场", "-p", "-P"],
+            compact=True,
+        ),
     )
 )
 async def _(ctx: MessageContext, res: Arparma):
     levelName = res.query[str]("等级名字")
+    pack_id = res.query[int]("猎场序号")
     async with get_unit_of_work(ctx.sender_id) as uow:
         view = await get_storage_view(
             uow,
             None,
             levelName,
+            pack_id,
             show_notation1=False,
             show_notation2=False,
         )

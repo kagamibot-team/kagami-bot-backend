@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.dataclasses.user import UserTime
 from src.core.unit_of_work import UnitOfWork
-from src.models import Global, User
+from src.models.models import Global, User
 
 
 async def getInterval(session: AsyncSession):

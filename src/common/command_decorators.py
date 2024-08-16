@@ -9,15 +9,18 @@ from nonebot import get_driver
 from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import UniMessage
 
-from src.base.command_events import GroupContext
+from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_manager import EventManager
 from src.base.event.event_root import root
 from src.base.event.event_timer import addInterval, addTimeout
 from src.base.exceptions import KagamiCoreException, KagamiStopIteration
 from src.base.onebot.onebot_events import OnebotStartedContext
+from src.common.times import now_datetime
+from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
 
 T = TypeVar("T")
+TE = TypeVar("TE", bound=MessageContext)
 TA = TypeVarTuple("TA")
 
 
@@ -193,8 +196,10 @@ def kagami_exception_handler():
         async def inner(ctx: GroupContext) -> T | None:
             try:
                 return await func(ctx)
-            except (ArgumentMissing, ParamsUnmatched) as e:
-                await ctx.reply(str(e.args), ref=True, at=False)
+            except ArgumentMissing as e:
+                await ctx.reply(f"你输入的{str(e)}了哦！", ref=True, at=False)
+            except ParamsUnmatched as e:
+                await ctx.reply(f"你输入的{str(e)}了哦！", ref=True, at=False)
             except KagamiCoreException as e:
                 if len(e.message) > 0:
                     await ctx.reply(e.message, ref=True, at=False)
@@ -213,6 +218,23 @@ def kagami_exception_handler():
         return inner
 
     return deco
+
+
+def require_awake(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
+    """
+    需要玩家醒着才能执行的指令
+    """
+
+    async def _func(ctx: TE, *args: *TA):
+        async with get_unit_of_work(ctx.sender_id) as uow:
+            n = now_datetime().timestamp()
+            uid = await uow.users.get_uid(ctx.sender_id)
+            if await uow.users.get_getup_time(uid) > n:
+                return
+
+        await func(ctx, *args)
+
+    return _func
 
 
 __all__ = [

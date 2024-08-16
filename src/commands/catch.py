@@ -14,6 +14,7 @@ from src.common.command_decorators import (
     listen_message,
     match_alconna,
     match_regex,
+    require_awake,
 )
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
@@ -145,6 +146,7 @@ async def handle_xb(msg: CatchMesssage):
 @match_alconna(
     Alconna("re:(抓小哥|zhua|抓抓)", Arg("count", int, flags=[ArgFlag.OPTIONAL]))
 )
+@require_awake
 async def _(ctx: GroupContext, result: Arparma):
     count = result.query[int]("count")
     if count is None:
@@ -160,6 +162,7 @@ async def _(ctx: GroupContext, result: Arparma):
 
 @listen_message()
 @match_regex("^(狂抓|kz|狂抓小哥|kZ|Kz|KZ)$")
+@require_awake
 async def _(ctx: GroupContext, _):
     msg = await picks(
         ctx.sender_id,

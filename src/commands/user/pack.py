@@ -8,6 +8,7 @@ from src.common.command_decorators import (
     match_alconna,
     match_regex,
     require_admin,
+    require_awake,
 )
 from src.core.unit_of_work import get_unit_of_work
 from src.services.pool import PoolService
@@ -15,7 +16,8 @@ from src.services.pool import PoolService
 
 @listen_message()
 @require_admin()
-@match_regex("^(小[lL]|xl)?(猎场|lc)$")
+@match_regex("^(小[鹅lL]|x[le])?(猎场|lc)$")
+@require_awake
 async def _(ctx: MessageContext, _):
     message: list[str] = []
 
@@ -43,6 +45,7 @@ async def _(ctx: MessageContext, _):
 @listen_message()
 @require_admin()
 @match_regex("^(猎场|lc)([Uu][Pp])$")
+@require_awake
 async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
@@ -66,6 +69,7 @@ async def _(ctx: MessageContext, _):
 @match_alconna(
     Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL]))
 )
+@require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -78,6 +82,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_alconna(Alconna("购买猎场", Arg("猎场序号", int)))
+@require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
     assert dest is not None
@@ -91,6 +96,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 @listen_message()
 @require_admin()
 @match_regex("^切换(猎场)?[uU][pP]池?$")
+@require_awake
 async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)
@@ -102,6 +108,7 @@ async def _(ctx: MessageContext, _):
 @listen_message()
 @require_admin()
 @match_regex("^购买(猎场)?[uU][pP]池?$")
+@require_awake
 async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         service = PoolService(uow)

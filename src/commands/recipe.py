@@ -12,10 +12,12 @@ from src.common.command_decorators import (
     match_alconna,
     match_literal,
     require_admin,
+    require_awake,
 )
 from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
+from src.logic.catch import handle_baibianxiaoge
 from src.ui.pages.recipe import render_merge_message
 from src.ui.views.award import GotAwardDisplay
 from src.ui.views.recipe import MergeResult, MergeStatus
@@ -142,17 +144,20 @@ async def _(ctx: MessageContext):
 @match_alconna(
     Alconna(
         "re:(合成|hc)(小哥|xg)?",
-        Arg("name1", str),
-        Arg("name2", str),
-        Arg("name3", str),
+        Arg(
+            "第一个小哥", str
+        ),  # 因为参数丢失的时候可能会显示名字，所以这里我改成了中文。
+        Arg("第二个小哥", str),
+        Arg("第三个小哥", str),
     )
 )
+@require_awake
 async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
 
-    n1 = res.query[str]("name1")
-    n2 = res.query[str]("name2")
-    n3 = res.query[str]("name3")
+    n1 = res.query[str]("第一个小哥")
+    n2 = res.query[str]("第二个小哥")
+    n3 = res.query[str]("第三个小哥")
     if n1 is None or n2 is None or n3 is None:
         return
 
@@ -199,6 +204,8 @@ async def _(ctx: GroupContext, res: Arparma):
                 is_new=await uow.inventories.get_stats(uid, aid) == 0,
             )
             await uow.inventories.give(uid, aid, add)
+            if aid == 35:
+                await handle_baibianxiaoge(uow, uid)
 
         if isinstance(ctx, GroupContext):
             await uow.recipes.record_history(
