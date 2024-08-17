@@ -19,13 +19,7 @@ across different repositories.
 该模块的思路源自 ChatGPT。
 """
 
-from typing import TypeVar
-
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from ..models import Base
-
-T = TypeVar("T", bound="Base")
 
 
 class DBRepository:

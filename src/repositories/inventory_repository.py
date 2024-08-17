@@ -1,7 +1,8 @@
+from typing import Iterable
 from sqlalchemy import delete, insert, select, update
 
 from ..base.repository import DBRepository
-from ..models import Inventory
+from ..models.models import Inventory
 
 
 class InventoryRepository(DBRepository):
@@ -108,7 +109,7 @@ class InventoryRepository(DBRepository):
         return sto, use
 
     async def get_inventory_dict(
-        self, uid: int, aids: list[int] | None = None
+        self, uid: int, aids: Iterable[int] | None = None
     ) -> dict[int, tuple[int, int]]:
         """获取玩家所有小哥物品栏的字典
 

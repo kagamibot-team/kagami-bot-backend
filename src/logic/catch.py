@@ -80,13 +80,14 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
         elif aid == 35 and not met_35:
             # 处理百变小哥
             met_35 = True
-            sids = await uow.skins.get_all_sids_of_one_award(35)
-            sids = [
-                sid
-                for sid in sids
-                if not await uow.skin_inventory.do_user_have(uid, sid)
-            ]
-            if len(sids) > 0:
-                sid = get_random().choice(sids)
-                await uow.skin_inventory.give(uid, sid)
+            await handle_baibianxiaoge(uow, uid)
     return picks
+
+
+async def handle_baibianxiaoge(uow: UnitOfWork, uid: int) -> int | None:
+    sids = await uow.skins.get_all_sids_of_one_award(35)
+    sids = [sid for sid in sids if not await uow.skin_inventory.do_user_have(uid, sid)]
+    if len(sids) > 0:
+        sid = get_random().choice(sids)
+        await uow.skin_inventory.give(uid, sid)
+        return sid

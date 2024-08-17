@@ -22,9 +22,9 @@ from src.ui.components.awards import ref_book_box_raw
 
 
 @listen_message()
-@match_alconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("name", str)))
+@match_alconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("小哥名字", str)))
 async def _(ctx: MessageContext, result: Arparma):
-    name = result.query[str]("name")
+    name = result.query[str]("小哥名字")
     assert name is not None
 
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -52,7 +52,7 @@ async def _(ctx: MessageContext, result: Arparma):
 
         await uow.skin_inventory.use(uid, aid, sid)
 
-        aname = (await uow.awards.get_info(aid))[0]
+        aname = (await uow.awards.get_info(aid)).name
         sname = (await uow.skins.get_info(sid))[0] if sid is not None else "默认"
 
     await ctx.reply(f"已经将 {aname} 的皮肤切换为 {sname} 了。")

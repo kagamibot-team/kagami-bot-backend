@@ -53,10 +53,13 @@ def display_box_raw(color: str, image: PIL.Image.Image | Path | str | bytes, new
     渲染 DisplayBox
     """
 
-    cache_key = f"{color}-{hash(image)}"
-    if cache_key not in DISPLAY_BOX_CACHE:
-        DISPLAY_BOX_CACHE[cache_key] = _display_box(color, image)
-    image = DISPLAY_BOX_CACHE[cache_key].copy()
+    if not isinstance(image, PIL.Image.Image):
+        cache_key = f"{color}-{hash(image)}"
+        if cache_key not in DISPLAY_BOX_CACHE:
+            DISPLAY_BOX_CACHE[cache_key] = _display_box(color, image)
+        image = DISPLAY_BOX_CACHE[cache_key].copy()
+    else:
+        image = _display_box(color, image)
     if new:
         image_new = PIL.Image.open("./res/new.png").convert("RGBA")
         paste_image(image, image_new, 88, 0)

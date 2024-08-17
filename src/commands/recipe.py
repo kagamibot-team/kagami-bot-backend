@@ -1,4 +1,5 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
+from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_root import throw_event
@@ -12,13 +13,15 @@ from src.common.command_decorators import (
     match_alconna,
     match_literal,
     require_admin,
+    require_awake,
 )
 from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
-from src.ui.pages.recipe import render_merge_message
+from src.logic.catch import handle_baibianxiaoge
+from src.ui.base.browser import get_browser_pool
 from src.ui.views.award import GotAwardDisplay
-from src.ui.views.recipe import MergeResult, MergeStatus
+from src.ui.views.recipe import MergeData, MergeResult, MergeStatus
 from src.ui.views.user import UserData
 
 
@@ -142,17 +145,20 @@ async def _(ctx: MessageContext):
 @match_alconna(
     Alconna(
         "re:(合成|hc)(小哥|xg)?",
-        Arg("name1", str),
-        Arg("name2", str),
-        Arg("name3", str),
+        Arg(
+            "第一个小哥", str
+        ),  # 因为参数丢失的时候可能会显示名字，所以这里我改成了中文。
+        Arg("第二个小哥", str),
+        Arg("第三个小哥", str),
     )
 )
+@require_awake
 async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
 
-    n1 = res.query[str]("name1")
-    n2 = res.query[str]("name2")
-    n3 = res.query[str]("name3")
+    n1 = res.query[str]("第一个小哥")
+    n2 = res.query[str]("第二个小哥")
+    n3 = res.query[str]("第三个小哥")
     if n1 is None or n2 is None or n3 is None:
         return
 
@@ -199,6 +205,8 @@ async def _(ctx: GroupContext, res: Arparma):
                 is_new=await uow.inventories.get_stats(uid, aid) == 0,
             )
             await uow.inventories.give(uid, aid, add)
+            if aid == 35:
+                await handle_baibianxiaoge(uow, uid)
 
         if isinstance(ctx, GroupContext):
             await uow.recipes.record_history(
@@ -230,7 +238,13 @@ async def _(ctx: GroupContext, res: Arparma):
             merge_time=now_datetime().timestamp(),
         )
 
-    await ctx.send(await render_merge_message(merge_info))
+    await ctx.send(
+        UniMessage.image(
+            raw=await get_browser_pool().render(
+                "recipe", MergeData.from_merge_result(merge_info)
+            )
+        )
+    )
     await throw_event(MergeEvent(user_data=user, merge_view=merge_info))
 
     if isinstance(ctx, GroupContext) and do_xb:

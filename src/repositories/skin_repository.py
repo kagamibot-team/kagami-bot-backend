@@ -4,9 +4,10 @@ from sqlalchemy import delete, insert, select, update
 
 from src.base.exceptions import ObjectNotFoundException
 from src.models.models import SkinAltName
+from src.ui.views.award import AwardInfo
 
 from ..base.repository import DBRepository
-from ..models import Skin
+from ..models.models import Skin
 
 
 class SkinRepository(DBRepository):
@@ -161,3 +162,14 @@ class SkinRepository(DBRepository):
             .scalars()
             .all()
         )
+
+    async def link(self, sid: int, info: AwardInfo):
+        """
+        更改 AwardInfo，挂载皮肤的信息
+        """
+        q = select(Skin.name, Skin.description, Skin.image)
+        sn, sd, si = (await self.session.execute(q)).tuples().one()
+        info.sid = sid
+        info.skin_name = sn
+        info.skin_description = sd
+        info.skin_image = Path(si).name

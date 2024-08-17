@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import enum
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
@@ -20,7 +20,6 @@ from imagetext_py import (
     text_size_multiline,
     text_wrap,
 )
-
 
 FONT_BASE = Path("./res/fonts/")
 

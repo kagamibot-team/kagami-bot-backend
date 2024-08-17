@@ -1,7 +1,7 @@
 from sqlalchemy import delete, func, insert, select, update
 
 from ..base.repository import DBRepository
-from ..models import Global
+from ..models.models import Global
 
 
 class SettingRepository(DBRepository):

@@ -7,7 +7,7 @@ from src.services.achievement import Achievement, get_achievement_service
 
 
 def get_single_achievement_msg(achievement: Achievement, achieved: bool) -> str:
-    _achieved = "[已达成] " if achieved else ""
+    _achieved = "[ √ 已达成] " if achieved else "[ × 未达成] "
     msg = f"{_achieved}{achievement.name}\n"
     msg += f"    {achievement.description}"
 
@@ -27,4 +27,4 @@ async def _(ctx: MessageContext, _):
                     get_single_achievement_msg(a, await a.have_got(uow, uid))
                 )
 
-    await ctx.send(f"{await ctx.sender_name} 成就\n\n" + "\n\n".join(display))
+    await ctx.send(f" 成就列表\n 当前用户：{await ctx.sender_name}\n\n" + "\n\n".join(display))

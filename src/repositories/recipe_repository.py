@@ -6,7 +6,7 @@ from src.models.level import Level
 
 from ..base.exceptions import ObjectAlreadyExistsException, RecipeMissingException
 from ..base.repository import DBRepository
-from ..models import Recipe
+from ..models.models import Recipe
 
 
 class RecipeRepository(DBRepository):
