@@ -117,7 +117,9 @@ class SuccessfulCatchMeta(BaseModel):
     get_chip: int
     own_chip: int
     remain_time: int
+    max_time: int
     need_time: str
+    field_from: int
 
 
 class SuccessfulCatch(BaseModel):
@@ -133,7 +135,9 @@ class SuccessfulCatch(BaseModel):
                 get_chip=data.money_changed,
                 own_chip=data.money_sum,
                 remain_time=data.slot_remain,
+                max_time=data.slot_sum,
                 need_time=data.timedelta_text,
+                field_from=data.pack_id,
             ),
             catchs=[
                 Catch(
