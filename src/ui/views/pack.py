@@ -401,3 +401,6 @@ class PackView(BaseModel):
 
     expression: LQRExpression
     "小鹅表情"
+
+    chips: int
+    "有多少薯片？"
