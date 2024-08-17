@@ -89,7 +89,7 @@ class LevelView(BaseModel):
         )
 
 
-class Info(BaseModel):
+class InfoView(BaseModel):
     description: str
     display_name: str
     color: str
@@ -97,8 +97,8 @@ class Info(BaseModel):
     level: LevelView
 
     @staticmethod
-    def from_award_info(info: AwardInfo) -> "Info":
-        return Info(
+    def from_award_info(info: AwardInfo) -> "InfoView":
+        return InfoView(
             description=info.description,
             display_name=info.name,
             color=info.color,
@@ -108,7 +108,7 @@ class Info(BaseModel):
 
 
 class Catch(BaseModel):
-    info: Info
+    info: InfoView
     count: int
     is_new: bool
 
@@ -141,7 +141,7 @@ class SuccessfulCatch(BaseModel):
             ),
             catchs=[
                 Catch(
-                    info=Info.from_award_info(d.info),
+                    info=InfoView.from_award_info(d.info),
                     count=d.count,
                     is_new=d.is_new,
                 )

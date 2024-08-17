@@ -4,6 +4,8 @@ from random import Random
 
 from pydantic import BaseModel
 
+from src.ui.views.catch import InfoView
+
 from .award import AwardInfo, GotAwardDisplay
 from .user import UserData
 
@@ -352,3 +354,20 @@ class MergeHistoryList(BaseModel):
 
     history: list[MergeHistory]
     "合成小哥的历史记录"
+
+
+class MergeMeta(BaseModel):
+    status: str
+    is_strange: bool
+    cost_chip: int
+    own_chip: int
+
+
+class MergeData(BaseModel):
+    """
+    传递给前端的数据
+    """
+
+    inputs: tuple[InfoView, InfoView, InfoView]
+    output: InfoView
+    meta: MergeMeta
