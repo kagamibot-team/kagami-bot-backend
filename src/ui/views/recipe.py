@@ -55,7 +55,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="刚抓的小哥，便宜造！", image=MokieImage.normal),
             MokieMessage(text="嗯。", image=MokieImage.normal),
             MokieMessage(text="很经常的结果。", image=MokieImage.normal),
-            MokieMessage(text="多试试吧。", image=MokieImage.normal),
+            MokieMessage(text="多试试吧，别的配方。", image=MokieImage.normal),
         ),
         2: (
             MokieMessage(text="可以，至少升了。", image=MokieImage.normal),
@@ -114,13 +114,13 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="这个可以有！", image=MokieImage.astonish),
         ),
         5: (
-            MokieMessage(text="我也想要。", image=MokieImage.astonish),
+            MokieMessage(text="我也想要啊。", image=MokieImage.astonish),
             MokieMessage(text="大家一起来抄吧！", image=MokieImage.normal),
             MokieMessage(text="恭喜你啊。", image=MokieImage.jealous),
             MokieMessage(text="也就成功升了三级而已。", image=MokieImage.jealous),
         ),
         0: (
-            MokieMessage(text="没亏多少。", image=MokieImage.laugh),
+            MokieMessage(text="还好亏多少。", image=MokieImage.laugh),
             MokieMessage(text="不关我事哦。", image=MokieImage.shy),
             MokieMessage(text="下次一定！", image=MokieImage.normal),
             MokieMessage(text="多合合吧。", image=MokieImage.normal),
@@ -128,7 +128,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
     },
     3: {
         2: (
-            MokieMessage(text="下次少合。", image=MokieImage.laugh),
+            MokieMessage(text="下次不用合这个了。", image=MokieImage.laugh),
             MokieMessage(text="吃一堑，长一智。", image=MokieImage.normal),
             MokieMessage(text="嘛，总是会遇到的啦。", image=MokieImage.laugh),
             MokieMessage(text="知道了就可以避免了啦。", image=MokieImage.normal),
@@ -137,7 +137,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="感觉作用有限，配方。", image=MokieImage.normal),
             MokieMessage(text="今天天气不错。", image=MokieImage.normal),
             MokieMessage(text="好没槽点的配方！", image=MokieImage.normal),
-            MokieMessage(text="这咋了。（模仿）", image=MokieImage.xiaoge),
+            MokieMessage(text="那咋了？（学小人机）", image=MokieImage.xiaoge),
         ),
         4: (
             MokieMessage(text="能用。", image=MokieImage.normal),
