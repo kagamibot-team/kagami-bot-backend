@@ -70,6 +70,38 @@ class AwardInfo(BaseModel):
         return self.skin_description
 
 
+class LevelView(BaseModel):
+    display_name: str
+    color: str
+    lid: int
+
+    @staticmethod
+    def from_model(lv: Level) -> "LevelView":
+        return LevelView(
+            display_name=lv.display_name,
+            color=lv.color,
+            lid=lv.lid,
+        )
+
+
+class InfoView(BaseModel):
+    description: str
+    display_name: str
+    color: str
+    image: str
+    level: LevelView
+
+    @staticmethod
+    def from_award_info(info: AwardInfo) -> "InfoView":
+        return InfoView(
+            description=info.description,
+            display_name=info.name,
+            color=info.color,
+            image=info.image_url,
+            level=LevelView.from_model(info.level),
+        )
+
+
 class AwardDisplay(BaseModel):
     info: AwardInfo
 
@@ -92,6 +124,11 @@ class AwardDisplay(BaseModel):
     @property
     def sold_out(self) -> bool:
         return False
+
+
+class DisplayData(BaseModel):
+    info: InfoView
+    count: int | None = None
 
 
 class GotAwardDisplay(AwardDisplay):

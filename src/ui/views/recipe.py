@@ -4,7 +4,7 @@ from random import Random
 
 from pydantic import BaseModel
 
-from src.ui.views.catch import InfoView
+from src.ui.views.catch import Catch, InfoView
 
 from .award import AwardInfo, GotAwardDisplay
 from .user import UserData
@@ -98,7 +98,9 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="记得避雷。", image=MokieImage.normal),
         ),
         2: (
-            MokieMessage(text="希望不要落到需要用这个配方的时候。", image=MokieImage.normal),
+            MokieMessage(
+                text="希望不要落到需要用这个配方的时候。", image=MokieImage.normal
+            ),
             MokieMessage(text="一般般。", image=MokieImage.normal),
             MokieMessage(text="好无聊——", image=MokieImage.normal),
             MokieMessage(text="也行吧。", image=MokieImage.normal),
@@ -182,15 +184,22 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         0: (
             MokieMessage(text="必要的牺牲。", image=MokieImage.laugh),
             MokieMessage(text="其实不要的可以给我。", image=MokieImage.laugh),
-            MokieMessage(text="其实就算你多扔进去几个四星，成功率也不会提高很多，貌似，我猜的。", image=MokieImage.shy),
+            MokieMessage(
+                text="其实就算你多扔进去几个四星，成功率也不会提高很多，貌似，我猜的。",
+                image=MokieImage.shy,
+            ),
             MokieMessage(text="噗。", image=MokieImage.laugh),
         ),
     },
     5: {
         4: (
-            MokieMessage(text="万不得已的时候我也用过这种配方。", image=MokieImage.normal),
+            MokieMessage(
+                text="万不得已的时候我也用过这种配方。", image=MokieImage.normal
+            ),
             MokieMessage(text="嘛，回来个四星也行吧。", image=MokieImage.normal),
-            MokieMessage(text="看你抱着他们过来的时候都有点吓人！", image=MokieImage.shy),
+            MokieMessage(
+                text="看你抱着他们过来的时候都有点吓人！", image=MokieImage.shy
+            ),
             MokieMessage(text="追求稳定性吗。", image=MokieImage.normal),
         ),
         5: (
@@ -202,7 +211,9 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         0: (
             MokieMessage(text="没必要。", image=MokieImage.laugh),
             MokieMessage(text="自己留着点吧。", image=MokieImage.laugh),
-            MokieMessage(text="虽然没人权但是也不能这样造他们啊。", image=MokieImage.shy),
+            MokieMessage(
+                text="虽然没人权但是也不能这样造他们啊。", image=MokieImage.shy
+            ),
             MokieMessage(text="无聊和我找话吗。", image=MokieImage.shy),
         ),
     },
@@ -241,9 +252,15 @@ MOKIE_MESSAGES_LOVE = (
     MokieMessage(text="第一次合出来的时候开心一整天。", image=MokieImage.normal),
     MokieMessage(text="在家里放着一堆呢，感觉像是天堂。", image=MokieImage.normal),
     MokieMessage(text="啊啊啊啊啊啊啊啊啊啊啊啊。（表演）", image=MokieImage.astonish),
-    MokieMessage(text="你那还有多少？我拿一百个老哥跟你换。", image=MokieImage.astonish),
-    MokieMessage(text="心情不好的时候就学我来给他们顺顺毛吧。", image=MokieImage.normal),
-    MokieMessage(text="一看到就有好多话想说，可惜一次说不完呢。", image=MokieImage.normal),
+    MokieMessage(
+        text="你那还有多少？我拿一百个老哥跟你换。", image=MokieImage.astonish
+    ),
+    MokieMessage(
+        text="心情不好的时候就学我来给他们顺顺毛吧。", image=MokieImage.normal
+    ),
+    MokieMessage(
+        text="一看到就有好多话想说，可惜一次说不完呢。", image=MokieImage.normal
+    ),
 )
 "榆木华厨的"
 
@@ -263,18 +280,6 @@ class MergeResult(BaseModel):
     cost_money: int
     remain_money: int
     merge_time: float
-
-    @property
-    def title1(self):
-        return f"{self.user.name} 的合成材料："
-
-    @property
-    def title2(self):
-        return f"合成结果：{self.successed.value}"
-
-    @property
-    def title3(self):
-        return f"本次合成花费了你 {self.cost_money} 薯片，你还有 {self.remain_money} 薯片。"
 
     @property
     def input_highest_level(self):
@@ -363,11 +368,44 @@ class MergeMeta(BaseModel):
     own_chip: int
 
 
+class YMHMessage(BaseModel):
+    text: str
+    image: str
+
+
 class MergeData(BaseModel):
     """
     传递给前端的数据
     """
 
     inputs: tuple[InfoView, InfoView, InfoView]
-    output: InfoView
+    output: Catch
     meta: MergeMeta
+    ymh_message: YMHMessage
+    name: str
+
+    @staticmethod
+    def from_merge_result(data: MergeResult) -> "MergeData":
+        return MergeData(
+            inputs=(
+                InfoView.from_award_info(data.inputs[0]),
+                InfoView.from_award_info(data.inputs[1]),
+                InfoView.from_award_info(data.inputs[2]),
+            ),
+            output=Catch(
+                info=InfoView.from_award_info(data.output.info),
+                count=data.output.count,
+                is_new=data.output.is_new,
+            ),
+            meta=MergeMeta(
+                status=data.successed.value,
+                is_strange=data.is_strange,
+                cost_chip=data.cost_money,
+                own_chip=data.remain_money,
+            ),
+            ymh_message=YMHMessage(
+                text=data.ymh_message.text,
+                image=data.ymh_message.image.value,
+            ),
+            name=data.user.name,
+        )

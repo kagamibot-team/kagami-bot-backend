@@ -7,7 +7,7 @@ from random import Random
 
 from pydantic import BaseModel
 
-from src.ui.views.catch import InfoView, LevelView
+from src.ui.views.award import InfoView, LevelView
 from src.ui.views.user import UserData
 
 

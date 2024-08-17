@@ -1,4 +1,5 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
+from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_root import throw_event
@@ -18,9 +19,9 @@ from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
-from src.ui.pages.recipe import render_merge_message
+from src.ui.base.browser import get_browser_pool
 from src.ui.views.award import GotAwardDisplay
-from src.ui.views.recipe import MergeResult, MergeStatus
+from src.ui.views.recipe import MergeData, MergeResult, MergeStatus
 from src.ui.views.user import UserData
 
 
@@ -237,7 +238,13 @@ async def _(ctx: GroupContext, res: Arparma):
             merge_time=now_datetime().timestamp(),
         )
 
-    await ctx.send(await render_merge_message(merge_info))
+    await ctx.send(
+        UniMessage.image(
+            raw=await get_browser_pool().render(
+                "recipe", MergeData.from_merge_result(merge_info)
+            )
+        )
+    )
     await throw_event(MergeEvent(user_data=user, merge_view=merge_info))
 
     if isinstance(ctx, GroupContext) and do_xb:

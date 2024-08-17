@@ -3,11 +3,8 @@ from typing import Any, TypeVar
 from nonebot_plugin_alconna import UniMessage
 
 from src.ui.base.browser import get_browser_pool
-from src.ui.base.tools import image_to_bytes
-from src.ui.components.catch import catch
-from src.ui.views.award import AwardDisplay
+from src.ui.views.award import AwardDisplay, DisplayData, InfoView
 from src.ui.views.catch import CatchMesssage, CatchResultMessage, SuccessfulCatch
-from utils.threading import make_async
 
 T = TypeVar("T")
 
@@ -27,8 +24,10 @@ async def render_catch_failed_message(data: CatchMesssage) -> UniMessage[Any]:
 
 
 async def render_award_info_message(data: AwardDisplay) -> UniMessage[Any]:
-    image = await make_async(catch)(data)
-    return UniMessage.image(raw=await make_async(image_to_bytes)(image))
+    image = await get_browser_pool().render(
+        "catch", DisplayData(info=InfoView.from_award_info(data.info), count=None)
+    )
+    return UniMessage.image(raw=image)
 
 
 async def render_catch_message(message: CatchMesssage) -> UniMessage[Any]:

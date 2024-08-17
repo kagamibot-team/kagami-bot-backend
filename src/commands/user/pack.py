@@ -16,7 +16,7 @@ from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.services.pool import PoolService
 from src.ui.base.browser import get_browser_pool
-from src.ui.views.catch import InfoView, LevelView
+from src.ui.views.award import InfoView, LevelView
 from src.ui.views.pack import (
     LevelCollectProgress,
     PackView,

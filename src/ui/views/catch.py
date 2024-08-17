@@ -1,8 +1,6 @@
 from pydantic import BaseModel
 
-from src.models.level import Level
-
-from .award import AwardInfo, GotAwardDisplay
+from .award import GotAwardDisplay, InfoView
 from .user import UserData
 
 
@@ -57,54 +55,6 @@ class CatchResultMessage(CatchMesssage):
 
     catchs: list[GotAwardDisplay]
     "抓小哥的条目"
-
-    @property
-    def title(self):
-        "标题"
-        lmt = f"[{self.pack_id}号猎场]"
-        if self.pack_id == 1:
-            lmt = ""
-        return lmt + self.user.name + " 的一抓"
-
-    @property
-    def details(self):
-        "标题下方的文字"
-        return (
-            f"本次获得{self.money_changed}薯片，"
-            f"目前共有{self.money_sum}薯片。\n"
-            f"剩余次数：{self.slot_remain}/{self.slot_sum}，"
-            f"距下次次数恢复还要{self.timedelta_text}"
-        )
-
-
-class LevelView(BaseModel):
-    display_name: str
-    color: str
-
-    @staticmethod
-    def from_model(lv: Level) -> "LevelView":
-        return LevelView(
-            display_name=lv.display_name,
-            color=lv.color,
-        )
-
-
-class InfoView(BaseModel):
-    description: str
-    display_name: str
-    color: str
-    image: str
-    level: LevelView
-
-    @staticmethod
-    def from_award_info(info: AwardInfo) -> "InfoView":
-        return InfoView(
-            description=info.description,
-            display_name=info.name,
-            color=info.color,
-            image=info.image_url,
-            level=LevelView.from_model(info.level),
-        )
 
 
 class Catch(BaseModel):
