@@ -10,8 +10,66 @@ from src.common.command_decorators import (
     require_admin,
     require_awake,
 )
-from src.core.unit_of_work import get_unit_of_work
+from src.common.data.awards import get_award_info
+from src.common.rd import get_random
+from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.services.pool import PoolService
+from src.ui.base.browser import get_browser_pool
+from src.ui.views.catch import InfoView, LevelView
+from src.ui.views.pack import (
+    LevelCollectProgress,
+    PackView,
+    SinglePackView,
+    get_random_expression,
+)
+from src.ui.views.user import UserData
+
+
+async def get_pack_data(uow: UnitOfWork, user: UserData):
+    packs: list[SinglePackView] = []
+    uid = user.uid
+
+    for i in range(1, await uow.settings.get_pack_count() + 1):
+        aids = await uow.pack.get_main_aids_of_pack(i)
+        grouped = await uow.awards.group_by_level(aids)
+        grouped = {d: v for d, v in grouped.items() if len(v) > 0}
+        top_lid = max(grouped.keys())
+
+        packs.append(
+            SinglePackView(
+                pack_id=i,
+                award_count=[
+                    LevelCollectProgress(
+                        level=LevelView.from_model(uow.levels.get_by_id(lid)),
+                        collected=len(
+                            [
+                                v
+                                for _, v in (
+                                    await uow.inventories.get_inventory_dict(uid, aids)
+                                ).items()
+                                if sum(v) > 0
+                            ]
+                        ),
+                        sum_up=len(aids),
+                    )
+                    for lid, aids in grouped.items()
+                    if lid > 0
+                ],
+                featured_award=InfoView.from_award_info(
+                    await get_award_info(
+                        uow, get_random().choice(list(grouped[top_lid]))
+                    )
+                ),
+                unlocked=i in await uow.user_pack.get_own(uid),
+            )
+        )
+
+    return PackView(
+        packs=packs,
+        user=user,
+        selecting=await uow.user_pack.get_using(uid),
+        expression=get_random_expression(get_random()),
+    )
 
 
 @listen_message()
@@ -38,6 +96,16 @@ async def _(ctx: MessageContext, _):
                 msg += ";当前"
             msg += f"\n共有 {count} 小哥包含在内。"
             message.append(msg)
+
+        data = await get_pack_data(
+            uow,
+            UserData(
+                uid=uid, qqid=str(ctx.sender_id), name=await ctx.get_sender_name()
+            ),
+        )
+
+    browsers = get_browser_pool()
+    await browsers.render("liechang", data)
 
     await ctx.reply("\n\n".join(message))
 
