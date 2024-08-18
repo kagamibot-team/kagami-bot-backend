@@ -6,5 +6,9 @@ from src.base.event.event_root import activate_root, root
 
 from .auto_reload import init
 
+from .apis.init import init_routers
+
+
 activate_root(root)
 init()
+init_routers()

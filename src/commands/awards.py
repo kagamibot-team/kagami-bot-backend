@@ -140,6 +140,7 @@ async def get_storage_view(
     pack_id: int | None,
     show_notation1: bool = True,
     show_notation2: bool = True,
+    include_zero: bool = True,
 ) -> UserStorageView:
     uid = None if userdata is None else userdata.uid
     view = UserStorageView(user=userdata)
@@ -150,7 +151,7 @@ async def get_storage_view(
     for level in uow.levels.sorted:
         if level_name is not None and level != view.limited_level:
             continue
-        aids = await uow.awards.get_aids(level.lid, pack_id)
+        aids = await uow.awards.get_aids(level.lid, pack_id, include_zero)
         infos = await get_a_list_of_award_storage(
             uow,
             uid,
@@ -169,13 +170,13 @@ async def get_storage_view(
         Option(
             "等级",
             Arg("等级名字", str),
-            alias=["--level", "级别", "-l", "-L"],
+            alias=["--level", "级别", "-l", "-L", "lv"],
             compact=True,
         ),
         Option(
             "猎场",
             Arg("猎场序号", int),
-            alias=["--pack", "小鹅猎场", "-p", "-P"],
+            alias=["--pack", "小鹅猎场", "-p", "-P", "lc"],
             compact=True,
         ),
     )
@@ -253,5 +254,6 @@ async def _(ctx: MessageContext, res: Arparma):
             pack_id,
             show_notation1=False,
             show_notation2=False,
+            include_zero=False,
         )
     await ctx.send(await render_progress_message(view))

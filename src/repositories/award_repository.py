@@ -1,9 +1,11 @@
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable
 
 from sqlalchemy import delete, insert, select, update
 
 from src.base.exceptions import ObjectNotFoundException
+from src.models.level import level_repo
+from src.ui.views.award import AwardInfo
 
 from ..base.repository import DBRepository
 from ..models.models import Award, AwardAltName
@@ -75,7 +77,7 @@ class AwardRepository(DBRepository):
 
         return a
 
-    async def get_aids(self, lid: int, pack: int | None = None) -> list[int]:
+    async def get_aids(self, lid: int, pack: int | None = None, include_zero: bool = False) -> list[int]:
         """获得全部小哥
 
         Args:
@@ -92,7 +94,10 @@ class AwardRepository(DBRepository):
             .order_by(-Award.sorting, Award.data_id)
         )
         if pack is not None:
-            q = q.filter(Award.main_pack_id == pack)
+            if include_zero:
+                q = q.filter(Award.main_pack_id.in_((pack, 0)))
+            else:
+                q = q.filter(Award.main_pack_id == pack)
         return [row[0] for row in (await self.session.execute(q)).tuples().all()]
 
     async def get_aid_strong(self, name: str) -> int:
@@ -109,16 +114,16 @@ class AwardRepository(DBRepository):
             raise ObjectNotFoundException("小哥", name)
         return aid
 
-    async def get_info(self, aid: int) -> tuple[str, str, int, str, int, int]:
+    async def get_info(self, aid: int) -> AwardInfo:
         """获取一个小哥的基础信息
 
         Args:
             aid (int): 小哥的 ID
 
         Returns:
-            tuple[str, str, int, str, int, int]: 名字、描述、等级 ID 和图片，排序，是否抽得到
+            AwardInfo
         """
-        query = select(
+        q = select(
             Award.name,
             Award.description,
             Award.level_id,
@@ -126,7 +131,46 @@ class AwardRepository(DBRepository):
             Award.sorting,
             Award.main_pack_id,
         ).filter(Award.data_id == aid)
-        return (await self.session.execute(query)).tuples().one()
+        name, desc, lid, img, sorting, pid = (
+            (await self.session.execute(q)).tuples().one()
+        )
+        return AwardInfo(
+            aid=aid,
+            name=name,
+            award_description=desc,
+            award_image=Path(img).name,
+            level=level_repo.get_by_id(lid),
+            sorting=sorting,
+            pack_id=pid,
+        )
+
+    async def get_info_dict(self, aids: Iterable[int]) -> dict[int, AwardInfo]:
+        """
+        获取很多小哥的基础信息
+        """
+        q = select(
+            Award.data_id,
+            Award.name,
+            Award.description,
+            Award.level_id,
+            Award.image,
+            Award.sorting,
+            Award.main_pack_id,
+        ).filter(Award.data_id.in_(aids))
+        r = (await self.session.execute(q)).tuples().all()
+        rt = {}
+        for aid, name, desc, lid, img, sorting, pid in r:
+            info = AwardInfo(
+                aid=aid,
+                name=name,
+                award_description=desc,
+                award_image=Path(img).name,
+                level=level_repo.get_by_id(lid),
+                sorting=sorting,
+                pack_id=pid,
+            )
+            rt[aid] = info
+        return rt
 
     async def set_alias(self, aid: int, name: str):
         """设置一个小哥的别名
@@ -224,29 +268,6 @@ class AwardRepository(DBRepository):
                 select(Award.level_id).filter(Award.data_id == aid)
             )
         ).scalar_one()
-
-    async def get_list_of_award_info(
-        self, aids: list[int]
-    ) -> Sequence[tuple[int, str, str, int, str, int, int]]:
-        """获取多个小哥的基础信息
-
-        Args:
-            aids (list[int]): 小哥的 ID 列表
-
-        Returns:
-            Sequence[tuple[int, str, str, int, str, int, int]]: 小哥 ID 和基础信息
-        """
-
-        query = select(
-            Award.data_id,
-            Award.name,
-            Award.description,
-            Award.level_id,
-            Award.image,
-            Award.main_pack_id,
-            Award.sorting,
-        ).where(Award.data_id.in_(aids))
-        return (await self.session.execute(query)).tuples().all()
 
     async def get_all_mergeable_zeros(self) -> set[int]:
         """

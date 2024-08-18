@@ -15,3 +15,6 @@ pyvenv.cfg
 
 # Nonebot 的截图文件
 /nonebot_*.svg
+
+# 前端的 dist
+/frontend

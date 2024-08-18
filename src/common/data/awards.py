@@ -3,6 +3,7 @@
 """
 
 from pathlib import Path
+import uuid
 
 from src.base.exceptions import LackException
 from src.common.download import download, writeData
@@ -11,45 +12,8 @@ from src.core.unit_of_work import UnitOfWork
 from src.models.models import *
 from src.models.level import level_repo
 from src.ui.base.strange import make_strange
-from src.ui.base.tools import image_to_bytes
 from src.ui.views.award import AwardInfo, StorageDisplay
 from utils.threading import make_async
-
-
-def award_info_from_uow(
-    uow: UnitOfWork,
-    aid: int,
-    name: str,
-    description: str,
-    level_id: int,
-    image: str,
-    pack_id: int,
-    sorting: int,
-) -> tuple[int, AwardInfo]:
-    """
-    用来获取一个小哥的基础信息
-
-    Args:
-        uow (UnitOfWork): 工作单元
-        aid (int): 小哥 ID
-        name (str): 小哥名称
-        description (str): 小哥描述
-        level_id (int): 小哥等级
-        image (str): 小哥图片
-        pack_id (int): 是否只能通过特殊方式获得
-        sorting (int): 排序
-    """
-    return aid, AwardInfo(
-        aid=aid,
-        name=name,
-        description=description,
-        level=uow.levels.get_by_id(level_id),
-        image=Path(image),
-        sid=None,
-        skin_name=None,
-        sorting=sorting,
-        pack_id=pack_id,
-    )
 
 
 async def get_award_info(
@@ -64,29 +28,12 @@ async def get_award_info(
     """
     if uid is not None and sid is not None:
         raise ValueError("请不要同时启用 uid 和 sid 两个参数")
-
-    aname, desc, lid, img, sorting, pack_id = await uow.awards.get_info(aid)
-    level = uow.levels.get_by_id(lid)
-    sname = None
-
+    info = await uow.awards.get_info(aid)
     if uid:
         sid = await uow.skin_inventory.get_using(uid, aid)
     if sid:
-        sname, sdesc, img = await uow.skins.get_info(sid)
-        sdesc = sdesc.strip()
-        desc = sdesc or desc
-
-    return AwardInfo(
-        aid=aid,
-        name=aname,
-        description=desc,
-        level=level,
-        image=Path(img),
-        sid=sid,
-        skin_name=sname,
-        sorting=sorting,
-        pack_id=pack_id,
-    )
+        await uow.skins.link(sid, info)
+    return info
 
 
 async def get_a_list_of_award_storage(
@@ -102,7 +49,7 @@ async def get_a_list_of_award_storage(
         uow (UnitOfWork): 工作单元
         aids (list[StorageDisplay | None]): 小哥 ID 列表
     """
-    _basics = await uow.awards.get_list_of_award_info(aids)
+    _basics = await uow.awards.get_info_dict(aids)
     basics: list[StorageDisplay | None] = list(
         (
             StorageDisplay(
@@ -110,34 +57,30 @@ async def get_a_list_of_award_storage(
                 stats=0,
                 do_show_notation2=show_notation2,
                 do_show_notation1=show_notation1,
-                info=award_info_from_uow(uow, *info)[1],
+                info=info,
             )
-            for info in _basics
+            for info in _basics.values()
         )
     )
     if uid is None:
         return basics
 
     using = await uow.skin_inventory.get_using_list(uid)
-    for i, info in enumerate(basics):
-        if info is None:
+    for i, data in enumerate(basics):
+        if data is None:
             continue
 
-        aid = info.info.aid
+        aid = data.info.aid
         sto, use = await uow.inventories.get_inventory(uid, aid)
         if sto + use == 0:
             basics[i] = None
             continue
 
-        info.storage = sto
-        info.stats = sto + use
+        data.storage = sto
+        data.stats = sto + use
         if aid in using:
             sid = using[aid]
-            info.info.sid = sid
-            sname, sdesc, img = await uow.skins.get_info(sid)
-            info.info.skin_name = sname
-            info.info.description = sdesc.strip() or info.info.description
-            info.info.image = Path(img)
+            await uow.skins.link(sid, data.info)
 
     return basics
 
@@ -150,15 +93,16 @@ async def generate_random_info():
     rlen = get_random().randint(2, 4)
     rlen2 = get_random().randint(30, 90)
     rchar = lambda: chr(get_random().randint(0x4E00, 0x9FFF))
+    img = await make_async(make_strange)()
+    img_name = f"tmp_{uuid.uuid4().hex}.png"
+    img.save(Path("./data/awards/") / img_name)
 
     return AwardInfo(
         aid=-1,
         name="".join((rchar() for _ in range(rlen))),
-        description="".join((rchar() for _ in range(rlen2))),
-        image=image_to_bytes(await make_async(make_strange)()),
+        award_description="".join((rchar() for _ in range(rlen2))),
+        award_image=img_name,
         level=level_repo.levels[0],
-        sid=None,
-        skin_name=None,
     )
 
 

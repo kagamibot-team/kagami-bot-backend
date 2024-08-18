@@ -1,8 +1,9 @@
 from enum import Enum
-from pathlib import Path
 from random import Random
 
 from pydantic import BaseModel
+
+from src.ui.views.catch import Catch, InfoView
 
 from .award import AwardInfo, GotAwardDisplay
 from .user import UserData
@@ -29,14 +30,6 @@ class MokieImage(Enum):
     shy = "心虚"
     afraid = "惶恐"
 
-    @property
-    def image_url(self) -> Path:
-        return Path(f"./res/mokie/榆木华 表情 {self.value}.png")
-
-
-for i in MokieImage:
-    assert i.image_url.exists()
-
 
 class MokieMessage(BaseModel):
     """
@@ -55,7 +48,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="刚抓的小哥，便宜造！", image=MokieImage.normal),
             MokieMessage(text="嗯。", image=MokieImage.normal),
             MokieMessage(text="很经常的结果。", image=MokieImage.normal),
-            MokieMessage(text="多试试吧。", image=MokieImage.normal),
+            MokieMessage(text="多试试吧，别的配方。", image=MokieImage.normal),
         ),
         2: (
             MokieMessage(text="可以，至少升了。", image=MokieImage.normal),
@@ -96,7 +89,9 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="记得避雷。", image=MokieImage.normal),
         ),
         2: (
-            MokieMessage(text="希望不要落到需要用这个配方的时候。", image=MokieImage.normal),
+            MokieMessage(
+                text="希望不要落到需要用这个配方的时候。", image=MokieImage.normal
+            ),
             MokieMessage(text="一般般。", image=MokieImage.normal),
             MokieMessage(text="好无聊——", image=MokieImage.normal),
             MokieMessage(text="也行吧。", image=MokieImage.normal),
@@ -114,13 +109,13 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="这个可以有！", image=MokieImage.astonish),
         ),
         5: (
-            MokieMessage(text="我也想要。", image=MokieImage.astonish),
+            MokieMessage(text="我也想要啊。", image=MokieImage.astonish),
             MokieMessage(text="大家一起来抄吧！", image=MokieImage.normal),
             MokieMessage(text="恭喜你啊。", image=MokieImage.jealous),
             MokieMessage(text="也就成功升了三级而已。", image=MokieImage.jealous),
         ),
         0: (
-            MokieMessage(text="没亏多少。", image=MokieImage.laugh),
+            MokieMessage(text="还好亏多少。", image=MokieImage.laugh),
             MokieMessage(text="不关我事哦。", image=MokieImage.shy),
             MokieMessage(text="下次一定！", image=MokieImage.normal),
             MokieMessage(text="多合合吧。", image=MokieImage.normal),
@@ -128,7 +123,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
     },
     3: {
         2: (
-            MokieMessage(text="下次少合。", image=MokieImage.laugh),
+            MokieMessage(text="下次不用合这个了。", image=MokieImage.laugh),
             MokieMessage(text="吃一堑，长一智。", image=MokieImage.normal),
             MokieMessage(text="嘛，总是会遇到的啦。", image=MokieImage.laugh),
             MokieMessage(text="知道了就可以避免了啦。", image=MokieImage.normal),
@@ -137,7 +132,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="感觉作用有限，配方。", image=MokieImage.normal),
             MokieMessage(text="今天天气不错。", image=MokieImage.normal),
             MokieMessage(text="好没槽点的配方！", image=MokieImage.normal),
-            MokieMessage(text="这咋了。（模仿）", image=MokieImage.xiaoge),
+            MokieMessage(text="那咋了？（学小人机）", image=MokieImage.xiaoge),
         ),
         4: (
             MokieMessage(text="能用。", image=MokieImage.normal),
@@ -180,15 +175,22 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         0: (
             MokieMessage(text="必要的牺牲。", image=MokieImage.laugh),
             MokieMessage(text="其实不要的可以给我。", image=MokieImage.laugh),
-            MokieMessage(text="其实就算你多扔进去几个四星，成功率也不会提高很多，貌似，我猜的。", image=MokieImage.shy),
+            MokieMessage(
+                text="其实就算你多扔进去几个四星，成功率也不会提高很多，貌似，我猜的。",
+                image=MokieImage.shy,
+            ),
             MokieMessage(text="噗。", image=MokieImage.laugh),
         ),
     },
     5: {
         4: (
-            MokieMessage(text="万不得已的时候我也用过这种配方。", image=MokieImage.normal),
+            MokieMessage(
+                text="万不得已的时候我也用过这种配方。", image=MokieImage.normal
+            ),
             MokieMessage(text="嘛，回来个四星也行吧。", image=MokieImage.normal),
-            MokieMessage(text="看你抱着他们过来的时候都有点吓人！", image=MokieImage.shy),
+            MokieMessage(
+                text="看你抱着他们过来的时候都有点吓人！", image=MokieImage.shy
+            ),
             MokieMessage(text="追求稳定性吗。", image=MokieImage.normal),
         ),
         5: (
@@ -200,7 +202,9 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         0: (
             MokieMessage(text="没必要。", image=MokieImage.laugh),
             MokieMessage(text="自己留着点吧。", image=MokieImage.laugh),
-            MokieMessage(text="虽然没人权但是也不能这样造他们啊。", image=MokieImage.shy),
+            MokieMessage(
+                text="虽然没人权但是也不能这样造他们啊。", image=MokieImage.shy
+            ),
             MokieMessage(text="无聊和我找话吗。", image=MokieImage.shy),
         ),
     },
@@ -239,9 +243,15 @@ MOKIE_MESSAGES_LOVE = (
     MokieMessage(text="第一次合出来的时候开心一整天。", image=MokieImage.normal),
     MokieMessage(text="在家里放着一堆呢，感觉像是天堂。", image=MokieImage.normal),
     MokieMessage(text="啊啊啊啊啊啊啊啊啊啊啊啊。（表演）", image=MokieImage.astonish),
-    MokieMessage(text="你那还有多少？我拿一百个老哥跟你换。", image=MokieImage.astonish),
-    MokieMessage(text="心情不好的时候就学我来给他们顺顺毛吧。", image=MokieImage.normal),
-    MokieMessage(text="一看到就有好多话想说，可惜一次说不完呢。", image=MokieImage.normal),
+    MokieMessage(
+        text="你那还有多少？我拿一百个老哥跟你换。", image=MokieImage.astonish
+    ),
+    MokieMessage(
+        text="心情不好的时候就学我来给他们顺顺毛吧。", image=MokieImage.normal
+    ),
+    MokieMessage(
+        text="一看到就有好多话想说，可惜一次说不完呢。", image=MokieImage.normal
+    ),
 )
 "榆木华厨的"
 
@@ -261,18 +271,6 @@ class MergeResult(BaseModel):
     cost_money: int
     remain_money: int
     merge_time: float
-
-    @property
-    def title1(self):
-        return f"{self.user.name} 的合成材料："
-
-    @property
-    def title2(self):
-        return f"合成结果：{self.successed.value}"
-
-    @property
-    def title3(self):
-        return f"本次合成花费了你 {self.cost_money} 薯片，你还有 {self.remain_money} 薯片。"
 
     @property
     def input_highest_level(self):
@@ -352,3 +350,53 @@ class MergeHistoryList(BaseModel):
 
     history: list[MergeHistory]
     "合成小哥的历史记录"
+
+
+class MergeMeta(BaseModel):
+    status: str
+    is_strange: bool
+    cost_chip: int
+    own_chip: int
+
+
+class YMHMessage(BaseModel):
+    text: str
+    image: str
+
+
+class MergeData(BaseModel):
+    """
+    传递给前端的数据
+    """
+
+    inputs: tuple[InfoView, InfoView, InfoView]
+    output: Catch
+    meta: MergeMeta
+    ymh_message: YMHMessage
+    name: str
+
+    @staticmethod
+    def from_merge_result(data: MergeResult) -> "MergeData":
+        return MergeData(
+            inputs=(
+                InfoView.from_award_info(data.inputs[0]),
+                InfoView.from_award_info(data.inputs[1]),
+                InfoView.from_award_info(data.inputs[2]),
+            ),
+            output=Catch(
+                info=InfoView.from_award_info(data.output.info),
+                count=data.output.count,
+                is_new=data.output.is_new,
+            ),
+            meta=MergeMeta(
+                status=data.successed.value,
+                is_strange=data.is_strange,
+                cost_chip=data.cost_money,
+                own_chip=data.remain_money,
+            ),
+            ymh_message=YMHMessage(
+                text=data.ymh_message.text,
+                image=data.ymh_message.image.value,
+            ),
+            name=data.user.name,
+        )

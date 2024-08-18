@@ -1,6 +1,6 @@
-import time
+import os
 from random import Random
 
 
 def get_random():
-    return Random(hash(f"{time.time()}"))
+    return Random(os.urandom(16))

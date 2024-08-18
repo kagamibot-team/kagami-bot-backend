@@ -14,3 +14,4 @@ qrcode
 freezegun
 imagetext-py
 packaging
+selenium

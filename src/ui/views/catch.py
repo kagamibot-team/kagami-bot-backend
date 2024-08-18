@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from .award import GotAwardDisplay
+from .award import GotAwardDisplay, InfoView
 from .user import UserData
 
 
@@ -56,20 +56,45 @@ class CatchResultMessage(CatchMesssage):
     catchs: list[GotAwardDisplay]
     "抓小哥的条目"
 
-    @property
-    def title(self):
-        "标题"
-        lmt = f"[{self.pack_id}号猎场]"
-        if self.pack_id == 1:
-            lmt = ""
-        return lmt + self.user.name + " 的一抓"
 
-    @property
-    def details(self):
-        "标题下方的文字"
-        return (
-            f"本次获得{self.money_changed}薯片，"
-            f"目前共有{self.money_sum}薯片。\n"
-            f"剩余次数：{self.slot_remain}/{self.slot_sum}，"
-            f"距下次次数恢复还要{self.timedelta_text}"
+class Catch(BaseModel):
+    info: InfoView
+    count: int
+    is_new: bool
+
+
+class SuccessfulCatchMeta(BaseModel):
+    get_chip: int
+    own_chip: int
+    remain_time: int
+    max_time: int
+    need_time: str
+    field_from: int
+
+
+class SuccessfulCatch(BaseModel):
+    name: str
+    meta: SuccessfulCatchMeta
+    catchs: list[Catch]
+
+    @staticmethod
+    def from_catch_result(data: CatchResultMessage):
+        return SuccessfulCatch(
+            name=data.user.name,
+            meta=SuccessfulCatchMeta(
+                get_chip=data.money_changed,
+                own_chip=data.money_sum,
+                remain_time=data.slot_remain,
+                max_time=data.slot_sum,
+                need_time=data.timedelta_text,
+                field_from=data.pack_id,
+            ),
+            catchs=[
+                Catch(
+                    info=InfoView.from_award_info(d.info),
+                    count=d.count,
+                    is_new=d.is_new,
+                )
+                for d in data.catchs
+            ],
         )
