@@ -30,11 +30,6 @@ async def _(ctx: OnebotStartedContext):
             for upd_msg in la.about.update[lv]:
                 msg += "\n -" + upd_msg
             await broadcast(ctx.bot, msg)
-
-            msg2 = f"刚刚推送了版本 {lv} 的更新，内容如下：\n"
-            for upd_msg in la.about.update_dev[lv]:
-                msg2 += "\n -" + upd_msg
-            await broadcast(ctx.bot, msg, require_admin=True)
         elif get_driver().env != "dev":
             for group in config.admin_groups:
                 await send_group_msg(ctx.bot, group, "服务器重启好了")

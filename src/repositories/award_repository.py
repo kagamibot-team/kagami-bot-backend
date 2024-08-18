@@ -77,7 +77,7 @@ class AwardRepository(DBRepository):
 
         return a
 
-    async def get_aids(self, lid: int, pack: int | None = None) -> list[int]:
+    async def get_aids(self, lid: int, pack: int | None = None, include_zero: bool = False) -> list[int]:
         """获得全部小哥
 
         Args:
@@ -94,7 +94,10 @@ class AwardRepository(DBRepository):
             .order_by(-Award.sorting, Award.data_id)
         )
         if pack is not None:
-            q = q.filter(Award.main_pack_id.in_((pack, 0)))
+            if include_zero:
+                q = q.filter(Award.main_pack_id.in_((pack, 0)))
+            else:
+                q = q.filter(Award.main_pack_id == pack)
         return [row[0] for row in (await self.session.execute(q)).tuples().all()]
 
     async def get_aid_strong(self, name: str) -> int:

@@ -14,36 +14,6 @@ from src.ui.base.browser import get_browser_pool
 from src.ui.base.tools import image_to_bytes
 
 updateHistory: dict[str, list[str]] = la.about.update
-updateHistoryDev: dict[str, list[str]] = la.about.update_dev
-helpAdmin: list[str] = la.about.help_admin
-
-
-def constructUpdateMessage(updates: dict[str, list[str]], count: int = 3) -> UniMessage:
-    """
-    构造更新信息
-    """
-
-    text = f"{la.about.update_header}\n"
-
-    for key in get_latest_versions(count):
-        text += f"版本 {key} 更新推送:\n"
-        for item in updates[key]:
-            text += f"- {item}\n"
-
-    return UniMessage().text(text)
-
-
-def constructHelpMessage(helps: list[str]) -> UniMessage:
-    """
-    构造帮助信息
-    """
-
-    text = f"{la.about.help_header}\n"
-
-    for item in helps:
-        text += f"- {item}\n"
-
-    return UniMessage().text(text)
 
 
 @listen_message()
@@ -88,22 +58,10 @@ async def _(ctx: MessageContext, *_):
 
 
 @listen_message()
-@match_regex("^:: ?(抓小哥|zhua) ?(更新|gx|upd|update)$")
-async def _(ctx: MessageContext, *_):
-    await ctx.send(constructUpdateMessage(updateHistoryDev))
-
-
-@listen_message()
 @match_regex("^(抓小哥|zhua) ?(帮助|help)$")
 async def _(ctx: MessageContext, *_):
     image = await get_browser_pool().render("help")
     await ctx.send(UniMessage().image(raw=image))
-
-
-@listen_message()
-@match_regex("^:: ?(抓小哥|zhua)? ?(帮助|help)$")
-async def _(ctx: MessageContext, *_):
-    await ctx.send(constructHelpMessage(helpAdmin))
 
 
 @listen_message()
