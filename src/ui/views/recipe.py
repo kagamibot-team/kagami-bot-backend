@@ -1,5 +1,4 @@
 from enum import Enum
-from pathlib import Path
 from random import Random
 
 from pydantic import BaseModel
@@ -30,14 +29,6 @@ class MokieImage(Enum):
     jealous = "咬牙切齿"
     shy = "心虚"
     afraid = "惶恐"
-
-    @property
-    def image_url(self) -> Path:
-        return Path(f"./res/mokie/榆木华 表情 {self.value}.png")
-
-
-for i in MokieImage:
-    assert i.image_url.exists()
 
 
 class MokieMessage(BaseModel):
