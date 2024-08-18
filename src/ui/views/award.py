@@ -61,7 +61,7 @@ class AwardInfo(BaseModel):
     def image_url(self) -> str:
         if self.skin_image is None:
             return "../file/award/" + self.award_image
-        return "../file/skin/" + self.award_image
+        return "../file/skin/" + self.skin_image
 
     @property
     def description(self) -> str:

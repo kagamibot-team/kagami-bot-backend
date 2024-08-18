@@ -6,6 +6,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from asyncio import Lock
 
+from loguru import logger
 import nonebot
 from pydantic import BaseModel
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -91,8 +92,9 @@ class BrowserPool:
 
     def __init__(self, factory: BaseBrowserDriverFactory, count: int) -> None:
         self.renderers = []
-        for _ in range(count):
+        for i in range(count):
             self.renderers.append(BrowserRenderer(factory.get()))
+            logger.info(f"打开了浏览器 {i+1}/{count}")
 
     async def render(self, path: str, data: BaseModel | None = None) -> bytes:
         query = ""
