@@ -169,13 +169,13 @@ async def get_storage_view(
         Option(
             "等级",
             Arg("等级名字", str),
-            alias=["--level", "级别", "-l", "-L"],
+            alias=["--level", "级别", "-l", "-L", "lv"],
             compact=True,
         ),
         Option(
             "猎场",
             Arg("猎场序号", int),
-            alias=["--pack", "小鹅猎场", "-p", "-P"],
+            alias=["--pack", "小鹅猎场", "-p", "-P", "lc"],
             compact=True,
         ),
     )
