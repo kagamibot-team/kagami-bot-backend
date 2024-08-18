@@ -167,7 +167,7 @@ class SkinRepository(DBRepository):
         """
         更改 AwardInfo，挂载皮肤的信息
         """
-        q = select(Skin.name, Skin.description, Skin.image)
+        q = select(Skin.name, Skin.description, Skin.image).filter(Skin.data_id == sid)
         sn, sd, si = (await self.session.execute(q)).tuples().one()
         info.sid = sid
         info.skin_name = sn
