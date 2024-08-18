@@ -79,7 +79,6 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
 
 
 @listen_message()
-@require_admin()
 @match_regex("^(小[鹅lL]|x[le])?(猎场|lc)$")
 @require_awake
 async def _(ctx: MessageContext, _):
@@ -121,7 +120,6 @@ async def _(ctx: MessageContext, _):
 
 
 @listen_message()
-@require_admin()
 @match_alconna(
     Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL]))
 )
@@ -146,7 +144,6 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
 
 @listen_message()
-@require_admin()
 @match_alconna(Alconna("购买猎场", Arg("猎场序号", int)))
 @require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
@@ -156,7 +153,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         service = PoolService(uow)
         uid = await uow.users.get_uid(ctx.sender_id)
         await service.buy_pack(uid, dest)
-    await ctx.reply(f"[测试中]成功购买了 {dest} 号猎场")
+    await ctx.reply(f"成功购买了 {dest} 号猎场")
 
 
 @listen_message()
