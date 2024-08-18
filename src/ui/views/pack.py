@@ -34,7 +34,7 @@ with open(Path("./res/dialog/lqr.csv"), "r", encoding="utf-8") as f:
     for row in reader:
         assert len(row) == 2
         EXPRESSIONS.append(
-            LQRExpression(text=row[1], face=LQRExpressionImage(value=row[0]))
+            LQRExpression(text=row[1], face=LQRExpressionImage(value=row[0].strip()))
         )
 
 logger.info("人 机 一 百 句加载完成")
