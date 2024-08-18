@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable
 
 from sqlalchemy import delete, insert, select, update
 
@@ -94,7 +94,7 @@ class AwardRepository(DBRepository):
             .order_by(-Award.sorting, Award.data_id)
         )
         if pack is not None:
-            q = q.filter(Award.main_pack_id == pack)
+            q = q.filter(Award.main_pack_id.in_((pack, 0)))
         return [row[0] for row in (await self.session.execute(q)).tuples().all()]
 
     async def get_aid_strong(self, name: str) -> int:
