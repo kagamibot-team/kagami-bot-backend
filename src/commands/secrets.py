@@ -1,8 +1,8 @@
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext
-from src.common.data.awards import get_award_info
 from src.common.command_decorators import listen_message, match_regex
+from src.common.data.awards import get_award_info
 from src.core.unit_of_work import get_unit_of_work
 
 

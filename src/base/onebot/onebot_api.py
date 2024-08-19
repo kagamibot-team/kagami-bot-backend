@@ -108,6 +108,28 @@ async def get_group_member_info(bot: OnebotBotProtocol, group_id: int, user_id: 
     )
 
 
+async def get_stranger_name(bot: OnebotBotProtocol, qqid: int | str) -> str:
+    try:
+        info: dict[str, Any] = await bot.call_api("get_stranger_info", user_id=qqid)
+        name: str = info.get("nick", "")
+        return name
+    except ActionFailed:
+        # Fallback 方案
+        return str(qqid)
+
+
+async def get_group_member_list(
+    bot: OnebotBotProtocol, group_id: int
+) -> list[dict[str, Any]]:
+    try:
+        data: list[dict[str, Any]] = await bot.call_api(
+            "get_group_member_list", group_id=group_id
+        )
+        return data
+    except ActionFailed:
+        return []
+
+
 async def get_name(
     bot: OnebotBotProtocol, qqid: int | str, group_id: int | None
 ) -> str:

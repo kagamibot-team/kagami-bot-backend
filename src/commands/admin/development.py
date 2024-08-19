@@ -3,32 +3,30 @@
 如果有一些需要方便开发的指令，就写到这里吧！
 """
 
-import subprocess
 from pathlib import Path
+from re import Match
 
-from src.base.command_events import GroupContext
+from nonebot_plugin_alconna import UniMessage
+
+from src.base.command_events import GroupContext, MessageContext, OnebotContext
 from src.base.db import DatabaseManager
+from src.base.onebot.onebot_api import get_group_list
+from src.base.onebot.onebot_tools import update_cached_name
 from src.common.command_decorators import (
     listen_message,
     match_literal,
     match_regex,
     require_admin,
 )
-from src.common.get_local_ip import get_ip
 from src.common.save_file_handler import pack_save
 
-
-@listen_message()
-@require_admin()
-@match_literal("::get-ip")
-async def _(ctx: GroupContext):
-    await ctx.reply("\n".join(get_ip()))
+from src.apis.render_ui import manager as backend_data_manager
 
 
 @listen_message()
 @require_admin()
 @match_literal("::manual-save")
-async def _(ctx: GroupContext):
+async def _(ctx: MessageContext):
     await DatabaseManager.get_single().manual_checkpoint()
     await ctx.reply("ok")
 
@@ -65,7 +63,20 @@ async def _(ctx: GroupContext, _):
 
 @listen_message()
 @require_admin()
-@match_literal("::reload-script")
-async def _(ctx: GroupContext):
-    await ctx.reply("服务器即将重启")
-    subprocess.call(["sh", Path("./linux/upgrade.sh")])
+@match_regex("^::dump-data ([0-9a-fA-F]+)$")
+async def _(ctx: MessageContext, res: Match[str]):
+    data = backend_data_manager.get(res.group(1))
+    if data is not None:
+        await ctx.reply(UniMessage(str(data.model_dump_json(indent=4))))
+    else:
+        await ctx.reply("None.")
+
+
+@listen_message()
+@require_admin()
+@match_literal("::refresh-card")
+async def _(ctx: OnebotContext):
+    groups = await get_group_list(ctx.bot)
+    for info in groups:
+        await update_cached_name(ctx.bot, info.group_id)
+    await ctx.reply("ok.")

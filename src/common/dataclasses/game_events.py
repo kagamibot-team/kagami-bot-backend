@@ -1,9 +1,8 @@
 from pydantic import BaseModel
 
-from src.ui.views.award import GotAwardDisplay
-from src.ui.views.catch import CatchMesssage, CatchResultMessage
-from src.ui.views.recipe import MergeResult
-from src.ui.views.user import UserData
+from src.ui.types.recipe import MergeData
+from src.ui.types.zhua import GetAward, ZhuaData
+from src.ui.types.common import UserData
 
 
 class UserDataUpdatedEvent(BaseModel):
@@ -31,17 +30,15 @@ class UserTryCatchEvent(UserDataUpdatedEvent):
     抓小哥时触发的事件
     """
 
-    catch_view: CatchMesssage
+    data: ZhuaData
 
     @property
-    def successed(self):
-        return isinstance(self.catch_view, CatchResultMessage)
-    
+    def successed(self) -> bool:
+        return len(self.data.catchs) > 0
+
     @property
-    def results(self) -> list[GotAwardDisplay]:
-        if not isinstance(self.catch_view, CatchResultMessage):
-            return []
-        return self.catch_view.catchs
+    def results(self) -> list[GetAward]:
+        return self.data.catchs
 
 
 class MergeEvent(UserDataUpdatedEvent):
@@ -49,4 +46,4 @@ class MergeEvent(UserDataUpdatedEvent):
     合成小哥的时候触发的事件
     """
 
-    merge_view: MergeResult
+    merge_view: MergeData

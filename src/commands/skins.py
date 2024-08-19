@@ -1,3 +1,4 @@
+from pathlib import Path
 import PIL
 import PIL.Image
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma, MultiVar, Option
@@ -52,7 +53,7 @@ async def _(ctx: MessageContext, result: Arparma):
 
         await uow.skin_inventory.use(uid, aid, sid)
 
-        aname = (await uow.awards.get_info(aid)).name
+        aname = (await uow.awards.get_info(aid)).display_name
         sname = (await uow.skins.get_info(sid))[0] if sid is not None else "默认"
 
     await ctx.reply(f"已经将 {aname} 的皮肤切换为 {sname} 了。")
@@ -108,7 +109,7 @@ async def _(ctx: MessageContext, _: Arparma):
         boxes.append(
             ref_book_box_raw(
                 color=co,
-                image=im,
+                image=Path(im),
                 new=False,
                 notation_bottom=no,
                 notation_top="",
@@ -167,7 +168,7 @@ async def _(ctx: MessageContext, res: Arparma):
         boxes.append(
             ref_book_box_raw(
                 color=uow.levels[lid].color,
-                image=im,
+                image=Path(im),
                 new=False,
                 notation_bottom=str(pr),
                 notation_top="",

@@ -17,7 +17,7 @@ from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.models.level import level_repo
 from src.ui.pages.storage import render_progress_message, render_storage_message
 from src.ui.views.list_view import UserStorageView
-from src.ui.views.user import UserData
+from src.ui.types.common import UserData
 
 
 @listen_message()

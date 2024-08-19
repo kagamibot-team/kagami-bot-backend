@@ -16,18 +16,15 @@ from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.services.pool import PoolService
 from src.ui.base.browser import get_browser_pool
-from src.ui.views.award import InfoView, LevelView
+from src.ui.types.liechang import LiechangCountInfo, LiechangData, SingleLiechang
 from src.ui.views.pack import (
-    LevelCollectProgress,
-    PackView,
-    SinglePackView,
     get_random_expression,
 )
-from src.ui.views.user import UserData
+from src.ui.types.common import UserData
 
 
 async def get_pack_data(uow: UnitOfWork, user: UserData):
-    packs: list[SinglePackView] = []
+    packs: list[SingleLiechang] = []
     uid = user.uid
 
     for i in range(1, await uow.settings.get_pack_count() + 1):
@@ -36,40 +33,37 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
         grouped = {d: v for d, v in grouped.items() if len(v) > 0}
         top_lid = max(grouped.keys())
 
-        packs.append(
-            SinglePackView(
-                pack_id=i,
-                award_count=sorted(
+        acount = [
+            LiechangCountInfo(
+                level=uow.levels.get_data_by_id(lid),
+                collected=len(
                     [
-                        LevelCollectProgress(
-                            level=LevelView.from_model(uow.levels.get_by_id(lid)),
-                            collected=len(
-                                [
-                                    v
-                                    for _, v in (
-                                        await uow.inventories.get_inventory_dict(
-                                            uid, aids
-                                        )
-                                    ).items()
-                                    if sum(v) > 0
-                                ]
-                            ),
-                            sum_up=len(aids),
-                        )
-                        for lid, aids in grouped.items()
-                        if lid > 0
-                    ],
-                    key=lambda v: v.level.display_name,
-                    reverse=True,
+                        v
+                        for _, v in (
+                            await uow.inventories.get_inventory_dict(uid, aids)
+                        ).items()
+                        if sum(v) > 0
+                    ]
                 ),
-                featured_award=InfoView.from_award_info(
-                    await get_award_info(uow, list(grouped[top_lid])[0])
+                sum_up=len(aids),
+            )
+            for lid, aids in grouped.items()
+            if lid > 0
+        ]
+        acount = sorted(acount, key=lambda v: v.level.display_name, reverse=True)
+
+        packs.append(
+            SingleLiechang(
+                pack_id=i,
+                award_count=acount,
+                featured_award=await get_award_info(
+                    uow, list(grouped[top_lid])[0], uid
                 ),
                 unlocked=i in await uow.user_pack.get_own(uid),
             )
         )
 
-    return PackView(
+    return LiechangData(
         packs=packs,
         user=user,
         selecting=await uow.user_pack.get_using(uid),
@@ -144,7 +138,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
 
 @listen_message()
-@match_alconna(Alconna("购买猎场", Arg("猎场序号", int)))
+@match_alconna(Alconna("re:(购买|gm|buy)(猎场|lc)", Arg("猎场序号", int)))
 @require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
