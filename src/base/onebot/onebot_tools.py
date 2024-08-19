@@ -1,7 +1,13 @@
 import asyncio
 import nonebot
 
-from src.base.onebot.onebot_api import get_group_list, send_group_msg, send_private_msg
+from src.base.onebot.onebot_api import (
+    get_group_list,
+    get_group_member_list,
+    get_stranger_name,
+    send_group_msg,
+    send_private_msg,
+)
 from src.base.onebot.onebot_basic import MessageLike, OnebotBotProtocol
 from src.common.config import config
 
@@ -38,3 +44,28 @@ async def tell(qqid: int, message: MessageLike, bot: OnebotBotProtocol | None = 
         await send_private_msg(bot, qqid, message)
     else:
         await send_group_msg(bot, LAST_CONTEXT_RECORDER[qqid], message)
+
+
+CACHED_NAME_GROUP: dict[int, dict[int, str]] = {}
+
+
+async def update_cached_name(bot: OnebotBotProtocol, group_id: int):
+    ls = await get_group_member_list(bot, group_id)
+    CACHED_NAME_GROUP[group_id] = {}
+    for d in ls:
+        CACHED_NAME_GROUP[group_id][int(d["user_id"])] = d["card"]
+
+
+async def get_name_cached(
+    group_id: int | None, qqid: int, bot: OnebotBotProtocol | None = None
+) -> str:
+    if bot is None:
+        bot = nonebot.get_bot()
+    name: str = await get_stranger_name(bot, qqid)
+    if group_id is not None:
+        if group_id not in CACHED_NAME_GROUP:
+            await update_cached_name(bot, group_id)
+        if group_id in CACHED_NAME_GROUP:
+            if qqid in CACHED_NAME_GROUP[group_id]:
+                name = CACHED_NAME_GROUP[group_id][qqid]
+    return name

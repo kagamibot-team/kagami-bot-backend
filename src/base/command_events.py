@@ -32,6 +32,7 @@ from src.base.onebot.onebot_basic import (
     export_msg,
 )
 from src.base.onebot.onebot_enum import QQEmoji
+from src.base.onebot.onebot_tools import get_name_cached
 
 
 class _ForwardMessageData(TypedDict):
@@ -179,7 +180,8 @@ class OnebotContext(MessageContext, Generic[TE]):
         return self.event.user_id
 
     async def get_sender_name(self) -> str:
-        return await get_name(self.bot, self.sender_id, None)
+        # return await get_name(self.bot, self.sender_id, None)
+        return await get_name_cached(None, self.sender_id, self.bot)
 
     async def send(self, message: Iterable[Any] | str) -> OnebotReceipt:
         message = UniMessage(message)
@@ -240,7 +242,8 @@ class GroupContext(OnebotContext[GroupMessageEvent]):
         return self.event.group_id
 
     async def get_sender_name(self):
-        return await get_name(self.bot, self.sender_id, self.group_id)
+        # return await get_name(self.bot, self.sender_id, self.group_id)
+        return await get_name_cached(self.group_id, self.sender_id, self.bot)
 
     async def _send(self, message: MessageLike):
         return await send_group_msg(self.bot, self.event.group_id, message)
