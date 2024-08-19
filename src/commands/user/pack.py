@@ -144,7 +144,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
 
 @listen_message()
-@match_alconna(Alconna("购买猎场", Arg("猎场序号", int)))
+@match_alconna(Alconna("re:(购买|gm|buy)(猎场|lc)", Arg("猎场序号", int)))
 @require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
