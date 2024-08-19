@@ -3,8 +3,9 @@ from typing import Any, TypeVar
 from nonebot_plugin_alconna import UniMessage
 
 from src.ui.base.browser import get_browser_pool
+from src.ui.types.common import GetAward
 from src.ui.types.zhua import ZhuaData
-from src.ui.views.award import AwardDisplay, DisplayData, InfoView
+from src.ui.views.award import AwardDisplay
 
 T = TypeVar("T")
 
@@ -15,9 +16,12 @@ async def render_catch_failed_message(data: ZhuaData) -> UniMessage[Any]:
     )
 
 
-async def render_award_info_message(data: AwardDisplay) -> UniMessage[Any]:
+async def render_award_info_message(
+    data: AwardDisplay, count: int | None = None
+) -> UniMessage[Any]:
+    count = count or -1
     image = await get_browser_pool().render(
-        "catch", DisplayData(info=InfoView.from_award_info(data.info), count=None)
+        "catch", GetAward(info=data.info, count=count, is_new=False)
     )
     return UniMessage.image(raw=image)
 

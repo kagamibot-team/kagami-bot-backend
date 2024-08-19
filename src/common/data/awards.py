@@ -23,33 +23,13 @@ from utils.threading import make_async
 async def get_award_info(
     uow: UnitOfWork, aid: int, uid: int | None = None, sid: int | None = None
 ):
-    """用来获取一个小哥的基础信息
-
-    Args:
-        uow (UnitOfWork): 工作单元
-        aid (int): 小哥 ID
-        uid (int | None, optional): 用户 ID，可留空，用来获取皮肤的信息. Defaults to None.
-    """
     if uid is not None and sid is not None:
         raise ValueError("请不要同时启用 uid 和 sid 两个参数")
-    info = await uow.awards.get_info(aid)
+    data = await uow.awards.get_info(aid)
     if uid:
         sid = await uow.skin_inventory.get_using(uid, aid)
     if sid:
-        await uow.skins.link(sid, info)
-    return info
-
-
-async def get_award_data(
-    uow: UnitOfWork, aid: int, uid: int | None = None, sid: int | None = None
-):
-    if uid is not None and sid is not None:
-        raise ValueError("请不要同时启用 uid 和 sid 两个参数")
-    data = await uow.awards.get_basic_data(aid)
-    if uid:
-        sid = await uow.skin_inventory.get_using(uid, aid)
-    if sid:
-        await uow.skins.link_data(sid, data)
+        await uow.skins.link(sid, data)
     return data
 
 
@@ -117,9 +97,12 @@ async def generate_random_info():
     return src.ui.types.common.AwardInfo(
         display_name="".join((rchar() for _ in range(rlen))),
         description="".join((rchar() for _ in range(rlen2))),
-        image=f"../file/temp/{img_name}",
+        image_name=img_name,
+        image_type="temp",
         level=level_repo.get_data_by_id(0),
         color=level_repo.get_data_by_id(0).color,
+        aid=-1,
+        sorting=0,
     )
 
 
@@ -134,7 +117,9 @@ async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
     """
     sto, _ = await uow.inventories.give(uid, aid, -count)
     if sto < 0:
-        raise LackException((await get_award_info(uow, aid)).name, count, sto + count)
+        raise LackException(
+            (await get_award_info(uow, aid)).display_name, count, sto + count
+        )
 
 
 async def download_award_image(aid: int, url: str):

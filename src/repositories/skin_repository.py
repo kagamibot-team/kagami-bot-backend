@@ -2,13 +2,9 @@ from pathlib import Path
 
 from sqlalchemy import delete, insert, select, update
 
-import src
 from src.base.exceptions import ObjectNotFoundException
 from src.models.models import SkinAltName
-import src.ui
-import src.ui.types
-import src.ui.types.common
-from src.ui.views.award import AwardInfo
+from src.ui.types.common import AwardInfo
 
 from ..base.repository import DBRepository
 from ..models.models import Skin
@@ -168,19 +164,9 @@ class SkinRepository(DBRepository):
         )
 
     async def link(self, sid: int, info: AwardInfo):
-        """
-        更改 AwardInfo，挂载皮肤的信息
-        """
-        q = select(Skin.name, Skin.description, Skin.image).filter(Skin.data_id == sid)
-        sn, sd, si = (await self.session.execute(q)).tuples().one()
-        info.sid = sid
-        info.skin_name = sn
-        info.skin_description = sd
-        info.skin_image = Path(si).name
-
-    async def link_data(self, sid: int, info: src.ui.types.common.AwardInfo):
         q = select(Skin.description, Skin.image).filter(Skin.data_id == sid)
         sd, si = (await self.session.execute(q)).tuples().one()
         if len(sd) > 0:
             info.description = sd
-        info.image = f"../file/skin/{si}"
+        info.image_name = Path(si).name
+        info.image_type = "skins"

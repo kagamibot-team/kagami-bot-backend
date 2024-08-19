@@ -8,7 +8,7 @@ from loguru import logger
 
 from src.ui.base.basics import Fonts
 from src.ui.base.tools import hex_to_rgb, mix_color, rgb_to_hex
-from src.ui.views.award import AwardDisplay, AwardInfo
+from src.ui.views.award import AwardDisplay
 
 from ..base.basics import (
     apply_mask,
@@ -68,7 +68,7 @@ def display_box_raw(color: str, image: PIL.Image.Image | Path | str | bytes, new
 
 def ref_book_box_raw(
     color: str,
-    image: PIL.Image.Image | Path | str | bytes,
+    image: Path,
     new: bool,
     notation_bottom: str,
     notation_top: str,
@@ -137,28 +137,14 @@ def ref_book_box_raw(
 def ref_book_box(data: AwardDisplay | None) -> PIL.Image.Image:
     if data is None:
         return ref_book_box_raw(
-            "#696361", "./res/blank_placeholder.png", False, "", "", "？？？", ""
+            "#696361", Path("./res/blank_placeholder.png"), False, "", "", "？？？", ""
         )
     return ref_book_box_raw(
         data.info.color,
-        data.info.image,
+        data.info.image_path,
         data.new,
         data.notation,
         data.notation2,
-        data.info.name,
+        data.info.display_name,
         data.name_notation,
     )
-
-
-def display_box(data: AwardDisplay | AwardInfo | None) -> PIL.Image.Image:
-    """
-    渲染 DisplayBox
-    """
-
-    if data is None:
-        return display_box_raw("#696361", "./res/blank_placeholder.png", False)
-
-    if isinstance(data, AwardInfo):
-        data = AwardDisplay(info=data)
-
-    return display_box_raw(data.info.color, data.info.image, data.new)

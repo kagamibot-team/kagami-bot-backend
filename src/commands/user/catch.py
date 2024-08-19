@@ -14,7 +14,7 @@ from src.common.command_decorators import (
     match_regex,
     require_awake,
 )
-from src.common.data.awards import get_award_data
+from src.common.data.awards import get_award_info
 from src.common.data.user import get_user_data
 from src.common.dataclasses.game_events import UserTryCatchEvent
 from src.common.times import now_datetime
@@ -82,7 +82,7 @@ async def picks(
         await uow.inventories.give(uid, aid, pick.delta)
         catchs.append(
             GetAward(
-                info=await get_award_data(uow, aid, uid),
+                info=await get_award_info(uow, aid, uid),
                 count=pick.delta,
                 is_new=pick.beforeStats == 0,
             )

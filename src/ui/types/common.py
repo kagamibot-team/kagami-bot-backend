@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pathlib import Path
+from pydantic import BaseModel, computed_field
 
 
 class LevelData(BaseModel):
@@ -8,11 +9,23 @@ class LevelData(BaseModel):
 
 
 class AwardInfo(BaseModel):
+    aid: int
     description: str
     display_name: str
     color: str
-    image: str
+    image_name: str
+    image_type: str
     level: LevelData
+    sorting: int
+
+    @property
+    def image_path(self) -> Path:
+        return Path("./data") / self.image_type / self.image_name
+
+    @computed_field
+    @property
+    def image_url(self) -> str:
+        return f"../file/{self.image_type}/{self.image_name}"
 
 
 class UserData(BaseModel):

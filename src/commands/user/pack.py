@@ -11,7 +11,7 @@ from src.common.command_decorators import (
     require_admin,
     require_awake,
 )
-from src.common.data.awards import get_award_data
+from src.common.data.awards import get_award_info
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.services.pool import PoolService
@@ -56,7 +56,7 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
             SingleLiechang(
                 pack_id=i,
                 award_count=acount,
-                featured_award=await get_award_data(
+                featured_award=await get_award_info(
                     uow, list(grouped[top_lid])[0], uid
                 ),
                 unlocked=i in await uow.user_pack.get_own(uid),

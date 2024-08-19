@@ -35,7 +35,7 @@ async def request_data(data_id: str):
     return data
 
 
-@router.get("/file/award/{image_name}")
+@router.get("/file/awards/{image_name}")
 async def award_image(image_name: str):
     fp = Path("./data/awards/") / image_name
     if not fp.exists():
@@ -45,9 +45,17 @@ async def award_image(image_name: str):
     return FileResponse(fp)
 
 
-@router.get("/file/skin/{image_name}")
+@router.get("/file/skins/{image_name}")
 async def skin_image(image_name: str):
     fp = Path("./data/skins/") / image_name
+    if not fp.exists():
+        return HTMLResponse("<html><body>404!</body></html>", 404)
+    return FileResponse(fp)
+
+
+@router.get("/file/temp/{image_name}")
+async def temp_image(image_name: str):
+    fp = Path("./data/temp/") / image_name
     if not fp.exists():
         return HTMLResponse("<html><body>404!</body></html>", 404)
     return FileResponse(fp)

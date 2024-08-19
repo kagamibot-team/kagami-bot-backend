@@ -5,7 +5,7 @@ from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event
 from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.command_decorators import listen_message, match_alconna, require_awake
-from src.common.data.awards import generate_random_info, get_award_data, use_award
+from src.common.data.awards import generate_random_info, get_award_info, use_award
 from src.common.data.recipe import try_merge
 from src.common.data.user import get_user_data
 from src.common.dataclasses.game_events import MergeEvent
@@ -50,9 +50,9 @@ async def _(ctx: GroupContext, res: Arparma):
         a1 = await uow.awards.get_aid_strong(n1)
         a2 = await uow.awards.get_aid_strong(n2)
         a3 = await uow.awards.get_aid_strong(n3)
-        info1 = await get_award_data(uow, a1)
-        info2 = await get_award_data(uow, a2)
-        info3 = await get_award_data(uow, a3)
+        info1 = await get_award_info(uow, a1)
+        info2 = await get_award_info(uow, a2)
+        info3 = await get_award_info(uow, a3)
         cost = costs[info1.level.lid] + costs[info2.level.lid] + costs[info3.level.lid]
 
         using: dict[int, int] = {}
@@ -75,7 +75,7 @@ async def _(ctx: GroupContext, res: Arparma):
                 is_new=False,
             )
         else:
-            info = await get_award_data(uow, aid, uid)
+            info = await get_award_info(uow, aid, uid)
             add = get_random().randint(1, 3)
             do_xb = info.level.lid in (4, 5)
             data = GetAward(
