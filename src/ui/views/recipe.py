@@ -115,7 +115,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="也就成功升了三级而已。", image=MokieImage.jealous),
         ),
         0: (
-            MokieMessage(text="还好亏多少。", image=MokieImage.laugh),
+            MokieMessage(text="还好没亏多少。", image=MokieImage.laugh),
             MokieMessage(text="不关我事哦。", image=MokieImage.shy),
             MokieMessage(text="下次一定！", image=MokieImage.normal),
             MokieMessage(text="多合合吧。", image=MokieImage.normal),
