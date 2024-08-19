@@ -3,16 +3,7 @@ from random import Random
 
 from pydantic import BaseModel
 
-from src.ui.views.catch import Catch, InfoView
-
-from .award import AwardInfo, GotAwardDisplay
-from .user import UserData
-
-
-class MergeStatus(Enum):
-    success = "成功！"
-    fail = "失败！"
-    what = "失败？"
+from src.ui.types.recipe import MergeData
 
 
 class MokieImage(Enum):
@@ -259,144 +250,24 @@ MOKIE_MESSAGES_ZERO = (MokieMessage(text="...", image=MokieImage.wtf),)
 "合成了隐藏的小哥？！"
 
 
-class MergeResult(BaseModel):
-    """
-    合成小哥时的消息
-    """
+def get_mokie_message(view: MergeData, random: Random):
+    if view.meta.is_strange:
+        return random.choice(MOKIE_MESSAGES_ZERO)
 
-    user: UserData
-    successed: MergeStatus
-    inputs: tuple[AwardInfo, AwardInfo, AwardInfo]
-    output: GotAwardDisplay
-    cost_money: int
-    remain_money: int
-    merge_time: float
+    if view.output.info.display_name == "小华":
+        # 小华
+        return random.choice(MOKIE_MESSAGES_XIAOHUA)
 
-    @property
-    def input_highest_level(self):
-        return max((i.level.lid for i in self.inputs))
+    if view.output.info.display_name in ("小水瓶子", "小可怜"):
+        # 小水瓶子和小可怜
+        return random.choice(MOKIE_MESSAGES_LOVE)
 
-    @property
-    def result_level(self):
-        return self.output.info.level.lid
+    input_highest_level = max((i.level.lid for i in view.inputs))
 
-    @property
-    def is_shit(self):
-        "合成的是粑粑小哥么"
-        return self.output.info.aid == 89
+    _ms = MOKIE_MESSAGES.get(input_highest_level, {})
+    _msls = _ms.get(view.output.info.level.lid, ())
 
-    @property
-    def random(self):
-        return Random(hash(self.merge_time))
+    if len(_msls) == 0:
+        return MOKIE_MESSAGE_FALLBACK
 
-    @property
-    def have_strange_in_input(self):
-        "输入的有奇怪的小哥么"
-
-        for i in self.inputs:
-            if i.level.lid == 0 and i.aid != 89:
-                return True
-        return False
-
-    @property
-    def result_is_strange(self):
-        return self.result_level == 0 and not self.is_shit
-
-    @property
-    def is_strange(self):
-        return self.have_strange_in_input or self.result_is_strange
-
-    @property
-    def ymh_message(self) -> MokieMessage:
-        if self.is_strange:
-            return self.random.choice(MOKIE_MESSAGES_ZERO)
-
-        if self.output.info.aid == 9:
-            # 小华
-            return self.random.choice(MOKIE_MESSAGES_XIAOHUA)
-
-        if self.output.info.aid in (34, 98):
-            # 小水瓶子和小可怜
-            return self.random.choice(MOKIE_MESSAGES_LOVE)
-
-        _ms = MOKIE_MESSAGES.get(self.input_highest_level, {})
-        _msls = _ms.get(self.result_level, ())
-
-        if len(_msls) == 0:
-            return MOKIE_MESSAGE_FALLBACK
-
-        return self.random.choice(_msls)
-
-
-class MergeHistory(BaseModel):
-    """
-    合成小哥的历史记录
-    """
-
-    inputs: tuple[AwardInfo, AwardInfo, AwardInfo]
-    "用于合成的小哥"
-
-    output: AwardInfo
-    "合成结果"
-
-    found_person: UserData
-    "发现这个配方的人"
-
-
-class MergeHistoryList(BaseModel):
-    """
-    合成小哥的历史记录列表
-    """
-
-    history: list[MergeHistory]
-    "合成小哥的历史记录"
-
-
-class MergeMeta(BaseModel):
-    status: str
-    is_strange: bool
-    cost_chip: int
-    own_chip: int
-
-
-class YMHMessage(BaseModel):
-    text: str
-    image: str
-
-
-class MergeData(BaseModel):
-    """
-    传递给前端的数据
-    """
-
-    inputs: tuple[InfoView, InfoView, InfoView]
-    output: Catch
-    meta: MergeMeta
-    ymh_message: YMHMessage
-    name: str
-
-    @staticmethod
-    def from_merge_result(data: MergeResult) -> "MergeData":
-        return MergeData(
-            inputs=(
-                InfoView.from_award_info(data.inputs[0]),
-                InfoView.from_award_info(data.inputs[1]),
-                InfoView.from_award_info(data.inputs[2]),
-            ),
-            output=Catch(
-                info=InfoView.from_award_info(data.output.info),
-                count=data.output.count,
-                is_new=data.output.is_new,
-            ),
-            meta=MergeMeta(
-                status=data.successed.value,
-                is_strange=data.is_strange,
-                cost_chip=data.cost_money,
-                own_chip=data.remain_money,
-            ),
-            ymh_message=YMHMessage(
-                text=data.ymh_message.text,
-                image=data.ymh_message.image.value,
-            ),
-            name=data.user.name,
-        )
+    return random.choice(_msls)

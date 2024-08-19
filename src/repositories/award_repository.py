@@ -3,8 +3,12 @@ from typing import Iterable
 
 from sqlalchemy import delete, insert, select, update
 
+import src
 from src.base.exceptions import ObjectNotFoundException
 from src.models.level import level_repo
+import src.ui
+import src.ui.types
+import src.ui.types.common
 from src.ui.views.award import AwardInfo
 
 from ..base.repository import DBRepository
@@ -284,3 +288,13 @@ class AwardRepository(DBRepository):
         q = select(Award.data_id, Award.name).filter(Award.data_id.in_(aids))
         r = await self.session.execute(q)
         return dict(r.tuples().all())
+
+    async def get_basic_data(self, aid: int) -> src.ui.types.common.AwardInfo:
+        _info = await self.get_info(aid)
+        return src.ui.types.common.AwardInfo(
+            description=_info.description,
+            display_name=_info.display_name,
+            color=_info.color,
+            image=_info.image_url,
+            level=_info.level.to_data()
+        )

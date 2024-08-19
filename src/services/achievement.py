@@ -179,7 +179,7 @@ class TimerAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
     ) -> bool:
         if not isinstance(event, UserTryCatchEvent):
             return False
-        return event.catch_view.next_time < 1
+        return event.data.meta.need_time == "0秒"
 
 
 class TripleAchivement(NoPriseAchievement, AlwaysDisplayAchievement):
@@ -211,11 +211,11 @@ class MergeTripleAchievement(DisplayWhenAchievedAchievement):
             return False
         view = event.merge_view
         if (
-            view.inputs[0].aid == 5
-            and view.inputs[1].aid == 5
-            and view.inputs[2].aid == 5
+            view.inputs[0].display_name == "小哥"
+            and view.inputs[1].display_name == "小哥"
+            and view.inputs[2].display_name == "小哥"
         ):
-            if view.output.info.aid == 25:
+            if view.output.info.display_name == "三小哥":
                 return True
         return False
 

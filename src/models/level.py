@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from src.base.exceptions import ObjectNotFoundException
+from src.ui.types.common import LevelData
 
 
 class Level(BaseModel):
@@ -15,6 +16,13 @@ class Level(BaseModel):
     awarding: int
     lid: int
     sorting_priority: int
+
+    def to_data(self):
+        return LevelData(
+            display_name=self.display_name,
+            color=self.color,
+            lid=self.lid,
+        )
 
 
 class LevelRepository:
@@ -87,6 +95,9 @@ class LevelRepository:
 
     def get_by_id(self, id: int):
         return self.levels[id]
+
+    def get_data_by_id(self, id: int) -> LevelData:
+        return self.get_by_id(id).to_data()
 
     def __getitem__(self, key: int | str):
         if isinstance(key, str):

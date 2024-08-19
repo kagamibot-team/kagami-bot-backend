@@ -1,12 +1,6 @@
 from pydantic import BaseModel
 
-from src.ui.types.common import AwardInfo, UserData
-
-
-class Catch(BaseModel):
-    info: AwardInfo
-    count: int | None = None
-    is_new: bool | None = None
+from src.ui.types.common import GetAward, UserData
 
 
 class ZhuaMeta(BaseModel):
@@ -21,4 +15,4 @@ class ZhuaMeta(BaseModel):
 class ZhuaData(BaseModel):
     user: UserData
     meta: ZhuaMeta
-    catchs: list[Catch]
+    catchs: list[GetAward]
