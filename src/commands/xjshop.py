@@ -20,7 +20,7 @@ from src.services.shop import ShopFreezed, ShopProductFreezed, build_xjshop
 from src.ui.base.basics import Fonts, paste_image, pile, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
 from src.ui.components.awards import ref_book_box_raw
-from src.ui.views.user import UserData
+from src.ui.types.common import UserData
 
 
 async def product_box(product: ShopProductFreezed):

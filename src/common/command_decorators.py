@@ -160,7 +160,7 @@ def interval_at_start(interval: float, skip_first: bool = True):
     """在 Bot 上线时创建定时任务
 
     Args:
-        interval (float): 周期
+        interval (float): 周期，单位秒
         skip_first (bool, optional): 是否跳过第一次执行. Defaults to True.
     """
 

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from src.models.level import Level
 
 from .award import StorageDisplay
-from .user import UserData
+from ..types.common import UserData
 
 
 class ListView(BaseModel):

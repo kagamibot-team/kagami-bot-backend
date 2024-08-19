@@ -7,7 +7,7 @@ from src.base.onebot.onebot_tools import tell
 from src.common.dataclasses.game_events import UserDataUpdatedEvent
 from src.core.unit_of_work import get_unit_of_work
 from src.services.achievement import Achievement, get_achievement_service
-from src.ui.views.user import UserData
+from src.ui.types.common import UserData
 
 
 async def render_achievement_message(

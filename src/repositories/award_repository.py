@@ -5,7 +5,7 @@ from sqlalchemy import delete, insert, select, update
 
 from src.base.exceptions import ObjectNotFoundException
 from src.models.level import level_repo
-from src.ui.views.award import AwardInfo
+from src.ui.types.common import AwardInfo
 
 from ..base.repository import DBRepository
 from ..models.models import Award, AwardAltName
@@ -77,7 +77,9 @@ class AwardRepository(DBRepository):
 
         return a
 
-    async def get_aids(self, lid: int, pack: int | None = None, include_zero: bool = False) -> list[int]:
+    async def get_aids(
+        self, lid: int, pack: int | None = None, include_zero: bool = False
+    ) -> list[int]:
         """获得全部小哥
 
         Args:
@@ -113,64 +115,6 @@ class AwardRepository(DBRepository):
         if aid is None:
             raise ObjectNotFoundException("小哥", name)
         return aid
-
-    async def get_info(self, aid: int) -> AwardInfo:
-        """获取一个小哥的基础信息
-
-        Args:
-            aid (int): 小哥的 ID
-
-        Returns:
-            AwardInfo
-        """
-        q = select(
-            Award.name,
-            Award.description,
-            Award.level_id,
-            Award.image,
-            Award.sorting,
-            Award.main_pack_id,
-        ).filter(Award.data_id == aid)
-        name, desc, lid, img, sorting, pid = (
-            (await self.session.execute(q)).tuples().one()
-        )
-        return AwardInfo(
-            aid=aid,
-            name=name,
-            award_description=desc,
-            award_image=Path(img).name,
-            level=level_repo.get_by_id(lid),
-            sorting=sorting,
-            pack_id=pid,
-        )
-
-    async def get_info_dict(self, aids: Iterable[int]) -> dict[int, AwardInfo]:
-        """
-        获取很多小哥的基础信息
-        """
-        q = select(
-            Award.data_id,
-            Award.name,
-            Award.description,
-            Award.level_id,
-            Award.image,
-            Award.sorting,
-            Award.main_pack_id,
-        ).filter(Award.data_id.in_(aids))
-        r = (await self.session.execute(q)).tuples().all()
-        rt = {}
-        for aid, name, desc, lid, img, sorting, pid in r:
-            info = AwardInfo(
-                aid=aid,
-                name=name,
-                award_description=desc,
-                award_image=Path(img).name,
-                level=level_repo.get_by_id(lid),
-                sorting=sorting,
-                pack_id=pid,
-            )
-            rt[aid] = info
-        return rt
 
     async def set_alias(self, aid: int, name: str):
         """设置一个小哥的别名
@@ -284,3 +228,46 @@ class AwardRepository(DBRepository):
         q = select(Award.data_id, Award.name).filter(Award.data_id.in_(aids))
         r = await self.session.execute(q)
         return dict(r.tuples().all())
+
+    async def get_info(self, aid: int) -> AwardInfo:
+        q = select(
+            Award.description, Award.name, Award.level_id, Award.image, Award.sorting
+        ).filter(Award.data_id == aid)
+        d, n, l, i, s = (await self.session.execute(q)).tuples().one()
+        lv = level_repo.get_data_by_id(l)
+
+        return AwardInfo(
+            description=d,
+            display_name=n,
+            color=lv.color,
+            image_name=Path(i).name,
+            image_type="awards",
+            level=lv,
+            aid=aid,
+            sorting=s,
+        )
+
+    async def get_info_dict(self, aids: Iterable[int]) -> dict[int, AwardInfo]:
+        q = select(
+            Award.data_id,
+            Award.description,
+            Award.name,
+            Award.level_id,
+            Award.image,
+            Award.sorting,
+        ).filter(Award.data_id.in_(aids))
+        tpls = (await self.session.execute(q)).tuples().all()
+
+        return {
+            aid: AwardInfo(
+                description=d,
+                display_name=n,
+                color=level_repo.get_data_by_id(l).color,
+                image_name=Path(i).name,
+                image_type="awards",
+                level=level_repo.get_data_by_id(l),
+                aid=aid,
+                sorting=s,
+            )
+            for aid, d, n, l, i, s in tpls
+        }
