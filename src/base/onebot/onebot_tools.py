@@ -1,4 +1,5 @@
 import asyncio
+from loguru import logger
 import nonebot
 
 from src.base.onebot.onebot_api import (
@@ -54,6 +55,7 @@ async def update_cached_name(bot: OnebotBotProtocol, group_id: int):
     CACHED_NAME_GROUP[group_id] = {}
     for d in ls:
         CACHED_NAME_GROUP[group_id][int(d["user_id"])] = d["card"]
+    logger.info(f"群 {group_id} 群成员信息刷新了一次")
 
 
 async def get_name_cached(
@@ -66,6 +68,8 @@ async def get_name_cached(
         if group_id not in CACHED_NAME_GROUP:
             await update_cached_name(bot, group_id)
         if group_id in CACHED_NAME_GROUP:
+            if qqid not in CACHED_NAME_GROUP[group_id]:
+                await update_cached_name(bot, group_id)
             if qqid in CACHED_NAME_GROUP[group_id]:
                 name = CACHED_NAME_GROUP[group_id][qqid]
     return name
