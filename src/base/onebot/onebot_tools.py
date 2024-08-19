@@ -1,3 +1,4 @@
+import asyncio
 import nonebot
 
 from src.base.onebot.onebot_api import get_group_list, send_group_msg, send_private_msg
@@ -26,6 +27,7 @@ async def broadcast(
             continue
 
         await send_group_msg(bot, group.group_id, message)
+        await asyncio.sleep(0.2)
 
 
 async def tell(qqid: int, message: MessageLike, bot: OnebotBotProtocol | None = None):
