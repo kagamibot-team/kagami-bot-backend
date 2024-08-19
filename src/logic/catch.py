@@ -92,4 +92,5 @@ async def handle_baibianxiaoge(uow: UnitOfWork, uid: int) -> int | None:
     if len(sids) > 0:
         sid = get_random().choice(sids)
         await uow.skin_inventory.give(uid, sid)
+        await uow.skin_inventory.use(uid, 35, sid)
         return sid
