@@ -133,7 +133,6 @@ async def goodnight(ctx: GroupContext, res: Arparma):
         + get_random().choice(
             [
                 "明早见哦！",
-                "明早早八再见~",
                 "睡个好觉哦！",
                 "呼呼——",
                 "zzz……",
