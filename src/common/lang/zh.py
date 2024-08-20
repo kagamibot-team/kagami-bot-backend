@@ -2,7 +2,6 @@ from packaging.version import Version
 
 
 class About:
-    about = "关于抓小哥：\n以后再写，详见 https://github.com/Passthem-desu/passthem-bot"
     update: dict[str, list[str]] = {
         "0.2.0": [
             "将数据使用数据库储存",

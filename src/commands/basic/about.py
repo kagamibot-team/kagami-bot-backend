@@ -64,7 +64,14 @@ async def _(ctx: MessageContext, *_):
     await ctx.send(UniMessage().image(raw=image))
 
 
+# @listen_message()
+# @match_regex("^(关于 ?抓小哥|zhua ?about)$")
+# async def _(ctx: MessageContext, *_):
+#     await ctx.send(UniMessage().text("关于抓小哥：暂时没"))
+
+
 @listen_message()
-@match_regex("^(关于 ?抓小哥|zhua ?about)$")
+@match_regex("^(关于 ?小?镜 ?([bB]ot)?|kagami ?about)$")
 async def _(ctx: MessageContext, *_):
-    await ctx.send(UniMessage().text(la.about.about))
+    image = await get_browser_pool().render("about")
+    await ctx.send(UniMessage().image(raw=image))
