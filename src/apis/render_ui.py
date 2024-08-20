@@ -3,12 +3,15 @@
 """
 
 from pathlib import Path
+from sysconfig import get_platform, get_python_version
 
 from fastapi import APIRouter
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+import nonebot
 from pydantic import BaseModel
 
 from src.common.config import config
+from src.common.lang.zh import get_latest_version
 from src.ui.base.backend_pages import BackendDataManager
 
 router = APIRouter()
@@ -33,6 +36,30 @@ async def request_data(data_id: str):
             {"status": "failed", "detail": "所请求的 data_id 不存在"}, status_code=404
         )
     return data
+
+
+@router.get("/metadata/")
+async def request_meta_data():
+    """
+    向后台请求关于服务器的元数据
+    """
+    try:
+        bot = nonebot.get_bot()
+        onebot_meta = await bot.call_api("get_version_info")
+
+        app_name: str = onebot_meta["app_name"]
+        app_version: str = onebot_meta["app_version"]
+    except:
+        app_name: str = "未识别"
+        app_version: str = "未识别"
+
+    return {
+        "app_name": app_name,
+        "app_version": app_version,
+        "kagami_version": get_latest_version(),
+        "python_version": get_python_version(),
+        "platform": get_platform(),
+    }
 
 
 @router.get("/file/awards/{image_name}")

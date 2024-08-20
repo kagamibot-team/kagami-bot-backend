@@ -1,6 +1,7 @@
 import asyncio
-from loguru import logger
+
 import nonebot
+from loguru import logger
 
 from src.base.onebot.onebot_api import (
     get_group_list,
