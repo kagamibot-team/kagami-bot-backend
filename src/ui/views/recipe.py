@@ -106,7 +106,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="也就成功升了三级而已。", image=MokieImage.jealous),
         ),
         0: (
-            MokieMessage(text="还好亏多少。", image=MokieImage.laugh),
+            MokieMessage(text="还好没亏多少。", image=MokieImage.laugh),
             MokieMessage(text="不关我事哦。", image=MokieImage.shy),
             MokieMessage(text="下次一定！", image=MokieImage.normal),
             MokieMessage(text="多合合吧。", image=MokieImage.normal),
@@ -126,7 +126,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="那咋了？（学小人机）", image=MokieImage.xiaoge),
         ),
         4: (
-            MokieMessage(text="能用。", image=MokieImage.normal),
+            MokieMessage(text="蛮好用的。", image=MokieImage.normal),
             MokieMessage(text="算是成功了吧。", image=MokieImage.normal),
             MokieMessage(text="没成本更低的就用这种吧。", image=MokieImage.normal),
             MokieMessage(text="也不算少见。", image=MokieImage.normal),
@@ -135,11 +135,11 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="还不错哦。", image=MokieImage.astonish),
             MokieMessage(text="小赚！", image=MokieImage.astonish),
             MokieMessage(text="多来点！", image=MokieImage.astonish),
-            MokieMessage(text="我：有点东西", image=MokieImage.astonish),
+            MokieMessage(text="我：有点东西", image=MokieImage.normal),
         ),
         0: (
             MokieMessage(text="胜败乃兵家常事！", image=MokieImage.laugh),
-            MokieMessage(text="我以前死在这过很多次。", image=MokieImage.normal),
+            MokieMessage(text="我以前在这绊倒过很多次。", image=MokieImage.normal),
             MokieMessage(text="小华不知道哦。", image=MokieImage.normal),
             MokieMessage(text="别怪我，怪机器。", image=MokieImage.shy),
         ),
@@ -154,14 +154,14 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
         4: (
             MokieMessage(text="也行……？", image=MokieImage.normal),
             MokieMessage(text="还可以。", image=MokieImage.normal),
-            MokieMessage(text="换一换口味啦。", image=MokieImage.normal),
+            MokieMessage(text="说不定可以换换口味。", image=MokieImage.normal),
             MokieMessage(text="这是你需要的吗？", image=MokieImage.normal),
         ),
         5: (
-            MokieMessage(text="一分耕耘一分收获吧。", image=MokieImage.normal),
-            MokieMessage(text="不经历风雨，怎能见彩虹？", image=MokieImage.normal),
+            MokieMessage(text="确实是有付出才有收获。", image=MokieImage.normal),
+            MokieMessage(text="不经历风雨，怎能见彩虹？……好土。", image=MokieImage.normal),
             MokieMessage(text="升星的钱你来出！", image=MokieImage.normal),
-            MokieMessage(text="挺敢的嘛！（才不说你很勇嘛）", image=MokieImage.normal),
+            MokieMessage(text="挺敢的嘛！（不说你很勇嘛）", image=MokieImage.normal),
         ),
         0: (
             MokieMessage(text="必要的牺牲。", image=MokieImage.laugh),
@@ -185,10 +185,10 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(text="追求稳定性吗。", image=MokieImage.normal),
         ),
         5: (
-            MokieMessage(text="看得我胆战心惊的。", image=MokieImage.shy),
-            MokieMessage(text="大手笔啊。", image=MokieImage.normal),
+            MokieMessage(text="看得我胆战心惊的。还好出货了。", image=MokieImage.shy),
+            MokieMessage(text="大手笔啊。", image=MokieImage.astonish),
             MokieMessage(text="你是真馋了。", image=MokieImage.normal),
-            MokieMessage(text="也没啥好惊讶的，甚至。", image=MokieImage.normal),
+            MokieMessage(text="也没啥好惊讶的，好像。", image=MokieImage.normal),
         ),
         0: (
             MokieMessage(text="没必要。", image=MokieImage.laugh),
@@ -196,7 +196,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
             MokieMessage(
                 text="虽然没人权但是也不能这样造他们啊。", image=MokieImage.shy
             ),
-            MokieMessage(text="无聊和我找话吗。", image=MokieImage.shy),
+            MokieMessage(text="无聊和我找话吗。", image=MokieImage.laugh),
         ),
     },
     0: {
@@ -211,7 +211,7 @@ MOKIE_MESSAGES: dict[int, dict[int, tuple[MokieMessage, ...]]] = {
 
 MOKIE_MESSAGES_XIAOHUA = (
     MokieMessage(text="像我吧。", image=MokieImage.xiaoge),
-    MokieMessage(text="哎这些东西真不知道哪来的。", image=MokieImage.normal),
+    MokieMessage(text="哎，这些东西真不知道哪来的。", image=MokieImage.normal),
     MokieMessage(text="虽然不是我，但别想什么奇怪的事。", image=MokieImage.shy),
     MokieMessage(text="看到这个的时候，他们会想起我吗……", image=MokieImage.normal),
 )
@@ -246,7 +246,7 @@ MOKIE_MESSAGES_LOVE = (
 )
 "榆木华厨的"
 
-MOKIE_MESSAGES_ZERO = (MokieMessage(text="...", image=MokieImage.wtf),)
+MOKIE_MESSAGES_ZERO = (MokieMessage(text="……", image=MokieImage.wtf),)
 "合成了隐藏的小哥？！"
 
 

@@ -57,7 +57,7 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
                 pack_id=i,
                 award_count=acount,
                 featured_award=await get_award_info(
-                    uow, list(grouped[top_lid])[0], uid
+                    uow, get_random().choice(list(grouped[top_lid])), uid
                 ),
                 unlocked=i in await uow.user_pack.get_own(uid),
             )
