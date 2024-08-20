@@ -72,4 +72,6 @@ async def get_name_cached(
                 await update_cached_name(bot, group_id)
             if qqid in CACHED_NAME_GROUP[group_id]:
                 name = CACHED_NAME_GROUP[group_id][qqid]
+    if len(name) == 0:
+        return str(qqid)
     return name
