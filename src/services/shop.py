@@ -255,7 +255,7 @@ async def build_xjshop(uow: UnitOfWork) -> ShopService:
             continue
         info = await uow.awards.get_info(aid)
         service.register(
-            SkinProduct(sid, sname, simage, info.display_name, price, info.color)
+            SkinProduct(sid, sname, simage, info.name, price, info.color)
         )
 
     return service

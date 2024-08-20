@@ -133,6 +133,6 @@ async def _(ctx: GroupContext, res: Arparma):
             XBRecord(
                 time=now_datetime(),
                 action=Action.merged,
-                data=f"{merge_info.output.info.display_name} ×{add}",
+                data=f"{merge_info.output.info.name} ×{add}",
             ),
         )

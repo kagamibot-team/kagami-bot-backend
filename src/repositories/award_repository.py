@@ -238,7 +238,7 @@ class AwardRepository(DBRepository):
 
         return AwardInfo(
             description=d,
-            display_name=n,
+            name=n,
             color=lv.color,
             image_name=Path(i).name,
             image_type="awards",
@@ -261,7 +261,7 @@ class AwardRepository(DBRepository):
         return {
             aid: AwardInfo(
                 description=d,
-                display_name=n,
+                name=n,
                 color=level_repo.get_data_by_id(l).color,
                 image_name=Path(i).name,
                 image_type="awards",

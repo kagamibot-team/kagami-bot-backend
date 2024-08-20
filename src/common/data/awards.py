@@ -95,7 +95,7 @@ async def generate_random_info():
     img.save(Path("./data/temp/") / img_name)
 
     return src.ui.types.common.AwardInfo(
-        display_name="".join((rchar() for _ in range(rlen))),
+        name="".join((rchar() for _ in range(rlen))),
         description="".join((rchar() for _ in range(rlen2))),
         image_name=img_name,
         image_type="temp",
@@ -118,7 +118,7 @@ async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
     sto, _ = await uow.inventories.give(uid, aid, -count)
     if sto < 0:
         raise LackException(
-            (await get_award_info(uow, aid)).display_name, count, sto + count
+            (await get_award_info(uow, aid)).name, count, sto + count
         )
 
 

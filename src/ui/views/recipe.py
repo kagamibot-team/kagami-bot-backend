@@ -254,11 +254,11 @@ def get_mokie_message(view: MergeData, random: Random):
     if view.meta.is_strange:
         return random.choice(MOKIE_MESSAGES_ZERO)
 
-    if view.output.info.display_name == "小华":
+    if view.output.info.name == "小华":
         # 小华
         return random.choice(MOKIE_MESSAGES_XIAOHUA)
 
-    if view.output.info.display_name in ("小水瓶子", "小可怜"):
+    if view.output.info.name in ("小水瓶子", "小可怜"):
         # 小水瓶子和小可怜
         return random.choice(MOKIE_MESSAGES_LOVE)
 

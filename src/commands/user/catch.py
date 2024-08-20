@@ -123,7 +123,7 @@ async def handle_xb(group: int, msg: ZhuaData):
             continue
 
         new_hint = "（新）" if catch.is_new else ""
-        data.append(f"{catch.info.display_name} ×{catch.count}{new_hint}")
+        data.append(f"{catch.info.name} ×{catch.count}{new_hint}")
 
     if len(data) > 0:
         LocalStorageManager.instance().data.add_xb(

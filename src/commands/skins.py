@@ -53,7 +53,7 @@ async def _(ctx: MessageContext, result: Arparma):
 
         await uow.skin_inventory.use(uid, aid, sid)
 
-        aname = (await uow.awards.get_info(aid)).display_name
+        aname = (await uow.awards.get_info(aid)).name
         sname = (await uow.skins.get_info(sid))[0] if sid is not None else "默认"
 
     await ctx.reply(f"已经将 {aname} 的皮肤切换为 {sname} 了。")

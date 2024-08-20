@@ -164,9 +164,10 @@ class SkinRepository(DBRepository):
         )
 
     async def link(self, sid: int, info: AwardInfo):
-        q = select(Skin.description, Skin.image).filter(Skin.data_id == sid)
-        sd, si = (await self.session.execute(q)).tuples().one()
+        q = select(Skin.name, Skin.description, Skin.image).filter(Skin.data_id == sid)
+        sn, sd, si = (await self.session.execute(q)).tuples().one()
         if len(sd) > 0:
             info.description = sd
         info.image_name = Path(si).name
         info.image_type = "skins"
+        info.skin_name = sn
