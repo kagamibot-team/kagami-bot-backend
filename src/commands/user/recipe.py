@@ -16,7 +16,6 @@ from src.logic.catch import handle_baibianxiaoge
 from src.ui.base.browser import get_browser_pool
 from src.ui.types.common import GetAward
 from src.ui.types.recipe import MergeData, MergeMeta, YMHMessage
-from src.ui.views.recipe import get_mokie_message
 
 
 @listen_message()
@@ -112,14 +111,7 @@ async def _(ctx: GroupContext, res: Arparma):
             ),
             inputs=(info1, info2, info3),
             output=data,
-            ymh_message=YMHMessage(
-                text="...",
-                image="正常",
-            ),
         )
-
-        msg = get_mokie_message(merge_info, get_random())
-        merge_info.ymh_message = YMHMessage(text=msg.text, image=msg.image.value)
 
     await ctx.send(
         UniMessage.image(raw=await get_browser_pool().render("recipe", merge_info))

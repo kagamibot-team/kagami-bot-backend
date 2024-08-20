@@ -20,4 +20,3 @@ class MergeData(BaseModel):
     inputs: tuple[AwardInfo, AwardInfo, AwardInfo]
     output: GetAward
     meta: MergeMeta
-    ymh_message: YMHMessage
