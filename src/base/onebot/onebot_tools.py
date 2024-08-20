@@ -54,7 +54,8 @@ async def update_cached_name(bot: OnebotBotProtocol, group_id: int):
     ls = await get_group_member_list(bot, group_id)
     CACHED_NAME_GROUP[group_id] = {}
     for d in ls:
-        CACHED_NAME_GROUP[group_id][int(d["user_id"])] = d["card"]
+        if len(d["card"]) > 0:
+            CACHED_NAME_GROUP[group_id][int(d["user_id"])] = d["card"]
     logger.info(f"群 {group_id} 群成员信息刷新了一次")
 
 
