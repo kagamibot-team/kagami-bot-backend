@@ -6,6 +6,7 @@ from io import BytesIO
 from pathlib import Path
 from sysconfig import get_platform, get_python_version
 
+import nonebot
 from fastapi import APIRouter
 from fastapi.responses import (
     FileResponse,
@@ -13,7 +14,6 @@ from fastapi.responses import (
     JSONResponse,
     StreamingResponse,
 )
-import nonebot
 from pydantic import BaseModel
 
 from src.base.onebot.onebot_tools import get_avatar_cached

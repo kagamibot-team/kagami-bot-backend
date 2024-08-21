@@ -4,12 +4,10 @@ from abc import ABC, abstractmethod
 
 class Schedule(ABC):
     @abstractmethod
-    async def do(self) -> None:
-        ...
+    async def do(self) -> None: ...
 
     @abstractmethod
-    def should_do(self, dt: datetime.datetime) -> bool:
-        ...
+    def should_do(self, dt: datetime.datetime) -> bool: ...
 
 
 class Timing(Schedule):
@@ -17,8 +15,7 @@ class Timing(Schedule):
 
     @property
     @abstractmethod
-    def next(self) -> datetime.datetime:
-        ...
+    def next(self) -> datetime.datetime: ...
 
     def should_do(self, dt: datetime.datetime) -> bool:
         return dt >= self.next
