@@ -16,7 +16,7 @@ from fastapi.responses import (
 import nonebot
 from pydantic import BaseModel
 
-from src.base.onebot.onebot_api import get_avatar_image
+from src.base.onebot.onebot_tools import get_avatar_cached
 from src.common.config import config
 from src.common.lang.zh import get_latest_version
 from src.ui.base.backend_pages import BackendDataManager
@@ -104,7 +104,7 @@ async def serve_vue_app(path: str):
     return HTMLResponse((FRONTEND_DIST / "index.html").read_text(encoding="utf-8"))
 
 
-@router.get("/file/avatar/qq/{qqid}")
+@router.get("/file/avatar/qq/{qqid}/")
 async def get_qq_avatar(qqid: int):
-    img = await get_avatar_image(qqid)
+    img = await get_avatar_cached(qqid)
     return StreamingResponse(BytesIO(img))

@@ -1,9 +1,11 @@
 import asyncio
+import time
 
 import nonebot
 from loguru import logger
 
 from src.base.onebot.onebot_api import (
+    get_avatar_image,
     get_group_list,
     get_group_member_list,
     get_stranger_name,
@@ -48,7 +50,20 @@ async def tell(qqid: int, message: MessageLike, bot: OnebotBotProtocol | None = 
         await send_group_msg(bot, LAST_CONTEXT_RECORDER[qqid], message)
 
 
+class AvatarCache:
+    data: bytes
+    expire_time: float
+
+    def __init__(self, data: bytes, timeout_seconds: float = 43200) -> None:
+        self.data = data
+        self.expire_time = time.time() + timeout_seconds
+
+    def expired(self):
+        return time.time() > self.expire_time
+
+
 CACHED_NAME_GROUP: dict[int, dict[int, str]] = {}
+CACHED_AVATAR: dict[int, AvatarCache] = {}
 
 
 async def update_cached_name(bot: OnebotBotProtocol, group_id: int):
@@ -79,3 +94,11 @@ async def get_name_cached(
     if len(name) == 0:
         return str(qqid)
     return name
+
+
+async def get_avatar_cached(qqid: int) -> bytes:
+    if qqid not in CACHED_AVATAR or CACHED_AVATAR[qqid].expired():
+        logger.info(f"刷新了 {qqid} 的头像缓存")
+        data = await get_avatar_image(qqid)
+        CACHED_AVATAR[qqid] = AvatarCache(data)
+    return CACHED_AVATAR[qqid].data
