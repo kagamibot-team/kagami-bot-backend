@@ -117,9 +117,7 @@ async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
     """
     sto, _ = await uow.inventories.give(uid, aid, -count)
     if sto < 0:
-        raise LackException(
-            (await get_award_info(uow, aid)).name, count, sto + count
-        )
+        raise LackException((await get_award_info(uow, aid)).name, count, sto + count)
 
 
 async def download_award_image(aid: int, url: str):

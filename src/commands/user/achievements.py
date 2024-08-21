@@ -27,4 +27,6 @@ async def _(ctx: MessageContext, _):
                     get_single_achievement_msg(a, await a.have_got(uow, uid))
                 )
 
-    await ctx.send(f" 成就列表\n 当前用户：{await ctx.sender_name}\n\n" + "\n\n".join(display))
+    await ctx.send(
+        f" 成就列表\n 当前用户：{await ctx.sender_name}\n\n" + "\n\n".join(display)
+    )
