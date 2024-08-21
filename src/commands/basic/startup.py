@@ -36,7 +36,7 @@ async def _(ctx: OnebotStartedContext):
                 await send_group_msg(ctx.bot, group, "服务器重启好了")
 
 
-@interval_at_start(3600, False)
+@interval_at_start(60, False)
 async def _(ctx: OnebotStartedContext):
     ls = await get_group_list(ctx.bot)
     for info in ls:
