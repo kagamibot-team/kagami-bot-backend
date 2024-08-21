@@ -15,7 +15,7 @@ from src.base.exceptions import (
     SleepToLateException,
     UnknownArgException,
 )
-from src.common.command_decorators import (
+from src.common.command_deco import (
     listen_message,
     match_alconna,
     require_awake,

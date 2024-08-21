@@ -4,7 +4,7 @@ from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
-from src.common.command_decorators import (
+from src.common.command_deco import (
     listen_message,
     match_alconna,
     match_regex,

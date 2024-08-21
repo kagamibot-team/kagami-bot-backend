@@ -12,7 +12,7 @@ from src.base.command_events import GroupContext, MessageContext, OnebotContext
 from src.base.db import DatabaseManager
 from src.base.onebot.onebot_api import get_group_list
 from src.base.onebot.onebot_tools import update_cached_name
-from src.common.command_decorators import (
+from src.common.command_deco import (
     listen_message,
     match_literal,
     match_regex,

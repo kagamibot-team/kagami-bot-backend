@@ -1,7 +1,7 @@
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
-from src.common.command_decorators import listen_message, match_regex
+from src.common.command_deco import listen_message, match_regex
 from src.core.unit_of_work import get_unit_of_work
 
 

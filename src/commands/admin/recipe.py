@@ -3,7 +3,7 @@ from arclet.alconna import Alconna, Arg, Arparma, Option
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectNotFoundException
 from src.common.data.awards import get_award_info
-from src.common.command_decorators import (
+from src.common.command_deco import (
     listen_message,
     match_alconna,
     match_literal,

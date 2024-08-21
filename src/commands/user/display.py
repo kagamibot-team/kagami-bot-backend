@@ -5,7 +5,7 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import DoNotHaveException
-from src.common.command_decorators import listen_message, match_alconna
+from src.common.command_deco import listen_message, match_alconna
 from src.common.data.awards import get_award_info
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin

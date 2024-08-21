@@ -7,7 +7,7 @@ from nonebot_plugin_alconna import At, Reply, Text
 from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event
 from src.base.exceptions import KagamiRangeError
-from src.common.command_decorators import (
+from src.common.command_deco import (
     listen_message,
     match_alconna,
     match_regex,

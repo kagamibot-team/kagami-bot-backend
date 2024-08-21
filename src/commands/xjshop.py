@@ -9,7 +9,7 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import SoldOutException
-from src.common.command_decorators import (
+from src.common.command_deco import (
     listen_message,
     match_alconna,
     require_awake,

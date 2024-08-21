@@ -1,7 +1,7 @@
 import time
 from nonebot_plugin_alconna import At, Emoji, Reply, Text, UniMessage
 from src.base.command_events import OnebotContext
-from src.common.command_decorators import listen_message, require_awake
+from src.common.command_deco import listen_message, require_awake
 from src.common.data.awards import use_award
 from src.common.rd import get_random
 from nonebot.adapters.onebot.v11 import MessageSegment
