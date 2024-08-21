@@ -19,6 +19,7 @@ from typing import Any
 import PIL
 import PIL.Image
 import requests
+from nonebot.adapters.onebot.v11.exception import ActionFailed
 from pydantic import BaseModel
 
 from src.base.onebot.onebot_basic import (
@@ -27,7 +28,6 @@ from src.base.onebot.onebot_basic import (
     handle_input_message,
 )
 from src.base.onebot.onebot_enum import QQEmoji, QQStatus
-from nonebot.adapters.onebot.v11.exception import ActionFailed
 
 
 async def send_group_msg(

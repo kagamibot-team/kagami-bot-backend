@@ -1,8 +1,6 @@
 from typing import Any, Protocol, cast
 
-
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
-
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 
 

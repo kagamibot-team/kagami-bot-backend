@@ -40,12 +40,17 @@ class Config(BaseModel):
     """
 
     frontend_dist: str = "./frontend/"
+    "前端文件的地址"
 
     @property
     def frontend_path(self):
         return Path(self.frontend_dist)
 
     browser_count: int = 1
+    "打开的浏览器数量"
+
+    limited_group: list[int] = []
+    "在哪些群，功能受到限制"
 
 
 config = get_plugin_config(Config)
