@@ -47,7 +47,7 @@ class SkinRepository(DBRepository):
         """获得所有皮肤的信息
 
         Returns:
-            tuple[int, int, str, str, str, float]: 皮肤 ID，对应小哥 ID，名字，描述，图，价格
+            list[tuple[int, int, str, str, str, float]]: 皮肤 ID，对应小哥 ID，名字，描述，图，价格
         """
 
         q = select(
