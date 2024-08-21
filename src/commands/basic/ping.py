@@ -11,7 +11,7 @@ from src.base.onebot.onebot_api import (
 from src.base.onebot.onebot_basic import OnebotBotProtocol
 from src.base.onebot.onebot_enum import QQEmoji
 from src.base.onebot.onebot_events import GroupPokeContext
-from src.common.command_decorators import listen_message, require_awake
+from src.common.command_deco import limited, listen_message, require_awake
 from src.common.config import config
 from src.common.rd import get_random
 from src.core.unit_of_work import get_unit_of_work
@@ -88,6 +88,7 @@ def __match_str(s: str):
 
 
 @listen_message()
+@limited
 @require_awake
 async def _(ctx: MessageContext):
     message = ctx.message
@@ -210,6 +211,7 @@ async def _(ctx: GroupPokeContext):
 
 
 @listen_message()
+@limited
 @require_awake
 async def _(ctx: GroupContext):
     if len(ctx.message) != 1:

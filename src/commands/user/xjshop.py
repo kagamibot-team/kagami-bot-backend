@@ -9,7 +9,8 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import SoldOutException
-from src.common.command_decorators import (
+from src.common.command_deco import (
+    limited,
     listen_message,
     match_alconna,
     require_awake,
@@ -156,6 +157,7 @@ async def shop_buy_message(
         ),
     )
 )
+@limited
 @require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
     buys = res.query[list[str]]("商品名") or []

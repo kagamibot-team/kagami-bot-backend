@@ -7,7 +7,7 @@ from src.base.onebot.onebot_api import get_group_list, send_group_msg, set_qq_st
 from src.base.onebot.onebot_enum import QQStatus
 from src.base.onebot.onebot_events import OnebotStartedContext
 from src.base.onebot.onebot_tools import broadcast, update_cached_name
-from src.common.command_decorators import interval_at_start
+from src.common.command_deco import interval_at_start
 from src.common.config import config
 from src.common.lang.zh import get_latest_version, la
 from src.core.unit_of_work import get_unit_of_work
@@ -36,7 +36,7 @@ async def _(ctx: OnebotStartedContext):
                 await send_group_msg(ctx.bot, group, "服务器重启好了")
 
 
-@interval_at_start(3600, False)
+@interval_at_start(60, False)
 async def _(ctx: OnebotStartedContext):
     ls = await get_group_list(ctx.bot)
     for info in ls:

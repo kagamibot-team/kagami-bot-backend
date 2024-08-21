@@ -11,12 +11,13 @@ class LevelData(BaseModel):
 class AwardInfo(BaseModel):
     aid: int
     description: str
-    display_name: str
+    name: str
     color: str
     image_name: str
     image_type: str
     level: LevelData
     sorting: int
+    skin_name: str = ""
 
     @property
     def image_path(self) -> Path:
@@ -26,6 +27,13 @@ class AwardInfo(BaseModel):
     @property
     def image_url(self) -> str:
         return f"../file/{self.image_type}/{self.image_name}"
+
+    @computed_field
+    @property
+    def display_name(self) -> str:
+        if self.skin_name != "":
+            return f"{self.name}[{self.skin_name}]"
+        return self.name
 
 
 class UserData(BaseModel):

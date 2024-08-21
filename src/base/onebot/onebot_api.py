@@ -19,6 +19,7 @@ from typing import Any
 import PIL
 import PIL.Image
 import requests
+from nonebot.adapters.onebot.v11.exception import ActionFailed
 from pydantic import BaseModel
 
 from src.base.onebot.onebot_basic import (
@@ -27,7 +28,6 @@ from src.base.onebot.onebot_basic import (
     handle_input_message,
 )
 from src.base.onebot.onebot_enum import QQEmoji, QQStatus
-from nonebot.adapters.onebot.v11.exception import ActionFailed
 
 
 async def send_group_msg(
@@ -191,7 +191,7 @@ async def get_avatar_image(user_id: int):
         user_id (int): QQ 号
 
     Returns:
-        PIL.Image.Image: PIL 的图像对象
+        bytes: 图像数据
     """
     loop = asyncio.get_event_loop()
     req = await loop.run_in_executor(
@@ -199,4 +199,4 @@ async def get_avatar_image(user_id: int):
         requests.get,
         f"http://q.qlogo.cn/headimg_dl?dst_uin={user_id}&spec=640&img_type=jpg",
     )
-    return PIL.Image.open(BytesIO(req.content), "r")
+    return req.content

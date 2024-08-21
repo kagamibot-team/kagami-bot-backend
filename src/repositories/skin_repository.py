@@ -47,7 +47,7 @@ class SkinRepository(DBRepository):
         """获得所有皮肤的信息
 
         Returns:
-            tuple[int, int, str, str, str, float]: 皮肤 ID，对应小哥 ID，名字，描述，图，价格
+            list[tuple[int, int, str, str, str, float]]: 皮肤 ID，对应小哥 ID，名字，描述，图，价格
         """
 
         q = select(
@@ -164,9 +164,10 @@ class SkinRepository(DBRepository):
         )
 
     async def link(self, sid: int, info: AwardInfo):
-        q = select(Skin.description, Skin.image).filter(Skin.data_id == sid)
-        sd, si = (await self.session.execute(q)).tuples().one()
+        q = select(Skin.name, Skin.description, Skin.image).filter(Skin.data_id == sid)
+        sn, sd, si = (await self.session.execute(q)).tuples().one()
         if len(sd) > 0:
             info.description = sd
         info.image_name = Path(si).name
         info.image_type = "skins"
+        info.skin_name = sn

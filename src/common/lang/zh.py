@@ -2,7 +2,6 @@ from packaging.version import Version
 
 
 class About:
-    about = "关于抓小哥：\n以后再写，详见 https://github.com/Passthem-desu/passthem-bot"
     update: dict[str, list[str]] = {
         "0.2.0": [
             "将数据使用数据库储存",
@@ -234,6 +233,11 @@ class About:
             "修复了不显示用户名的问题，此时将替换为显示 QQ 号",
             "调整了一些界面",
         ],
+        "1.0.3": [
+            "修复了一些用户只能显示 QQ 号的问题",
+            "在一些界面显示了 QQ 头像",
+            "调整了一些指令",
+        ]
     }
 
 

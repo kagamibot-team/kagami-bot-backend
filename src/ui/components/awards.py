@@ -145,6 +145,6 @@ def ref_book_box(data: AwardDisplay | None) -> PIL.Image.Image:
         data.new,
         data.notation,
         data.notation2,
-        data.info.display_name,
+        data.info.name,
         data.name_notation,
     )

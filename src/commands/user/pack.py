@@ -4,7 +4,8 @@ from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
-from src.common.command_decorators import (
+from src.common.command_deco import (
+    limited,
     listen_message,
     match_alconna,
     match_regex,
@@ -74,6 +75,7 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
 
 @listen_message()
 @match_regex("^(小[鹅lL]|x[le])?(猎场|lc)$")
+@limited
 @require_awake
 async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -94,6 +96,7 @@ async def _(ctx: MessageContext, _):
 @listen_message()
 @require_admin()
 @match_regex("^(猎场|lc)([Uu][Pp])$")
+@limited
 @require_awake
 async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -117,6 +120,7 @@ async def _(ctx: MessageContext, _):
 @match_alconna(
     Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL]))
 )
+@limited
 @require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")
@@ -138,6 +142,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
 
 @listen_message()
+@limited
 @match_alconna(Alconna("re:(购买|gm|buy)(猎场|lc)", Arg("猎场序号", int)))
 @require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):

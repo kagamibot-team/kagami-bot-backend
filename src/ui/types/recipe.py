@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from src.ui.types.common import GetAward, UserData, AwardInfo
+from src.ui.types.common import AwardInfo, GetAward, UserData
 
 
 class MergeMeta(BaseModel):
@@ -10,14 +10,8 @@ class MergeMeta(BaseModel):
     is_strange: bool
 
 
-class YMHMessage(BaseModel):
-    text: str
-    image: str
-
-
 class MergeData(BaseModel):
     user: UserData
     inputs: tuple[AwardInfo, AwardInfo, AwardInfo]
     output: GetAward
     meta: MergeMeta
-    ymh_message: YMHMessage

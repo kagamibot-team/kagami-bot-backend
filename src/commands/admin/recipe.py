@@ -3,7 +3,7 @@ from arclet.alconna import Alconna, Arg, Arparma, Option
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectNotFoundException
 from src.common.data.awards import get_award_info
-from src.common.command_decorators import (
+from src.common.command_deco import (
     listen_message,
     match_alconna,
     match_literal,
@@ -44,7 +44,7 @@ async def _(ctx: MessageContext, res: Arparma):
         modified = await uow.recipes.is_modified(a1, a2, a3)
 
         await ctx.reply(
-            f"{n1}+{n2}+{n3} 合成 {info.display_name}，概率为 {re[1]*100}%，modified={modified}"
+            f"{n1}+{n2}+{n3} 合成 {info.name}，概率为 {re[1]*100}%，modified={modified}"
         )
 
 
@@ -121,7 +121,7 @@ async def _(ctx: MessageContext):
             info3 = await get_award_info(uow, aid3)
             info = await get_award_info(uow, aid)
             msg.append(
-                f"{info1.display_name}+{info2.display_name}+{info3.display_name} 合成 {info.display_name}，"
+                f"{info1.name}+{info2.name}+{info3.name} 合成 {info.name}，"
                 f"概率为 {posi*100}%"
             )
 

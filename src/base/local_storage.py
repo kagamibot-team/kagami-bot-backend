@@ -1,44 +1,10 @@
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 
 from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 from src.common.times import now_datetime
-
-
-class Action(Enum):
-    catched = "抓到了"
-    merged = "合成出了"
-    gained = "获得了"
-
-
-class XBRecord(BaseModel):
-    """
-    单条喜报的记录
-    """
-
-    time: datetime
-    "喜报记录的时间"
-
-    action: Action
-    "这条喜报是关于什么的"
-
-    data: str
-    "喜报展示的信息"
-
-
-class XBData(BaseModel):
-    records: list[XBRecord] = []
-
-    def expire(self):
-        """
-        清理掉过期了的喜报，默认喜报的过期时间是一天
-        """
-
-        current = now_datetime()
-        self.records = [r for r in self.records if (current - r.time).days == 0]
 
 
 class GroupSignInData(BaseModel):
@@ -58,30 +24,16 @@ class GroupSignInData(BaseModel):
 
 class LocalStorageData(BaseModel):
     ls_version: int = 1
-    xbs: dict[str, dict[str, XBData]] = {}
     group_sign_in_data: dict[str, GroupSignInData] = {}
 
     def update(self):
-        for ls in self.xbs.values():
-            for e in ls.values():
-                e.expire()
         for e in self.group_sign_in_data.values():
             e.expire()
-
-    def get_group_xb(self, group: str | int):
-        self.update()
-        self.xbs.setdefault(str(group), {})
-        return self.xbs[str(group)]
 
     def get_group_signin_count(self, group: str | int):
         self.update()
         self.group_sign_in_data.setdefault(str(group), GroupSignInData())
         return self.group_sign_in_data
-
-    def add_xb(self, group: int | str, qqid: int | str, record: XBRecord):
-        self.get_group_xb(group).setdefault(str(qqid), XBData())
-        self.xbs[str(group)][str(qqid)].records.append(record)
-        self.update()
 
     def sign(self, group: int | str):
         self.update()

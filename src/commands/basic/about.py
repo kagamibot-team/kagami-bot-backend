@@ -7,7 +7,7 @@ import PIL.Image
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
-from src.common.command_decorators import listen_message, match_regex
+from src.common.command_deco import listen_message, match_regex
 from src.common.lang.zh import get_latest_versions, la
 from src.ui.base.basics import Fonts, render_text, vertical_pile
 from src.ui.base.browser import get_browser_pool
@@ -64,7 +64,14 @@ async def _(ctx: MessageContext, *_):
     await ctx.send(UniMessage().image(raw=image))
 
 
+# @listen_message()
+# @match_regex("^(关于 ?抓小哥|zhua ?about)$")
+# async def _(ctx: MessageContext, *_):
+#     await ctx.send(UniMessage().text("关于抓小哥：暂时没"))
+
+
 @listen_message()
-@match_regex("^(关于 ?抓小哥|zhua ?about)$")
+@match_regex("^(关于 ?小?镜 ?([bB]ot)?|kagami ?about)$")
 async def _(ctx: MessageContext, *_):
-    await ctx.send(UniMessage().text(la.about.about))
+    image = await get_browser_pool().render("about")
+    await ctx.send(UniMessage().image(raw=image))

@@ -3,20 +3,17 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event
-from src.base.local_storage import Action, XBRecord, get_localdata
-from src.common.command_decorators import listen_message, match_alconna, require_awake
+from src.common.command_deco import limited, listen_message, match_alconna, require_awake
 from src.common.data.awards import generate_random_info, get_award_info, use_award
 from src.common.data.recipe import try_merge
 from src.common.data.user import get_user_data
 from src.common.dataclasses.game_events import MergeEvent
 from src.common.rd import get_random
-from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
 from src.ui.base.browser import get_browser_pool
 from src.ui.types.common import GetAward
-from src.ui.types.recipe import MergeData, MergeMeta, YMHMessage
-from src.ui.views.recipe import get_mokie_message
+from src.ui.types.recipe import MergeData, MergeMeta
 
 
 @listen_message()
@@ -30,6 +27,7 @@ from src.ui.views.recipe import get_mokie_message
         Arg("第三个小哥", str),
     )
 )
+@limited
 @require_awake
 async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
@@ -68,7 +66,6 @@ async def _(ctx: GroupContext, res: Arparma):
         if aid == -1:
             info = await generate_random_info()
             add = get_random().randint(1, 100)
-            do_xb = False
             data = GetAward(
                 info=info,
                 count=add,
@@ -77,7 +74,6 @@ async def _(ctx: GroupContext, res: Arparma):
         else:
             info = await get_award_info(uow, aid, uid)
             add = get_random().randint(1, 3)
-            do_xb = info.level.lid in (4, 5)
             data = GetAward(
                 info=info,
                 count=add,
@@ -112,27 +108,9 @@ async def _(ctx: GroupContext, res: Arparma):
             ),
             inputs=(info1, info2, info3),
             output=data,
-            ymh_message=YMHMessage(
-                text="...",
-                image="正常",
-            ),
         )
-
-        msg = get_mokie_message(merge_info, get_random())
-        merge_info.ymh_message = YMHMessage(text=msg.text, image=msg.image.value)
 
     await ctx.send(
         UniMessage.image(raw=await get_browser_pool().render("recipe", merge_info))
     )
     await throw_event(MergeEvent(user_data=user, merge_view=merge_info))
-
-    if isinstance(ctx, GroupContext) and do_xb:
-        get_localdata().add_xb(
-            ctx.event.group_id,
-            ctx.sender_id,
-            XBRecord(
-                time=now_datetime(),
-                action=Action.merged,
-                data=f"{merge_info.output.info.display_name} ×{add}",
-            ),
-        )
