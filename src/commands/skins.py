@@ -10,6 +10,7 @@ from src.base.command_events import MessageContext
 from src.base.exceptions import DoNotHaveException, ObjectAlreadyExistsException
 from src.common.data.skins import downloadSkinImage
 from src.common.command_deco import (
+    limited,
     listen_message,
     match_alconna,
     require_admin,
@@ -25,6 +26,7 @@ from src.ui.components.awards import ref_book_box_raw
 
 @listen_message()
 @match_alconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("小哥名字", str)))
+@limited
 @require_awake
 async def _(ctx: MessageContext, result: Arparma):
     name = result.query[str]("小哥名字")

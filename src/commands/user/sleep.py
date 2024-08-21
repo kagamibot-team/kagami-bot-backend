@@ -16,6 +16,7 @@ from src.base.exceptions import (
     UnknownArgException,
 )
 from src.common.command_deco import (
+    limited,
     listen_message,
     match_alconna,
     require_awake,
@@ -88,6 +89,7 @@ def parse_getup_time(inp: tuple[str] | None) -> tuple[int, int]:
         Arg("getup_time", MultiVar(str, "*"), seps=" "),
     )
 )
+@limited
 @require_awake
 async def goodnight(ctx: GroupContext, res: Arparma):
     arg = res.query[tuple[str]]("getup_time")

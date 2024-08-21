@@ -8,6 +8,7 @@ from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event
 from src.base.exceptions import KagamiRangeError
 from src.common.command_deco import (
+    limited,
     listen_message,
     match_alconna,
     match_regex,
@@ -113,6 +114,7 @@ async def picks(
 
 
 @listen_message()
+@limited
 @match_alconna(
     Alconna("re:(抓小哥|zhua|抓抓)", Arg("count", int, flags=[ArgFlag.OPTIONAL]))
 )
@@ -132,6 +134,7 @@ async def _(ctx: GroupContext, result: Arparma):
 
 
 @listen_message()
+@limited
 @match_regex("^(狂抓|kz|狂抓小哥|kZ|Kz|KZ)$")
 @require_awake
 async def _(ctx: GroupContext, _):

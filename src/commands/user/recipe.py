@@ -3,7 +3,7 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event
-from src.common.command_deco import listen_message, match_alconna, require_awake
+from src.common.command_deco import limited, listen_message, match_alconna, require_awake
 from src.common.data.awards import generate_random_info, get_award_info, use_award
 from src.common.data.recipe import try_merge
 from src.common.data.user import get_user_data
@@ -27,6 +27,7 @@ from src.ui.types.recipe import MergeData, MergeMeta
         Arg("第三个小哥", str),
     )
 )
+@limited
 @require_awake
 async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}
