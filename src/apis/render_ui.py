@@ -2,14 +2,21 @@
 渲染用的 API
 """
 
+from io import BytesIO
 from pathlib import Path
 from sysconfig import get_platform, get_python_version
 
 from fastapi import APIRouter
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    StreamingResponse,
+)
 import nonebot
 from pydantic import BaseModel
 
+from src.base.onebot.onebot_api import get_avatar_image
 from src.common.config import config
 from src.common.lang.zh import get_latest_version
 from src.ui.base.backend_pages import BackendDataManager
@@ -95,3 +102,9 @@ async def serve_vue_app(path: str):
     if file_path.exists() and file_path.is_file():
         return FileResponse(file_path)
     return HTMLResponse((FRONTEND_DIST / "index.html").read_text(encoding="utf-8"))
+
+
+@router.get("/file/avatar/qq/{qqid}")
+async def get_qq_avatar(qqid: int):
+    img = await get_avatar_image(qqid)
+    return StreamingResponse(BytesIO(img))
