@@ -15,7 +15,7 @@ from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
 from src.ui.base.browser import get_browser_pool
 from src.ui.types.common import GetAward
-from src.ui.types.recipe import MergeData, MergeMeta, YMHMessage
+from src.ui.types.recipe import MergeData, MergeMeta
 
 
 @listen_message()
