@@ -54,7 +54,7 @@ class AvatarCache:
     data: bytes
     expire_time: float
 
-    def __init__(self, data: bytes, timeout_seconds: float = 3600) -> None:
+    def __init__(self, data: bytes, timeout_seconds: float = 43200) -> None:
         self.data = data
         self.expire_time = time.time() + timeout_seconds
 
@@ -98,6 +98,7 @@ async def get_name_cached(
 
 async def get_avatar_cached(qqid: int) -> bytes:
     if qqid not in CACHED_AVATAR or CACHED_AVATAR[qqid].expired():
+        logger.info(f"刷新了 {qqid} 的头像缓存")
         data = await get_avatar_image(qqid)
         CACHED_AVATAR[qqid] = AvatarCache(data)
     return CACHED_AVATAR[qqid].data

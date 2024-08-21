@@ -15,6 +15,8 @@ from nonebot import get_driver
 from src.base.event.event_root import root
 from utils.collections import PriorityList
 
+from arclet.alconna.manager import command_manager as alconna_manager
+
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
     ("src", "commands"),
@@ -64,6 +66,8 @@ def reload():
     重载所有需要的模块
     """
 
+    for command in alconna_manager.get_commands():
+        alconna_manager.delete(command)
     for key in root.keys():
         root[key] = PriorityList()
     for p in loaded_modules:
