@@ -7,7 +7,6 @@ from nonebot_plugin_alconna import At, Reply, Text
 from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event
 from src.base.exceptions import KagamiRangeError
-from src.base.local_storage import Action, LocalStorageManager, XBRecord
 from src.common.command_decorators import (
     listen_message,
     match_alconna,
@@ -17,7 +16,6 @@ from src.common.command_decorators import (
 from src.common.data.awards import get_award_info
 from src.common.data.user import get_user_data
 from src.common.dataclasses.game_events import UserTryCatchEvent
-from src.common.times import now_datetime
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.logic.catch import pickAwards
 from src.logic.catch_time import uow_calculate_time
@@ -110,28 +108,8 @@ async def picks(
         ),
         catchs=catchs,
     )
-    if group_id is not None and len(catchs) > 0:
-        await handle_xb(group_id, msg)
     await throw_event(UserTryCatchEvent(user_data=user, data=msg))
     return msg
-
-
-async def handle_xb(group: int, msg: ZhuaData):
-    data: list[str] = []
-    for catch in msg.catchs:
-        if catch.info.level.lid not in (4, 5):
-            continue
-
-        new_hint = "（新）" if catch.is_new else ""
-        data.append(f"{catch.info.name} ×{catch.count}{new_hint}")
-
-    if len(data) > 0:
-        LocalStorageManager.instance().data.add_xb(
-            group,
-            msg.user.qqid,
-            XBRecord(time=now_datetime(), action=Action.catched, data="，".join(data)),
-        )
-        LocalStorageManager.instance().save()
 
 
 @listen_message()

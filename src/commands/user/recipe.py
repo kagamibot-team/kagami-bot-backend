@@ -3,14 +3,12 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event
-from src.base.local_storage import Action, XBRecord, get_localdata
 from src.common.command_decorators import listen_message, match_alconna, require_awake
 from src.common.data.awards import generate_random_info, get_award_info, use_award
 from src.common.data.recipe import try_merge
 from src.common.data.user import get_user_data
 from src.common.dataclasses.game_events import MergeEvent
 from src.common.rd import get_random
-from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
 from src.ui.base.browser import get_browser_pool
@@ -67,7 +65,6 @@ async def _(ctx: GroupContext, res: Arparma):
         if aid == -1:
             info = await generate_random_info()
             add = get_random().randint(1, 100)
-            do_xb = False
             data = GetAward(
                 info=info,
                 count=add,
@@ -76,7 +73,6 @@ async def _(ctx: GroupContext, res: Arparma):
         else:
             info = await get_award_info(uow, aid, uid)
             add = get_random().randint(1, 3)
-            do_xb = info.level.lid in (4, 5)
             data = GetAward(
                 info=info,
                 count=add,
@@ -117,14 +113,3 @@ async def _(ctx: GroupContext, res: Arparma):
         UniMessage.image(raw=await get_browser_pool().render("recipe", merge_info))
     )
     await throw_event(MergeEvent(user_data=user, merge_view=merge_info))
-
-    if isinstance(ctx, GroupContext) and do_xb:
-        get_localdata().add_xb(
-            ctx.event.group_id,
-            ctx.sender_id,
-            XBRecord(
-                time=now_datetime(),
-                action=Action.merged,
-                data=f"{merge_info.output.info.name} ×{add}",
-            ),
-        )
