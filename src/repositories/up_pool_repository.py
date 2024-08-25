@@ -156,7 +156,7 @@ class UpPoolRepository(DBRepository):
         """
         upid = await self.get_upid(name)
         if upid is None:
-            raise ObjectNotFoundException("猎场升级", name)
+            raise ObjectNotFoundException("猎场升级")
         return upid
 
     async def get_pool_info(self, upid: int) -> UpPoolInfo:
