@@ -113,7 +113,7 @@ class AwardRepository(DBRepository):
         """
         aid = await self.get_aid(name)
         if aid is None:
-            raise ObjectNotFoundException("小哥", name)
+            raise ObjectNotFoundException("小哥")
         return aid
 
     async def set_alias(self, aid: int, name: str):

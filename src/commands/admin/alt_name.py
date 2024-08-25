@@ -58,7 +58,7 @@ async def _(ctx: MessageContext, res: Arparma):
         elif sid is not None:
             await uow.skins.set_alias(sid, aname)
         else:
-            raise ObjectNotFoundException("东西", rname)
+            raise ObjectNotFoundException("东西")
 
     await ctx.send("ok.")
 
