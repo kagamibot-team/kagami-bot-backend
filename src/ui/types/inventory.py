@@ -11,6 +11,8 @@ class DisplayBoxData(BaseModel):
     new_overlay: bool = False
     notation_up_color: str = "#FFFFFF"
     notation_down_color: str = "#FFFFFF"
+    do_glow: bool = False
+    glow_type: int = 0
 
 
 class BookBoxData(BaseModel):

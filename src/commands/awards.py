@@ -207,25 +207,6 @@ async def _(ctx: MessageContext, res: Arparma):
 
 
 @listen_message()
-@match_alconna(Alconna("re:(kc|抓库存|抓小哥库存)"))
-async def _(ctx: MessageContext, _: Arparma):
-    async with get_unit_of_work(ctx.sender_id) as uow:
-        view = await get_storage_view(
-            uow,
-            UserData(
-                uid=await uow.users.get_uid(ctx.sender_id),
-                name=await ctx.sender_name,
-                qqid=str(ctx.sender_id),
-            ),
-            None,
-            None,
-            show_notation2=False,
-        )
-
-    await ctx.send(await render_storage_message(view))
-
-
-@listen_message()
 @require_admin()
 @match_alconna(
     Alconna(
