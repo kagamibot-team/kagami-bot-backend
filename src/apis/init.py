@@ -30,4 +30,4 @@ def init_routers():
     """
     sub_app.include_router(render_ui_router)
     app.mount("/kagami", sub_app)
-    app.mount("/kagami/res", StaticFiles(directory=Path("./res/")), name="res")
+    app.mount("/kagami-res", StaticFiles(directory=Path("./res/")), name="res")

@@ -21,11 +21,15 @@ class AwardInfo(BaseModel):
 
     @property
     def image_path(self) -> Path:
+        if self.image_name == "default.png":
+            return Path("./res/default.png")
         return Path("./data") / self.image_type / self.image_name
 
     @computed_field
     @property
     def image_url(self) -> str:
+        if self.image_name == "default.png":
+            return "/kagami-res/default.png"
         return f"../file/{self.image_type}/{self.image_name}"
 
     @computed_field
