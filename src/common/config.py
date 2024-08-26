@@ -52,6 +52,9 @@ class Config(BaseModel):
     limited_group: list[int] = []
     "在哪些群，功能受到限制"
 
+    use_fake_browser: bool = False
+    "是否使用假渲染器"
+
 
 config = get_plugin_config(Config)
 
