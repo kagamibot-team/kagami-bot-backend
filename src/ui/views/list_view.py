@@ -62,12 +62,6 @@ class UserStorageView(BaseModel):
     limited_pack: int | None = None
 
     @property
-    def level_limit_text(self) -> str:
-        if self.limited_level is None:
-            return ""
-        return self.limited_level.display_name
-
-    @property
     def pack_limit_text(self) -> str:
         if self.limited_pack is None:
             return ""
@@ -81,11 +75,6 @@ class UserStorageView(BaseModel):
                 f"{self.user_name}{self.pack_limit_text}抓小哥进度：{self.progress:.2%}"
             )
         return f"{self.user_name}{self.pack_limit_text}{self.limited_level.display_name}进度："
-
-    @property
-    def storage_title(self) -> str:
-        "进度标题"
-        return f"{self.user_name}{self.pack_limit_text}{self.level_limit_text}库存"
 
     @property
     def user_name(self) -> str:
@@ -138,21 +127,6 @@ class UserStorageView(BaseModel):
             ls.append(TitleView(title=title, size=80, color=level.color))
             ls.append(ListView(awards=awards))
         return ls
-
-    @property
-    def storage_document(self) -> ListViewDocument:
-        "库存视图"
-        docs: list[ListView | str | int | TitleView] = [
-            TitleView(title=self.storage_title, size=80)
-        ]
-        awards: list[StorageDisplay | None] = []
-        for _, awds in self.awards:
-            awards += sorted(
-                [i for i in awds if i is not None and i.storage > 0],
-                key=lambda x: (-x.storage, x.info.aid, x.info.sorting),
-            )
-        docs.append(ListView(awards=awards))
-        return ListViewDocument(docs=docs)
 
     @property
     def prog_document(self) -> ListViewDocument:

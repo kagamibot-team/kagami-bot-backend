@@ -10,21 +10,9 @@ def render_progress_image(data: UserStorageView):
     return render_document(data.prog_document)
 
 
-def render_storage_image(data: UserStorageView):
-    return render_document(data.storage_document)
-
-
 async def render_progress_message(data: UserStorageView):
     return UniMessage.image(
         raw=await make_async(image_to_bytes)(
             await make_async(render_progress_image)(data)
-        )
-    )
-
-
-async def render_storage_message(data: UserStorageView):
-    return UniMessage.image(
-        raw=await make_async(image_to_bytes)(
-            await make_async(render_storage_image)(data)
         )
     )

@@ -17,7 +17,7 @@ from src.common.data.awards import download_award_image, get_a_list_of_award_sto
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.models.level import level_repo
 from src.services.pool import PoolService
-from src.ui.pages.storage import render_progress_message, render_storage_message
+from src.ui.pages.storage import render_progress_message
 from src.ui.types.common import UserData
 from src.ui.views.list_view import UserStorageView
 
