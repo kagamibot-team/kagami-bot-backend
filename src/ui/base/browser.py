@@ -82,6 +82,22 @@ class ChromeFactory(BaseBrowserDriverFactory):
         opt.add_argument("--headless")
         opt.add_argument("--enable-webgl")
         opt.add_argument("--allow-file-access-from-files")
+
+        # 对 Docker 环境的支持
+        opt.add_argument("--disable-dev-shm-usage")
+        # 容器内存共享的空间较小，导致 Chrome 无法正常启动。
+
+        opt.add_argument("--no-sandbox")
+        # 在 Docker 中运行 Chrome 时，--no-sandbox 是必需的，
+        # 因为默认的沙箱模式在容器中无法正确工作。
+
+        # 其他的一些选项
+        opt.add_argument("--disable-gpu") 
+        opt.add_argument("--disable-extensions")
+        opt.add_argument("--disable-infobars")
+        opt.add_argument("--start-maximized")
+        opt.add_argument("--disable-notifications")
+
         driver = Chrome(options=opt)
         return driver
 
@@ -93,6 +109,7 @@ class BrowserPool:
     def __init__(self, factory: BaseBrowserDriverFactory, count: int) -> None:
         self.renderers = []
         for i in range(count):
+            logger.info(f"正在打开浏览器 {i+1}/{count}")
             self.renderers.append(BrowserRenderer(factory.get()))
             logger.info(f"打开了浏览器 {i+1}/{count}")
 
