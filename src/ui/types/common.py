@@ -50,3 +50,7 @@ class GetAward(BaseModel):
     info: AwardInfo
     count: int
     is_new: bool
+
+
+class DisplayAward(GetAward):
+    stats: str = ""
