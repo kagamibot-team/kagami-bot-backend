@@ -83,13 +83,13 @@ def parse_getup_time(inp: tuple[str] | None) -> tuple[int, int]:
 
 
 @listen_message()
+@limited
 @match_alconna(
     Alconna(
         "小镜晚安",
         Arg("getup_time", MultiVar(str, "*"), seps=" "),
     )
 )
-@limited
 @require_awake
 async def goodnight(ctx: GroupContext, res: Arparma):
     arg = res.query[tuple[str]]("getup_time")

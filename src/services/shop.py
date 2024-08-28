@@ -231,7 +231,7 @@ class ShopService:
     def __getitem__(self, name: str) -> ShopProduct:
         p = self.get(name)
         if p is None:
-            raise ObjectNotFoundException("商品", name)
+            raise ObjectNotFoundException("商品")
         return p
 
     async def freeze(self, uow: UnitOfWork, uid: int) -> ShopFreezed:
@@ -254,8 +254,6 @@ async def build_xjshop(uow: UnitOfWork) -> ShopService:
         if price <= 0:
             continue
         info = await uow.awards.get_info(aid)
-        service.register(
-            SkinProduct(sid, sname, simage, info.name, price, info.color)
-        )
+        service.register(SkinProduct(sid, sname, simage, info.name, price, info.color))
 
     return service

@@ -90,7 +90,7 @@ class LevelRepository:
     def get_by_name_strong(self, name: str):
         r = self.name_index.get(name)
         if r is None:
-            raise ObjectNotFoundException("等级", name)
+            raise ObjectNotFoundException("等级")
         return r
 
     def get_by_id(self, id: int):

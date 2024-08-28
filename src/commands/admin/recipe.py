@@ -38,7 +38,7 @@ async def _(ctx: MessageContext, res: Arparma):
 
         re = await uow.recipes.get_recipe(a1, a2, a3)
         if re is None:
-            raise ObjectNotFoundException("配方", f"{n1} + {n2} + {n3}")
+            raise ObjectNotFoundException("配方")
 
         info = await get_award_info(uow, re[0])
         modified = await uow.recipes.is_modified(a1, a2, a3)

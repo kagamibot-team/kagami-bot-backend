@@ -74,8 +74,8 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
 
 
 @listen_message()
-@match_regex("^(小[鹅lL]|x[le])?(猎场|lc)$")
 @limited
+@match_regex("^(小[鹅lL]|x[le])?(猎场|lc)$")
 @require_awake
 async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -95,8 +95,8 @@ async def _(ctx: MessageContext, _):
 
 @listen_message()
 @require_admin()
-@match_regex("^(猎场|lc)([Uu][Pp])$")
 @limited
+@match_regex("^(猎场|lc)([Uu][Pp])$")
 @require_awake
 async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
@@ -117,10 +117,10 @@ async def _(ctx: MessageContext, _):
 
 
 @listen_message()
+@limited
 @match_alconna(
     Alconna("re:(切换|qh)(猎场|lc)", Arg("猎场序号", int, flags=[ArgFlag.OPTIONAL]))
 )
-@limited
 @require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
     dest = res.query[int]("猎场序号")

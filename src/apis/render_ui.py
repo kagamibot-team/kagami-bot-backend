@@ -6,6 +6,8 @@ from io import BytesIO
 from pathlib import Path
 from sysconfig import get_platform, get_python_version
 
+from loguru import logger
+import nonebot
 from fastapi import APIRouter
 from fastapi.responses import (
     FileResponse,
@@ -13,7 +15,6 @@ from fastapi.responses import (
     JSONResponse,
     StreamingResponse,
 )
-import nonebot
 from pydantic import BaseModel
 
 from src.base.onebot.onebot_tools import get_avatar_cached
@@ -26,6 +27,7 @@ manager = BackendDataManager()
 
 
 FRONTEND_DIST = config.frontend_path
+INDEX_PATH = FRONTEND_DIST / "index.html"
 
 
 def backend_register_data(data: BaseModel) -> str:
@@ -101,6 +103,11 @@ async def serve_vue_app(path: str):
 
     if file_path.exists() and file_path.is_file():
         return FileResponse(file_path)
+    if not INDEX_PATH.exists():
+        logger.warning("未找到前端的 Index 文件，将渲染 Fallback 页面。")
+        return HTMLResponse(
+            Path("./res/frontend_fallback.html").read_text(encoding="utf-8")
+        )
     return HTMLResponse((FRONTEND_DIST / "index.html").read_text(encoding="utf-8"))
 
 

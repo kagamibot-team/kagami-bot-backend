@@ -62,7 +62,6 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
         aid = get_random().choice(list(limited_aids))
         picked.append(aid)
 
-    met_35 = False
     new_calculated: set[int] = set()
 
     for aid in picked:
@@ -79,9 +78,8 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
         if picks.awards[aid].beforeStats == 0 and aid not in new_calculated:
             picks.money += 20
             new_calculated.add(aid)
-        elif aid == 35 and not met_35:
+        elif aid == 35:
             # 处理百变小哥
-            met_35 = True
             await handle_baibianxiaoge(uow, uid)
     return picks
 

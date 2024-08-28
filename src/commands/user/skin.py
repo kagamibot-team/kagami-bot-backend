@@ -20,8 +20,8 @@ from src.ui.components.awards import ref_book_box_raw
 
 
 @listen_message()
-@match_alconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("小哥名字", str)))
 @limited
+@match_alconna(Alconna("re:(更换|改变|替换|切换)(小哥)?(皮肤)", Arg("小哥名字", str)))
 @require_awake
 async def _(ctx: MessageContext, result: Arparma):
     name = result.query[str]("小哥名字")

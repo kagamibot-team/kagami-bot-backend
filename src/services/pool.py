@@ -130,9 +130,9 @@ class PoolService:
         assert len(available) > 0
         if pack is not None:
             if pack <= 0 or pack > max_count:
-                raise ObjectNotFoundException(obj_name=f"{pack} 号猎场")
+                raise ObjectNotFoundException("猎场")
             if pack not in available:
-                raise DoNotHaveException(f"{pack} 号猎场")
+                raise DoNotHaveException("猎场")
         elif len(available) == 1 or current not in available:
             pack = available[0]
         else:
@@ -154,7 +154,7 @@ class PoolService:
         if pack_id in own_packs:
             raise SoldOutException(f"{pack_id} 号猎场")
         if pack_id <= 0 or pack_id > max_count:
-            raise ObjectNotFoundException(obj_name=f"{pack_id} 号猎场")
+            raise ObjectNotFoundException("猎场")
 
         await self.uow.money.use(uid, 1000)
         await self.uow.user_pack.add_own(uid, pack_id)
@@ -191,7 +191,7 @@ class PoolService:
         await self.ensure_user(uid)
         upid = await self.get_buyable_pool(pack)
         if upid is None:
-            raise ObjectNotFoundException(obj_name=f"{pack} 号猎场的猎场升级")
+            raise ObjectNotFoundException("猎场的猎场升级")
         if upid in await self.uow.up_pool.get_own(uid, pack):
             raise SoldOutException(f"{pack} 号猎场的猎场升级")
         info = await self.uow.up_pool.get_pool_info(upid)

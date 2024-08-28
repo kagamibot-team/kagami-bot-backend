@@ -16,16 +16,13 @@ class KagamiStopIteration(KagamiCoreException):
 class ObjectNotFoundException(KagamiCoreException):
     """当找不到某个对象时抛出此异常"""
 
-    def __init__(self, obj_type: str | None = None, obj_name: str = "") -> None:
+    def __init__(self, obj_type: str | None = None) -> None:
         super().__init__()
         self.obj_type = obj_type
-        self.obj_name = obj_name
 
     @property
     def message(self) -> str:
-        msg = f"我好像没找到你说的 {self.obj_name}"
-        if self.obj_type is not None:
-            msg += f" 的那个 {self.obj_type}"
+        msg = f"抱歉！档案中没有这个{self.obj_type}，请检查输入是否有误！"
         return msg
 
 
@@ -80,7 +77,7 @@ class DoNotHaveException(KagamiCoreException):
 
     @property
     def message(self) -> str:
-        return f"阿呀！你好像没有 {self.obj}……"
+        return f"阿呀！你好像没有「{self.obj}」……"
 
 
 class KagamiRangeError(KagamiCoreException):

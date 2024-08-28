@@ -7,7 +7,7 @@ import PIL.Image
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
-from src.common.command_deco import listen_message, match_regex
+from src.common.command_deco import limited, listen_message, match_regex
 from src.common.lang.zh import get_latest_versions, la
 from src.ui.base.basics import Fonts, render_text, vertical_pile
 from src.ui.base.browser import get_browser_pool
@@ -17,6 +17,7 @@ updateHistory: dict[str, list[str]] = la.about.update
 
 
 @listen_message()
+@limited
 @match_regex("^(抓小哥|zhua) ?(更新|gx|upd|update)$")
 async def _(ctx: MessageContext, *_):
     count = 3
@@ -58,6 +59,7 @@ async def _(ctx: MessageContext, *_):
 
 
 @listen_message()
+@limited
 @match_regex("^(抓小哥|zhua) ?(帮助|help)$")
 async def _(ctx: MessageContext, *_):
     image = await get_browser_pool().render("help")
@@ -71,6 +73,7 @@ async def _(ctx: MessageContext, *_):
 
 
 @listen_message()
+@limited
 @match_regex("^(关于 ?小?镜 ?([bB]ot)?|kagami ?about)$")
 async def _(ctx: MessageContext, *_):
     image = await get_browser_pool().render("about")
