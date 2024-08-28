@@ -44,7 +44,7 @@ async def _(ctx: MessageContext, res: Arparma):
             raise ObjectAlreadyExistsException(aname)
         level_obj = level_repo.get_by_name(lname)
         if level_obj is None:
-            raise ObjectNotFoundException("等级", lname)
+            raise ObjectNotFoundException("等级")
         await uow.awards.add_award(aname, level_obj.lid)
     await ctx.reply("ok.")
 

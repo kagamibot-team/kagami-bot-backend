@@ -231,7 +231,7 @@ class ShopService:
     def __getitem__(self, name: str) -> ShopProduct:
         p = self.get(name)
         if p is None:
-            raise ObjectNotFoundException("商品", name)
+            raise ObjectNotFoundException("商品")
         return p
 
     async def freeze(self, uow: UnitOfWork, uid: int) -> ShopFreezed:

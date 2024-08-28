@@ -89,7 +89,7 @@ class SkinRepository(DBRepository):
         """
         s = await self.get_sid(name)
         if s is None:
-            raise ObjectNotFoundException("皮肤", name)
+            raise ObjectNotFoundException("皮肤")
         return s
 
     async def add_skin(self, aid: int, name: str) -> int:

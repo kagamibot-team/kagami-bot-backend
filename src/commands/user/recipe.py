@@ -22,6 +22,7 @@ from src.ui.types.recipe import MergeData, MergeMeta
 
 
 @listen_message()
+@limited
 @match_alconna(
     Alconna(
         "re:(合成|hc)(小哥|xg)?",
@@ -32,7 +33,6 @@ from src.ui.types.recipe import MergeData, MergeMeta
         Arg("第三个小哥", str),
     )
 )
-@limited
 @require_awake
 async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 20, 1: 3, 2: 8, 3: 12, 4: 15, 5: 17}

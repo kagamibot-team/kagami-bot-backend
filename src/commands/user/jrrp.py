@@ -10,8 +10,8 @@ from src.core.unit_of_work import get_unit_of_work
 
 
 @listen_message()
-@match_regex("^(小镜|xj)(签到|qd)$")
 @limited
+@match_regex("^(小镜|xj)(签到|qd)$")
 @require_awake
 async def _(ctx: GroupContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:

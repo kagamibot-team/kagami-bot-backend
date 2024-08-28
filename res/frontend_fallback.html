@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        #big_box {
+            width: 600px;
+            background-color: white;
+            padding: 30px 50px;
+            box-shadow: 30px 30px 90px #0002;
+        }
+
+        body {
+            background-color: rgb(204, 204, 215);
+        }
+
+        code {
+            color: rgb(204, 101, 4);
+            background-color: #eee;
+            padding: 3px 5px;
+            border-radius: 4px;
+            border: solid 1px #ccc;
+        }
+    </style>
+
+    <script>
+        window.addEventListener("load", () => {
+            window.loaded_trigger_signal = true;
+        });
+    </script>
+</head>
+
+<body>
+    <div id="big_box">
+        <h1>临时页面</h1>
+        <hr />
+        <p>如果你看到当前页面，说明你没有成功配置 <code>dist</code> 目录。</p>
+        <p>
+            一般来说，你需要在 <code>.env</code> 文件中，将 <code>FRONTEND_DIST</code> 配置为前端文件的文件夹地址。
+        </p>
+        <p>如果你只需要检查将要传输给前端的数据，请使用 <code>::dump-data &lt;数据UUID&gt;</code> 指令获得，其中 UUID 可以通过管理面板中的响应获取。</p>
+    </div>
+</body>
+
+</html>

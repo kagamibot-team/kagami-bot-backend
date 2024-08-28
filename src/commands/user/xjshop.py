@@ -147,6 +147,7 @@ async def shop_buy_message(
 
 
 @listen_message()
+@limited
 @match_alconna(
     Alconna(
         "re:(小镜的?|xj) ?(shop|小店|商店)",
@@ -157,7 +158,6 @@ async def shop_buy_message(
         ),
     )
 )
-@limited
 @require_awake
 async def _(ctx: MessageContext, res: Arparma[Any]):
     buys = res.query[list[str]]("商品名") or []
