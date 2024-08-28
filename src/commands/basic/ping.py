@@ -14,6 +14,7 @@ from src.base.onebot.onebot_events import GroupPokeContext
 from src.common.command_deco import limited, listen_message, require_awake
 from src.common.config import config
 from src.common.rd import get_random
+from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 
 
@@ -196,6 +197,13 @@ LAST_POKE_TIME: dict[int, float] = {}
 
 @root.listen(GroupPokeContext)
 async def _(ctx: GroupPokeContext):
+    if ctx.event.group_id in config.limited_group:
+        return
+    async with get_unit_of_work(ctx.event.user_id) as uow:
+        n = now_datetime().timestamp()
+        uid = await uow.users.get_uid(ctx.event.user_id)
+        if await uow.users.get_getup_time(uid) > n:
+            return
     if ctx.event.target_id == ctx.event.self_id:
         last = LAST_POKE_TIME.get(ctx.event.user_id, 0.0)
         curr = time.time()
