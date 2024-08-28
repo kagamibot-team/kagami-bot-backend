@@ -81,7 +81,7 @@ class BrowserRenderer(Renderer):
         )
         element_width: float = element.size["width"]
         element_height: float = element.size["height"]
-        self.driver.set_window_size(element_width + 100, element_height + 100)
+        self.driver.set_window_size(element_width + 100, element_height + 500)
         return element.screenshot_as_png
 
 
