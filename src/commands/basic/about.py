@@ -17,6 +17,7 @@ updateHistory: dict[str, list[str]] = la.about.update
 
 
 @listen_message()
+@limited
 @match_regex("^(抓小哥|zhua) ?(更新|gx|upd|update)$")
 async def _(ctx: MessageContext, *_):
     count = 3
@@ -72,6 +73,7 @@ async def _(ctx: MessageContext, *_):
 
 
 @listen_message()
+@limited
 @match_regex("^(关于 ?小?镜 ?([bB]ot)?|kagami ?about)$")
 async def _(ctx: MessageContext, *_):
     image = await get_browser_pool().render("about")
