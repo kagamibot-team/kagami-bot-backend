@@ -36,10 +36,12 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         sid = None
         uid = await uow.users.get_uid(ctx.sender_id)
         sto: int | None = None
+        sta: int | None = None
 
         if not do_admin:
-            sto = await uow.inventories.get_stats(uid, aid)
-            if sto <= 0:
+            sto = await uow.inventories.get_storage(uid, aid)
+            sta = await uow.inventories.get_stats(uid, aid)
+            if sta <= 0:
                 raise DoNotHaveException(name)
 
         if skin_name is not None:
@@ -56,7 +58,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         dt = AwardDisplay(info=info)
 
     if do_display:
-        msg = await render_award_info_message(dt, count=sto)
+        msg = await render_award_info_message(dt, count=sto, stats=sta)
         await ctx.send(msg)
     elif do_admin:
         msg = (

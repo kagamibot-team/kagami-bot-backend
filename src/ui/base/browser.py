@@ -6,6 +6,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from asyncio import Lock
 from pathlib import Path
+import time
 
 import nonebot
 from loguru import logger
@@ -65,6 +66,8 @@ class BrowserRenderer(Renderer):
             )
         )
 
+        time.sleep(0.3)
+
         # 等待图片加载完成
         WebDriverWait(self.driver, 10).until(
             lambda driver: driver.execute_script(
@@ -78,7 +81,7 @@ class BrowserRenderer(Renderer):
         )
         element_width: float = element.size["width"]
         element_height: float = element.size["height"]
-        self.driver.set_window_size(element_width + 50, element_height + 50)
+        self.driver.set_window_size(element_width + 100, element_height + 500)
         return element.screenshot_as_png
 
 
