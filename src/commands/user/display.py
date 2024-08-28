@@ -62,7 +62,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         await ctx.send(msg)
     elif do_admin:
         msg = (
-            UniMessage.text(f"{info.name}【{info.level.display_name}】")
+            UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
             .image(path=info.image_path)
             .text(
                 f"id={aid};\n"
@@ -73,7 +73,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         await ctx.reply(msg)
     else:
         msg = (
-            UniMessage.text(f"{info.name}【{info.level.display_name}】")
+            UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
             .image(path=info.image_path)
             .text(f"\n{info.description}")
         )
