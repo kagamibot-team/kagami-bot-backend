@@ -68,7 +68,7 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
         packs=packs,
         user=user,
         selecting=await uow.user_pack.get_using(uid),
-        expression=get_random_expression(get_random()),
+        dialogue=get_random_expression(get_random()),
         chips=int(await uow.money.get(uid)),
     )
 
