@@ -16,6 +16,7 @@ from src.common.data.awards import get_award_info
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.services.pool import PoolService
+from src.services.stats import StatService
 from src.ui.base.browser import get_browser_pool
 from src.ui.types.liechang import LiechangCountInfo, LiechangData, SingleLiechang
 from src.ui.views.pack import (
@@ -68,7 +69,7 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
         packs=packs,
         user=user,
         selecting=await uow.user_pack.get_using(uid),
-        expression=get_random_expression(get_random()),
+        dialogue=get_random_expression(get_random()),
         chips=int(await uow.money.get(uid)),
     )
 
@@ -86,6 +87,7 @@ async def _(ctx: MessageContext, _):
                 uid=uid, qqid=str(ctx.sender_id), name=await ctx.get_sender_name()
             ),
         )
+        await StatService(uow).check_lc_view(uid, data.selecting)
 
     browsers = get_browser_pool()
     img = await browsers.render("liechang", data)
@@ -134,6 +136,8 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 uid=uid, qqid=str(ctx.sender_id), name=await ctx.get_sender_name()
             ),
         )
+        await StatService(uow).check_lc_view(uid, data.selecting)
+        await StatService(uow).qhlc_command(uid, data.selecting)
 
     browsers = get_browser_pool()
     img = await browsers.render("liechang", data)

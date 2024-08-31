@@ -16,8 +16,9 @@ class SingleLiechang(BaseModel):
     unlocked: bool
 
 
-class LQRExpression(BaseModel):
+class DialogueMessage(BaseModel):
     text: str
+    speaker: str
     face: str
 
 
@@ -25,5 +26,5 @@ class LiechangData(BaseModel):
     packs: list[SingleLiechang]
     user: UserData
     selecting: int
-    expression: LQRExpression
+    dialogue: DialogueMessage
     chips: int

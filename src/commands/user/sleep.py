@@ -24,6 +24,7 @@ from src.common.command_deco import (
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime
 from src.core.unit_of_work import get_unit_of_work
+from src.services.stats import StatService
 
 GET_UP_TIME_PRESETS = {
     "四": 4,
@@ -124,6 +125,7 @@ async def goodnight(ctx: GroupContext, res: Arparma):
 
         await uow.users.set_getup_time(uid, target.timestamp())
         name = await uow.users.name(qqid=ctx.sender_id)
+        await StatService(uow).sleep(uid, 21 <= now_time.hour < 23)
 
     # 渲染消息部分
     rep_name = ""

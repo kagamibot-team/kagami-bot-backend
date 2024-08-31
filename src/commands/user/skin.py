@@ -14,6 +14,7 @@ from src.common.command_deco import (
     require_awake,
 )
 from src.core.unit_of_work import get_unit_of_work
+from src.services.stats import StatService
 from src.ui.base.basics import Fonts, pile, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
 from src.ui.components.awards import ref_book_box_raw
@@ -54,6 +55,7 @@ async def _(ctx: MessageContext, result: Arparma):
 
         aname = (await uow.awards.get_info(aid)).name
         sname = (await uow.skins.get_info(sid))[0] if sid is not None else "默认"
+        await StatService(uow).switch_skin(uid, aid, sid)
 
     await ctx.reply(f"已经将 {aname} 的皮肤切换为 {sname} 了。")
 
