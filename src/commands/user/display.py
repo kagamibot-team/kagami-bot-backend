@@ -9,6 +9,7 @@ from src.common.command_deco import listen_message, match_alconna
 from src.common.data.awards import get_award_info
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
+from src.services.stats import StatService
 from src.ui.pages.catch import render_award_info_message
 from src.ui.views.award import AwardDisplay
 
@@ -56,6 +57,8 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         main_pack = await uow.pack.get_main_pack(aid)
         linked_pack = await uow.pack.get_linked_packs(aid)
         dt = AwardDisplay(info=info)
+
+        await StatService(uow).display(uid, aid, sid)
 
     if do_display:
         msg = await render_award_info_message(dt, count=sto, stats=sta)

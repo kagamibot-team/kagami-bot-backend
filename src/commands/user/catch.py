@@ -88,7 +88,7 @@ async def picks(
                 is_new=pick.beforeStats == 0,
             )
         )
-        await stats.zhua(uid, aid, pick_result.pid)
+        await stats.zhua(uid, aid, pick_result.pid, pick.delta)
 
     await uow.users.update_catch_time(
         uid,
@@ -96,6 +96,7 @@ async def picks(
         user_time.pickLastUpdated,
     )
     await uow.money.add(uid, pick_result.money)
+    await stats.zhua_get_chips(uid, int(pick_result.money))
     pack_id = await uow.user_pack.get_using(uid)
 
     msg = ZhuaData(
@@ -167,6 +168,7 @@ async def _(ctx: GroupContext):
         flags_before = await uow.user_flag.get(uid)
         await uow.user_flag.add(uid, "是")
         utime = await uow_calculate_time(uow, uid)
+        await StatService(uow).shi(uid)
     if utime.pickRemain > 0:
         async with get_unit_of_work(ctx.sender_id) as uow:
             msg = await picks(

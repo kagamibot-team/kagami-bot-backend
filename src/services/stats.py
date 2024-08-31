@@ -13,6 +13,8 @@ class StatService:
         self.uow = uow
 
     # 记录层：记录各类数据
+
+    # 表层
     async def throw_baba(self, uid: int, target: int, success: bool):
         stid = await self.uow.stats.get_id(
             uid=uid,
@@ -28,12 +30,19 @@ class StatService:
             )
             await self.uow.stats.update(stid, 1)
 
-    async def zhua(self, uid: int, aid: int, pid: int, count: int = 1):
+    async def zhua(self, uid: int, aid: int, pid: int, count: int):
         stid = await self.uow.stats.get_id(
             uid=uid,
             stat_type="抓到小哥",
             linked_aid=aid,
             linked_pid=pid,
+        )
+        await self.uow.stats.update(stid, count)
+
+    async def zhua_get_chips(self, uid: int, count: int):
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="在抓小哥的时候得到薯片",
         )
         await self.uow.stats.update(stid, count)
 
@@ -51,11 +60,8 @@ class StatService:
         )
         await self.uow.stats.update(stid, 1)
 
-    async def hc(self, uid: int, rid: int, success: bool, result: int):
-        msg = ({
-            False: "合成失败",
-            True: "合成成功"
-        })[success]
+    async def hc(self, uid: int, rid: int, success: bool, result: int, spent: int):
+        msg = ({False: "合成失败", True: "合成成功"})[success]
         stid = await self.uow.stats.get_id(
             uid=uid,
             stat_type=msg,
@@ -63,6 +69,14 @@ class StatService:
             linked_aid=result,
         )
         await self.uow.stats.update(stid, 1)
+        msg = ({False: "合成失败消费", True: "合成成功消费"})[success]
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type=msg,
+            linked_rid=rid,
+            linked_aid=result,
+        )
+        await self.uow.stats.update(stid, spent)
 
     async def sleep(self, uid: int, early: bool):
         stid = await self.uow.stats.get_id(
@@ -78,9 +92,80 @@ class StatService:
             await self.uow.stats.update(stid, 1)
 
     async def sign(self, uid: int):
+        stid = await self.uow.stats.get_id(uid=uid, stat_type="签到")
+        await self.uow.stats.update(stid, 1)
+
+    async def qhlc_command(self, uid: int, pid: int):
         stid = await self.uow.stats.get_id(
             uid=uid,
-            stat_type="签到"
+            stat_type="切换猎场",
+            linked_pid=pid,
+        )
+        await self.uow.stats.update(stid, 1)
+
+    async def check_lc_view(self, uid: int, pid: int):
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="看猎场的界面",
+            linked_pid=pid,
+        )
+        await self.uow.stats.update(stid, 1)
+
+    async def xjshop_buy(self, uid: int, spent: int):
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="在小镜商店消费次数",
+        )
+        await self.uow.stats.update(stid, 1)
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="在小镜商店消费薯片",
+        )
+        await self.uow.stats.update(stid, spent)
+
+    async def check_xjshop(self, uid: int):
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="查看小镜商店",
+        )
+        await self.uow.stats.update(stid, 1)
+
+    async def switch_skin(self, uid: int, aid: int, sid: int | None):
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="切换皮肤",
+            linked_aid=aid,
+            linked_sid=sid,
+        )
+        await self.uow.stats.update(stid, 1)
+
+    async def shi(self, uid: int):
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="是",
+        )
+        await self.uow.stats.update(stid, 1)
+
+    async def kbs(self, uid: int):
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="kbs",
+        )
+        await self.uow.stats.update(stid, 1)
+
+    async def display(self, uid: int | None, aid: int, sid: int | None):
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="展示小哥",
+            linked_aid=aid,
+            linked_sid=sid,
+        )
+        await self.uow.stats.update(stid, 1)
+
+    async def poke(self, uid: int):
+        stid = await self.uow.stats.get_id(
+            uid=uid,
+            stat_type="戳小镜",
         )
         await self.uow.stats.update(stid, 1)
 

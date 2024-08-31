@@ -16,6 +16,7 @@ from src.common.config import config
 from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
+from src.services.stats import StatService
 
 
 def __match_char(c: str):
@@ -141,6 +142,7 @@ async def reply_call(
     at_back = UniMessage.at(str(sender))
     async with get_unit_of_work(sender) as uow:
         special_name = await uow.users.name(qqid=sender)
+        await StatService(uow).poke(await uow.users.get_uid(sender))
 
     _special = (
         (

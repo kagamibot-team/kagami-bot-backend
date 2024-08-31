@@ -70,7 +70,7 @@ async def _(ctx: GroupContext, res: Arparma):
 
         aid, succeed = await try_merge(uow, uid, a1, a2, a3)
         rid = await uow.recipes.get_recipe_id(a1, a2, a3)
-        await StatService(uow).hc(uid, rid, succeed, aid)
+        await StatService(uow).hc(uid, rid, succeed, aid, cost)
         if aid == -1:
             info = await generate_random_info()
             add = get_random().randint(1, 100)

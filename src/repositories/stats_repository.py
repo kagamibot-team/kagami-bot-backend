@@ -8,15 +8,15 @@ from src.models.stats import StatRecord
 
 
 class StatData(BaseModel):
-    uid: int
+    uid: int | None
     stat_type: str
     count: int
-    linked_uid: int
-    linked_aid: int
-    linked_sid: int
-    linked_pid: int
-    linked_rid: int
-    linked_upid: int
+    linked_uid: int | None
+    linked_aid: int | None
+    linked_sid: int | None
+    linked_pid: int | None
+    linked_rid: int | None
+    linked_upid: int | None
 
 
 class StatsRepository(DBRepository):
@@ -26,7 +26,7 @@ class StatsRepository(DBRepository):
 
     async def _create(
         self,
-        uid: int,
+        uid: int | None,
         stat_type: str,
         count: int = 0,
         linked_uid: int | None = None,
@@ -58,7 +58,7 @@ class StatsRepository(DBRepository):
 
     async def _get(
         self,
-        uid: int,
+        uid: int | None,
         stat_type: str,
         linked_uid: int | None = None,
         linked_aid: int | None = None,
@@ -87,7 +87,7 @@ class StatsRepository(DBRepository):
 
     async def get_all_id(
         self,
-        uid: int | Literal["no_limit"],
+        uid: int | None | Literal["no_limit"],
         stat_type: str,
         linked_uid: int | None | Literal["no_limit"] = "no_limit",
         linked_aid: int | None | Literal["no_limit"] = "no_limit",
@@ -143,7 +143,7 @@ class StatsRepository(DBRepository):
 
     async def assure(
         self,
-        uid: int,
+        uid: int | None,
         stat_type: str,
         linked_uid: int | None = None,
         linked_aid: int | None = None,
@@ -176,7 +176,7 @@ class StatsRepository(DBRepository):
 
     async def get_sum(
         self,
-        uid: int | Literal["no_limit"],
+        uid: int | None | Literal["no_limit"],
         stat_type: str,
         linked_uid: int | None | Literal["no_limit"] = "no_limit",
         linked_aid: int | None | Literal["no_limit"] = "no_limit",
@@ -274,7 +274,7 @@ class StatsRepository(DBRepository):
 
     async def get_id(
         self,
-        uid: int,
+        uid: int | None,
         stat_type: str,
         linked_uid: int | None = None,
         linked_aid: int | None = None,
