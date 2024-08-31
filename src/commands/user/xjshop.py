@@ -18,6 +18,7 @@ from src.common.command_deco import (
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.services.shop import ShopFreezed, ShopProductFreezed, build_xjshop
+from src.services.stats import StatService
 from src.ui.base.basics import Fonts, paste_image, pile, render_text, vertical_pile
 from src.ui.base.tools import image_to_bytes
 from src.ui.components.awards import ref_book_box_raw
@@ -171,6 +172,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             )
             freezed_shop = await shop.freeze(uow, uid)
             money = await uow.money.get(uid)
+            await StatService(uow).check_xjshop(uid)
         msg = await shop_default_message(user, freezed_shop, money)
         await ctx.send(msg)
     else:
@@ -192,5 +194,5 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 prods.append(await prod.freeze(uow, uid))
                 await prod.gain(uow, uid)
             remain = await uow.money.use(uid, costs)
-            print(prods)
+            await StatService(uow).xjshop_buy(uid, int(costs))
         await ctx.send(await shop_buy_message(user, prods, costs, remain))
