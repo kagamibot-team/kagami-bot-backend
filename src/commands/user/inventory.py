@@ -161,4 +161,3 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         ),
     )
     await ctx.send(UniMessage.image(raw=img))
-
