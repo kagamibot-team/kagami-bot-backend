@@ -9,13 +9,10 @@ from src.common.command_deco import (
     match_literal,
     require_admin,
 )
-from src.common.data.awards import download_award_image, get_a_list_of_award_storage
-from src.core.unit_of_work import UnitOfWork, get_unit_of_work
+from src.common.data.awards import download_award_image
+from src.core.unit_of_work import get_unit_of_work
 from src.models.level import level_repo
 from src.services.pool import PoolService
-from src.ui.pages.storage import render_progress_message
-from src.ui.types.common import UserData
-from src.ui.views.list_view import UserStorageView
 
 
 @listen_message()
@@ -129,72 +126,6 @@ async def _(ctx: MessageContext, res: Arparma):
         )
 
     await ctx.reply("ok.")
-
-
-async def get_storage_view(
-    uow: UnitOfWork,
-    userdata: UserData | None,
-    level_name: str | None,
-    pack_id: int | None,
-    show_notation1: bool = True,
-    show_notation2: bool = True,
-    include_zero: bool = True,
-) -> UserStorageView:
-    uid = None if userdata is None else userdata.uid
-    view = UserStorageView(user=userdata)
-    if level_name is not None:
-        view.limited_level = uow.levels.get_by_name_strong(level_name)
-    view.limited_pack = pack_id
-
-    for level in uow.levels.sorted:
-        if level_name is not None and level != view.limited_level:
-            continue
-        aids = await uow.awards.get_aids(level.lid, pack_id, include_zero)
-        infos = await get_a_list_of_award_storage(
-            uow,
-            uid,
-            aids,
-            show_notation2=show_notation2,
-            show_notation1=show_notation1,
-        )
-        view.awards.append((level, infos))
-    return view
-
-
-@listen_message()
-@require_admin()
-@match_alconna(
-    Alconna(
-        "re:(所有|全部)小哥",
-        ["::"],
-        Option(
-            "等级",
-            Arg("等级名字", str),
-            alias=["--level", "级别", "-l", "-L"],
-            compact=True,
-        ),
-        Option(
-            "猎场",
-            Arg("猎场序号", int),
-            alias=["--pack", "小鹅猎场", "-p", "-P"],
-            compact=True,
-        ),
-    )
-)
-async def _(ctx: MessageContext, res: Arparma):
-    levelName = res.query[str]("等级名字")
-    pack_id = res.query[int]("猎场序号")
-    async with get_unit_of_work(ctx.sender_id) as uow:
-        view = await get_storage_view(
-            uow,
-            None,
-            levelName,
-            pack_id,
-            show_notation1=False,
-            show_notation2=False,
-            include_zero=False,
-        )
-    await ctx.send(await render_progress_message(view))
 
 
 @listen_message()

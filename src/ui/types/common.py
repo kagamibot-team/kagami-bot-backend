@@ -41,9 +41,9 @@ class AwardInfo(BaseModel):
 
 
 class UserData(BaseModel):
-    uid: int
-    qqid: str
-    name: str
+    uid: int = -1
+    qqid: str = ""
+    name: str = "管理员"
 
 
 class GetAward(BaseModel):

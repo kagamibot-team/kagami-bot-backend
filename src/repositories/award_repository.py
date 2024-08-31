@@ -93,7 +93,9 @@ class AwardRepository(DBRepository):
             list[int]: 小哥的 ID 列表
         """
 
-        q = select(Award.data_id).order_by(-Award.sorting, Award.data_id)
+        q = select(Award.data_id).order_by(
+            -Award.level_id, -Award.sorting, Award.data_id
+        )
         if lid is not None:
             q = q.filter(Award.level_id == lid)
         if pack is not None:

@@ -31,7 +31,6 @@ class Fonts(enum.Enum):
     MAPLE_UI = FONT_BASE / "Maple UI.ttf"
     HARMONYOS_SANS_BLACK = FONT_BASE / "HarmonyOS_Sans_SC_Black.ttf"
     VONWAON_BITMAP_12 = FONT_BASE / "VonwaonBitmap-12px.ttf"
-    VONWAON_BITMAP_16 = FONT_BASE / "VonwaonBitmap-16px.ttf"
     MARU_MONICA = FONT_BASE / "莫妮卡像素圆体 x12y16pxMaruMonica.otf"
 
 
