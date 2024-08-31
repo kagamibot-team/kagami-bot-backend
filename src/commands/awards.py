@@ -2,11 +2,7 @@ from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import Image
 
 from src.base.command_events import MessageContext
-from src.base.exceptions import (
-    KagamiRangeError,
-    ObjectAlreadyExistsException,
-    ObjectNotFoundException,
-)
+from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
 from src.common.command_deco import (
     listen_message,
     match_alconna,
@@ -163,47 +159,6 @@ async def get_storage_view(
         )
         view.awards.append((level, infos))
     return view
-
-
-@listen_message()
-@match_alconna(
-    Alconna(
-        "re:(zhuajd|抓进度|抓小哥进度)",
-        Option(
-            "等级",
-            Arg("等级名字", str),
-            alias=["--level", "级别", "-l", "-L", "lv"],
-            compact=True,
-        ),
-        Option(
-            "猎场",
-            Arg("猎场序号", int),
-            alias=["--pack", "小鹅猎场", "-p", "-P", "lc"],
-            compact=True,
-        ),
-    )
-)
-async def _(ctx: MessageContext, res: Arparma):
-    levelName = res.query[str]("等级名字")
-    pack_id = res.query[int]("猎场序号")
-    async with get_unit_of_work(ctx.sender_id) as uow:
-        if pack_id is not None:
-            # 验证 pack_id 范围，防止用户乱输
-            maxc = await uow.settings.get_pack_count()
-            if pack_id <= 0 or pack_id > maxc:
-                raise KagamiRangeError("猎场序号", f"1~{maxc} 的值", pack_id)
-        view = await get_storage_view(
-            uow,
-            UserData(
-                uid=await uow.users.get_uid(ctx.sender_id),
-                name=await ctx.sender_name,
-                qqid=str(ctx.sender_id),
-            ),
-            levelName,
-            pack_id,
-        )
-
-    await ctx.send(await render_progress_message(view))
 
 
 @listen_message()
