@@ -16,6 +16,7 @@ from src.common.dataclasses.game_events import MergeEvent
 from src.common.rd import get_random
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
+from src.services.stats import StatService
 from src.ui.base.browser import get_browser_pool
 from src.ui.types.common import GetAward
 from src.ui.types.recipe import MergeData, MergeMeta
@@ -68,6 +69,8 @@ async def _(ctx: GroupContext, res: Arparma):
         after = await uow.money.use(uid, cost)
 
         aid, succeed = await try_merge(uow, uid, a1, a2, a3)
+        rid = await uow.recipes.get_recipe_id(a1, a2, a3)
+        await StatService(uow).hc(uid, rid, succeed, aid)
         if aid == -1:
             info = await generate_random_info()
             add = get_random().randint(1, 100)

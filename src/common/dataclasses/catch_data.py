@@ -19,3 +19,4 @@ class Picks(BaseModel):
     awards: dict[int, Pick]
     money: float
     uid: int
+    pid: int

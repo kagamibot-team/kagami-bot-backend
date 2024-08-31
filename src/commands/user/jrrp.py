@@ -7,6 +7,7 @@ from src.common.command_deco import limited, listen_message, match_regex, requir
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime, to_utc8
 from src.core.unit_of_work import get_unit_of_work
+from src.services.stats import StatService
 
 
 @listen_message()
@@ -37,6 +38,7 @@ async def _(ctx: GroupContext, _):
 
         await uow.money.add(uid, moneydelta)
         await uow.users.set_sign_in_info(uid, time.time(), count)
+        await StatService(uow).sign(uid)
 
     await ctx.reply(
         f"签到成功！你已经连续签到 {count} 天了。\n您的今日人品是 {moneydelta} ，获得了对应量的薯片！"
