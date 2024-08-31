@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 from nonebot import get_plugin_config
 from pydantic import BaseModel
 
@@ -54,6 +55,9 @@ class Config(BaseModel):
 
     use_fake_browser: bool = False
     "是否使用假渲染器"
+
+    browser: Literal["chrome", "firefox"] = "chrome"
+    "使用什么浏览器"
 
 
 config = get_plugin_config(Config)
