@@ -54,6 +54,7 @@ class BrowserRenderer(Renderer):
     def _sync_render(self, link: str) -> bytes:
         # 访问相应接口
         self.driver.get(link)
+        logger.debug(f"WebDriver 访问了 {link}")
 
         # 等待页面加载完成
         WebDriverWait(self.driver, 10).until(
@@ -67,6 +68,7 @@ class BrowserRenderer(Renderer):
                 "return window.loaded_trigger_signal !== undefined;"
             )
         )
+        logger.debug(f"WebDriver 收到了页面加载完成的信号")
 
         time.sleep(0.3)
 
@@ -76,6 +78,7 @@ class BrowserRenderer(Renderer):
                 "return Array.from(document.images).every(img => img.complete);"
             )
         )
+        logger.debug(f"WebDriver 断定图片已经加载完成了")
 
         # 截图
         element = WebDriverWait(self.driver, 5).until(
@@ -84,7 +87,12 @@ class BrowserRenderer(Renderer):
         element_width: float = element.size["width"]
         element_height: float = element.size["height"]
         self.driver.set_window_size(element_width + 100, element_height + 500)
-        return element.screenshot_as_png
+
+        logger.debug(f"WebDriver 开始截图")
+        image = element.screenshot_as_png
+        logger.debug(f"WebDriver 截图好了")
+
+        return image
 
 
 class FakeRenderer(Renderer):
@@ -114,7 +122,7 @@ class ChromeFactory(BaseBrowserDriverFactory):
         # 因为默认的沙箱模式在容器中无法正确工作。
 
         # 其他的一些选项
-        opt.add_argument("--disable-gpu") 
+        opt.add_argument("--disable-gpu")
         opt.add_argument("--disable-extensions")
         opt.add_argument("--disable-infobars")
         opt.add_argument("--start-maximized")
@@ -182,9 +190,18 @@ class BrowserPool:
         if data is not None:
             uuid = backend_register_data(data)
             query = f"?uuid={uuid}"
+            logger.debug(f"已经将数据暂存到 {uuid} 了")
+
         nbdriver = nonebot.get_driver()
-        port = nbdriver.config.port
-        link = f"http://127.0.0.1:{port}/kagami/pages/{path}{query}"
+
+        port: int = nbdriver.config.port
+        if (_port := config.config.render_port) != 0:
+            port = int(_port)
+
+        link = f"http://{config.config.render_host}:{port}/kagami/pages/{path}{query}"
+
+        logger.debug(f"访问 {link} 进行渲染")
+
         for r in self.renderers:
             if not r.lock.locked():
                 return await r.render_link(link)
