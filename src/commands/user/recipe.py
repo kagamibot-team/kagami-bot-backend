@@ -88,13 +88,6 @@ async def _(ctx: GroupContext, res: Arparma):
             if aid == 35:
                 await handle_baibianxiaoge(uow, uid)
 
-        if isinstance(ctx, GroupContext):
-            await uow.recipes.record_history(
-                ctx.event.group_id,
-                await uow.recipes.get_recipe_id(a1, a2, a3),
-                uid,
-            )
-
         if succeed:
             status = "成功！"
         elif aid in (89, -1):
