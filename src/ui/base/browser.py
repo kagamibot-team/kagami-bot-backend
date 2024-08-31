@@ -68,7 +68,7 @@ class BrowserRenderer(Renderer):
                 "return window.loaded_trigger_signal !== undefined;"
             )
         )
-        logger.debug(f"WebDriver 收到了页面加载完成的信号")
+        logger.debug("WebDriver 收到了页面加载完成的信号")
 
         time.sleep(0.3)
 
@@ -78,7 +78,7 @@ class BrowserRenderer(Renderer):
                 "return Array.from(document.images).every(img => img.complete);"
             )
         )
-        logger.debug(f"WebDriver 断定图片已经加载完成了")
+        logger.debug("WebDriver 断定图片已经加载完成了")
 
         # 截图
         element = WebDriverWait(self.driver, 5).until(
@@ -88,9 +88,9 @@ class BrowserRenderer(Renderer):
         element_height: float = element.size["height"]
         self.driver.set_window_size(element_width + 100, element_height + 500)
 
-        logger.debug(f"WebDriver 开始截图")
+        logger.debug("WebDriver 开始截图")
         image = element.screenshot_as_png
-        logger.debug(f"WebDriver 截图好了")
+        logger.debug("WebDriver 截图好了")
 
         return image
 

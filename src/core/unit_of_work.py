@@ -26,6 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.base.lock_manager import get_lock
 from src.models.level import level_repo
 from src.repositories.skin_inventory_repository import SkinInventoryRepository
+from src.repositories.stats_repository import StatsRepository
 from src.repositories.up_pool_repository import PackRepository, UpPoolRepository
 from src.repositories.user_repository import (
     MoneyRepository,
@@ -166,6 +167,10 @@ class UnitOfWork:
     @property
     def pack(self):
         return PackRepository(self.session)
+
+    @property
+    def stats(self):
+        return StatsRepository(self.session)
 
 
 def get_unit_of_work(qqid: str | int | None = None):

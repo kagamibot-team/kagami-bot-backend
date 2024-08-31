@@ -1,9 +1,5 @@
 from sqlalchemy import delete, insert, select, update
 
-from src.models.models import Award
-from src.models.recipe_history import RecipeHistory
-from src.models.level import Level
-
 from ..base.exceptions import ObjectAlreadyExistsException, RecipeMissingException
 from ..base.repository import DBRepository
 from ..models.models import Recipe
@@ -141,7 +137,6 @@ class RecipeRepository(DBRepository):
         )
 
         await self.session.execute(query)
-        await self.clear_history(await self.get_recipe_id(aid1, aid2, aid3))
 
     async def clear_not_modified(self, force: bool = False) -> None:
         """删除所有未修改的配方"""
@@ -174,17 +169,6 @@ class RecipeRepository(DBRepository):
 
         return (await self.session.execute(query)).scalar_one_or_none() == 1
 
-    async def clear_history(self, rid: int):
-        """清除某个合成配方所有的合成历史
-
-        Args:
-            rid (int): 配方的 ID
-        """
-
-        await self.session.execute(
-            delete(RecipeHistory).where(RecipeHistory.recipe == rid)
-        )
-
     async def get_all_special(self):
         """
         获取所有特殊配方
@@ -201,116 +185,3 @@ class RecipeRepository(DBRepository):
         ).filter(Recipe.modified == 1)
 
         return list((await self.session.execute(query)).tuples().all())
-
-    async def limit_one_history(self, group_id: int | str, rid: int):
-        """限制数据库中的合成历史只保留最旧的一个
-
-        Args:
-            group_id (int | str): 群 ID
-            rid (int): 配方的 ID
-
-        Returns:
-            int | None: 如果有历史，返回最旧的历史的发现者 UID，否则返回 None
-        """
-
-        the_true_first_uid = await self.session.scalar(
-            select(RecipeHistory.first)
-            .where(
-                RecipeHistory.source == str(group_id),
-                RecipeHistory.recipe == rid,
-            )
-            .order_by(-RecipeHistory.data_id)
-            .limit(1)
-        )
-
-        await self.session.execute(
-            delete(RecipeHistory).where(
-                RecipeHistory.source == str(group_id),
-                RecipeHistory.recipe == rid,
-            )
-        )
-
-        if the_true_first_uid is not None:
-            await self.session.execute(
-                insert(RecipeHistory).values(
-                    {
-                        RecipeHistory.source: str(group_id),
-                        RecipeHistory.recipe: rid,
-                        RecipeHistory.first: the_true_first_uid,
-                    }
-                )
-            )
-
-        return the_true_first_uid
-
-    async def record_history(self, group_id: int | str, rid: int, uid: int):
-        """记录下一次合成历史
-
-        Args:
-            group_id (int | str): 群 ID
-            rid (int): 配方的 ID
-            uid (int): 用户的 ID
-        """
-
-        # 前面忘记筛选了，这里只能人工再修复一下
-        first = await self.limit_one_history(group_id, rid)
-
-        if first is None:
-            await self.session.execute(
-                insert(RecipeHistory).values(
-                    {
-                        RecipeHistory.source: str(group_id),
-                        RecipeHistory.recipe: rid,
-                        RecipeHistory.first: uid,
-                    }
-                )
-            )
-
-    async def get_histories(
-        self,
-        group_id: int | str,
-        result: int | None = None,
-        level: int | Level | None = None,
-        page_index: int = 0,
-        page_size: int = 10,
-    ):
-        """获得抓小哥的历史记录合集
-
-        Args:
-            group_id (int | str): 群 ID
-            result (int | None, optional): 筛选条件之合成出来的小哥 ID. Defaults to None.
-            level (int | Level | None, optional): 筛选条件之等级. Defaults to None.
-            page_index (int, optional): 第几页（程序的方式定义索引）. Defaults to 0.
-            page_size (int, optional): 一页多少个. Defaults to 10.
-
-        Returns:
-            Sequence[tuple[int, int, int, int, int, datetime]]: 输入的三个 ID，输出的一个 ID，第一个发现者的 UID，记录的时间
-        """
-
-        query = (
-            select(
-                Recipe.award1,
-                Recipe.award2,
-                Recipe.award3,
-                Recipe.result,
-                RecipeHistory.first,
-                RecipeHistory.created_at,
-            )
-            .join(RecipeHistory, RecipeHistory.recipe == Recipe.data_id)
-            .filter(RecipeHistory.source == str(group_id))
-        )
-
-        if result is not None:
-            query = query.filter(Recipe.result == result)
-
-        if level is not None:
-            if isinstance(level, Level):
-                level = level.lid
-            query = query.join(Award, Recipe.result == Award.data_id)
-            query = query.filter(Award.level_id == level)
-
-        query = query.order_by(-RecipeHistory.data_id)
-        query = query.offset(page_index * page_size)
-        query = query.limit(page_size)
-
-        return (await self.session.execute(query)).tuples().all()
