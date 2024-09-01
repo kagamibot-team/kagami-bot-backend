@@ -1,6 +1,7 @@
 from loguru import logger
 from nonebot import get_driver
 from nonebot.exception import ActionFailed
+from nonebot_plugin_alconna import UniMessage
 
 from src.base.event.event_root import root
 from src.base.onebot.onebot_api import get_group_list, send_group_msg, set_qq_status
@@ -9,8 +10,9 @@ from src.base.onebot.onebot_events import OnebotStartedContext
 from src.base.onebot.onebot_tools import broadcast, update_cached_name
 from src.common.command_deco import interval_at_start
 from src.common.config import config
-from src.common.lang.zh import get_latest_version, la
 from src.core.unit_of_work import get_unit_of_work
+from src.ui.base.browser import get_browser_pool
+from src.ui.types.zhuagx import UpdateData, get_latest_version
 
 
 @root.listen(OnebotStartedContext)
@@ -24,16 +26,16 @@ async def _(ctx: OnebotStartedContext):
         version = await uow.settings.get_last_version()
         lv = get_latest_version()
 
-        if version != lv:
-            await uow.settings.set_last_version(lv)
+        if version != lv.version:
+            await uow.settings.set_last_version(lv.version)
 
-            msg = f"刚刚推送了版本 {lv} 的更新，内容如下：\n"
-            for upd_msg in la.about.update[lv]:
-                msg += "\n -" + upd_msg
-            await broadcast(ctx.bot, msg)
-        elif get_driver().env != "dev":
-            for group in config.admin_groups:
-                await send_group_msg(ctx.bot, group, "服务器重启好了")
+    if version != lv:
+        data = UpdateData(versions=[lv], show_pager=False)
+        msg = UniMessage.image(raw=await get_browser_pool().render("update", data))
+        await broadcast(ctx.bot, msg)
+    elif get_driver().env != "dev":
+        for group in config.admin_groups:
+            await send_group_msg(ctx.bot, group, "服务器重启好了")
 
 
 @interval_at_start(60, False)

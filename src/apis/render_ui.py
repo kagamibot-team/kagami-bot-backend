@@ -19,8 +19,8 @@ from pydantic import BaseModel
 
 from src.base.onebot.onebot_tools import get_avatar_cached
 from src.common.config import config
-from src.common.lang.zh import get_latest_version
 from src.ui.base.backend_pages import BackendDataManager
+from src.ui.types.zhuagx import get_latest_version
 
 router = APIRouter()
 manager = BackendDataManager()
@@ -65,7 +65,7 @@ async def request_meta_data():
     return {
         "app_name": app_name,
         "app_version": app_version,
-        "kagami_version": get_latest_version(),
+        "kagami_version": get_latest_version().version,
         "python_version": get_python_version(),
         "platform": get_platform(),
     }
