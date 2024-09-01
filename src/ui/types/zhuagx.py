@@ -453,7 +453,8 @@ updates = [
         updates=[
             UpdateContentData(content="猎场功能上线", tags=["功能"]),
             UpdateContentData(
-                content="实现了新的界面渲染方式，这个方案现在进入了测试阶段", tags=["内核"]
+                content="实现了新的界面渲染方式，这个方案现在进入了测试阶段",
+                tags=["内核"],
             ),
         ],
     ),
@@ -467,7 +468,8 @@ updates = [
         version="1.0.2",
         updates=[
             UpdateContentData(
-                content="修复了不显示用户名的问题，此时将替换为显示 QQ 号", tags=["特性"]
+                content="修复了不显示用户名的问题，此时将替换为显示 QQ 号",
+                tags=["特性"],
             ),
             UpdateContentData(content="调整了一些界面", tags=["特性"]),
         ],
@@ -475,7 +477,9 @@ updates = [
     VersionData(
         version="1.0.3",
         updates=[
-            UpdateContentData(content="修复了一些用户只能显示 QQ 号的问题", tags=["修复"]),
+            UpdateContentData(
+                content="修复了一些用户只能显示 QQ 号的问题", tags=["修复"]
+            ),
             UpdateContentData(content="在一些界面显示了 QQ 头像", tags=["特性"]),
             UpdateContentData(content="调整了一些指令", tags=["特性"]),
         ],
@@ -483,16 +487,27 @@ updates = [
     VersionData(
         version="1.0.5",
         updates=[
-            UpdateContentData(content="修复了一些指令会意外在闲聊群触发的问题", tags=["修复"]),
+            UpdateContentData(
+                content="修复了一些指令会意外在闲聊群触发的问题", tags=["修复"]
+            ),
             UpdateContentData(content="调整了一些错误信息的回复", tags=["特性"]),
             UpdateContentData(content="修改了和百变小哥有关的游戏逻辑", tags=["修复"]),
-            UpdateContentData(content="展示条目的时候同时显示库存和累计", tags=["特性"]),
+            UpdateContentData(
+                content="展示条目的时候同时显示库存和累计", tags=["特性"]
+            ),
         ],
     ),
     VersionData(
         version="1.1.0",
         updates=[
             UpdateContentData(content="新增了一个 NPC", tags=["特性"]),
+        ],
+    ),
+    VersionData(
+        version="1.1.1",
+        updates=[
+            UpdateContentData(content="修复了合成时可能出现的外键问题", tags=["修复"]),
+            UpdateContentData(content="更改了更新界面", tags=["界面"]),
         ],
     ),
 ]
