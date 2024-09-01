@@ -61,12 +61,13 @@ class StatService:
         await self.uow.stats.update(stid, 1)
 
     async def hc(self, uid: int, rid: int, success: bool, result: int, spent: int):
+        _res = None if result < 0 else result
         msg = ({False: "合成失败", True: "合成成功"})[success]
         stid = await self.uow.stats.get_id(
             uid=uid,
             stat_type=msg,
             linked_rid=rid,
-            linked_aid=result,
+            linked_aid=_res,
         )
         await self.uow.stats.update(stid, 1)
         msg = ({False: "合成失败消费", True: "合成成功消费"})[success]
@@ -74,7 +75,7 @@ class StatService:
             uid=uid,
             stat_type=msg,
             linked_rid=rid,
-            linked_aid=result,
+            linked_aid=_res,
         )
         await self.uow.stats.update(stid, spent)
 
