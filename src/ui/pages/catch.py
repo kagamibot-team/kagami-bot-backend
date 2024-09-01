@@ -20,7 +20,7 @@ async def render_award_info_message(
     data: AwardDisplay, count: int | None = None, stats: int | None = None
 ) -> UniMessage[Any]:
     count = count or -1
-    stats_val = str(stats) or ""
+    stats_val = str(stats or "")
     image = await get_browser_pool().render(
         "catch",
         DisplayAward(info=data.info, count=count, is_new=False, stats=stats_val),
