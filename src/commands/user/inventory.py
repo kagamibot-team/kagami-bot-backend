@@ -21,8 +21,7 @@ def build_display(
     stats: dict[int, int] | None = None,
 ) -> list[BookBoxData]:
     elements: list[BookBoxData] = []
-    storage = storage
-    stats = stats
+
     for d in info:
         if stats is not None and (d.aid not in stats or stats[d.aid] <= 0):
             obj = BookBoxData(
