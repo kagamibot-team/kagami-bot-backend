@@ -25,9 +25,6 @@ FONT_BASE = Path("./res/fonts/")
 
 
 class Fonts(enum.Enum):
-    JINGNAN_BOBO_HEI = FONT_BASE / "荆南波波黑-Bold.ttf"  # 界面标题
-    JINGNAN_JUNJUN = FONT_BASE / "JUNJUN.otf"  # 界面次级标题
-    ALIMAMA_SHU_HEI = FONT_BASE / "AlimamaShuHeiTi-Bold.ttf"  # 界面小文字
     HARMONYOS_SANS_BLACK = FONT_BASE / "HarmonyOS_Sans_SC_Black.ttf"
     VONWAON_BITMAP_12 = FONT_BASE / "VonwaonBitmap-12px.ttf"
     MARU_MONICA = FONT_BASE / "莫妮卡像素圆体 x12y16pxMaruMonica.otf"
