@@ -82,14 +82,15 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         aids = await uow.awards.get_aids()
         infos = list((await uow.awards.get_info_dict(aids)).values())
         inventory_dict = await uow.inventories.get_inventory_dict(user.uid, aids)
-        storage_dict = {i: v[0] for i, v in inventory_dict.items()}
-        stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
-        infos = [i for i in infos if stats_dict.get(i.aid, 0) > 0]
-        infos = sorted(
-            infos,
-            key=lambda i: (-i.level.lid, -storage_dict.get(i.aid, 0), i.sorting, i.aid),
-        )
-        view = build_display(infos, storage_dict, stats_dict)
+
+    storage_dict = {i: v[0] for i, v in inventory_dict.items()}
+    stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
+    infos = [i for i in infos if stats_dict.get(i.aid, 0) > 0]
+    infos = sorted(
+        infos,
+        key=lambda i: (-i.level.lid, -storage_dict.get(i.aid, 0), i.sorting, i.aid),
+    )
+    view = build_display(infos, storage_dict, stats_dict)
     img = await get_browser_pool().render(
         "storage",
         data=StorageData(
@@ -141,48 +142,49 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         infos = await uow.awards.get_info_dict(aids)
 
         inventory_dict = await uow.inventories.get_inventory_dict(user.uid, aids)
-        storage_dict = {i: v[0] for i, v in inventory_dict.items()}
-        stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
 
-        groups: list[BoxItemList] = []
+    storage_dict = {i: v[0] for i, v in inventory_dict.items()}
+    stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
 
-        if lid is not None:
-            infos = [infos[aid] for aid in aids]
-            view = build_display(infos, storage_dict, stats_dict)
-            groups.append(BoxItemList(elements=view))
-            progress = 0
-        else:
-            grouped_aids = await uow.awards.group_by_level(aids)
-            grouped_aids_filtered = [
-                (
-                    uow.levels.get_by_id(i),
-                    [(v if stats_dict.get(v, 0) > 0 else None) for v in vs],
+    groups: list[BoxItemList] = []
+
+    if lid is not None:
+        infos = [infos[aid] for aid in aids]
+        view = build_display(infos, storage_dict, stats_dict)
+        groups.append(BoxItemList(elements=view))
+        progress = 0
+    else:
+        grouped_aids = await uow.awards.group_by_level(aids)
+        grouped_aids_filtered = [
+            (
+                uow.levels.get_by_id(i),
+                [(v if stats_dict.get(v, 0) > 0 else None) for v in vs],
+            )
+            for i, vs in grouped_aids.items()
+        ]
+        progress = calc_progress(grouped_aids_filtered)
+
+        for i in (5, 4, 3, 2, 1, 0):
+            if i not in grouped_aids:
+                continue
+
+            lvl = uow.levels.get_by_id(i)
+            _infos = [infos[aid] for aid in grouped_aids[i]]
+            if i == 0:
+                # 零星小哥的特殊处理
+                _infos = [i for i in _infos if stats_dict.get(i.aid, 0) > 0]
+            if len(_infos) <= 0:
+                continue
+            view = build_display(_infos, storage_dict, stats_dict)
+            current = len([i for i in grouped_aids[i] if stats_dict.get(i, 0) > 0])
+            progress_follow = f"：{current}/{len(grouped_aids[i])}" if i > 0 else ""
+            groups.append(
+                BoxItemList(
+                    title=lvl.display_name + progress_follow,
+                    title_color=lvl.color,
+                    elements=view,
                 )
-                for i, vs in grouped_aids.items()
-            ]
-            progress = calc_progress(grouped_aids_filtered)
-
-            for i in (5, 4, 3, 2, 1, 0):
-                if i not in grouped_aids:
-                    continue
-
-                lvl = uow.levels.get_by_id(i)
-                _infos = [infos[aid] for aid in grouped_aids[i]]
-                if i == 0:
-                    # 零星小哥的特殊处理
-                    _infos = [i for i in _infos if stats_dict.get(i.aid, 0) > 0]
-                if len(_infos) <= 0:
-                    continue
-                view = build_display(_infos, storage_dict, stats_dict)
-                current = len([i for i in grouped_aids[i] if stats_dict.get(i, 0) > 0])
-                progress_follow = f"：{current}/{len(grouped_aids[i])}" if i > 0 else ""
-                groups.append(
-                    BoxItemList(
-                        title=lvl.display_name + progress_follow,
-                        title_color=lvl.color,
-                        elements=view,
-                    )
-                )
+            )
 
     pack_det = "" if pack_index is None else f"{pack_index} 猎场 "
     level_det = "" if level is None else f"{level.display_name} "
