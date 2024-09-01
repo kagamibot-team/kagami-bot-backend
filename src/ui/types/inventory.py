@@ -31,5 +31,5 @@ class BoxItemList(BaseModel):
 
 class StorageData(BaseModel):
     user: UserData
-    boxes: list[BoxItemList]
+    boxes: list[BoxItemList] = []
     title_text: str = "小哥库存"
