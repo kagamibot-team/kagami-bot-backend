@@ -25,11 +25,9 @@ async def _(ctx: OnebotStartedContext):
     async with get_unit_of_work() as uow:
         version = await uow.settings.get_last_version()
         lv = get_latest_version()
+        await uow.settings.set_last_version(lv.version)
 
-        if version != lv.version:
-            await uow.settings.set_last_version(lv.version)
-
-    if version != lv:
+    if version != lv.version:
         data = UpdateData(versions=[lv], show_pager=False)
         msg = UniMessage.image(raw=await get_browser_pool().render("update", data))
         await broadcast(ctx.bot, msg)
