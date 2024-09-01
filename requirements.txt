@@ -10,7 +10,6 @@ SQLAlchemy
 alembic
 aiosqlite
 pytz
-qrcode
 freezegun
 imagetext-py
 packaging
