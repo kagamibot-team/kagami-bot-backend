@@ -7,14 +7,12 @@ from src.base.exceptions import KagamiRangeError
 from src.common.command_deco import listen_message, match_alconna
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
-from src.common.data.awards import get_a_list_of_award_storage
 from src.common.data.user import get_user_data
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import Level
 from src.ui.base.browser import get_browser_pool
 from src.ui.types.common import AwardInfo, UserData
-from src.ui.types.inventory import BookBoxData, DisplayBoxData, StorageData, StorageUnit
-from src.ui.views.award import StorageDisplay
+from src.ui.types.inventory import BookBoxData, DisplayBoxData, StorageData, BoxItemList
 
 
 def build_display(
@@ -82,25 +80,22 @@ def calc_progress(grouped_awards: Iterable[tuple[Level, list[int | None]]]) -> f
 async def _(ctx: MessageContext, res: Arparma[Any]):
     async with get_unit_of_work(ctx.sender_id) as uow:
         user = await get_user_data(ctx, uow)
-        aids: dict[int, list[int]] = {}
-        all_storages: list[StorageDisplay] = []
-        for i in (5, 4, 3, 2, 1, 0):
-            aids[i] = await uow.awards.get_aids(i)
-            storages = await get_a_list_of_award_storage(uow, user.uid, aids[i])
-            all_storages += [e for e in storages if e is not None]
-        all_storages = sorted(
-            all_storages, key=lambda s: (-s.info.level.lid, -s.storage)
+        aids = await uow.awards.get_aids()
+        infos = list((await uow.awards.get_info_dict(aids)).values())
+        inventory_dict = await uow.inventories.get_inventory_dict(user.uid, aids)
+        storage_dict = {i: v[0] for i, v in inventory_dict.items()}
+        stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
+        infos = [i for i in infos if stats_dict.get(i.aid, 0) > 0]
+        infos = sorted(
+            infos,
+            key=lambda i: (-i.level.lid, -storage_dict.get(i.aid, 0), i.sorting, i.aid),
         )
-        _sto = {item.info.aid: item.storage for item in all_storages}
-        _sta = {item.info.aid: item.stats for item in all_storages}
-        infos = [item.info for item in all_storages]
-
-        view = build_display(infos, _sto, _sta)
+        view = build_display(infos, storage_dict, stats_dict)
     img = await get_browser_pool().render(
         "storage",
         data=StorageData(
             user=user,
-            boxes=[StorageUnit(elements=view)],
+            boxes=[BoxItemList(elements=view)],
             title_text="库存",
         ),
     )
@@ -150,12 +145,12 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         storage_dict = {i: v[0] for i, v in inventory_dict.items()}
         stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
 
-        groups: list[StorageUnit] = []
+        groups: list[BoxItemList] = []
 
         if lid is not None:
             infos = [infos[aid] for aid in aids]
             view = build_display(infos, storage_dict, stats_dict)
-            groups.append(StorageUnit(elements=view))
+            groups.append(BoxItemList(elements=view))
             progress = 0
         else:
             grouped_aids = await uow.awards.group_by_level(aids)
@@ -183,7 +178,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 current = len([i for i in grouped_aids[i] if stats_dict.get(i, 0) > 0])
                 progress_follow = f"：{current}/{len(grouped_aids[i])}" if i > 0 else ""
                 groups.append(
-                    StorageUnit(
+                    BoxItemList(
                         title=lvl.display_name + progress_follow,
                         title_color=lvl.color,
                         elements=view,
@@ -244,12 +239,12 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         aids = await uow.awards.get_aids(lid, pack_index)
         infos = await uow.awards.get_info_dict(aids)
 
-        groups: list[StorageUnit] = []
+        groups: list[BoxItemList] = []
 
         if lid is not None:
             infos = [infos[aid] for aid in aids]
             view = build_display(infos)
-            groups.append(StorageUnit(elements=view))
+            groups.append(BoxItemList(elements=view))
         else:
             _aids = await uow.awards.group_by_level(aids)
 
@@ -263,7 +258,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                     continue
                 view = build_display(_infos)
                 groups.append(
-                    StorageUnit(
+                    BoxItemList(
                         title=lvl.display_name,
                         title_color=lvl.color,
                         elements=view,

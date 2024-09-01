@@ -21,7 +21,7 @@ class BookBoxData(BaseModel):
     title2: str = ""
 
 
-class StorageUnit(BaseModel):
+class BoxItemList(BaseModel):
     title: str = ""
     "标题留空时不显示小标题"
 
@@ -31,5 +31,5 @@ class StorageUnit(BaseModel):
 
 class StorageData(BaseModel):
     user: UserData
-    boxes: list[StorageUnit]
+    boxes: list[BoxItemList]
     title_text: str = "小哥库存"

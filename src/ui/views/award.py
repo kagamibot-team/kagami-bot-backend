@@ -25,19 +25,3 @@ class AwardDisplay(BaseModel):
     @property
     def sold_out(self) -> bool:
         return False
-
-
-class StorageDisplay(AwardDisplay):
-    do_show_notation1: bool = True
-    do_show_notation2: bool = False
-
-    storage: int
-    stats: int
-
-    @property
-    def notation(self):
-        return str(self.storage) if self.do_show_notation1 else ""
-
-    @property
-    def notation2(self):
-        return str(self.stats) if self.do_show_notation2 else ""
