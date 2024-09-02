@@ -26,7 +26,6 @@ FONT_BASE = Path("./res/fonts/")
 
 class Fonts(enum.Enum):
     HARMONYOS_SANS_BLACK = FONT_BASE / "HarmonyOS_Sans_SC_Black.ttf"
-    VONWAON_BITMAP_12 = FONT_BASE / "VonwaonBitmap-12px.ttf"
     MARU_MONICA = FONT_BASE / "莫妮卡像素圆体 x12y16pxMaruMonica.otf"
 
 

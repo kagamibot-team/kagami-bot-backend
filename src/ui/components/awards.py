@@ -47,7 +47,7 @@ def _display_box(
     return canvas
 
 
-def display_box_raw(color: str, image: PIL.Image.Image | Path | str | bytes, new: bool):
+def display_box_raw(color: str, image: PIL.Image.Image | Path | str | bytes):
     """
     渲染 DisplayBox
     """
@@ -59,24 +59,18 @@ def display_box_raw(color: str, image: PIL.Image.Image | Path | str | bytes, new
         image = DISPLAY_BOX_CACHE[cache_key].copy()
     else:
         image = _display_box(color, image)
-    if new:
-        image_new = PIL.Image.open("./res/new.png").convert("RGBA")
-        paste_image(image, image_new, 88, 0)
     return image
 
 
 def ref_book_box_raw(
     color: str,
     image: Path,
-    new: bool,
     notation_bottom: str,
-    notation_top: str,
     name: str,
     name_bottom: str,
     sold_out: bool = False,
-    smaller_size: bool = False,  # 呵呵，这条是补丁，在商店里面的字体大小不能很大
 ) -> PIL.Image.Image:
-    box = display_box_raw(color, image, new)
+    box = display_box_raw(color, image)
 
     if sold_out:
         so = PIL.Image.open("./res/sold_out.png")
@@ -88,24 +82,13 @@ def ref_book_box_raw(
         width=170,
         color="#FFFFFF",
         font=Fonts.MARU_MONICA,
-        font_size=36 if smaller_size else 48,
+        font_size=36,
         stroke=2,
         stroke_color="#000000",
         margin_bottom=5,
         margin_left=5,
     )
 
-    tl_notation = render_text(
-        text=notation_top,
-        width=170,
-        color="#000000",
-        font=Fonts.MARU_MONICA,
-        font_size=48,
-        stroke=2,
-        stroke_color="#FFFFFF",
-        margin_bottom=5,
-        margin_left=5,
-    )
     title = render_text(
         text=name,
         width=180,
@@ -127,7 +110,6 @@ def ref_book_box_raw(
     paste_image(block, box, 18, 18)
     paste_image(block, title, 18, 170)
     paste_image(block, title2, 18, 194)
-    paste_image(block, bl_notation, 23, 117 if smaller_size else 105)
-    paste_image(block, tl_notation, 23, 23)
+    paste_image(block, bl_notation, 23, 117)
 
     return block

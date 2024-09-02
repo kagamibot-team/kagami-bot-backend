@@ -28,13 +28,10 @@ async def product_box(product: ShopProductFreezed):
     return ref_book_box_raw(
         color=product.background_color,
         image=product.image,
-        new=False,
         notation_bottom=str(product.price) + "薯片",
-        notation_top="",
         name=product.title,
         name_bottom=product.description,
         sold_out=product.is_sold_out,
-        smaller_size=True,
     )
 
 
