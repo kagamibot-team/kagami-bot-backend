@@ -3,6 +3,7 @@
 如果有一些需要方便开发的指令，就写到这里吧！
 """
 
+import json
 from pathlib import Path
 from re import Match
 
@@ -67,7 +68,10 @@ async def _(ctx: GroupContext, _):
 async def _(ctx: MessageContext, res: Match[str]):
     data = backend_data_manager.get(res.group(1))
     if data is not None:
-        await ctx.reply(UniMessage(str(data.model_dump_json(indent=4))))
+        if isinstance(data, dict):
+            await ctx.reply(UniMessage(json.dumps(data)))
+        else:
+            await ctx.reply(UniMessage(str(data.model_dump_json(indent=4))))
     else:
         await ctx.reply("None.")
 

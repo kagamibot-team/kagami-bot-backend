@@ -20,6 +20,7 @@ from src.common.dataclasses.game_events import UserTryCatchEvent
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.logic.catch import pickAwards
 from src.logic.catch_time import uow_calculate_time
+from src.services.stats import StatService
 from src.ui.pages.catch import render_catch_message
 from src.ui.types.common import UserData
 from src.ui.types.zhua import GetAward, ZhuaData, ZhuaMeta
@@ -62,6 +63,7 @@ async def picks(
 
     uid = user.uid
     user_time = await uow_calculate_time(uow, uid)
+    stats = StatService(uow)
 
     if count is None:
         count = user_time.pickRemain
@@ -86,6 +88,7 @@ async def picks(
                 is_new=pick.beforeStats == 0,
             )
         )
+        await stats.zhua(uid, aid, pick_result.pid, pick.delta)
 
     await uow.users.update_catch_time(
         uid,
@@ -93,6 +96,7 @@ async def picks(
         user_time.pickLastUpdated,
     )
     await uow.money.add(uid, pick_result.money)
+    await stats.zhua_get_chips(uid, int(pick_result.money))
     pack_id = await uow.user_pack.get_using(uid)
 
     msg = ZhuaData(
@@ -124,12 +128,14 @@ async def _(ctx: GroupContext, result: Arparma):
     if count is None:
         count = 1
     async with get_unit_of_work(ctx.sender_id) as uow:
+        ud = await get_user_data(ctx, uow)
         msg = await picks(
             uow,
-            await get_user_data(ctx, uow),
+            ud,
             count,
             group_id=ctx.group_id,
         )
+        await StatService(uow).zhua_command(ud.uid)
     await ctx.send(await render_catch_message(msg))
 
 
@@ -139,11 +145,13 @@ async def _(ctx: GroupContext, result: Arparma):
 @require_awake
 async def _(ctx: GroupContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
+        ud = await get_user_data(ctx, uow)
         msg = await picks(
             uow,
-            await get_user_data(ctx, uow),
+            ud,
             group_id=ctx.group_id,
         )
+        await StatService(uow).kz_command(ud.uid)
     await ctx.send(await render_catch_message(msg))
 
 
@@ -160,6 +168,7 @@ async def _(ctx: GroupContext):
         flags_before = await uow.user_flag.get(uid)
         await uow.user_flag.add(uid, "是")
         utime = await uow_calculate_time(uow, uid)
+        await StatService(uow).shi(uid)
     if utime.pickRemain > 0:
         async with get_unit_of_work(ctx.sender_id) as uow:
             msg = await picks(

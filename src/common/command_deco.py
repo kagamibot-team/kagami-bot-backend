@@ -9,6 +9,8 @@ from nonebot import get_driver
 from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import UniMessage
 
+from selenium.common.exceptions import WebDriverException
+
 from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_manager import EventManager
 from src.base.event.event_root import root
@@ -207,6 +209,9 @@ def kagami_exception_handler():
                 if isinstance(e, KagamiStopIteration):
                     raise e from e
             except ActionFailed as e:
+                raise e from e
+            except WebDriverException as e:
+                await ctx.reply("渲染页面的时候出错了！请联系 PT 修复呀！")
                 raise e from e
             except Exception as e:  #!pylint: disable=W0703
                 await ctx.reply(

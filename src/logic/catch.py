@@ -21,15 +21,18 @@ async def pickAwards(uow: UnitOfWork, uid: int, count: int) -> Picks:
 
     up_pool_posibility = {1: 0.1, 2: 0.2, 3: 0.4, 4: 0.5, 5: 0.6}
 
-    picks = Picks(awards={}, money=0, uid=uid)
-    assert count >= 0
-
-    picked: list[int] = []
-
     pool_service = PoolService(uow)
-
+    picked: list[int] = []
     aids_set = await pool_service.get_aids(uid)
     aids = await uow.awards.group_by_level(aids_set)
+
+    picks = Picks(
+        awards={},
+        money=0,
+        uid=uid,
+        pid=await pool_service.get_current_pack(uid),
+    )
+    assert count >= 0
 
     levels = [uow.levels.get_by_id(i) for i in aids]
     weights = [level.weight for level in levels]

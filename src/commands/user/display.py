@@ -9,6 +9,7 @@ from src.common.command_deco import listen_message, match_alconna
 from src.common.data.awards import get_award_info
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
+from src.services.stats import StatService
 from src.ui.pages.catch import render_award_info_message
 from src.ui.views.award import AwardDisplay
 
@@ -36,10 +37,12 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         sid = None
         uid = await uow.users.get_uid(ctx.sender_id)
         sto: int | None = None
+        sta: int | None = None
 
         if not do_admin:
-            sto = await uow.inventories.get_stats(uid, aid)
-            if sto <= 0:
+            sto = await uow.inventories.get_storage(uid, aid)
+            sta = await uow.inventories.get_stats(uid, aid)
+            if sta <= 0:
                 raise DoNotHaveException(name)
 
         if skin_name is not None:
@@ -55,12 +58,14 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         linked_pack = await uow.pack.get_linked_packs(aid)
         dt = AwardDisplay(info=info)
 
+        await StatService(uow).display(uid, aid, sid)
+
     if do_display:
-        msg = await render_award_info_message(dt, count=sto)
+        msg = await render_award_info_message(dt, count=sto, stats=sta)
         await ctx.send(msg)
     elif do_admin:
         msg = (
-            UniMessage.text(f"{info.name}【{info.level.display_name}】")
+            UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
             .image(path=info.image_path)
             .text(
                 f"id={aid};\n"
@@ -71,7 +76,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         await ctx.reply(msg)
     else:
         msg = (
-            UniMessage.text(f"{info.name}【{info.level.display_name}】")
+            UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
             .image(path=info.image_path)
             .text(f"\n{info.description}")
         )

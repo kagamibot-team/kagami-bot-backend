@@ -6,7 +6,7 @@ from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import *
-from .recipe_history import RecipeHistory
+from .stats import StatRecord
 from .up_pool import UpPool
 
 DEFAULT_IMG = os.path.join(".", "res", "default.png")
@@ -174,6 +174,6 @@ __all__ = [
     "Skin",
     "SkinAltName",
     "Recipe",
-    "RecipeHistory",
     "UpPool",
+    "StatRecord",
 ]

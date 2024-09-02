@@ -1,9 +1,6 @@
 from typing import Any
 
 import PIL.Image
-import qrcode
-import qrcode.constants
-import qrcode.main
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import UniMessage
 
@@ -18,10 +15,13 @@ from src.common.command_deco import (
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.services.shop import ShopFreezed, ShopProductFreezed, build_xjshop
-from src.ui.base.basics import Fonts, paste_image, pile, render_text, vertical_pile
+from src.services.stats import StatService
+from src.ui.base.basics import Fonts, pile, render_text, vertical_pile
+from src.ui.base.browser import get_browser_pool
 from src.ui.base.tools import image_to_bytes
 from src.ui.components.awards import ref_book_box_raw
 from src.ui.types.common import UserData
+from src.ui.types.xjshop import BuyData, Product
 
 
 async def product_box(product: ShopProductFreezed):
@@ -91,59 +91,26 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
 async def shop_buy_message(
     user: UserData,
     products: list[ShopProductFreezed],
-    cost: float,
     remain: float,
 ):
-    buy_result = "小镜的 Shop 销售小票\n"
-    buy_result += "--------------------\n"
-    buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
-    buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
-    buy_result += f"客户：{user.name}\n"
-    buy_result += f"编号：{user.qqid}\n"
-    buy_result += "--------------------\n\n"
+    _date = now_datetime().strftime("%Y-%m-%d")
+    _time = now_datetime().strftime("%H:%M:%S")
 
-    for product in products:
-        buy_result += f"- {product.title}  {product.price} 薯片\n"
-
-    buy_result += "\n"
-    buy_result += f"总计：{cost}薯片\n"
-    buy_result += f"实付：{cost}薯片\n"
-    buy_result += f"余额：{remain}薯片\n"
-    buy_result += "--------------------\n"
-    buy_result += "  本次消费已结帐\n"
-    buy_result += "  欢迎下次光临\n"
-    buy_result += "--------------------\n"
-
-    image = render_text(
-        text=buy_result,
-        width=336,
-        color="#000000",
-        font=Fonts.VONWAON_BITMAP_12,
-        font_size=24,
-        margin_top=60,
-        margin_bottom=248,
-        margin_left=20,
-        margin_right=20,
-        draw_emoji=False,
+    data = BuyData(
+        date=_date,
+        time=_time,
+        user=user,
+        remain_chips=int(remain),
+        records=[
+            Product(
+                title=e.title,
+                price=int(e.price),
+            )
+            for e in products
+        ],
     )
 
-    base = PIL.Image.new("RGBA", image.size, "#FFFFFF")
-    paste_image(base, image, 0, 0)
-
-    qrc = qrcode.main.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=0,
-    )
-    qrc.add_data(buy_result)
-    qrc.make(fit=True)
-    qimg = qrc.make_image(fill_color="black", back_color="white")
-
-    qr = qimg.resize((180, 180), PIL.Image.LANCZOS)
-
-    base.paste(qr, (98, base.height - 240))
-    return UniMessage.image(raw=image_to_bytes(base))
+    return UniMessage.image(raw=await get_browser_pool().render("xjshop/bought", data))
 
 
 @listen_message()
@@ -171,6 +138,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             )
             freezed_shop = await shop.freeze(uow, uid)
             money = await uow.money.get(uid)
+            await StatService(uow).check_xjshop(uid)
         msg = await shop_default_message(user, freezed_shop, money)
         await ctx.send(msg)
     else:
@@ -192,5 +160,5 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 prods.append(await prod.freeze(uow, uid))
                 await prod.gain(uow, uid)
             remain = await uow.money.use(uid, costs)
-            print(prods)
-        await ctx.send(await shop_buy_message(user, prods, costs, remain))
+            await StatService(uow).xjshop_buy(uid, int(costs))
+        await ctx.send(await shop_buy_message(user, prods, remain))

@@ -4,9 +4,8 @@
 
 from io import BytesIO
 from pathlib import Path
-from sysconfig import get_platform, get_python_version
+from typing import Any
 
-import nonebot
 from fastapi import APIRouter
 from fastapi.responses import (
     FileResponse,
@@ -14,11 +13,11 @@ from fastapi.responses import (
     JSONResponse,
     StreamingResponse,
 )
+from loguru import logger
 from pydantic import BaseModel
 
 from src.base.onebot.onebot_tools import get_avatar_cached
 from src.common.config import config
-from src.common.lang.zh import get_latest_version
 from src.ui.base.backend_pages import BackendDataManager
 
 router = APIRouter()
@@ -26,9 +25,10 @@ manager = BackendDataManager()
 
 
 FRONTEND_DIST = config.frontend_path
+INDEX_PATH = FRONTEND_DIST / "index.html"
 
 
-def backend_register_data(data: BaseModel) -> str:
+def backend_register_data(data: BaseModel | dict[str, Any]) -> str:
     return manager.register(data)
 
 
@@ -43,30 +43,6 @@ async def request_data(data_id: str):
             {"status": "failed", "detail": "所请求的 data_id 不存在"}, status_code=404
         )
     return data
-
-
-@router.get("/metadata/")
-async def request_meta_data():
-    """
-    向后台请求关于服务器的元数据
-    """
-    try:
-        bot = nonebot.get_bot()
-        onebot_meta = await bot.call_api("get_version_info")
-
-        app_name: str = onebot_meta["app_name"]
-        app_version: str = onebot_meta["app_version"]
-    except:
-        app_name: str = "未识别"
-        app_version: str = "未识别"
-
-    return {
-        "app_name": app_name,
-        "app_version": app_version,
-        "kagami_version": get_latest_version(),
-        "python_version": get_python_version(),
-        "platform": get_platform(),
-    }
 
 
 @router.get("/file/awards/{image_name}")
@@ -101,6 +77,11 @@ async def serve_vue_app(path: str):
 
     if file_path.exists() and file_path.is_file():
         return FileResponse(file_path)
+    if not INDEX_PATH.exists():
+        logger.warning("未找到前端的 Index 文件，将渲染 Fallback 页面。")
+        return HTMLResponse(
+            Path("./res/frontend_fallback.html").read_text(encoding="utf-8")
+        )
     return HTMLResponse((FRONTEND_DIST / "index.html").read_text(encoding="utf-8"))
 
 
