@@ -4,12 +4,20 @@
 
 import math
 from re import Match
+from sysconfig import get_platform, get_python_version
+
+import nonebot
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.common.command_deco import limited, listen_message, match_regex
 from src.ui.base.browser import get_browser_pool
-from src.ui.types.zhuagx import UpdateData, get_latest_versions, updates
+from src.ui.types.zhuagx import (
+    UpdateData,
+    get_latest_version,
+    get_latest_versions,
+    updates,
+)
 from src.ui.types.zhuahelp import HelpData, command_dict, command_content
 from src.base.exceptions import ObjectNotFoundException
 
@@ -54,5 +62,24 @@ async def _(ctx: MessageContext, res: Match[str]):
 @limited
 @match_regex("^(关于 ?小?镜 ?([bB]ot)?|kagami ?about)$")
 async def _(ctx: MessageContext, *_):
-    image = await get_browser_pool().render("about")
+    try:
+        bot = nonebot.get_bot()
+        onebot_meta = await bot.call_api("get_version_info")
+
+        app_name: str = onebot_meta["app_name"]
+        app_version: str = onebot_meta["app_version"]
+    except:
+        app_name: str = "未识别"
+        app_version: str = "未识别"
+
+    image = await get_browser_pool().render(
+        "about",
+        {
+            "app_name": app_name,
+            "app_version": app_version,
+            "kagami_version": get_latest_version().version,
+            "python_version": get_python_version(),
+            "platform": get_platform(),
+        },
+    )
     await ctx.send(UniMessage().image(raw=image))
