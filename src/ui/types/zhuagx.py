@@ -510,6 +510,15 @@ updates = [
             UpdateContentData(content="更改了更新界面", tags=["界面"]),
         ],
     ),
+    VersionData(
+        version="1.1.2",
+        updates=[
+            UpdateContentData(content="迁移了大量代码到前端渲染，有些界面可能会有一些位移", tags=["内核", "界面"]),
+            UpdateContentData(content="修复了小镜晚安的连胜日期问题", tags=["修复"]),
+            UpdateContentData(content="榆木华：调整了小镜 Bot 的帮助信息", tags=["特性"]),
+            UpdateContentData(content="修复了重复汇报版本更新的问题", tags=["修复"])
+        ]
+    )
 ]
 
 
