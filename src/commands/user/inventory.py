@@ -42,10 +42,10 @@ def build_display(
             if d.level.lid >= 4:
                 obj.display_box.do_glow = True
         # 如果提供了库存和统计信息，则显示之
-        if storage is not None and d.aid in storage:
+        if storage is not None and d.aid in storage and storage[d.aid] > 0:
             obj.display_box.notation_down = str(storage[d.aid])
-        if stats is not None and d.aid in stats:
-            obj.display_box.notation_down = str(stats[d.aid])
+        if stats is not None and d.aid in stats and stats[d.aid] > 0:
+            obj.display_box.notation_up = str(stats[d.aid])
         elements.append(obj)
     return elements
 
@@ -139,6 +139,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             )
 
         aids = await uow.awards.get_aids(lid, pack_index)
+        aids.sort()
         infos = await uow.awards.get_info_dict(aids)
 
         inventory_dict = await uow.inventories.get_inventory_dict(user.uid, aids)
@@ -148,43 +149,42 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
         groups: list[BoxItemList] = []
 
+        grouped_aids = await uow.awards.group_by_level(aids)
+        grouped_aids_filtered = [
+            (
+                uow.levels.get_by_id(i),
+                [(v if stats_dict.get(v, 0) > 0 else None) for v in vs],
+            )
+            for i, vs in grouped_aids.items()
+        ]
+        progress = calc_progress(grouped_aids_filtered)
+
+        calculating_groups = (5, 4, 3, 2, 1, 0)
         if lid is not None:
-            infos = [infos[aid] for aid in aids]
-            view = build_display(infos, storage_dict, stats_dict)
-            groups.append(BoxItemList(elements=view))
-            progress = 0
-        else:
-            grouped_aids = await uow.awards.group_by_level(aids)
-            grouped_aids_filtered = [
-                (
-                    uow.levels.get_by_id(i),
-                    [(v if stats_dict.get(v, 0) > 0 else None) for v in vs],
-                )
-                for i, vs in grouped_aids.items()
-            ]
-            progress = calc_progress(grouped_aids_filtered)
+            calculating_groups = (lid,)
 
-            for i in (5, 4, 3, 2, 1, 0):
-                if i not in grouped_aids:
-                    continue
+        for i in calculating_groups:
+            if i not in grouped_aids:
+                continue
 
-                lvl = uow.levels.get_by_id(i)
-                _infos = [infos[aid] for aid in grouped_aids[i]]
-                if i == 0:
-                    # 零星小哥的特殊处理
-                    _infos = [i for i in _infos if stats_dict.get(i.aid, 0) > 0]
-                if len(_infos) <= 0:
-                    continue
-                view = build_display(_infos, storage_dict, stats_dict)
-                current = len([i for i in grouped_aids[i] if stats_dict.get(i, 0) > 0])
-                progress_follow = f"：{current}/{len(grouped_aids[i])}" if i > 0 else ""
-                groups.append(
-                    BoxItemList(
-                        title=lvl.display_name + progress_follow,
-                        title_color=lvl.color,
-                        elements=view,
-                    )
+            lvl = uow.levels.get_by_id(i)
+            _infos = [infos[aid] for aid in grouped_aids[i]]
+            _infos = sorted(_infos, key=lambda x: x.aid)
+            if i == 0:
+                # 零星小哥的特殊处理
+                _infos = [i for i in _infos if stats_dict.get(i.aid, 0) > 0]
+            if len(_infos) <= 0:
+                continue
+            view = build_display(_infos, storage_dict, stats_dict)
+            current = len([i for i in grouped_aids[i] if stats_dict.get(i, 0) > 0])
+            progress_follow = f"：{current}/{len(grouped_aids[i])}" if i > 0 else ""
+            groups.append(
+                BoxItemList(
+                    title=lvl.display_name + progress_follow,
+                    title_color=lvl.color,
+                    elements=view,
                 )
+            )
 
     pack_det = "" if pack_index is None else f"{pack_index} 猎场 "
     level_det = "" if level is None else f"{level.display_name} "
@@ -238,6 +238,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             )
 
         aids = await uow.awards.get_aids(lid, pack_index)
+        aids.sort()
         infos = await uow.awards.get_info_dict(aids)
 
         groups: list[BoxItemList] = []
@@ -255,6 +256,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
                 lvl = uow.levels.get_by_id(i)
                 _infos = [infos[aid] for aid in _aids[i]]
+                _infos = sorted(_infos, key=lambda x: x.aid)
                 if len(_infos) <= 0:
                     continue
                 view = build_display(_infos)
