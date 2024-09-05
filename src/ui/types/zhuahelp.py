@@ -225,7 +225,7 @@ command_content: dict[str, HelpData] = {
     ),
     "金暴性": HelpData(
         command="金暴性",
-        description="若获得过代表“金”、“暴”和“性”的三个小哥，则在说出含有“金”、“暴”、“性”或者“sex”中的任意一个关键字词时，直接触发提示，获取并切换三小哥的[三要素]皮肤。",
+        description="若获得过代表“金”、“暴”和“性”的全部三种小哥，则在说出含有“金”、“暴”、“性”或者“sex”中任一关键字词的发言时，直接触发小镜提示，获取并切换三小哥的[三要素]皮肤。",
         required_parameters=None,
         optional_parameters=None,
         related_commands=None,
