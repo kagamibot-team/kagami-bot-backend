@@ -9,13 +9,12 @@ import pathlib
 import pkgutil
 from types import ModuleType
 
+from arclet.alconna.manager import command_manager as alconna_manager
 from loguru import logger
 from nonebot import get_driver
 
 from src.base.event.event_root import root
 from utils.collections import PriorityList
-
-from arclet.alconna.manager import command_manager as alconna_manager
 
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
@@ -24,7 +23,6 @@ to_load_parents = (
     ("src", "logic"),
     ("src", "repositories"),
     ("src", "services"),
-    ("src", "ui", "components"),
     ("src", "ui", "pages"),
 )
 

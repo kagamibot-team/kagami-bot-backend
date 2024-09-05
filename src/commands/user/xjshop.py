@@ -1,9 +1,6 @@
+from pathlib import Path
 from typing import Any
 
-import PIL.Image
-import qrcode
-import qrcode.constants
-import qrcode.main
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import UniMessage
 
@@ -19,132 +16,72 @@ from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.services.shop import ShopFreezed, ShopProductFreezed, build_xjshop
 from src.services.stats import StatService
-from src.ui.base.basics import Fonts, paste_image, pile, render_text, vertical_pile
-from src.ui.base.tools import image_to_bytes
-from src.ui.components.awards import ref_book_box_raw
+from src.ui.base.browser import get_browser_pool
 from src.ui.types.common import UserData
-
-
-async def product_box(product: ShopProductFreezed):
-    return ref_book_box_raw(
-        color=product.background_color,
-        image=product.image,
-        new=False,
-        notation_bottom=str(product.price) + "薯片",
-        notation_top="",
-        name=product.title,
-        name_bottom=product.description,
-        sold_out=product.is_sold_out,
-        smaller_size=True,
-    )
+from src.ui.types.inventory import BookBoxData, DisplayBoxData
+from src.ui.types.xjshop import BuyData, Product, ProductGroup, ShopDisplay
 
 
 async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
-    titles: list[PIL.Image.Image] = []
-    boxes: list[PIL.Image.Image] = []
+    def trans_image(path: Path) -> str:
+        if path.parent == Path("./res"):
+            return "/kagami-res/" + path.name
+        if path.parent == Path("./data/temp"):
+            return "/kagami/file/temp/" + path.name
+        return "/kagami-res/blank_placeholder.png"
 
-    titles.append(
-        render_text(
-            text=(
-                f"欢迎来到小镜商店，{user.name}！您拥有{int(money)}薯片。\n"
-                "输入“小镜商店 购买 {商品名}”就可以购买了。\n"
-            ),
-            width=808 - 80 * 2,
-            color="#FFFFFF",
-            font=Fonts.HARMONYOS_SANS_BLACK,
-            font_size=32,
-        )
+    shop_data = ShopDisplay(
+        user=user,
+        chips=int(money),
+        products=[
+            ProductGroup(
+                group_name=name,
+                products=[
+                    BookBoxData(
+                        title1=product.title,
+                        title2=product.description,
+                        display_box=DisplayBoxData(
+                            image=trans_image(product.image),
+                            color=product.background_color,
+                            notation_down=f"{int(product.price)}薯片",
+                            sold_out_overlay=product.is_sold_out,
+                        ),
+                    )
+                    for product in products
+                ],
+            )
+            for name, products in shop.items()
+        ],
     )
 
-    for group, products in shop.items():
-        boxes.append(
-            render_text(
-                text=group,
-                color="#FFFFFF",
-                font=Fonts.HARMONYOS_SANS_BLACK,
-                font_size=60,
-            )
-        )
-
-        subs: list[PIL.Image.Image] = []
-        for product in products:
-            subs.append(await product_box(product))
-        boxes.append(
-            pile(
-                images=subs,
-                columns=3,
-                background="#9B9690",
-                horizontalAlign="center",
-                marginBottom=30,
-            )
-        )
-
-    area_title = vertical_pile(titles, 0, "left", "#9B9690", 0, 0, 0, 0)
-    area_box = vertical_pile(boxes, 0, "left", "#9B9690", 0, 0, 0, 0)
-    image = vertical_pile(
-        [area_title, area_box], 40, "left", "#9B9690", 464, 80, 80, 60
+    return UniMessage().image(
+        raw=await get_browser_pool().render("xjshop/home", shop_data)
     )
-    image.paste(PIL.Image.open("./res/kagami_shop.png"), (0, 0))
-
-    return UniMessage().image(raw=image_to_bytes(image))
 
 
 async def shop_buy_message(
     user: UserData,
     products: list[ShopProductFreezed],
-    cost: float,
     remain: float,
 ):
-    buy_result = "小镜的 Shop 销售小票\n"
-    buy_result += "--------------------\n"
-    buy_result += f"日期：{now_datetime().strftime('%Y-%m-%d')}\n"
-    buy_result += f"时间：{now_datetime().strftime('%H:%M:%S')}\n"
-    buy_result += f"客户：{user.name}\n"
-    buy_result += f"编号：{user.qqid}\n"
-    buy_result += "--------------------\n\n"
+    _date = now_datetime().strftime("%Y-%m-%d")
+    _time = now_datetime().strftime("%H:%M:%S")
 
-    for product in products:
-        buy_result += f"- {product.title}  {product.price} 薯片\n"
-
-    buy_result += "\n"
-    buy_result += f"总计：{cost}薯片\n"
-    buy_result += f"实付：{cost}薯片\n"
-    buy_result += f"余额：{remain}薯片\n"
-    buy_result += "--------------------\n"
-    buy_result += "  本次消费已结帐\n"
-    buy_result += "  欢迎下次光临\n"
-    buy_result += "--------------------\n"
-
-    image = render_text(
-        text=buy_result,
-        width=336,
-        color="#000000",
-        font=Fonts.VONWAON_BITMAP_12,
-        font_size=24,
-        margin_top=60,
-        margin_bottom=248,
-        margin_left=20,
-        margin_right=20,
-        draw_emoji=False,
+    data = BuyData(
+        date=_date,
+        time=_time,
+        user=user,
+        remain_chips=int(remain),
+        records=[
+            Product(
+                title=e.title,
+                price=int(e.price),
+            )
+            for e in products
+        ],
     )
 
-    base = PIL.Image.new("RGBA", image.size, "#FFFFFF")
-    paste_image(base, image, 0, 0)
-
-    qrc = qrcode.main.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=0,
-    )
-    qrc.add_data(buy_result)
-    qrc.make(fit=True)
-    qimg = qrc.make_image(fill_color="black", back_color="white")
-
-    qr = qimg.resize((180, 180), PIL.Image.LANCZOS)
-
-    base.paste(qr, (98, base.height - 240))
-    return UniMessage.image(raw=image_to_bytes(base))
+    return UniMessage.image(raw=await get_browser_pool().render("xjshop/bought", data))
 
 
 @listen_message()
@@ -195,4 +132,4 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 await prod.gain(uow, uid)
             remain = await uow.money.use(uid, costs)
             await StatService(uow).xjshop_buy(uid, int(costs))
-        await ctx.send(await shop_buy_message(user, prods, costs, remain))
+        await ctx.send(await shop_buy_message(user, prods, remain))

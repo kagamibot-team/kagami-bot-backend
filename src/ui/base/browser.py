@@ -7,6 +7,7 @@ import time
 from abc import ABC, abstractmethod
 from asyncio import Lock
 from pathlib import Path
+from typing import Any
 
 import nonebot
 from loguru import logger
@@ -185,7 +186,9 @@ class BrowserPool:
             self.renderers.append(rendererFactory.get())
             logger.info(f"打开了浏览器 {i+1}/{count}")
 
-    async def render(self, path: str, data: BaseModel | None = None) -> bytes:
+    async def render(
+        self, path: str, data: BaseModel | dict[str, Any] | None = None
+    ) -> bytes:
         query = ""
         if data is not None:
             uuid = backend_register_data(data)
