@@ -57,8 +57,10 @@ class BrowserRenderer(Renderer):
         self.driver.get(link)
         logger.debug(f"WebDriver 访问了 {link}")
 
+        timer = time.time()
+
         # 等待页面加载完成
-        WebDriverWait(self.driver, 10).until(
+        WebDriverWait(self.driver, 30).until(
             lambda driver: driver.execute_script("return document.readyState;")
             == "complete"
         )
@@ -69,7 +71,10 @@ class BrowserRenderer(Renderer):
                 "return window.loaded_trigger_signal !== undefined;"
             )
         )
-        logger.debug("WebDriver 收到了页面加载完成的信号")
+
+        timer2 = time.time()
+        logger.debug(f"WebDriver 收到了页面加载完成的信号，耗时 {timer2 - timer}")
+        timer = timer2
 
         time.sleep(0.3)
 
@@ -79,19 +84,27 @@ class BrowserRenderer(Renderer):
                 "return Array.from(document.images).every(img => img.complete);"
             )
         )
-        logger.debug("WebDriver 断定图片已经加载完成了")
+
+        timer2 = time.time()
+        logger.debug(f"WebDriver 断定图片已经加载完成了，耗时 {timer2 - timer}")
+        timer = timer2
 
         # 截图
         element = WebDriverWait(self.driver, 5).until(
             lambda d: d.find_element(By.ID, "big_box")
         )
-        element_width: float = element.size["width"]
-        element_height: float = element.size["height"]
-        self.driver.set_window_size(element_width + 100, element_height + 500)
+        
+        document_width = self.driver.execute_script("return document.documentElement.scrollWidth")
+        document_height = self.driver.execute_script("return document.documentElement.scrollHeight")
 
-        logger.debug("WebDriver 开始截图")
+        self.driver.set_window_size(document_width + 500, document_height + 500)
+
+        logger.debug(f"Get Document Size {document_width} * {document_height}")
+        logger.debug(self.driver.get_window_size())
+
         image = element.screenshot_as_png
-        logger.debug("WebDriver 截图好了")
+        timer2 = time.time()
+        logger.debug(f"WebDriver 截图好了，耗时 {timer2 - timer}")
 
         return image
 
