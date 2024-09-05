@@ -23,11 +23,7 @@ def load_sources(
     return [PIL.Image.open(p) for p in available]
 
 
-sources = load_sources()
-
-
 def make_strange(
-    sources: list[PIL.Image.Image] = sources,
     xGrids: int = 5,
     yGrids: int = 4,
     premix_background: bool = True,
@@ -35,7 +31,6 @@ def make_strange(
     """涴跺滲杅夔劂汜傖掩з呯腔苤貊芞砉
 
     Args:
-        sources (list[PILImage], optional): 苤貊芞砉腔懂埭ㄛ場宎硉岆婓珨羲宎憩樓婥腔芞え摩
         xGrids (int, optional): 阨す源砃猁з傖嗣屾爺
         yGrids (int, optional): 旳眻源砃猁з傖嗣屾爺
         premix_background (bool, optional): 岆瘁枑ヶ跤掖劓樓奻豜窪伎腔沓喃
@@ -43,6 +38,8 @@ def make_strange(
     Returns:
         PILImage: ������������
     """
+
+    sources = load_sources()
     base = PIL.Image.new("RGBA", (2000, 1600), (0, 0, 0, 0))
 
     w = int(2000 / xGrids)

@@ -1,22 +1,17 @@
-from pathlib import Path
-
-import PIL
-import PIL.Image
-from arclet.alconna import Alconna, Arg, ArgFlag, Arparma, MultiVar, Option
+from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from loguru import logger
 from nonebot_plugin_alconna import Image, UniMessage
-from sqlalchemy import select, update
+from sqlalchemy import update
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectAlreadyExistsException
 from src.common.command_deco import listen_message, match_alconna, require_admin
 from src.common.data.skins import downloadSkinImage
 from src.core.unit_of_work import get_unit_of_work
-from src.models.level import level_repo
-from src.models.models import Award, AwardAltName, Skin, SkinAltName
-from src.ui.base.basics import Fonts, pile, render_text, vertical_pile
-from src.ui.base.tools import image_to_bytes
-from src.ui.components.awards import ref_book_box_raw
+from src.models.models import Skin
+from src.ui.base.browser import get_browser_pool
+from src.ui.types.common import UserData
+from src.ui.types.inventory import BookBoxData, BoxItemList, DisplayBoxData, StorageData
 
 
 @listen_message()
@@ -25,66 +20,42 @@ from src.ui.components.awards import ref_book_box_raw
     Alconna(
         ["::"],
         "re:(所有|全部)皮肤",
-        Arg("name", str, flags=[ArgFlag.OPTIONAL]),
     )
 )
 async def _(ctx: MessageContext, res: Arparma):
-    name = res.query[str]("name")
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        all_skins = await uow.skins.all()
+        infos = await uow.awards.get_info_dict([n[1] for n in all_skins])
 
-    async with get_unit_of_work() as uow:
-        session = uow.session
-        query = select(
-            Skin.name, Award.name, Skin.price, Award.level_id, Skin.image
-        ).join(Award, Skin.award_id == Award.data_id)
+        boxes: list[BookBoxData] = []
 
-        if name:
-            query1 = query.filter(Award.name == name)
-            query2 = query.filter(Skin.name == name)
-            query3 = query.join(
-                AwardAltName, AwardAltName.award_id == Award.data_id
-            ).filter(AwardAltName.name == name)
-            query4 = query.join(
-                SkinAltName, SkinAltName.skin_id == Skin.data_id
-            ).filter(SkinAltName.name == name)
-
-            skins1 = (await session.execute(query1)).tuples()
-            skins2 = (await session.execute(query2)).tuples()
-            skins3 = (await session.execute(query3)).tuples()
-            skins4 = (await session.execute(query4)).tuples()
-
-            skins = list(skins1) + list(skins2) + list(skins3) + list(skins4)
-        else:
-            skins = list((await session.execute(query)).tuples())
-
-        skins = sorted(skins, key=lambda s: level_repo.sorted_index[s[3]])
-
-    boxes: list[PIL.Image.Image] = []
-    for sn, an, pr, lid, im in skins:
-        boxes.append(
-            ref_book_box_raw(
-                color=uow.levels[lid].color,
-                image=Path(im),
-                new=False,
-                notation_bottom=str(pr),
-                notation_top="",
-                name=sn,
-                name_bottom=an,
+        for sid, aid, sname, _, _, _ in all_skins:
+            info = infos[aid]
+            await uow.skins.link(sid, info)
+            boxes.append(
+                BookBoxData(
+                    display_box=DisplayBoxData(
+                        image=info.image_url,
+                        color=info.color,
+                    ),
+                    title1=sname,
+                    title2=info.name,
+                )
             )
-        )
 
-    area_title = render_text(
-        text=f"全部 {len(skins)} 种皮肤：",
-        color="#FFFFFF",
-        font=Fonts.HARMONYOS_SANS_BLACK,
-        font_size=80,
-        margin_bottom=30,
-        width=216 * 6,
+    data = StorageData(
+        user=UserData(),
+        title_text="皮肤进度",
+        boxes=[
+            BoxItemList(
+                elements=boxes,
+            )
+        ],
     )
 
-    area_box = pile(images=boxes, columns=6, background="#9B9690")
-
-    img = vertical_pile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
-    await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
+    await ctx.send(
+        UniMessage().image(raw=(await get_browser_pool().render("storage", data)))
+    )
 
 
 @listen_message()
