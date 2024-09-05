@@ -54,6 +54,10 @@ command_dict: dict[str, str] = {
     "小镜晚安": "小镜晚安",
     "丢粑粑": "丢粑粑",
 
+    "是": "是",
+    "金暴性": "金暴性",
+    "kbs": "金暴性",
+
     "抓小哥帮助": "抓小哥帮助",
     "zhuahelp": "抓小哥帮助",
     "抓小哥更新": "抓小哥更新",
@@ -117,6 +121,7 @@ command_content: dict[str, HelpData] = {
         optional_parameters=None,
         related_commands=None,
     ),
+
     "合成": HelpData(
         command="合成（hc）",
         description="使用合成功能，将三个任意小哥进行合成。",
@@ -152,6 +157,7 @@ command_content: dict[str, HelpData] = {
         optional_parameters=None,
         related_commands=None,
     ),
+
     "小镜商店": HelpData(
         command="小镜商店（xjshop）",
         description="展示小镜商店里的商品与其信息。",
@@ -185,6 +191,7 @@ command_content: dict[str, HelpData] = {
         optional_parameters=None,
         related_commands=None,
     ),
+    
     "小镜签到": HelpData(
         command="小镜签到（xjqd）",
         description="每天可以签一次到，奖励玩家1~100中随机量的薯片。同时会统计连续签到天数，连续天数越多奖励大量薯片概率越高。",
@@ -208,6 +215,22 @@ command_content: dict[str, HelpData] = {
         optional_parameters=None,
         related_commands=None,
     ),
+
+    "是": HelpData(
+        command="是",
+        description="若有抓的次数，则消耗一次直接固定抓取是小哥；若没有，则将下一抓的猎物预定为是小哥，小镜回复“收到”；已预定则无其他效果，小镜回复“是”。",
+        required_parameters=None,
+        optional_parameters=None,
+        related_commands=None,
+    ),
+    "金暴性": HelpData(
+        command="金暴性",
+        description="若获得过代表“金”、“暴”和“性”的全部三种小哥，则在说出含有“金”、“暴”、“性”或者“sex”中任一关键字词的发言时，直接触发小镜提示，获取并切换三小哥的[三要素]皮肤。",
+        required_parameters=None,
+        optional_parameters=None,
+        related_commands=None,
+    ),
+
     "抓小哥帮助": HelpData(
         command="抓小哥帮助（zhuahelp）",
         description="展示指令列表与大致说明信息。",
