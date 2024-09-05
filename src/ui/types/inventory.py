@@ -6,13 +6,17 @@ from src.ui.types.common import UserData
 class DisplayBoxData(BaseModel):
     image: str
     color: str
+
     notation_up: str = ""
     notation_down: str = ""
-    new_overlay: bool = False
     notation_up_color: str = "#FFFFFF"
     notation_down_color: str = "#FFFFFF"
+
     do_glow: bool = False
     glow_type: int = 0
+
+    new_overlay: bool = False
+    sold_out_overlay: bool = False
 
 
 class BookBoxData(BaseModel):
