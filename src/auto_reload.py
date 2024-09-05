@@ -23,7 +23,6 @@ to_load_parents = (
     ("src", "logic"),
     ("src", "repositories"),
     ("src", "services"),
-    ("src", "ui", "components"),
     ("src", "ui", "pages"),
 )
 
