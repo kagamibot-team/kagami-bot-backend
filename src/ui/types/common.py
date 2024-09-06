@@ -1,6 +1,6 @@
 import hashlib
 from pathlib import Path
-import sys
+
 import PIL
 import PIL.Image
 from loguru import logger
