@@ -139,6 +139,8 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             )
 
         aids = await uow.awards.get_aids(lid, pack_index)
+        aids2 = await uow.awards.get_aids(lid, 0)
+        aids = list(set(aids) | set(aids2))
         aids.sort()
         infos = await uow.awards.get_info_dict(aids)
 

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import hashlib
 from pathlib import Path
 
 import PIL
@@ -85,7 +86,9 @@ class SkinProduct(ShopProduct):
     @property
     def cache(self) -> Path:
         return Path("./data/temp") / (
-            "blurred_" + hex(hash(Path(self._image).read_bytes()))[2:] + ".png"
+            "blurred_"
+            + hashlib.md5(Path(self._image).read_bytes()).hexdigest()
+            + ".png"
         )
 
     async def title(self, uow: UnitOfWork, uid: int):
