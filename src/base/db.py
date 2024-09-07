@@ -7,7 +7,7 @@ import sqlalchemy.event
 from sqlalchemy import PoolProxiedConnection, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.common.config import config
+from src.common.config import get_config
 
 __all__ = ["DatabaseManager"]
 
@@ -19,7 +19,7 @@ class DatabaseManager:
 
     def __init__(
         self,
-        database_uri: str = config.sqlalchemy_database_url,
+        database_uri: str = get_config().sqlalchemy_database_url,
     ):
         """
         初始化数据库管理类

@@ -6,7 +6,7 @@ import math
 
 from loguru import logger
 
-from src.common import config
+from src.common.config import get_config
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
 from src.models.models import Recipe
@@ -48,7 +48,7 @@ async def generate_random_result(
 
     # 抽取一个等级
     r = Recipe.get_random_object(
-        a1, a2, a3, ("STAGE-1", config.config.salt)
+        a1, a2, a3, ("STAGE-1", get_config().salt)
     ).betavariate(a0, b0)
     lid: int | None = None
     lid = math.ceil(r * 5)
@@ -74,7 +74,7 @@ async def generate_random_result(
     grouped = await uow.awards.group_by_level(targets)
 
     aids = list(grouped[lid])
-    aid = Recipe.get_random_object(a1, a2, a3, ("STAGE-2", config.config.salt)).choice(
+    aid = Recipe.get_random_object(a1, a2, a3, ("STAGE-2", get_config().salt)).choice(
         aids
     )
 

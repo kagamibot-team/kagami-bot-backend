@@ -22,7 +22,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 
 from src.apis.render_ui import backend_register_data
-from src.common import config
+from src.common.config import get_config
 
 
 class Renderer(ABC):
@@ -111,6 +111,9 @@ class BrowserRenderer(Renderer):
         logger.debug(f"Get Document Size {document_width} * {document_height}")
         logger.debug(self.driver.get_window_size())
 
+        assert document_width < 10000, "页面宽度超过了 10000 像素，请检查页面是否过大"
+        assert document_height < 10000, "页面高度超过了 10000 像素，请检查页面是否过大"
+
         image = element.screenshot_as_png
         timer2 = time.time()
         logger.debug(f"WebDriver 截图好了，耗时 {timer2 - timer}")
@@ -152,6 +155,21 @@ class ChromeFactory(BaseBrowserDriverFactory):
         opt.add_argument("--headless")
         opt.add_argument("--enable-webgl")
         opt.add_argument("--allow-file-access-from-files")
+
+        # 对 Docker 环境的支持
+        opt.add_argument("--disable-dev-shm-usage")
+        # 容器内存共享的空间较小，导致 Chrome 无法正常启动。
+
+        opt.add_argument("--no-sandbox")
+        # 在 Docker 中运行 Chrome 时，--no-sandbox 是必需的，
+        # 因为默认的沙箱模式在容器中无法正确工作。
+
+        # 其他的一些选项
+        opt.add_argument("--disable-gpu")
+        opt.add_argument("--disable-extensions")
+        opt.add_argument("--disable-infobars")
+        opt.add_argument("--start-maximized")
+        opt.add_argument("--disable-notifications")
 
         # 对 Docker 环境的支持
         opt.add_argument("--disable-dev-shm-usage")
@@ -226,6 +244,7 @@ class BrowserPool:
         self.factory = factory
         self.count = count
         for i in range(count):
+            logger.info(f"正在打开浏览器 {i+1}/{count}")
             self.renderers.append(factory.get())
             logger.info(f"打开了浏览器 {i+1}/{count}")
 
@@ -242,6 +261,15 @@ class BrowserPool:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, _sync_clean)
 
+    @property
+    def next_renderer(self) -> Renderer:
+        for r in self.renderers:
+            if not r.lock.locked():
+                return r
+        self.render_pointer += 1
+        self.render_pointer %= len(self.renderers)
+        return self.renderers[self.render_pointer]
+
     async def render(
         self, path: str, data: BaseModel | dict[str, Any] | None = None
     ) -> bytes:
@@ -254,30 +282,30 @@ class BrowserPool:
             logger.debug(f"已经将数据暂存到 {uuid} 了")
 
         nbdriver = nonebot.get_driver()
-
         port: int = nbdriver.config.port
-        if (_port := config.config.render_port) != 0:
+        if (_port := get_config().render_port) != 0:
             port = int(_port)
 
-        link = f"http://{config.config.render_host}:{port}/kagami/pages/{path}{query}"
+        link = f"http://{get_config().render_host}:{port}/kagami/pages/{path}{query}"
 
         logger.debug(f"访问 {link} 进行渲染")
 
-        for r in self.renderers:
-            if not r.lock.locked():
-                return await r.render_link(link)
-        self.render_pointer += 1
-        self.render_pointer %= len(self.renderers)
-        return await self.renderers[self.render_pointer].render_link(link)
+        while True:
+            renderer = self.next_renderer
+            try:
+                return await renderer.render_link(link)
+            except AssertionError as e:
+                logger.exception(e)
+                await self.clean_browser()
 
 
-if config.config.use_fake_browser:
+if get_config().use_fake_browser:
     factory = FakeRendererFactory()
-elif config.config.browser == "chrome":
+elif get_config().browser == "chrome":
     factory = BrowserRendererFactory(ChromeFactory())
 else:
     factory = BrowserRendererFactory(FirefoxFactory())
-browser_pool = BrowserPool(factory, config.config.browser_count)
+browser_pool = BrowserPool(factory, get_config().browser_count)
 
 
 def get_browser_pool():
