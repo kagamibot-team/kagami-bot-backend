@@ -12,6 +12,7 @@ from typing import Any
 import nonebot
 from loguru import logger
 from pydantic import BaseModel
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.webdriver import WebDriver as Chrome
 from selenium.webdriver.common.by import By
@@ -42,6 +43,10 @@ class Renderer(ABC):
 
             img_data = await loop.run_in_executor(None, _render)
         return img_data
+
+    @property
+    @abstractmethod
+    def available(self) -> bool: ...
 
 
 class BrowserRenderer(Renderer):
@@ -93,9 +98,13 @@ class BrowserRenderer(Renderer):
         element = WebDriverWait(self.driver, 5).until(
             lambda d: d.find_element(By.ID, "big_box")
         )
-        
-        document_width = self.driver.execute_script("return document.documentElement.scrollWidth")
-        document_height = self.driver.execute_script("return document.documentElement.scrollHeight")
+
+        document_width = self.driver.execute_script(
+            "return document.documentElement.scrollWidth"
+        )
+        document_height = self.driver.execute_script(
+            "return document.documentElement.scrollHeight"
+        )
 
         self.driver.set_window_size(document_width + 500, document_height + 500)
 
@@ -108,11 +117,28 @@ class BrowserRenderer(Renderer):
 
         return image
 
+    @property
+    def available(self):
+        result = False
+        try:
+            result = len(self.driver.window_handles) > 0
+        except WebDriverException:
+            pass
+        if not result:
+            logger.warning("WebDriver 失效了，尝试重新启动")
+            self.driver.quit()
+            del self.driver
+        return result
+
 
 class FakeRenderer(Renderer):
     def _sync_render(self, link: str) -> bytes:
         logger.info(f"假渲染器渲染了链接：{link}")
         return Path("./res/fake-renderer-fallback.png").read_bytes()
+
+    @property
+    def available(self):
+        return True
 
 
 class BaseBrowserDriverFactory(ABC):
@@ -192,16 +218,35 @@ class FakeRendererFactory(RendererFactory):
 class BrowserPool:
     renderers: list[Renderer]
     render_pointer: int = -1
+    factory: RendererFactory
+    count: int
 
-    def __init__(self, rendererFactory: RendererFactory, count: int) -> None:
+    def __init__(self, factory: RendererFactory, count: int) -> None:
         self.renderers = []
+        self.factory = factory
+        self.count = count
         for i in range(count):
-            self.renderers.append(rendererFactory.get())
+            self.renderers.append(factory.get())
             logger.info(f"打开了浏览器 {i+1}/{count}")
+
+    async def clean_browser(self):
+        """
+        清理被关闭的浏览器，并重新打开
+        """
+
+        def _sync_clean():
+            self.renderers = [i for i in self.renderers if i.available]
+            while len(self.renderers) < self.count:
+                self.renderers.append(self.factory.get())
+
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _sync_clean)
 
     async def render(
         self, path: str, data: BaseModel | dict[str, Any] | None = None
     ) -> bytes:
+        await self.clean_browser()
+
         query = ""
         if data is not None:
             uuid = backend_register_data(data)

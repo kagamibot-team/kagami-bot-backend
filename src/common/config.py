@@ -55,6 +55,9 @@ class Config(BaseModel):
     limited_group: list[int] = []
     "在哪些群，功能受到限制"
 
+    reload_info_interval: int = 60
+    "刷新群成员信息的间隔，单位秒，小于等于 0 则不刷新"
+
     # ==================
     # |  图片渲染设置  |
     # ==================
@@ -76,6 +79,9 @@ class Config(BaseModel):
 
     render_port: int = 0
     "渲染访问的端口，为 0 则使用当前 Nonebot 的端口"
+
+    clean_browser_interval: int = 120
+    "检查浏览器是否启动的时间间隔，单位秒，小于等于 0 则不检查"
 
     # ================
     # |  Properties  |
