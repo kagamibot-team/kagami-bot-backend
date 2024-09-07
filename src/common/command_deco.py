@@ -19,6 +19,7 @@ from src.base.exceptions import KagamiCoreException, KagamiStopIteration
 from src.base.onebot.onebot_events import OnebotStartedContext
 from src.common.config import get_config
 from src.common.times import now_datetime
+from src.common.webhook import send_webhook
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
 
@@ -190,6 +191,9 @@ def timeout_at_start(timeout: float):
     return deco
 
 
+STATUS = {"ACTION_FAILED_COUNT": 0, "WARNING_MESSAGE_TRIGGERED": False}
+
+
 def kagami_exception_handler():
     """
     当有小镜 Bot 内部抛出的 KagamiCoreException 错误时，把错误告知给用户。
@@ -209,6 +213,22 @@ def kagami_exception_handler():
                 if isinstance(e, KagamiStopIteration):
                     raise e from e
             except ActionFailed as e:
+                # 此时需要判断是不是被风控了
+                STATUS["ACTION_FAILED_COUNT"] += 1
+                if (
+                    get_config().send_message_fail_report_limit > 0
+                    and (
+                        STATUS["ACTION_FAILED_COUNT"]
+                        > get_config().send_message_fail_report_limit
+                    )
+                    and get_config().bot_send_message_fail_webhook
+                    and not STATUS["WARNING_MESSAGE_TRIGGERED"]
+                ):
+                    await send_webhook(
+                        get_config().bot_send_message_fail_webhook,
+                        {"message": "bot_send_message_fail"},
+                    )
+                    STATUS["WARNING_MESSAGE_TRIGGERED"] = True
                 raise e from e
             except WebDriverException as e:
                 await ctx.reply("渲染页面的时候出错了！请联系 PT 修复呀！")

@@ -7,6 +7,7 @@ from nonebot.drivers.fastapi import Driver as FastAPIDriver
 from fastapi.middleware.cors import CORSMiddleware
 
 from .render_ui import router as render_ui_router
+from .webhook import router as webhook_router
 
 _nb_driver = nonebot.get_driver()
 
@@ -31,3 +32,4 @@ def init_routers():
     sub_app.include_router(render_ui_router)
     app.mount("/kagami", sub_app)
     app.mount("/kagami-res", StaticFiles(directory=Path("./res/")), name="res")
+    app.include_router(webhook_router, prefix="/kagami-webhook")

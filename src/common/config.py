@@ -83,6 +83,22 @@ class Config(BaseModel):
     clean_browser_interval: int = 120
     "检查浏览器是否启动的时间间隔，单位秒，小于等于 0 则不检查"
 
+    # ===================
+    # |  Web Hook 设置  |
+    # ===================
+
+    enable_web_hook: bool = False
+    "是否启用 Web Hook"
+
+    bot_start_webhook: str = ""
+    "Bot 启动时发送的 Web Hook"
+
+    bot_send_message_fail_webhook: str = ""
+    "Bot 发送消息失败太多次数时发送的 Web Hook"
+
+    send_message_fail_report_limit: int = 8
+    "发送消息失败多少次后发送 Web Hook"
+
     # ================
     # |  Properties  |
     # ================
