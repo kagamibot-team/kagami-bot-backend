@@ -524,6 +524,15 @@ updates = [
             UpdateContentData(content="修复了重复汇报版本更新的问题", tags=["修复"]),
         ],
     ),
+    VersionData(
+        version="1.1.3",
+        updates=[
+            UpdateContentData(content="修复了若干已知的问题", tags=["修复"]),
+            UpdateContentData(
+                content="为小镜 Bot 的自动更新等功能做了简单的基础", tags=["内核"]
+            ),
+        ],
+    ),
 ]
 
 
