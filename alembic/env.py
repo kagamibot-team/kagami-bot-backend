@@ -22,7 +22,7 @@ config = context.config
 
 # 默认 AsyncEngine
 # engine: AsyncEngine = config.attributes["engines"][""]
-engine = create_async_engine(src.common.config.config.sqlalchemy_database_url)
+engine = create_async_engine(src.common.config.get_config().sqlalchemy_database_url)
 
 # 模型的 MetaData, 用于 "autogenerate" 支持.
 # from myapp import mymodel

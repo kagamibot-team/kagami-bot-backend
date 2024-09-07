@@ -17,7 +17,7 @@ from src.base.event.event_root import root
 from src.base.event.event_timer import addInterval, addTimeout
 from src.base.exceptions import KagamiCoreException, KagamiStopIteration
 from src.base.onebot.onebot_events import OnebotStartedContext
-from src.common.config import config
+from src.common.config import get_config
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import isAdmin
@@ -250,7 +250,7 @@ def limited(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
 
     async def _func(ctx: TE, *args: *TA):
         if isinstance(ctx, GroupContext):
-            if ctx.group_id in config.limited_group:
+            if ctx.group_id in get_config().limited_group:
                 return
 
         await func(ctx, *args)

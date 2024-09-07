@@ -22,7 +22,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 
 from src.apis.render_ui import backend_register_data
-from src.common import config
+from src.common.config import get_config
 
 
 class Renderer(ABC):
@@ -273,10 +273,10 @@ class BrowserPool:
         nbdriver = nonebot.get_driver()
 
         port: int = nbdriver.config.port
-        if (_port := config.config.render_port) != 0:
+        if (_port := get_config().render_port) != 0:
             port = int(_port)
 
-        link = f"http://{config.config.render_host}:{port}/kagami/pages/{path}{query}"
+        link = f"http://{get_config().render_host}:{port}/kagami/pages/{path}{query}"
 
         logger.debug(f"访问 {link} 进行渲染")
 
@@ -288,13 +288,13 @@ class BrowserPool:
         return await self.renderers[self.render_pointer].render_link(link)
 
 
-if config.config.use_fake_browser:
+if get_config().use_fake_browser:
     factory = FakeRendererFactory()
-elif config.config.browser == "chrome":
+elif get_config().browser == "chrome":
     factory = BrowserRendererFactory(ChromeFactory())
 else:
     factory = BrowserRendererFactory(FirefoxFactory())
-browser_pool = BrowserPool(factory, config.config.browser_count)
+browser_pool = BrowserPool(factory, get_config().browser_count)
 
 
 def get_browser_pool():

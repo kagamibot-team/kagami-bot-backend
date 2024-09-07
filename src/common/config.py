@@ -92,7 +92,8 @@ class Config(BaseModel):
         return Path(self.frontend_dist)
 
 
-config = get_plugin_config(Config)
+def get_config() -> Config:
+    return get_plugin_config(Config)
 
 
-__all__ = ["config", "Config"]
+__all__ = ["get_config", "Config"]
