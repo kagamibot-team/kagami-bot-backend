@@ -232,11 +232,6 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         else:
             level = None
             lid = None
-        pack_max = await uow.settings.get_pack_count()
-        if pack_index is not None and (pack_index <= 0 or pack_index > pack_max):
-            raise KagamiRangeError(
-                "猎场序号", f"大于 0 且不超过 {pack_max} 的值", pack_index
-            )
 
         aids = await uow.awards.get_aids(lid, pack_index)
         aids.sort()
