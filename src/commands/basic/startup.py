@@ -10,6 +10,7 @@ from src.base.onebot.onebot_events import OnebotStartedContext
 from src.base.onebot.onebot_tools import broadcast, update_cached_name
 from src.common.command_deco import interval_at_start
 from src.common.config import config
+from src.common.webhook import send_webhook
 from src.core.unit_of_work import get_unit_of_work
 from src.ui.base.browser import get_browser_pool
 from src.ui.types.zhuagx import UpdateData, get_latest_version
@@ -35,8 +36,13 @@ async def _(ctx: OnebotStartedContext):
         for group in config.admin_groups:
             await send_group_msg(ctx.bot, group, "服务器重启好了")
 
+    if config.enable_web_hook:
+        if config.bot_start_webhook:
+            await send_webhook(config.bot_start_webhook, {"message": "bot_started"})
+
 
 if (itv := config.reload_info_interval) > 0:
+
     @interval_at_start(itv, False)
     async def _(ctx: OnebotStartedContext):
         ls = await get_group_list(ctx.bot)
@@ -45,6 +51,7 @@ if (itv := config.reload_info_interval) > 0:
 
 
 if (itv := config.clean_browser_interval) > 0:
+
     @interval_at_start(itv, True)
     async def _(ctx: OnebotStartedContext):
         pool = get_browser_pool()
