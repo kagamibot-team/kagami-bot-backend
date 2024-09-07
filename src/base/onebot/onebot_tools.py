@@ -35,7 +35,7 @@ async def broadcast(
     for group in group_list:
         if config.enable_white_list and group.group_id not in config.white_list_groups:
             continue
-        if require_admin and group not in config.admin_groups:
+        if require_admin and group.group_id not in config.admin_groups:
             continue
 
         await send_group_msg(bot, group.group_id, message)
