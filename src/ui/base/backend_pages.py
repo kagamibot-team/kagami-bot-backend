@@ -2,8 +2,8 @@
 后端将数据暴露给前端的接口定义，以及将模板显示出来的定义
 """
 
-from typing import Any
 import uuid
+from typing import Any
 
 from pydantic import BaseModel
 

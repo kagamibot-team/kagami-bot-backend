@@ -16,7 +16,6 @@ from src.core.unit_of_work import UnitOfWork
 from src.models.level import level_repo
 from src.models.models import *
 from src.ui.base.strange import make_strange
-from src.ui.views.award import StorageDisplay
 from utils.threading import make_async
 
 
@@ -31,55 +30,6 @@ async def get_award_info(
     if sid:
         await uow.skins.link(sid, data)
     return data
-
-
-async def get_a_list_of_award_storage(
-    uow: UnitOfWork,
-    uid: int | None,
-    aids: list[int],
-    show_notation2: bool = True,
-    show_notation1: bool = True,
-) -> list[StorageDisplay | None]:
-    """用来获取多个小哥的基础信息
-
-    Args:
-        uow (UnitOfWork): 工作单元
-        aids (list[StorageDisplay | None]): 小哥 ID 列表
-    """
-    _basics = await uow.awards.get_info_dict(aids)
-    basics: list[StorageDisplay | None] = list(
-        (
-            StorageDisplay(
-                storage=0,
-                stats=0,
-                do_show_notation2=show_notation2,
-                do_show_notation1=show_notation1,
-                info=info,
-            )
-            for info in _basics.values()
-        )
-    )
-    if uid is None:
-        return basics
-
-    using = await uow.skin_inventory.get_using_list(uid)
-    for i, data in enumerate(basics):
-        if data is None:
-            continue
-
-        aid = data.info.aid
-        sto, use = await uow.inventories.get_inventory(uid, aid)
-        if sto + use == 0:
-            basics[i] = None
-            continue
-
-        data.storage = sto
-        data.stats = sto + use
-        if aid in using:
-            sid = using[aid]
-            await uow.skins.link(sid, data.info)
-
-    return basics
 
 
 async def generate_random_info():

@@ -42,7 +42,7 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
                     [
                         v
                         for _, v in (
-                            await uow.inventories.get_inventory_dict(uid, aids)
+                            await uow.inventories.get_inventory_dict(uid, list(aids))
                         ).items()
                         if sum(v) > 0
                     ]

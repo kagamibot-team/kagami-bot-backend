@@ -1,7 +1,3 @@
-from pathlib import Path
-
-import PIL
-import PIL.Image
 from arclet.alconna import Alconna, Arg, Arparma
 from nonebot_plugin_alconna import UniMessage
 
@@ -13,11 +9,11 @@ from src.common.command_deco import (
     match_alconna,
     require_awake,
 )
+from src.common.data.user import get_user_data
 from src.core.unit_of_work import get_unit_of_work
 from src.services.stats import StatService
-from src.ui.base.basics import Fonts, pile, render_text, vertical_pile
-from src.ui.base.tools import image_to_bytes
-from src.ui.components.awards import ref_book_box_raw
+from src.ui.base.browser import get_browser_pool
+from src.ui.types.inventory import BookBoxData, BoxItemList, DisplayBoxData, StorageData
 
 
 @listen_message()
@@ -65,54 +61,50 @@ async def _(ctx: MessageContext, result: Arparma):
 async def _(ctx: MessageContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
+        user = await get_user_data(ctx, uow)
         all_skins = await uow.skins.all()
         infos = await uow.awards.get_info_dict([n[1] for n in all_skins])
         skin_inventory = await uow.skin_inventory.get_list(uid)
         using = await uow.skin_inventory.get_using_list(uid)
 
-    _boxes: list[tuple[str, str, str, str, str]] = []
-    _un = (
-        "???",
-        "",
-        "",
-        "#696361",
-        "./res/blank_placeholder.png",
-    )
+        boxes: list[BookBoxData] = []
 
-    name = await ctx.get_sender_name()
-    area_title = render_text(
-        text=f"{name} 的皮肤进度：",
-        color="#FFFFFF",
-        font=Fonts.HARMONYOS_SANS_BLACK,
-        font_size=80,
-        margin_bottom=30,
-        width=216 * 6,
-    )
-
-    for sid, aid, sname, _, img, _ in all_skins:
-        aname = infos[aid].name
-        if sid not in skin_inventory:
-            _boxes.append(_un)
-            continue
-
-        notation = "使用中" if sid in using else ""
-        _boxes.append((sname, aname, notation, infos[aid].level.color, img))
-
-    boxes: list[PIL.Image.Image] = []
-    for sn, an, no, co, im in _boxes:
-        boxes.append(
-            ref_book_box_raw(
-                color=co,
-                image=Path(im),
-                new=False,
-                notation_bottom=no,
-                notation_top="",
-                name=sn,
-                name_bottom=an,
-            )
+        unknown_box = BookBoxData(
+            display_box=DisplayBoxData(
+                image="./resource/blank_placeholder.png",
+                color="#696361",
+            ),
+            title1="???",
         )
 
-    area_box = pile(images=boxes, columns=6, background="#9B9690")
+        for sid, aid, sname, _, _, _ in all_skins:
+            if sid not in skin_inventory:
+                boxes.append(unknown_box)
+                continue
+            info = infos[aid]
+            await uow.skins.link(sid, info)
+            boxes.append(
+                BookBoxData(
+                    display_box=DisplayBoxData(
+                        image=info.image_url,
+                        color=info.color,
+                        notation_down="使用中" if sid in using else "",
+                    ),
+                    title1=sname,
+                    title2=info.name,
+                )
+            )
 
-    img = vertical_pile([area_title, area_box], 15, "left", "#9B9690", 60, 60, 60, 60)
-    await ctx.send(UniMessage().image(raw=image_to_bytes(img)))
+    data = StorageData(
+        user=user,
+        title_text="皮肤进度",
+        boxes=[
+            BoxItemList(
+                elements=boxes,
+            )
+        ],
+    )
+
+    await ctx.send(
+        UniMessage().image(raw=(await get_browser_pool().render("storage", data)))
+    )

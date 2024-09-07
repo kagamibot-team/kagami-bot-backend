@@ -12,6 +12,7 @@ from typing import Any
 import nonebot
 from loguru import logger
 from pydantic import BaseModel
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.webdriver import WebDriver as Chrome
 from selenium.webdriver.common.by import By
@@ -43,6 +44,10 @@ class Renderer(ABC):
             img_data = await loop.run_in_executor(None, _render)
         return img_data
 
+    @property
+    @abstractmethod
+    def available(self) -> bool: ...
+
 
 class BrowserRenderer(Renderer):
     driver: WebDriver
@@ -57,8 +62,10 @@ class BrowserRenderer(Renderer):
         self.driver.get(link)
         logger.debug(f"WebDriver 访问了 {link}")
 
+        timer = time.time()
+
         # 等待页面加载完成
-        WebDriverWait(self.driver, 10).until(
+        WebDriverWait(self.driver, 30).until(
             lambda driver: driver.execute_script("return document.readyState;")
             == "complete"
         )
@@ -69,7 +76,10 @@ class BrowserRenderer(Renderer):
                 "return window.loaded_trigger_signal !== undefined;"
             )
         )
-        logger.debug("WebDriver 收到了页面加载完成的信号")
+
+        timer2 = time.time()
+        logger.debug(f"WebDriver 收到了页面加载完成的信号，耗时 {timer2 - timer}")
+        timer = timer2
 
         time.sleep(0.3)
 
@@ -79,27 +89,56 @@ class BrowserRenderer(Renderer):
                 "return Array.from(document.images).every(img => img.complete);"
             )
         )
-        logger.debug("WebDriver 断定图片已经加载完成了")
+
+        timer2 = time.time()
+        logger.debug(f"WebDriver 断定图片已经加载完成了，耗时 {timer2 - timer}")
+        timer = timer2
 
         # 截图
         element = WebDriverWait(self.driver, 5).until(
             lambda d: d.find_element(By.ID, "big_box")
         )
-        element_width: float = element.size["width"]
-        element_height: float = element.size["height"]
-        self.driver.set_window_size(element_width + 100, element_height + 500)
 
-        logger.debug("WebDriver 开始截图")
+        document_width = self.driver.execute_script(
+            "return document.documentElement.scrollWidth"
+        )
+        document_height = self.driver.execute_script(
+            "return document.documentElement.scrollHeight"
+        )
+
+        self.driver.set_window_size(document_width + 500, document_height + 500)
+
+        logger.debug(f"Get Document Size {document_width} * {document_height}")
+        logger.debug(self.driver.get_window_size())
+
         image = element.screenshot_as_png
-        logger.debug("WebDriver 截图好了")
+        timer2 = time.time()
+        logger.debug(f"WebDriver 截图好了，耗时 {timer2 - timer}")
 
         return image
+
+    @property
+    def available(self):
+        result = False
+        try:
+            result = len(self.driver.window_handles) > 0
+        except WebDriverException:
+            pass
+        if not result:
+            logger.warning("WebDriver 失效了，尝试重新启动")
+            self.driver.quit()
+            del self.driver
+        return result
 
 
 class FakeRenderer(Renderer):
     def _sync_render(self, link: str) -> bytes:
         logger.info(f"假渲染器渲染了链接：{link}")
         return Path("./res/fake-renderer-fallback.png").read_bytes()
+
+    @property
+    def available(self):
+        return True
 
 
 class BaseBrowserDriverFactory(ABC):
@@ -195,17 +234,36 @@ class FakeRendererFactory(RendererFactory):
 class BrowserPool:
     renderers: list[Renderer]
     render_pointer: int = -1
+    factory: RendererFactory
+    count: int
 
-    def __init__(self, rendererFactory: RendererFactory, count: int) -> None:
+    def __init__(self, factory: RendererFactory, count: int) -> None:
         self.renderers = []
+        self.factory = factory
+        self.count = count
         for i in range(count):
             logger.info(f"正在打开浏览器 {i+1}/{count}")
-            self.renderers.append(rendererFactory.get())
+            self.renderers.append(factory.get())
             logger.info(f"打开了浏览器 {i+1}/{count}")
+
+    async def clean_browser(self):
+        """
+        清理被关闭的浏览器，并重新打开
+        """
+
+        def _sync_clean():
+            self.renderers = [i for i in self.renderers if i.available]
+            while len(self.renderers) < self.count:
+                self.renderers.append(self.factory.get())
+
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _sync_clean)
 
     async def render(
         self, path: str, data: BaseModel | dict[str, Any] | None = None
     ) -> bytes:
+        await self.clean_browser()
+
         query = ""
         if data is not None:
             uuid = backend_register_data(data)

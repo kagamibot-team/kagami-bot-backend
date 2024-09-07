@@ -1,3 +1,4 @@
+import hashlib
 import os
 import random
 from collections.abc import Hashable
@@ -161,7 +162,7 @@ class Recipe(Base, BaseMixin):
             a3 (int): 第三个小哥
         """
 
-        return random.Random(hash((a1, a2, a3, salt)))
+        return random.Random(hashlib.md5(str((a1, a2, a3, salt)).encode()).hexdigest())
 
 
 __all__ = [

@@ -108,7 +108,7 @@ async def goodnight(ctx: GroupContext, res: Arparma):
         uid = await uow.users.get_uid(ctx.sender_id)
         last_time, count = await uow.users.get_sleep_early_data(uid)
         last_dt = timestamp_to_datetime(last_time).date()
-        if 21 <= now_time.hour < 23 and (now_time.date() - last_dt).days < 1:
+        if 21 <= now_time.hour < 23 and (now_time.date() - last_dt).days <= 1:
             count += 1
         elif 21 <= now_time.hour < 23:
             count = 1

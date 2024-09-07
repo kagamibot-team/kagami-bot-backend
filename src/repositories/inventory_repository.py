@@ -1,4 +1,3 @@
-from typing import Iterable
 from sqlalchemy import delete, insert, select, update
 
 from ..base.repository import DBRepository
@@ -109,7 +108,7 @@ class InventoryRepository(DBRepository):
         return sto, use
 
     async def get_inventory_dict(
-        self, uid: int, aids: Iterable[int] | None = None
+        self, uid: int, aids: list[int] | None = None
     ) -> dict[int, tuple[int, int]]:
         """获取玩家所有小哥物品栏的字典
 
@@ -120,11 +119,12 @@ class InventoryRepository(DBRepository):
             dict[int, tuple[int, int]]: 字典，值的两项分别是库存和用过的
         """
         aids = aids or []
-        query = (
-            select(Inventory.award_id, Inventory.storage, Inventory.used)
-            .filter(Inventory.user_id == uid)
-            .filter(Inventory.award_id.in_(aids))
+        query = select(Inventory.award_id, Inventory.storage, Inventory.used).filter(
+            Inventory.user_id == uid
         )
+
+        if len(aids) > 0:
+            query = query.filter(Inventory.award_id.in_(aids))
 
         result = await self.session.execute(query)
         res = {aid: (sto, use) for aid, sto, use in result.tuples()}

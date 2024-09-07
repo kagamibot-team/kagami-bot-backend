@@ -78,7 +78,10 @@ class AwardRepository(DBRepository):
         return a
 
     async def get_aids(
-        self, lid: int, pack: int | None = None, include_zero: bool = False
+        self,
+        lid: int | None = None,
+        pack: int | None = None,
+        include_zero: bool = False,
     ) -> list[int]:
         """获得全部小哥
 
@@ -90,11 +93,11 @@ class AwardRepository(DBRepository):
             list[int]: 小哥的 ID 列表
         """
 
-        q = (
-            select(Award.data_id)
-            .filter(Award.level_id == lid)
-            .order_by(-Award.sorting, Award.data_id)
+        q = select(Award.data_id).order_by(
+            -Award.level_id, -Award.sorting, Award.data_id
         )
+        if lid is not None:
+            q = q.filter(Award.level_id == lid)
         if pack is not None:
             if include_zero:
                 q = q.filter(Award.main_pack_id.in_((pack, 0)))
