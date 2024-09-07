@@ -19,7 +19,9 @@ with open(Path("./res/dialog/lqr.csv"), "r", encoding="utf-8") as f:
     reader = csv.reader(f)
     for row in reader:
         assert len(row) == 3
-        DIALOGUES.append(DialogueMessage(text=row[2], speaker=row[0].strip(), face=row[1].strip()))
+        DIALOGUES.append(
+            DialogueMessage(text=row[2], speaker=row[0].strip(), face=row[1].strip())
+        )
 
 logger.info("人 机 一 百 句加载完成")
 
