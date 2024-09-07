@@ -26,7 +26,9 @@ def record_last_context(qqid: int, group_id: int | None = None):
 
 
 async def broadcast(
-    bot: OnebotBotProtocol | None = None, message: MessageLike = "", require_admin: bool = False
+    bot: OnebotBotProtocol | None = None,
+    message: MessageLike = "",
+    require_admin: bool = False,
 ):
     if bot is None:
         bot = nonebot.get_bot()
