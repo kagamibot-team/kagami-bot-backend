@@ -36,8 +36,16 @@ async def _(ctx: OnebotStartedContext):
             await send_group_msg(ctx.bot, group, "服务器重启好了")
 
 
-@interval_at_start(60, False)
-async def _(ctx: OnebotStartedContext):
-    ls = await get_group_list(ctx.bot)
-    for info in ls:
-        await update_cached_name(ctx.bot, info.group_id)
+if (itv := config.reload_info_interval) > 0:
+    @interval_at_start(itv, False)
+    async def _(ctx: OnebotStartedContext):
+        ls = await get_group_list(ctx.bot)
+        for info in ls:
+            await update_cached_name(ctx.bot, info.group_id)
+
+
+if (itv := config.clean_browser_interval) > 0:
+    @interval_at_start(itv, True)
+    async def _(ctx: OnebotStartedContext):
+        pool = get_browser_pool()
+        await pool.clean_browser()
