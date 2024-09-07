@@ -84,13 +84,12 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         inventory_dict = await uow.inventories.get_inventory_dict(user.uid, aids)
 
     storage_dict = {i: v[0] for i, v in inventory_dict.items()}
-    stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
-    infos = [i for i in infos if stats_dict.get(i.aid, 0) > 0]
+    infos = [i for i in infos if storage_dict.get(i.aid, 0) > 0]
     infos = sorted(
         infos,
         key=lambda i: (-i.level.lid, -storage_dict.get(i.aid, 0), i.sorting, i.aid),
     )
-    view = build_display(infos, storage_dict, stats_dict)
+    view = build_display(infos, storage_dict)
     img = await get_browser_pool().render(
         "storage",
         data=StorageData(
