@@ -12,7 +12,7 @@ from src.base.onebot.onebot_basic import OnebotBotProtocol
 from src.base.onebot.onebot_enum import QQEmoji
 from src.base.onebot.onebot_events import GroupPokeContext
 from src.common.command_deco import limited, listen_message, require_awake
-from src.common.config import config
+from src.common.config import get_config
 from src.common.rd import get_random
 from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
@@ -101,7 +101,7 @@ async def _(ctx: MessageContext):
 
     msg0o: str | None = None
 
-    for name in config.my_name:
+    for name in get_config().my_name:
         if msg0.text.startswith(name):
             msg0o = msg0.text[len(name) :]
             break
@@ -199,7 +199,7 @@ LAST_POKE_TIME: dict[int, float] = {}
 
 @root.listen(GroupPokeContext)
 async def _(ctx: GroupPokeContext):
-    if ctx.event.group_id in config.limited_group:
+    if ctx.event.group_id in get_config().limited_group:
         return
     async with get_unit_of_work(ctx.event.user_id) as uow:
         n = now_datetime().timestamp()

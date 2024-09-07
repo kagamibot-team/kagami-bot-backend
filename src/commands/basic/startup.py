@@ -9,7 +9,7 @@ from src.base.onebot.onebot_enum import QQStatus
 from src.base.onebot.onebot_events import OnebotStartedContext
 from src.base.onebot.onebot_tools import broadcast, update_cached_name
 from src.common.command_deco import interval_at_start
-from src.common.config import config
+from src.common.config import get_config
 from src.common.webhook import send_webhook
 from src.core.unit_of_work import get_unit_of_work
 from src.ui.base.browser import get_browser_pool
@@ -33,15 +33,17 @@ async def _(ctx: OnebotStartedContext):
         msg = UniMessage.image(raw=await get_browser_pool().render("update", data))
         await broadcast(ctx.bot, msg)
     elif get_driver().env != "dev":
-        for group in config.admin_groups:
+        for group in get_config().admin_groups:
             await send_group_msg(ctx.bot, group, "服务器重启好了")
 
-    if config.enable_web_hook:
-        if config.bot_start_webhook:
-            await send_webhook(config.bot_start_webhook, {"message": "bot_started"})
+    if get_config().enable_web_hook:
+        if get_config().bot_start_webhook:
+            await send_webhook(
+                get_config().bot_start_webhook, {"message": "bot_started"}
+            )
 
 
-if (itv := config.reload_info_interval) > 0:
+if (itv := get_config().reload_info_interval) > 0:
 
     @interval_at_start(itv, False)
     async def _(ctx: OnebotStartedContext):
@@ -50,7 +52,7 @@ if (itv := config.reload_info_interval) > 0:
             await update_cached_name(ctx.bot, info.group_id)
 
 
-if (itv := config.clean_browser_interval) > 0:
+if (itv := get_config().clean_browser_interval) > 0:
 
     @interval_at_start(itv, True)
     async def _(ctx: OnebotStartedContext):

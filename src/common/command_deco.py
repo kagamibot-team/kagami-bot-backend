@@ -17,7 +17,7 @@ from src.base.event.event_root import root
 from src.base.event.event_timer import addInterval, addTimeout
 from src.base.exceptions import KagamiCoreException, KagamiStopIteration
 from src.base.onebot.onebot_events import OnebotStartedContext
-from src.common.config import config
+from src.common.config import get_config
 from src.common.times import now_datetime
 from src.common.webhook import send_webhook
 from src.core.unit_of_work import get_unit_of_work
@@ -216,16 +216,16 @@ def kagami_exception_handler():
                 # 此时需要判断是不是被风控了
                 STATUS["ACTION_FAILED_COUNT"] += 1
                 if (
-                    config.send_message_fail_report_limit > 0
+                    get_config().send_message_fail_report_limit > 0
                     and (
                         STATUS["ACTION_FAILED_COUNT"]
-                        > config.send_message_fail_report_limit
+                        > get_config().send_message_fail_report_limit
                     )
-                    and config.bot_send_message_fail_webhook
+                    and get_config().bot_send_message_fail_webhook
                     and not STATUS["WARNING_MESSAGE_TRIGGERED"]
                 ):
                     await send_webhook(
-                        config.bot_send_message_fail_webhook,
+                        get_config().bot_send_message_fail_webhook,
                         {"message": "bot_send_message_fail"},
                     )
                     STATUS["WARNING_MESSAGE_TRIGGERED"] = True
@@ -270,7 +270,7 @@ def limited(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
 
     async def _func(ctx: TE, *args: *TA):
         if isinstance(ctx, GroupContext):
-            if ctx.group_id in config.limited_group:
+            if ctx.group_id in get_config().limited_group:
                 return
 
         await func(ctx, *args)

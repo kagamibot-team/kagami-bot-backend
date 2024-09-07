@@ -13,7 +13,7 @@ from src.base.onebot.onebot_api import (
     send_private_msg,
 )
 from src.base.onebot.onebot_basic import MessageLike, OnebotBotProtocol
-from src.common.config import config
+from src.common.config import get_config
 
 LAST_CONTEXT_RECORDER: dict[int, int] = {}
 
@@ -33,9 +33,12 @@ async def broadcast(
     group_list = await get_group_list(bot)
 
     for group in group_list:
-        if config.enable_white_list and group.group_id not in config.white_list_groups:
+        if (
+            get_config().enable_white_list
+            and group.group_id not in get_config().white_list_groups
+        ):
             continue
-        if require_admin and group.group_id not in config.admin_groups:
+        if require_admin and group.group_id not in get_config().admin_groups:
             continue
 
         await send_group_msg(bot, group.group_id, message)

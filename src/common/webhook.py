@@ -6,7 +6,7 @@ import requests
 
 from requests.exceptions import RequestException
 
-from src.common import config
+from src.common.config import get_config
 from utils.threading import make_async
 
 
@@ -16,7 +16,7 @@ def send_webhook(webhook_url: str, message: dict[str, Any] | str | list[Any]):
     发送 Webhook 消息，使用 POST 形式
     """
 
-    if not config.config.enable_web_hook:
+    if not get_config().enable_web_hook:
         return
 
     if isinstance(message, (dict, list)):

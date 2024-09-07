@@ -17,14 +17,14 @@ from loguru import logger
 from pydantic import BaseModel
 
 from src.base.onebot.onebot_tools import get_avatar_cached
-from src.common.config import config
+from src.common.config import get_config
 from src.ui.base.backend_pages import BackendDataManager
 
 router = APIRouter()
 manager = BackendDataManager()
 
 
-FRONTEND_DIST = config.frontend_path
+FRONTEND_DIST = get_config().frontend_path
 INDEX_PATH = FRONTEND_DIST / "index.html"
 
 

@@ -23,7 +23,7 @@ from src.base.onebot.onebot_events import (
     OnebotStartedContext,
 )
 from src.base.onebot.onebot_tools import record_last_context
-from src.common.config import config
+from src.common.config import get_config
 
 
 def activate_root(event_root: EventManager):
@@ -40,7 +40,10 @@ def activate_root(event_root: EventManager):
 
     @groupMessageHandler.handle()
     async def _(bot: Bot, event: GroupMessageEvent):
-        if config.enable_white_list and event.group_id not in config.white_list_groups:
+        if (
+            get_config().enable_white_list
+            and event.group_id not in get_config().white_list_groups
+        ):
             return
         record_last_context(event.user_id, event.group_id)
 
