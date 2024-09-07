@@ -111,6 +111,9 @@ class BrowserRenderer(Renderer):
         logger.debug(f"Get Document Size {document_width} * {document_height}")
         logger.debug(self.driver.get_window_size())
 
+        assert document_width < 10000, "页面宽度超过了 10000 像素，请检查页面是否过大"
+        assert document_height < 10000, "页面高度超过了 10000 像素，请检查页面是否过大"
+
         image = element.screenshot_as_png
         timer2 = time.time()
         logger.debug(f"WebDriver 截图好了，耗时 {timer2 - timer}")
@@ -242,6 +245,15 @@ class BrowserPool:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, _sync_clean)
 
+    @property
+    def next_renderer(self) -> Renderer:
+        for r in self.renderers:
+            if not r.lock.locked():
+                return r
+        self.render_pointer += 1
+        self.render_pointer %= len(self.renderers)
+        return self.renderers[self.render_pointer]
+
     async def render(
         self, path: str, data: BaseModel | dict[str, Any] | None = None
     ) -> bytes:
@@ -254,21 +266,20 @@ class BrowserPool:
             logger.debug(f"已经将数据暂存到 {uuid} 了")
 
         nbdriver = nonebot.get_driver()
-
         port: int = nbdriver.config.port
         if (_port := config.config.render_port) != 0:
             port = int(_port)
 
         link = f"http://{config.config.render_host}:{port}/kagami/pages/{path}{query}"
-
         logger.debug(f"访问 {link} 进行渲染")
 
-        for r in self.renderers:
-            if not r.lock.locked():
-                return await r.render_link(link)
-        self.render_pointer += 1
-        self.render_pointer %= len(self.renderers)
-        return await self.renderers[self.render_pointer].render_link(link)
+        while True:
+            renderer = self.next_renderer
+            try:
+                return await renderer.render_link(link)
+            except AssertionError as e:
+                logger.exception(e)
+                await self.clean_browser()
 
 
 if config.config.use_fake_browser:
