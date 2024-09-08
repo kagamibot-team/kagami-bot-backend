@@ -9,6 +9,7 @@
 import os
 
 import nonebot
+from loguru import logger
 from nonebot.adapters.onebot.v11 import Adapter as OneBotV11Adapter
 
 from alembic import command
@@ -29,10 +30,28 @@ def pre_init():
     os.makedirs(os.path.join(".", "data", "temp"), exist_ok=True)
 
     # 注册日志管理器
-    nonebot.logger.add(
+    logger.add(
         "./data/log.log",
         format="{time:YYYY-MM-DD HH:mm:ss} [{level}] {message}",
         rotation="10 MB",
+        level="DEBUG",
+    )
+
+    # 添加另一个日志管理，用于记录错误
+    logger.add(
+        "./data/error.log",
+        format="{time:YYYY-MM-DD HH:mm:ss} [{level}] {message}",
+        rotation="10 MB",
+        level="ERROR",
+    )
+
+    # 添加一个日志管理器，归档所有日志
+    logger.add(
+        "./data/archive.log",
+        format="{time:YYYY-MM-DD HH:mm:ss} [{level}] {message}",
+        rotation="10 MB",
+        retention="10 days",
+        compression="zip",
         level="DEBUG",
     )
 

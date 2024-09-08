@@ -67,6 +67,20 @@ async def _(ctx: GroupContext, _):
 
 @listen_message()
 @require_admin()
+@match_regex("^::导出报错$")
+async def _(ctx: GroupContext, _):
+    await DatabaseManager.get_single().manual_checkpoint()
+    fp = Path("./data/error.log")
+    await ctx.bot.call_api(
+        "upload_group_file",
+        group_id=ctx.event.group_id,
+        file=str(fp.absolute()),
+        name=fp.name,
+    )
+
+
+@listen_message()
+@require_admin()
 @match_regex("^::dump-data ([0-9a-fA-F]+)$")
 async def _(ctx: MessageContext, res: Match[str]):
     data = backend_data_manager.get(res.group(1))
