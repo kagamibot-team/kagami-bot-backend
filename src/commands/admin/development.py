@@ -6,22 +6,25 @@
 import json
 from pathlib import Path
 from re import Match
+from typing import Any
 
+from arclet.alconna import Alconna, Arg, Arparma, Option
 from nonebot_plugin_alconna import UniMessage
 
+from src.apis.render_ui import manager as backend_data_manager
 from src.base.command_events import GroupContext, MessageContext, OnebotContext
 from src.base.db import DatabaseManager
 from src.base.onebot.onebot_api import get_group_list
 from src.base.onebot.onebot_tools import update_cached_name
 from src.common.command_deco import (
     listen_message,
+    match_alconna,
     match_literal,
     match_regex,
     require_admin,
 )
 from src.common.save_file_handler import pack_save
-
-from src.apis.render_ui import manager as backend_data_manager
+from src.ui.base.browser import get_browser_pool
 
 
 @listen_message()
@@ -84,3 +87,51 @@ async def _(ctx: OnebotContext):
     for info in groups:
         await update_cached_name(ctx.bot, info.group_id)
     await ctx.reply("ok.")
+
+
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna(
+        ["::"],
+        "browser-pool",
+        Option("--list", alias=["-l"]),
+        Option("--reload", Arg("browser_work_id", str), alias=["-r"]),
+        Option("--clean", alias=["-c"]),
+        Option("--reload-all", alias=["-a"]),
+    )
+)
+async def _(ctx: GroupContext, res: Arparma[Any]):
+    pool = get_browser_pool()
+
+    if res.exist("list"):
+        ls = "当前正在工作的渲染器：\n"
+        for worker in pool.workers:
+            ls += "\n- " + str(worker)
+        await ctx.reply(ls)
+        return
+
+    if res.exist("reload"):
+        work_id = res.query[str]("browser_work_id")
+        assert work_id is not None
+        await pool.reload(work_id)
+        await ctx.reply("ok.")
+        return
+
+    if res.exist("clean"):
+        await pool.clean()
+        await ctx.reply("ok.")
+        return
+
+    if res.exist("reload-all"):
+        await pool.reload()
+        await ctx.reply("ok.")
+        return
+
+    await ctx.reply(
+        "Usage:\n"
+        "::browser-pool --list # 列出当前正在工作的渲染器\n"
+        "::browser-pool --reload <browser_work_id>  # 重载指定渲染器\n"
+        "::browser-pool --clean  # 清理不可用的渲染器\n"
+        "::browser-pool --reload-all  # 重载所有渲染器"
+    )

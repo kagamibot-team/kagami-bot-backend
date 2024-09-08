@@ -174,3 +174,17 @@ class UnknownArgException(KagamiCoreException):
     @property
     def message(self):
         return f"我好像没搞懂你说 {self.arg} 是什么意思……"
+
+
+class KagamiRenderException(KagamiCoreException):
+    """渲染图片的时候的报错"""
+
+    def __init__(self, work_id: str) -> None:
+        super().__init__()
+        self.work_id = work_id
+
+    @property
+    def message(self) -> str:
+        return (
+            f"渲染图片的时候出了点问题！请联系 PT 修复呀！报错的渲染器：{self.work_id}"
+        )
