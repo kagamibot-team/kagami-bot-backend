@@ -57,4 +57,4 @@ if (itv := get_config().clean_browser_interval) > 0:
     @interval_at_start(itv, True)
     async def _(ctx: OnebotStartedContext):
         pool = get_browser_pool()
-        await pool.clean_browser()
+        await pool.clean()

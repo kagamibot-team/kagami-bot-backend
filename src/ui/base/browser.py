@@ -22,14 +22,24 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 
 from src.apis.render_ui import backend_register_data
+from src.base.exceptions import KagamiCoreException, KagamiRenderException
 from src.common.config import get_config
 
+TEMP = {"work_id": 0}
 
-class Renderer(ABC):
+
+def get_next_work_id() -> str:
+    TEMP["work_id"] += 1
+    return "#" + str(TEMP["work_id"])
+
+
+class RenderWorker(ABC):
     lock: Lock
+    work_id: str
 
     def __init__(self) -> None:
         self.lock = Lock()
+        self.work_id = get_next_work_id()
 
     @abstractmethod
     def _sync_render(self, link: str) -> bytes: ...
@@ -48,19 +58,30 @@ class Renderer(ABC):
     @abstractmethod
     def available(self) -> bool: ...
 
+    @abstractmethod
+    def quit(self) -> None: ...
 
-class BrowserRenderer(Renderer):
-    driver: WebDriver
+    def __str__(self) -> str:
+        return f"[{self.__class__.__name__} {self.work_id}]"
+
+
+class BrowserWorker(RenderWorker):
+    _driver: WebDriver | None
     lock: Lock
 
+    @property
+    def driver(self) -> WebDriver:
+        assert self._driver is not None, "WebDriver 还未初始化"
+        return self._driver
+
     def __init__(self, driver: WebDriver) -> None:
-        self.driver = driver
+        self._driver = driver
         super().__init__()
 
     def _sync_render(self, link: str) -> bytes:
         # 访问相应接口
         self.driver.get(link)
-        logger.debug(f"WebDriver 访问了 {link}")
+        logger.debug(f"WebDriver {self.work_id} 访问了 {link}")
 
         timer = time.time()
 
@@ -78,7 +99,9 @@ class BrowserRenderer(Renderer):
         )
 
         timer2 = time.time()
-        logger.debug(f"WebDriver 收到了页面加载完成的信号，耗时 {timer2 - timer}")
+        logger.debug(
+            f"WebDriver {self.work_id} 收到了页面加载完成的信号，耗时 {timer2 - timer}"
+        )
         timer = timer2
 
         time.sleep(0.3)
@@ -91,7 +114,9 @@ class BrowserRenderer(Renderer):
         )
 
         timer2 = time.time()
-        logger.debug(f"WebDriver 断定图片已经加载完成了，耗时 {timer2 - timer}")
+        logger.debug(
+            f"WebDriver {self.work_id} 断定图片已经加载完成了，耗时 {timer2 - timer}"
+        )
         timer = timer2
 
         # 截图
@@ -124,17 +149,23 @@ class BrowserRenderer(Renderer):
     def available(self):
         result = False
         try:
+            if self._driver is None:
+                return False
             result = len(self.driver.window_handles) > 0
         except WebDriverException:
             pass
         if not result:
-            logger.warning("WebDriver 失效了，尝试重新启动")
-            self.driver.quit()
-            del self.driver
+            logger.warning(f"WebDriver {self.work_id} 失效了")
+            self.quit()
         return result
 
+    def quit(self) -> None:
+        self.driver.quit()
+        self._driver = None
+        logger.info(f"WebDriver {self.work_id} 退出")
 
-class FakeRenderer(Renderer):
+
+class FakeRenderWorker(RenderWorker):
     def _sync_render(self, link: str) -> bytes:
         logger.info(f"假渲染器渲染了链接：{link}")
         return Path("./res/fake-renderer-fallback.png").read_bytes()
@@ -142,6 +173,9 @@ class FakeRenderer(Renderer):
     @property
     def available(self):
         return True
+
+    def quit(self) -> None:
+        pass
 
 
 class BaseBrowserDriverFactory(ABC):
@@ -213,67 +247,79 @@ class FirefoxFactory(BaseBrowserDriverFactory):
         return driver
 
 
-class RendererFactory(ABC):
+class RenderWorkerFactory(ABC):
     @abstractmethod
-    def get(self) -> Renderer: ...
+    def get(self) -> RenderWorker: ...
 
 
-class BrowserRendererFactory(RendererFactory):
+class BrowserWorkerFactory(RenderWorkerFactory):
     browserFactory: BaseBrowserDriverFactory
 
     def __init__(self, browserFactory: BaseBrowserDriverFactory) -> None:
         self.browserFactory = browserFactory
 
-    def get(self) -> Renderer:
-        return BrowserRenderer(self.browserFactory.get())
+    def get(self) -> RenderWorker:
+        return BrowserWorker(self.browserFactory.get())
 
 
-class FakeRendererFactory(RendererFactory):
-    def get(self) -> Renderer:
-        return FakeRenderer()
+class FakeWorkerFactory(RenderWorkerFactory):
+    def get(self) -> RenderWorker:
+        return FakeRenderWorker()
 
 
 class BrowserPool:
-    renderers: list[Renderer]
-    render_pointer: int = -1
-    factory: RendererFactory
+    workers: list[RenderWorker]
+    last_render_task: int = -1
+    factory: RenderWorkerFactory
     count: int
 
-    def __init__(self, factory: RendererFactory, count: int) -> None:
-        self.renderers = []
+    def __init__(self, factory: RenderWorkerFactory, count: int) -> None:
+        self.workers = []
         self.factory = factory
         self.count = count
         for i in range(count):
             logger.info(f"正在打开浏览器 {i+1}/{count}")
-            self.renderers.append(factory.get())
+            self.workers.append(factory.get())
             logger.info(f"打开了浏览器 {i+1}/{count}")
 
-    async def clean_browser(self):
+    async def clean(self):
         """
         清理被关闭的浏览器，并重新打开
         """
 
         def _sync_clean():
-            self.renderers = [i for i in self.renderers if i.available]
-            while len(self.renderers) < self.count:
-                self.renderers.append(self.factory.get())
+            self.workers = [i for i in self.workers if i.available]
+            while len(self.workers) < self.count:
+                self.workers.append(self.factory.get())
 
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, _sync_clean)
 
+    async def reload(self, work_id: str | None = None):
+        if work_id is None:
+            for worker in self.workers:
+                worker.quit()
+        else:
+            for i in self.workers:
+                if i.work_id == work_id:
+                    i.quit()
+                    break
+
+        await self.clean()
+
     @property
-    def next_renderer(self) -> Renderer:
-        for r in self.renderers:
+    def next_worker(self) -> RenderWorker:
+        for r in self.workers:
             if not r.lock.locked():
                 return r
-        self.render_pointer += 1
-        self.render_pointer %= len(self.renderers)
-        return self.renderers[self.render_pointer]
+        self.last_render_task += 1
+        self.last_render_task %= len(self.workers)
+        return self.workers[self.last_render_task]
 
     async def render(
         self, path: str, data: BaseModel | dict[str, Any] | None = None
     ) -> bytes:
-        await self.clean_browser()
+        await self.clean()
 
         query = ""
         if data is not None:
@@ -290,21 +336,30 @@ class BrowserPool:
 
         logger.debug(f"访问 {link} 进行渲染")
 
+        failed_count = 0
+
         while True:
-            renderer = self.next_renderer
+            worker = self.next_worker
+            logger.info(f"呼叫 {worker}")
             try:
-                return await renderer.render_link(link)
-            except AssertionError as e:
+                return await worker.render_link(link)
+            except AssertionError:
+                worker.quit()
+                await self.clean()
+            except WebDriverException as e:
+                logger.info(f"{worker} 渲染失败了")
                 logger.exception(e)
-                await self.clean_browser()
+                failed_count += 1
+                if failed_count >= 3:
+                    raise KagamiRenderException(worker.work_id)
 
 
 if get_config().use_fake_browser:
-    factory = FakeRendererFactory()
+    factory = FakeWorkerFactory()
 elif get_config().browser == "chrome":
-    factory = BrowserRendererFactory(ChromeFactory())
+    factory = BrowserWorkerFactory(ChromeFactory())
 else:
-    factory = BrowserRendererFactory(FirefoxFactory())
+    factory = BrowserWorkerFactory(FirefoxFactory())
 browser_pool = BrowserPool(factory, get_config().browser_count)
 
 
