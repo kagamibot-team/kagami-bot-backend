@@ -19,7 +19,8 @@ async def render_catch_failed_message(data: ZhuaData) -> UniMessage[Any]:
 async def render_award_info_message(
     data: AwardDisplay, count: int | None = None, stats: int | None = None
 ) -> UniMessage[Any]:
-    count = count or -1
+    if count is None:
+        count = -1
     stats_val = str(stats or "")
     image = await get_browser_pool().render(
         "catch",
