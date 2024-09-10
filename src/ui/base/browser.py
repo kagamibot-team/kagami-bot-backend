@@ -98,6 +98,12 @@ class BrowserWorker(RenderWorker):
             )
         )
 
+        WebDriverWait(self.driver, 20).until(
+            lambda driver: driver.execute_script(
+                "return window.loaded_data_signal !== false;"
+            )
+        )
+
         timer2 = time.time()
         logger.debug(
             f"WebDriver {self.work_id} 收到了页面加载完成的信号，耗时 {timer2 - timer}"
