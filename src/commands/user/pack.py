@@ -17,7 +17,7 @@ from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.services.pool import PoolService
 from src.services.stats import StatService
-from src.ui.base.browser import get_browser_pool
+from src.ui.base.browser import get_render_pool
 from src.ui.types.liechang import LiechangCountInfo, LiechangData, SingleLiechang
 from src.ui.views.pack import (
     get_random_expression,
@@ -89,7 +89,7 @@ async def _(ctx: MessageContext, _):
         )
         await StatService(uow).check_lc_view(uid, data.selecting)
 
-    browsers = get_browser_pool()
+    browsers = get_render_pool()
     img = await browsers.render("liechang", data)
 
     await ctx.send(UniMessage.image(raw=img))
@@ -139,7 +139,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         await StatService(uow).check_lc_view(uid, data.selecting)
         await StatService(uow).qhlc_command(uid, data.selecting)
 
-    browsers = get_browser_pool()
+    browsers = get_render_pool()
     img = await browsers.render("liechang", data)
 
     await ctx.send(UniMessage.image(raw=img))

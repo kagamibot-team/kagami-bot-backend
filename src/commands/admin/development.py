@@ -6,6 +6,7 @@
 import json
 from pathlib import Path
 from re import Match
+import time
 from typing import Any
 
 from arclet.alconna import Alconna, Arg, Arparma, Option
@@ -24,7 +25,7 @@ from src.common.command_deco import (
     require_admin,
 )
 from src.common.save_file_handler import pack_save
-from src.ui.base.browser import get_browser_pool
+from src.ui.base.browser import get_render_pool
 
 
 @listen_message()
@@ -116,12 +117,20 @@ async def _(ctx: OnebotContext):
     )
 )
 async def _(ctx: GroupContext, res: Arparma[Any]):
-    pool = get_browser_pool()
+    pool = get_render_pool()
 
     if res.exist("list"):
-        ls = "当前正在工作的渲染器：\n"
-        for worker in pool.workers:
+        ls = "当前闲置的渲染器："
+        idle, working = await pool.get_worker_list()
+        for worker in idle:
             ls += "\n- " + str(worker)
+        ls += "\n\n当前正在工作的渲染器："
+        for worker in working:
+            ls += (
+                "\n- "
+                + str(worker)
+                + f" 已经工作 {time.time() - worker.last_render_begin:.2f} 秒了"
+            )
         await ctx.reply(ls)
         return
 

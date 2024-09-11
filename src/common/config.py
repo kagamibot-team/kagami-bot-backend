@@ -71,7 +71,7 @@ class Config(BaseModel):
     frontend_dist: str = "./frontend/"
     "前端文件的地址"
 
-    browser_count: int = 1
+    browser_count: int = 3
     "打开的浏览器数量"
 
     render_host: str = "127.0.0.1"
@@ -82,6 +82,9 @@ class Config(BaseModel):
 
     clean_browser_interval: int = 120
     "检查浏览器是否启动的时间间隔，单位秒，小于等于 0 则不检查"
+
+    render_max_fail: int = 3
+    "渲染器至多允许失败多少次，小于 0 则允许无限重试"
 
     # ===================
     # |  Web Hook 设置  |

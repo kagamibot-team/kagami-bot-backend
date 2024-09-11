@@ -12,7 +12,7 @@ from src.common.command_deco import interval_at_start
 from src.common.config import get_config
 from src.common.webhook import send_webhook
 from src.core.unit_of_work import get_unit_of_work
-from src.ui.base.browser import get_browser_pool
+from src.ui.base.browser import get_render_pool
 from src.ui.types.zhuagx import UpdateData, get_latest_version
 
 
@@ -30,7 +30,7 @@ async def _(ctx: OnebotStartedContext):
 
     if version != lv.version:
         data = UpdateData(versions=[lv], show_pager=False)
-        msg = UniMessage.image(raw=await get_browser_pool().render("update", data))
+        msg = UniMessage.image(raw=await get_render_pool().render("update", data))
         await broadcast(ctx.bot, msg)
     elif get_driver().env != "dev":
         for group in get_config().admin_groups:
@@ -56,5 +56,5 @@ if (itv := get_config().clean_browser_interval) > 0:
 
     @interval_at_start(itv, True)
     async def _(ctx: OnebotStartedContext):
-        pool = get_browser_pool()
+        pool = get_render_pool()
         await pool.clean()

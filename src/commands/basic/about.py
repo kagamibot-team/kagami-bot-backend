@@ -11,7 +11,7 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.common.command_deco import limited, listen_message, match_regex
-from src.ui.base.browser import get_browser_pool
+from src.ui.base.browser import get_render_pool
 from src.ui.types.zhuagx import (
     UpdateData,
     get_latest_version,
@@ -39,7 +39,7 @@ async def _(ctx: MessageContext, res: Match[str]):
         show_pager=True,
         versions=short,
     )
-    image = await get_browser_pool().render("update", data)
+    image = await get_render_pool().render("update", data)
     await ctx.send(UniMessage().image(raw=image))
 
 
@@ -49,12 +49,12 @@ async def _(ctx: MessageContext, res: Match[str]):
 async def _(ctx: MessageContext, res: Match[str]):
     command = (res.group(3) or "").strip()
     if command == "":
-        image = await get_browser_pool().render("help")
+        image = await get_render_pool().render("help")
     else:
         if command not in command_dict:
             raise ObjectNotFoundException("指令")
         data: HelpData = command_content[command_dict[command]]
-        image = await get_browser_pool().render("help/detail", data)
+        image = await get_render_pool().render("help/detail", data)
     await ctx.send(UniMessage().image(raw=image))
 
 
@@ -72,7 +72,7 @@ async def _(ctx: MessageContext, *_):
         app_name: str = "未识别"
         app_version: str = "未识别"
 
-    image = await get_browser_pool().render(
+    image = await get_render_pool().render(
         "about",
         {
             "app_name": app_name,

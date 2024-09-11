@@ -17,7 +17,7 @@ from src.common.rd import get_random
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
 from src.services.stats import StatService
-from src.ui.base.browser import get_browser_pool
+from src.ui.base.browser import get_render_pool
 from src.ui.types.common import GetAward
 from src.ui.types.recipe import MergeData, MergeMeta
 
@@ -112,6 +112,6 @@ async def _(ctx: GroupContext, res: Arparma):
         )
 
     await ctx.send(
-        UniMessage.image(raw=await get_browser_pool().render("recipe", merge_info))
+        UniMessage.image(raw=await get_render_pool().render("recipe", merge_info))
     )
     await throw_event(MergeEvent(user_data=user, merge_view=merge_info))

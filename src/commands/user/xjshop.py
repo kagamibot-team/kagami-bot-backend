@@ -16,7 +16,7 @@ from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.services.shop import ShopFreezed, ShopProductFreezed, build_xjshop
 from src.services.stats import StatService
-from src.ui.base.browser import get_browser_pool
+from src.ui.base.browser import get_render_pool
 from src.ui.types.common import UserData
 from src.ui.types.inventory import BookBoxData, DisplayBoxData
 from src.ui.types.xjshop import BuyData, Product, ProductGroup, ShopDisplay
@@ -55,7 +55,7 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
     )
 
     return UniMessage().image(
-        raw=await get_browser_pool().render("xjshop/home", shop_data)
+        raw=await get_render_pool().render("xjshop/home", shop_data)
     )
 
 
@@ -81,7 +81,7 @@ async def shop_buy_message(
         ],
     )
 
-    return UniMessage.image(raw=await get_browser_pool().render("xjshop/bought", data))
+    return UniMessage.image(raw=await get_render_pool().render("xjshop/bought", data))
 
 
 @listen_message()

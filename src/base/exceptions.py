@@ -176,6 +176,16 @@ class UnknownArgException(KagamiCoreException):
         return f"我好像没搞懂你说 {self.arg} 是什么意思……"
 
 
+class KagamiRenderWarning(KagamiCoreException):
+    """
+    渲染图片时的问题，但此时不是核心报错
+    """
+
+    def __init__(self, exc: Exception) -> None:
+        super().__init__()
+        self.exception = exc
+
+
 class KagamiRenderException(KagamiCoreException):
     """渲染图片的时候的报错"""
 

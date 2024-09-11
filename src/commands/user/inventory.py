@@ -10,7 +10,7 @@ from arclet.alconna import Alconna, Arg, Arparma, Option
 from src.common.data.user import get_user_data
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import Level
-from src.ui.base.browser import get_browser_pool
+from src.ui.base.browser import get_render_pool
 from src.ui.types.common import AwardInfo, UserData
 from src.ui.types.inventory import BookBoxData, DisplayBoxData, StorageData, BoxItemList
 
@@ -90,7 +90,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         key=lambda i: (-i.level.lid, -storage_dict.get(i.aid, 0), i.sorting, i.aid),
     )
     view = build_display(infos, storage_dict)
-    img = await get_browser_pool().render(
+    img = await get_render_pool().render(
         "storage",
         data=StorageData(
             user=user,
@@ -191,7 +191,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
     level_det = "" if level is None else f"{level.display_name} "
     progress_det = "" if level is not None else f" {progress * 100:.2f}%"
 
-    img = await get_browser_pool().render(
+    img = await get_render_pool().render(
         "storage",
         data=StorageData(
             user=user,
@@ -272,7 +272,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
     pack_det = "" if pack_index is None else f"{pack_index} 猎场 "
     level_det = "" if level is None else f"{level.display_name} "
 
-    img = await get_browser_pool().render(
+    img = await get_render_pool().render(
         "storage",
         data=StorageData(
             user=UserData(),
