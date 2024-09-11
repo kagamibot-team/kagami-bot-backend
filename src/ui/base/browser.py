@@ -15,8 +15,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from src.base.exceptions import KagamiRenderWarning
 from src.common.config import get_config
-from src.ui.base.browser_driver import (BaseBrowserDriverFactory,
-                                        ChromeFactory, FirefoxFactory)
+from src.ui.base.browser_driver import (
+    BaseBrowserDriverFactory,
+    ChromeFactory,
+    FirefoxFactory,
+)
 from src.ui.base.render_worker import RenderPool, RenderWorker
 
 
