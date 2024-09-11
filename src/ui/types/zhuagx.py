@@ -533,6 +533,20 @@ updates = [
             ),
         ],
     ),
+    VersionData(
+        version="1.1.4",
+        updates=[
+            UpdateContentData(
+                content="这几天一直在修复渲染器的问题", tags=["修复", "内核"]
+            ),
+            UpdateContentData(
+                content="坏枪：修复了一些页面潜在的渲染问题", tags=["修复", "界面"]
+            ),
+            UpdateContentData(
+                content="修复了库存等界面的比例错误", tags=["修复", "界面"]
+            ),
+        ],
+    ),
 ]
 
 
