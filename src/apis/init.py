@@ -1,11 +1,12 @@
 from pathlib import Path
 
-from fastapi import FastAPI
 import nonebot
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from nonebot.drivers.fastapi import Driver as FastAPIDriver
-from fastapi.middleware.cors import CORSMiddleware
 
+from .api_root import router as api_router
 from .render_ui import router as render_ui_router
 from .webhook import router as webhook_router
 
@@ -33,3 +34,4 @@ def init_routers():
     app.mount("/kagami", sub_app)
     app.mount("/kagami-res", StaticFiles(directory=Path("./res/")), name="res")
     app.include_router(webhook_router, prefix="/kagami-webhook")
+    app.include_router(api_router, prefix="/kagami-api")
