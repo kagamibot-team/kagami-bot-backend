@@ -1,8 +1,11 @@
+from typing import Any
+
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
-from nonebot_plugin_alconna import Image
+from nonebot_plugin_alconna import Image, UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
+from src.commands.user.inventory import build_display
 from src.common.command_deco import (
     listen_message,
     match_alconna,
@@ -13,6 +16,9 @@ from src.common.data.awards import download_award_image
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import level_repo
 from src.services.pool import PoolService
+from src.ui.base.browser import get_render_pool
+from src.ui.types.common import UserData
+from src.ui.types.inventory import BoxItemList, StorageData
 
 
 @listen_message()
@@ -136,3 +142,80 @@ async def _(ctx: MessageContext):
         service = PoolService(uow)
         list = await service.get_uncatchable_aids()
     await ctx.reply(str(list))
+
+
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna(
+        ["::"],
+        "re:(所有|全部)小哥",
+        Option(
+            "等级",
+            Arg("等级名字", str),
+            alias=["--level", "级别", "-l", "-L"],
+            compact=True,
+        ),
+        Option(
+            "猎场",
+            Arg("猎场序号", int),
+            alias=["--pack", "小鹅猎场", "-p", "-P"],
+            compact=True,
+        ),
+    )
+)
+async def _(ctx: MessageContext, res: Arparma[Any]):
+    level_name = res.query[str]("等级名字") or ""
+    pack_index = res.query[int]("猎场序号")
+
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        if level_name != "":
+            level = uow.levels.get_by_name_strong(level_name)
+            lid = level.lid
+        else:
+            level = None
+            lid = None
+
+        aids = await uow.awards.get_aids(lid, pack_index)
+        aids.sort()
+        infos = await uow.awards.get_info_dict(aids)
+
+        groups: list[BoxItemList] = []
+
+        if lid is not None:
+            infos = [infos[aid] for aid in aids]
+            view = build_display(infos)
+            groups.append(BoxItemList(elements=view))
+        else:
+            _aids = await uow.awards.group_by_level(aids)
+
+            for i in (5, 4, 3, 2, 1, 0):
+                if i not in _aids:
+                    continue
+
+                lvl = uow.levels.get_by_id(i)
+                _infos = [infos[aid] for aid in _aids[i]]
+                _infos = sorted(_infos, key=lambda x: x.aid)
+                if len(_infos) <= 0:
+                    continue
+                view = build_display(_infos)
+                groups.append(
+                    BoxItemList(
+                        title=lvl.display_name,
+                        title_color=lvl.color,
+                        elements=view,
+                    )
+                )
+
+    pack_det = "" if pack_index is None else f"{pack_index} 猎场 "
+    level_det = "" if level is None else f"{level.display_name} "
+
+    img = await get_render_pool().render(
+        "storage",
+        data=StorageData(
+            user=UserData(),
+            boxes=groups,
+            title_text=pack_det + level_det + "抓小哥进度",
+        ),
+    )
+    await ctx.send(UniMessage.image(raw=img))
