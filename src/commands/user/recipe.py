@@ -133,9 +133,17 @@ async def _(ctx: GroupContext, res: Arparma):
     
     async with get_unit_of_work(ctx.sender_id) as uow:
         aid = await uow.awards.get_aid_strong(name)
-        recipe_ids = await uow.recipes.get_recipe_by_product(aid)
-        message = "历史测试：\n"
+        recipe_ids = await uow.stats.get_merge_by_product(aid)
+        
+        unique_recipe_ids = []
+        seen = set()
         for recipe_id in recipe_ids:
+            if recipe_id not in seen:
+                unique_recipe_ids.append(recipe_id)
+                seen.add(recipe_id)
+
+        message = "历史测试：\n"
+        for recipe_id in unique_recipe_ids:
             recipe = await uow.recipes.get_recipe_info(recipe_id)
             award1 = (await uow.awards.get_info(recipe.aid1)).name
             award2 = (await uow.awards.get_info(recipe.aid2)).name

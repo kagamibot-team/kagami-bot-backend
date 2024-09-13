@@ -211,13 +211,13 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         Option(
             "等级",
             Arg("等级名字", str),
-            alias=["--level", "级别", "-l", "-L"],
+            alias=["--level", "级别", "-l", "-L", "lv"],
             compact=True,
         ),
         Option(
             "猎场",
             Arg("猎场序号", int),
-            alias=["--pack", "小鹅猎场", "-p", "-P"],
+            alias=["--pack", "小鹅猎场", "-p", "-P", "lc"],
             compact=True,
         ),
     )
@@ -234,7 +234,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             level = None
             lid = None
         pack_max = await uow.settings.get_pack_count()
-        if pack_index is not None and (pack_index <= 0 or pack_index > pack_max):
+        if pack_index is not None and (pack_index < -1 or pack_index > pack_max):
             raise KagamiRangeError(
                 "猎场序号", f"大于 0 且不超过 {pack_max} 的值", pack_index
             )
