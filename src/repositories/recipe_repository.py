@@ -1,8 +1,9 @@
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, insert, select, update, desc
 
 from ..base.exceptions import ObjectAlreadyExistsException, RecipeMissingException
 from ..base.repository import DBRepository
 from ..models.models import Recipe
+from src.ui.types.recipe import RecipeInfo
 
 
 class RecipeRepository(DBRepository):
@@ -53,6 +54,47 @@ class RecipeRepository(DBRepository):
         )
 
         return (await self.session.execute(query)).scalar_one()
+
+    async def get_recipe_info(self, data_id: int) -> RecipeInfo:
+        """获得某个合成配方的详细信息
+
+        Args:
+            data_id (int): 合成配方的 ID
+
+        Returns:
+            RecipeData: 合成配方的数据
+        """
+
+        query = select(
+            Recipe.award1, Recipe.award2, Recipe.award3, Recipe.possibility, Recipe.result, Recipe.created_at, Recipe.updated_at
+        ).filter(Recipe.data_id == data_id)
+        a1, a2, a3, poss, ar, crt, upd = (await self.session.execute(query)).tuples().one()
+
+        return RecipeInfo(
+            aid1=a1,
+            aid2=a2,
+            aid3=a3,
+            possibility=poss,
+            result=ar,
+            created_at=crt,
+            updated_at=upd,
+        )
+
+    async def get_recipe_by_product(self, aid: int) -> list[int]:
+        """获得某个合成配方的 ID
+
+        Args:
+            aid (int): 产物小哥的 ID
+
+        Returns:
+            list[int]: 合成配方的 ID 们
+        """
+        query = select(Recipe.data_id).filter(
+            Recipe.result == aid
+        ).order_by(desc(Recipe.updated_at)).limit(10)
+
+        return [(row[0]) for row in (await self.session.execute(query)).all()]
+
 
     async def add_recipe(
         self,

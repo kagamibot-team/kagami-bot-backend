@@ -70,7 +70,7 @@ async def _(ctx: GroupContext, res: Arparma):
 
         aid, succeed = await try_merge(uow, uid, a1, a2, a3)
         rid = await uow.recipes.get_recipe_id(a1, a2, a3)
-        await StatService(uow).hc(uid, rid, succeed, aid, cost)
+        stid1, stid2 = await StatService(uow).hc(uid, rid, succeed, aid, cost)
         if aid == -1:
             info = await generate_random_info()
             add = get_random().randint(1, 100)
@@ -102,6 +102,8 @@ async def _(ctx: GroupContext, res: Arparma):
         merge_info = MergeData(
             user=user,
             meta=MergeMeta(
+                recipe_id=rid,
+                stat_id=stid1,
                 cost_chip=cost,
                 own_chip=int(after),
                 status=status,
@@ -115,3 +117,28 @@ async def _(ctx: GroupContext, res: Arparma):
         UniMessage.image(raw=await get_render_pool().render("recipe", merge_info))
     )
     await throw_event(MergeEvent(user_data=user, merge_view=merge_info))
+
+
+@listen_message()
+@match_alconna(
+    Alconna(
+        "re:(合成|hc)(档案|da)",
+        Arg("产物小哥", str)
+    )
+)
+async def _(ctx: GroupContext, res: Arparma):
+    name = res.query[str]("产物小哥")
+    if name == None:
+        return
+    
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        aid = await uow.awards.get_aid_strong(name)
+        recipe_ids = await uow.recipes.get_recipe_by_product(aid)
+        message = "历史测试：\n"
+        for recipe_id in recipe_ids:
+            recipe = await uow.recipes.get_recipe_info(recipe_id)
+            award1 = (await uow.awards.get_info(recipe.aid1)).name
+            award2 = (await uow.awards.get_info(recipe.aid2)).name
+            award3 = (await uow.awards.get_info(recipe.aid3)).name
+            message += f"{award1} + {award2} + {award3} ({recipe.possibility})\n"
+        await ctx.send(UniMessage.text(message))

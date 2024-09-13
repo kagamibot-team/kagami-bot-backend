@@ -4,7 +4,7 @@ from loguru import logger
 from nonebot_plugin_alconna import UniMessage
 from src.base.command_events import MessageContext
 from src.base.exceptions import KagamiRangeError
-from src.common.command_deco import listen_message, match_alconna
+from src.common.command_deco import listen_message, match_alconna, require_admin
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
 from src.common.data.user import get_user_data
@@ -203,6 +203,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
 
 @listen_message()
+@require_admin()
 @match_alconna(
     Alconna(
         ["::"],
@@ -281,3 +282,46 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         ),
     )
     await ctx.send(UniMessage.image(raw=img))
+
+
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna(
+        ["::"],
+        "re:(testboard)",
+    )
+)
+async def _(ctx: MessageContext, res: Arparma[Any]):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        pack_max = await uow.settings.get_pack_count()
+        pack_progress: list[list[tuple[int, float]]] = [[] for _ in range(0, pack_max + 1)]
+        users = await uow.users.all_users()
+        for uid in users:
+            for pid in range(0, pack_max + 1):
+                lid = None
+                aids = await uow.awards.get_aids(lid, pid if pid > 0 else None)
+                aids2 = await uow.awards.get_aids(lid, 0)
+                aids = list(set(aids) | set(aids2))
+                aids.sort()
+
+                inventory_dict = await uow.inventories.get_inventory_dict(uid, aids)
+                stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
+
+                grouped_aids = await uow.awards.group_by_level(aids)
+                grouped_aids_filtered = [
+                    (
+                        uow.levels.get_by_id(i),
+                        [(v if stats_dict.get(v, 0) > 0 else None) for v in vs],
+                    )
+                    for i, vs in grouped_aids.items()
+                ]
+                progress = calc_progress(grouped_aids_filtered)
+                pack_progress[pid].append((await uow.users.get_qqid(uid), progress))
+
+    for pid in range(0, pack_max + 1):
+        pack_progress[pid].sort(key=lambda x: x[1], reverse=True)
+        message = f"~ {"总" if pid == 0 else f"{pid}号猎场"}进度排行榜 ~\n"
+        for uid, progress in pack_progress[pid][:10]:
+            message += f"{uid}: {progress * 100:.2f}%\n"
+        await ctx.send(UniMessage.text(message))
