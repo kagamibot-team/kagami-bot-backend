@@ -1,6 +1,7 @@
 from arclet.alconna import Alconna, Arg, Arparma
 from nonebot_plugin_alconna import UniMessage
 
+from loguru import logger
 from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event
 from src.common.command_deco import (
@@ -20,6 +21,7 @@ from src.services.stats import StatService
 from src.ui.base.browser import get_render_pool
 from src.ui.types.common import GetAward
 from src.ui.types.recipe import MergeData, MergeMeta
+from src.ui.types.recipe import RecipeInfo
 
 
 @listen_message()
@@ -133,18 +135,56 @@ async def _(ctx: GroupContext, res: Arparma):
     
     async with get_unit_of_work(ctx.sender_id) as uow:
         aid = await uow.awards.get_aid_strong(name)
+        uid = await uow.users.get_uid(ctx.sender_id)
         recipe_ids = await uow.stats.get_merge_by_product(aid)
-        
-        unique_recipe_ids = []
-        seen = set()
+
+        unique_recipes: list[list[RecipeInfo]] = [[], [], [], []]
+        seen: set[int] = set() # 去重
         for recipe_id in recipe_ids:
             if recipe_id not in seen:
-                unique_recipe_ids.append(recipe_id)
+                recipe = await uow.recipes.get_recipe_info(recipe_id)
+                if recipe is None:
+                    continue # 可能要报个错啥的但是不太会写
+
+                n1 = (await uow.awards.get_info(recipe.aid1)).name
+                sto1 = await uow.inventories.get_storage(uid, recipe.aid1)
+                sto2 = await uow.inventories.get_storage(uid, recipe.aid2)
+                sto3 = await uow.inventories.get_storage(uid, recipe.aid3)
+
+                if recipe.aid1 == recipe.aid2 and recipe.aid2 == recipe.aid3:
+                    cnt = sto1 if sto1 < 3 else 3
+                elif recipe.aid1 == recipe.aid2 and recipe.aid2 != recipe.aid3:
+                    cnt = (sto1 if sto1 < 2 else 2) + (sto3 if sto3 < 1 else 1)
+                elif recipe.aid1 != recipe.aid2 and recipe.aid2 == recipe.aid3:
+                    cnt = (sto1 if sto1 < 1 else 1) + (sto2 if sto2 < 2 else 2)
+                else:
+                    cnt = (sto1 if sto1 < 1 else 1) + (sto2 if sto2 < 1 else 1)+ (sto3 if sto3 < 1 else 1)
+                
+                logger.info(f"{n1} {sto1} {sto2} {sto3} cnt {cnt}")
+
+                unique_recipes[cnt].append(recipe)
                 seen.add(recipe_id)
 
-        message = "历史测试：\n"
-        for recipe_id in unique_recipe_ids:
-            recipe = await uow.recipes.get_recipe_info(recipe_id)
+        message = "历史测试：\n拥有 3 个的：\n"
+        for recipe in unique_recipes[3]:
+            award1 = (await uow.awards.get_info(recipe.aid1)).name
+            award2 = (await uow.awards.get_info(recipe.aid2)).name
+            award3 = (await uow.awards.get_info(recipe.aid3)).name
+            message += f"{award1} + {award2} + {award3} ({recipe.possibility})\n"
+        message += "拥有 2 个的：\n"
+        for recipe in unique_recipes[2]:
+            award1 = (await uow.awards.get_info(recipe.aid1)).name
+            award2 = (await uow.awards.get_info(recipe.aid2)).name
+            award3 = (await uow.awards.get_info(recipe.aid3)).name
+            message += f"{award1} + {award2} + {award3} ({recipe.possibility})\n"
+        message += "拥有 1 个的：\n"
+        for recipe in unique_recipes[1]:
+            award1 = (await uow.awards.get_info(recipe.aid1)).name
+            award2 = (await uow.awards.get_info(recipe.aid2)).name
+            award3 = (await uow.awards.get_info(recipe.aid3)).name
+            message += f"{award1} + {award2} + {award3} ({recipe.possibility})\n"
+        message += "拥有 0 个的：\n"
+        for recipe in unique_recipes[0]:
             award1 = (await uow.awards.get_info(recipe.aid1)).name
             award2 = (await uow.awards.get_info(recipe.aid2)).name
             award3 = (await uow.awards.get_info(recipe.aid3)).name

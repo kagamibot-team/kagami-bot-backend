@@ -55,7 +55,7 @@ class RecipeRepository(DBRepository):
 
         return (await self.session.execute(query)).scalar_one()
 
-    async def get_recipe_info(self, data_id: int) -> RecipeInfo:
+    async def get_recipe_info(self, data_id: int) -> RecipeInfo | None:
         """获得某个合成配方的详细信息
 
         Args:
@@ -68,6 +68,9 @@ class RecipeRepository(DBRepository):
         query = select(
             Recipe.award1, Recipe.award2, Recipe.award3, Recipe.possibility, Recipe.result, Recipe.created_at, Recipe.updated_at
         ).filter(Recipe.data_id == data_id)
+        result = await self.session.execute(query)
+        if not result.fetchall():
+            return None
         a1, a2, a3, poss, ar, crt, upd = (await self.session.execute(query)).tuples().one()
 
         return RecipeInfo(
