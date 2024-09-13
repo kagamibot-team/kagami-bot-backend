@@ -69,6 +69,9 @@ async def _(ctx: GroupContext, res: Arparma):
             await use_award(uow, uid, aid, use)
 
         after = await uow.money.use(uid, cost)
+        aft_sto1 = await uow.inventories.get_storage(uid, a1)
+        aft_sto2 = await uow.inventories.get_storage(uid, a2)
+        aft_sto3 = await uow.inventories.get_storage(uid, a3)
 
         aid, succeed = await try_merge(uow, uid, a1, a2, a3)
         rid = await uow.recipes.get_recipe_id(a1, a2, a3)
@@ -112,6 +115,8 @@ async def _(ctx: GroupContext, res: Arparma):
                 is_strange=status == "失败？",
             ),
             inputs=(info1, info2, info3),
+            after_storages=(aft_sto1, aft_sto2, aft_sto3),
+            light_on=(True, True, True),
             output=data,
         )
 

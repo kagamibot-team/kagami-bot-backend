@@ -13,9 +13,11 @@ class MergeMeta(BaseModel):
     is_strange: bool
 
 
-class MergeData(BaseModel): # 传递给前端用
+class MergeData(BaseModel): # 传递给前端用的合成信息
     user: UserData
     inputs: tuple[AwardInfo, AwardInfo, AwardInfo]
+    after_storages: tuple[int, int, int]
+    light_on: tuple[bool, bool, bool]
     output: GetAward
     meta: MergeMeta
 
