@@ -74,6 +74,7 @@ class RecipeRepository(DBRepository):
         a1, a2, a3, poss, ar, crt, upd = (await self.session.execute(query)).tuples().one()
 
         return RecipeInfo(
+            recipe_id=data_id,
             aid1=a1,
             aid2=a2,
             aid3=a3,

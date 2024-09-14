@@ -1,4 +1,5 @@
 from typing import Iterable, Literal
+from datetime import datetime
 
 from pydantic import BaseModel
 from sqlalchemy import func, insert, select, update, desc
@@ -314,12 +315,12 @@ class StatsRepository(DBRepository):
         )
         await self.session.execute(query)
 
-    async def get_merge_by_product(self, aid: int) -> list[int]:
+    async def get_merge_by_product(self, aid: int) -> list[tuple[int, int, datetime]]:
         query = (
-            select(StatRecord.linked_rid)
+            select(StatRecord.data_id, StatRecord.linked_rid, StatRecord.updated_at)
             .where(StatRecord.stat_type == "合成成功")
             .where(StatRecord.linked_aid == aid)
         ).order_by(desc(StatRecord.updated_at))
 
-        return [(row[0]) for row in (await self.session.execute(query)).all()]
+        return [(row[0], row[1], row[2]) for row in (await self.session.execute(query)).all()]
     

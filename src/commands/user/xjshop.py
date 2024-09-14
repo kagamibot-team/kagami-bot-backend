@@ -45,6 +45,7 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
                             color=product.background_color,
                             notation_down=f"{int(product.price)}薯片",
                             sold_out_overlay=product.is_sold_out,
+                            black_overlay=product.is_sold_out,
                         ),
                     )
                     for product in products

@@ -8,26 +8,28 @@ from pydantic import BaseModel, computed_field
 
 
 class LevelData(BaseModel):
-    display_name: str
-    color: str
-    lid: int
+    display_name: str = "未知"
+    color: str = "#9e9d95"
+    lid: int = -1
 
 
 class AwardInfo(BaseModel):
-    aid: int
-    description: str
-    name: str
-    color: str
-    image_name: str
-    image_type: str
-    level: LevelData
-    sorting: int
+    aid: int = 0
+    description: str = "未知小哥。"
+    name: str = "？？？"
+    color: str = "#696361"
+    image_name: str = "blank_placeholder.png"
+    image_type: str = ""
+    level: LevelData = LevelData()
+    sorting: int = 0
     skin_name: str = ""
 
     @property
     def image_path(self) -> Path:
         if self.image_name == "default.png":
             return Path("./res/default.png")
+        if self.image_name == "blank_placeholder.png":
+            return Path("./res/blank_placeholder.png")
         return Path("./data") / self.image_type / self.image_name
 
     @computed_field
@@ -35,6 +37,8 @@ class AwardInfo(BaseModel):
     def image_url_raw(self) -> str:
         if self.image_name == "default.png":
             return "/kagami-res/default.png"
+        if self.image_name == "blank_placeholder.png":
+            return "./kagami-res/blank_placeholder.png"
         return f"../file/{self.image_type}/{self.image_name}"
 
     @computed_field
