@@ -137,7 +137,7 @@ async def _(ctx: GroupContext, res: Arparma):
     )
 )
 async def _(ctx: GroupContext, res: Arparma):
-    costs = {0: 1, 1: 2, 2: 4, 3: 8, 4: 12, 5: 20}
+    costs = {0: 1, 1: 2, 2: 4, 3: 8, 4: 16, 5: 32}
 
     name = res.query[str]("产物小哥")
     if name == None:
