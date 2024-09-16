@@ -30,7 +30,7 @@ class CDKeyBatchAward(Base, BaseMixin):
     batch_id = Column(Integer, ForeignKey('catch_cdk_batch.data_id', ondelete='CASCADE'))
     aid = Column(Integer, ForeignKey('catch_award.data_id', ondelete='CASCADE'), nullable=True)
     sid = Column(Integer, ForeignKey('catch_skin.data_id', ondelete='CASCADE'), nullable=True)
-    chips: Mapped[int] = mapped_column()
+    chips: Mapped[int] = mapped_column(nullable=True)
     quantity: Mapped[int] = mapped_column(default=1)
 
 
