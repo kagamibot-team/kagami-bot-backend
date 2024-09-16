@@ -1,29 +1,23 @@
-from enum import Enum
-from typing import Generic, TypeVar
 from fastapi import APIRouter
 from pydantic import BaseModel
+
+from src.apis.restful.base import APIWrapper
+from src.base.onebot.onebot_tools import broadcast
 
 router = APIRouter()
 
 
-T = TypeVar("T")
+class BroadcastData(BaseModel):
+    message: str
+    is_admin: bool = False
 
 
-class StatusCode(Enum):
-    ok = 0
-    error = 1
-
-
-class APIWrapper(BaseModel, Generic[T]):
-    code: StatusCode = StatusCode.ok
-    msg: str = ""
-    data: T
-
-
-class Ping(APIWrapper[str], BaseModel):
-    data: str = "pong"
+@router.post("/broadcast")
+async def broadcast_response(data: BroadcastData):
+    await broadcast(message=data.message, require_admin=data.is_admin)
+    return APIWrapper(data="ok.")
 
 
 @router.get("/ping")
 async def ping():
-    return Ping()
+    return APIWrapper(data="pong")
