@@ -11,7 +11,7 @@ from src.common.data.user import get_user_data
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import Level
 from src.ui.base.browser import get_render_pool
-from src.ui.types.common import AwardInfo, UserData
+from src.ui.types.common import AwardInfo
 from src.ui.types.inventory import BookBoxData, DisplayBoxData, StorageData, BoxItemList
 
 

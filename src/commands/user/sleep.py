@@ -91,20 +91,26 @@ def parse_getup_time(inp: tuple[str] | None) -> tuple[int, int]:
         Arg("getup_time", MultiVar(str, "*"), seps=" "),
     )
 )
-@require_awake
 async def goodnight(ctx: GroupContext, res: Arparma):
-    arg = res.query[tuple[str]]("getup_time")
-    hour, minute = parse_getup_time(arg)
-
-    now_time = now_datetime()
-    target = now_time.replace(hour=hour, minute=minute, second=0)
-    if target < now_time:
-        target += datetime.timedelta(days=1)
-
-    if hour <= now_time.hour < 21:
-        raise NotSleepTimeException()
-
     async with get_unit_of_work(ctx.sender_id) as uow:
+        n = now_datetime().timestamp()
+        uid = await uow.users.get_uid(ctx.sender_id)
+        if await uow.users.get_getup_time(uid) > n:
+            return
+        arg = res.query[tuple[str]]("getup_time")
+        hour, minute = parse_getup_time(arg)
+
+        # 必须将一些逻辑放在 UOW 里面，虽然会导致一些阻塞问题，
+        # 但是这种问题的耗时是微不足道的，而且可以避免出现恶性的
+        # 刷薯片 Bug。
+        now_time = now_datetime()
+        target = now_time.replace(hour=hour, minute=minute, second=0)
+        if target < now_time:
+            target += datetime.timedelta(days=1)
+
+        if hour <= now_time.hour < 21:
+            raise NotSleepTimeException()
+
         uid = await uow.users.get_uid(ctx.sender_id)
         last_time, count = await uow.users.get_sleep_early_data(uid)
         last_dt = timestamp_to_datetime(last_time).date()

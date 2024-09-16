@@ -547,6 +547,14 @@ updates = [
             ),
         ],
     ),
+    VersionData(
+        version="1.1.5",
+        updates=[
+            UpdateContentData(
+                content="修复了小镜晚安指令线程不安全的问题", tags=["修复"]
+            ),
+        ],
+    ),
 ]
 
 
