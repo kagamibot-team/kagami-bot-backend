@@ -37,6 +37,19 @@ class UserRepository(DBRepository):
         result = (await self.session.execute(query)).scalar_one()
         return result
 
+    async def get_qqid(self, uid: int | str) -> int:
+        """根据用户的 data_id 获取用户的 qqid
+
+        Args:
+            uid (int | str): 用户的 data_id
+
+        Returns:
+            int: 用户的 qqid
+        """
+        query = select(User.qq_id).filter(User.data_id == str(uid))
+        result = int((await self.session.execute(query)).scalar_one())
+        return result
+
     async def update_catch_time(self, uid: int, count_remain: int, last_calc: float):
         """更新玩家抓小哥的时间
 

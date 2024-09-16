@@ -17,6 +17,7 @@ class DisplayBoxData(BaseModel):
 
     new_overlay: bool = False
     sold_out_overlay: bool = False
+    black_overlay: bool = False
 
 
 class BookBoxData(BaseModel):
