@@ -7,7 +7,7 @@ from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import *
-from .cdkey import CDKey, CDKeyAward, CDKeyUsage
+from .cdkey import CDKey, CDKeyUsage, CDKeyBatch, CDKeyBatchAward
 from .stats import StatRecord
 from .up_pool import UpPool
 
@@ -179,6 +179,7 @@ __all__ = [
     "UpPool",
     "StatRecord",
     "CDKey",
-    "CDKeyAward",
+    "CDKeyBatch",
     "CDKeyUsage",
+    "CDKeyBatchAward",
 ]
