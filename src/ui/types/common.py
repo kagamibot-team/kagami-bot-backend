@@ -38,8 +38,8 @@ class AwardInfo(BaseModel):
         if self.image_name == "default.png":
             return "/kagami-res/default.png"
         if self.image_name == "blank_placeholder.png":
-            return "./kagami-res/blank_placeholder.png"
-        return f"../file/{self.image_type}/{self.image_name}"
+            return "/kagami-res/blank_placeholder.png"
+        return f"/kagami/file/{self.image_type}/{self.image_name}"
 
     @computed_field
     @property
@@ -47,7 +47,7 @@ class AwardInfo(BaseModel):
         if self.image_name == "default.png":
             return "/kagami-res/default.png"
         if self.image_name == "blank_placeholder.png":
-            return "./kagami-res/blank_placeholder.png"
+            return "/kagami-res/blank_placeholder.png"
         _target_hash = hashlib.md5(
             str(self.image_path).encode() + self.image_path.read_bytes()
         ).hexdigest()
@@ -57,7 +57,7 @@ class AwardInfo(BaseModel):
             img = PIL.Image.open(self.image_path)
             img = img.resize((175, 140))
             img.save(_target_path)
-        return f"../file/temp/temp_{_target_hash}.png"
+        return f"/kagami/file/temp/temp_{_target_hash}.png"
 
     @computed_field
     @property

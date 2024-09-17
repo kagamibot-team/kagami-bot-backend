@@ -110,7 +110,9 @@ class BrowserWorker(RenderWorker):
         element_width = element.size["width"]
         element_height = element.size["height"]
 
-        self.driver.set_window_size(element_width + 150, element_height + 150)
+        # self.driver.set_window_size(element_width + 150, element_height + 150)
+        self.driver.set_window_size(10000, 10000)
+        time.sleep(0.1)
 
         document_width = self.driver.execute_script(
             "return document.documentElement.scrollWidth"
