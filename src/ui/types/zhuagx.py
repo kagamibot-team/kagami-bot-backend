@@ -569,6 +569,14 @@ updates = [
             ),
         ],
     ),
+    VersionData(
+        version="1.2.1",
+        updates=[
+            UpdateContentData(
+                content="热更新，修复了若干 Bug", tags=["修复"]
+            )
+        ]
+    )
 ]
 
 
