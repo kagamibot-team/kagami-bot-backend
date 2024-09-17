@@ -130,6 +130,7 @@ async def _(ctx: GroupContext, res: Arparma):
 
 
 @listen_message()
+@limited
 @match_alconna(
     Alconna(
         "re:(合成|hc)(档案|da)",
