@@ -46,6 +46,8 @@ class AwardInfo(BaseModel):
     def image_url(self) -> str:
         if self.image_name == "default.png":
             return "/kagami-res/default.png"
+        if self.image_name == "blank_placeholder.png":
+            return "./kagami-res/blank_placeholder.png"
         _target_hash = hashlib.md5(
             str(self.image_path).encode() + self.image_path.read_bytes()
         ).hexdigest()
