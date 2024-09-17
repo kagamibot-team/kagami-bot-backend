@@ -107,10 +107,10 @@ class BrowserWorker(RenderWorker):
             lambda d: d.find_element(By.ID, "big_box")
         )
 
-        element_width = element.size['width']
-        element_height = element.size['height']
+        element_width = element.size["width"]
+        element_height = element.size["height"]
 
-        self.driver.set_window_size(element_width + 50, element_height + 50)
+        self.driver.set_window_size(element_width + 150, element_height + 150)
 
         document_width = self.driver.execute_script(
             "return document.documentElement.scrollWidth"
