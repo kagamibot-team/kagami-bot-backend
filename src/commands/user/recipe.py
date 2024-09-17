@@ -148,6 +148,11 @@ async def _(ctx: GroupContext, res: Arparma):
         product = await uow.awards.get_info(aid)
         uid = await uow.users.get_uid(ctx.sender_id)
         after = await uow.money.use(uid, costs[product.level.lid])
+        stat = await uow.inventories.get_stats(uid, aid)
+        if stat == 0: #没见过
+            product.image_name = "blank_placeholder.png"
+            product.color = "#696361"
+
 
         recipe_ids = await uow.stats.get_merge_by_product(aid)  # [0]是stat_id，[1]是recipe_id，[2]是update_at
         unique_recipes: list[list[RecipeInfo]] = [[], [], [], []]
