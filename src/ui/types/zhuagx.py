@@ -555,6 +555,20 @@ updates = [
             ),
         ],
     ),
+    VersionData(
+        version="1.2.0",
+        updates=[
+            UpdateContentData(
+                content="榆木华：上线合成档案查询功能，请输入“抓小哥帮助 合成档案”查看详细内容", tags=["功能"]
+            ),
+            UpdateContentData(
+                content="榆木华：合成界面添加剩余库存量的显示", tags=["特性", "界面"]
+            ),
+            UpdateContentData(
+                content="坏枪：修复了一些页面潜在的渲染问题", tags=["修复", "界面"]
+            ),
+        ],
+    ),
 ]
 
 
