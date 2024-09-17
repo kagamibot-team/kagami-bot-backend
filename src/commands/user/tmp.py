@@ -3,13 +3,19 @@ from typing import Any, Iterable
 from loguru import logger
 from nonebot_plugin_alconna import UniMessage
 from src.base.command_events import MessageContext
-from src.common.command_deco import listen_message, match_alconna
+from src.common.command_deco import listen_message, match_alconna, require_admin
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
 from src.core.unit_of_work import get_unit_of_work
 
 @listen_message()
-@match_alconna(Alconna("check_recipe"))
+@require_admin()
+@match_alconna(
+    Alconna(
+        ["::"],
+        "re:(test_checkrecipe)",
+    )
+)
 async def _(ctx: MessageContext, _: Arparma[Any]):
     res: str = ""
     async with get_unit_of_work(ctx.sender_id) as uow:

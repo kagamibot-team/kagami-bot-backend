@@ -13,6 +13,7 @@ from src.models.level import Level
 from src.ui.base.browser import get_render_pool
 from src.ui.types.common import AwardInfo
 from src.ui.types.inventory import BookBoxData, DisplayBoxData, StorageData, BoxItemList
+from src.ui.types.common import UserData
 
 
 def build_display(
@@ -289,7 +290,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 @match_alconna(
     Alconna(
         ["::"],
-        "re:(testboard)",
+        "re:(test_leaderboard)",
     )
 )
 async def _(ctx: MessageContext, res: Arparma[Any]):
