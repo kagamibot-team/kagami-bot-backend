@@ -322,7 +322,8 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
     for pid in range(0, pack_max + 1):
         pack_progress[pid].sort(key=lambda x: x[1], reverse=True)
-        message = f"~ {"总" if pid == 0 else f"{pid}号猎场"}进度排行榜 ~\n"
+        progress_name = "总" if pid == 0 else f"{pid}号猎场"
+        message = f"~ {progress_name}进度排行榜 ~\n"
         for uid, progress in pack_progress[pid][:10]:
             message += f"{uid}: {progress * 100:.2f}%\n"
         await ctx.send(UniMessage.text(message))
