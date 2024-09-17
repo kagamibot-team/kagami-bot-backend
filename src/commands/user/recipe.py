@@ -148,6 +148,7 @@ async def _(ctx: GroupContext, res: Arparma):
         product = await uow.awards.get_info(aid)
         uid = await uow.users.get_uid(ctx.sender_id)
         after = await uow.money.use(uid, costs[product.level.lid])
+
         stat = await uow.inventories.get_stats(uid, aid)
         if stat == 0: #没见过
             product.image_name = "blank_placeholder.png"
@@ -212,6 +213,19 @@ async def _(ctx: GroupContext, res: Arparma):
                     off1 = (sto1 < 1); off2 = (sto2 < 1); off3 = (sto3 < 2)
                 else:
                     off1 = (sto1 < 1); off2 = (sto2 < 1); off3 = (sto3 < 1)
+        
+                stat = await uow.inventories.get_stats(uid, recipe.aid1)
+                if stat == 0: #没见过
+                    award1.image_name = "blank_placeholder.png"
+                    award1.color = "#696361"
+                stat = await uow.inventories.get_stats(uid, recipe.aid2)
+                if stat == 0: #没见过
+                    award2.image_name = "blank_placeholder.png"
+                    award2.color = "#696361"
+                stat = await uow.inventories.get_stats(uid, recipe.aid3)
+                if stat == 0: #没见过
+                    award3.image_name = "blank_placeholder.png"
+                    award3.color = "#696361"
 
                 recipes_display.append(
                     MergeData(
