@@ -36,16 +36,3 @@ async def _(ctx: MessageContext, _: Arparma[Any]):
                 await uow.recipes.reset_recipe(info.aid1, info.aid2, info.aid3)
                 res+=f"{rid}: {n1} + {n2} + {n3} -> {nr}\n"
     await ctx.send(f"res: {res}")
-
-@listen_message()
-@require_admin()
-@match_alconna(
-    Alconna(
-        ["::"],
-        "re:(temp_change)",
-    )
-)
-async def _(ctx: MessageContext, _: Arparma[Any]):
-    async with get_unit_of_work(ctx.sender_id) as uow:
-        await uow.users.tmp()
-    await ctx.send(f"好了")
