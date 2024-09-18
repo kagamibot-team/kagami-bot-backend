@@ -125,8 +125,10 @@ class RenderPool(Generic[T]):
     """
 
     executor: ThreadPoolExecutor
-    worker_pool: asyncio.Queue[RenderWorker]
+
+    starting: set[RenderWorker]
     working: set[RenderWorker]
+    worker_pool: asyncio.Queue[RenderWorker]
     cls: type[T]
     count: int
     host: str
@@ -143,15 +145,23 @@ class RenderPool(Generic[T]):
         self.host = host
         self.port = port
         self.max_fail = max_fail
+
         self.working = set()
+        self.starting = set()
 
-    async def put(self) -> None:
-        asyncio.create_task(self._worker_initializer())
+    async def put(self, cls: type[RenderWorker] | None = None) -> None:
+        if cls is None:
+            cls = self.cls
+        asyncio.create_task(self._worker_initializer(cls))
 
-    async def _worker_initializer(self) -> None:
+    async def _worker_initializer(self, cls: type[RenderWorker] | None = None) -> None:
+        if cls is None:
+            cls = self.cls
         loop = asyncio.get_event_loop()
-        worker = self.cls()
+        worker = cls()
+        self.starting.add(worker)
         await loop.run_in_executor(self.executor, worker.init)
+        self.starting.remove(worker)
         await self.worker_pool.put(worker)
 
     async def _worker_quit(self, worker: RenderWorker) -> None:
@@ -208,6 +218,10 @@ class RenderPool(Generic[T]):
             for worker in tmp:
                 await self._worker_quit(worker)
                 await self.put()
+            for worker in self.working:
+                await self._worker_quit(worker)
+                await self.put()
+            self.working.clear()
         else:
             logger.info(f"渲染器 RELOAD 调用，将关闭指定渲染器 ID={worker_id}")
             for worker in tmp:
@@ -216,6 +230,36 @@ class RenderPool(Generic[T]):
                 else:
                     await self._worker_quit(worker)
                     await self.put()
+                    return
+            for worker in self.working:
+                if worker.worker_id == worker_id:
+                    await self._worker_quit(worker)
+                    await self.put()
+                    self.working.remove(worker)
+                    return
+
+    async def kill(self, worker_id: str):
+        """
+        关闭渲染器并重载
+        """
+
+        tmp: list[RenderWorker] = []
+        while not self.worker_pool.empty():
+            worker = await self.worker_pool.get()
+            tmp.append(worker)
+
+        logger.info(f"渲染器 KILL 调用，将关闭指定渲染器 ID={worker_id}")
+        for worker in tmp:
+            if worker.worker_id != worker_id:
+                await self.worker_pool.put(worker)
+            else:
+                await self._worker_quit(worker)
+                return
+        for worker in self.working:
+            if worker.worker_id == worker_id:
+                await self._worker_quit(worker)
+                self.working.remove(worker)
+                return
 
     async def render(
         self, path: str, data: BaseModel | dict[str, Any] | None = None
@@ -252,7 +296,9 @@ class RenderPool(Generic[T]):
             if fail > self.max_fail and self.max_fail > 0:
                 raise KagamiRenderException(worker.worker_id)
 
-    async def get_worker_list(self) -> tuple[list[RenderWorker], list[RenderWorker]]:
+    async def get_worker_list(
+        self,
+    ) -> tuple[list[RenderWorker], list[RenderWorker], list[RenderWorker]]:
         # 傻方法之：全部拿出来
         idle: list[RenderWorker] = []
         while not self.worker_pool.empty():
@@ -261,4 +307,4 @@ class RenderPool(Generic[T]):
         for worker in idle:
             await self.worker_pool.put(worker)
 
-        return idle, list(self.working)
+        return idle, list(self.working), list(self.starting)

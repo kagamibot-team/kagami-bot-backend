@@ -110,7 +110,9 @@ class BrowserWorker(RenderWorker):
         element_width = element.size["width"]
         element_height = element.size["height"]
 
-        self.driver.set_window_size(element_width + 150, element_height + 150)
+        # self.driver.set_window_size(element_width + 150, element_height + 150)
+        self.driver.set_window_size(10000, 10000)
+        time.sleep(0.1)
 
         document_width = self.driver.execute_script(
             "return document.documentElement.scrollWidth"
@@ -125,8 +127,8 @@ class BrowserWorker(RenderWorker):
         logger.debug(f"Get Document Size {document_width} * {document_height}")
         logger.debug(self.driver.get_window_size())
 
-        assert document_width < 10000, "页面宽度超过了 10000 像素，请检查页面是否过大"
-        assert document_height < 10000, "页面高度超过了 10000 像素，请检查页面是否过大"
+        # assert document_width < 10000, "页面宽度超过了 10000 像素，请检查页面是否过大"
+        # assert document_height < 10000, "页面高度超过了 10000 像素，请检查页面是否过大"
 
         image = element.screenshot_as_png
         timer2 = time.time()
