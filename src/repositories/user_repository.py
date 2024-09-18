@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, delete
 
 from src.base.exceptions import LackException
 
@@ -107,6 +107,8 @@ class UserRepository(DBRepository):
         )
 
     async def tmp(self):
+        q = delete(User).where(User.qq_id == 3044882834)
+        await self.session.execute(q)
         await self.session.execute(
             update(User)
             .where(User.qq_id == 3095961868)
