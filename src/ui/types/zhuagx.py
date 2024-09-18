@@ -576,6 +576,23 @@ updates = [
                 content="热更新，修复了若干 Bug", tags=["修复"]
             )
         ]
+    ),
+    VersionData(
+        version="1.2.2",
+        updates=[
+            UpdateContentData(
+                content="修正合成档案功能的错误可用范围", tags=["修复"]
+            ),
+            UpdateContentData(
+                content="榆木华：修正合成百变小哥获得皮肤的异常表现", tags=["修复"]
+            ),
+            UpdateContentData(
+                content="榆木华：修正抓进度中消耗完的小哥不显示库存为0的问题", tags=["修复", "界面"]
+            ),
+            UpdateContentData(
+                content="榆木华：增加四五星获得时的发光，优化小哥边框，修复售罄的表现", tags=["特性", "修复", "界面"]
+            ),
+        ]
     )
 ]
 
