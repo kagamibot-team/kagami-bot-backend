@@ -86,6 +86,10 @@ async def _(ctx: GroupContext, res: Arparma):
             )
             aft_stor = 0
         else:
+            if aid == 35:
+                stats = await uow.inventories.get_stats(uid, aid)
+                if stats > 0:
+                    await handle_baibianxiaoge(uow, uid)
             info = await get_award_info(uow, aid, uid)
             add = get_random().randint(1, 3)
             data = GetAward(
@@ -95,8 +99,6 @@ async def _(ctx: GroupContext, res: Arparma):
             )
             await uow.inventories.give(uid, aid, add)
             aft_stor = await uow.inventories.get_storage(uid, aid)
-            if aid == 35:
-                await handle_baibianxiaoge(uow, uid)
 
         if succeed:
             status = "成功！"
@@ -130,12 +132,14 @@ async def _(ctx: GroupContext, res: Arparma):
 
 
 @listen_message()
+@limited
 @match_alconna(
     Alconna(
         "re:(合成|hc)(档案|da)",
         Arg("产物小哥", str)
     )
 )
+@require_awake
 async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 1, 1: 2, 2: 4, 3: 8, 4: 16, 5: 32}
 
@@ -144,9 +148,14 @@ async def _(ctx: GroupContext, res: Arparma):
         return
     
     async with get_unit_of_work(ctx.sender_id) as uow:
+        uid = await uow.users.get_uid(ctx.sender_id)
+
+        if not await uow.user_flag.have(uid, "合成"):
+            await ctx.reply("你没有买小哥合成凭证，被门口的保安拦住了。")
+            return
+        
         aid = await uow.awards.get_aid_strong(name)
         product = await uow.awards.get_info(aid)
-        uid = await uow.users.get_uid(ctx.sender_id)
         after = await uow.money.use(uid, costs[product.level.lid])
 
         stat = await uow.inventories.get_stats(uid, aid)
