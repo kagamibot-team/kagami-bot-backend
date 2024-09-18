@@ -1,12 +1,7 @@
-"""
-利用 Selenium 渲染图像
-"""
-
 import time
 from abc import abstractmethod
 from pathlib import Path
 
-import nonebot
 from loguru import logger
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
@@ -14,13 +9,12 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 
 from src.base.exceptions import KagamiRenderWarning
-from src.common.config import get_config
 from src.ui.base.browser_driver import (
     BaseBrowserDriverFactory,
     ChromeFactory,
     FirefoxFactory,
 )
-from src.ui.base.render_worker import RenderPool, RenderWorker
+from src.ui.base.render_worker import RenderWorker
 
 
 class BrowserWorker(RenderWorker):
@@ -179,35 +173,3 @@ class FakeRenderWorker(RenderWorker):
 
     def _init(self) -> None:
         pass
-
-
-config = get_config()
-
-
-port = config.render_port
-if port == 0:
-    port = nonebot.get_driver().config.port
-
-if config.use_fake_browser:
-    cls = FakeRenderWorker
-elif config.browser == "chrome":
-    cls = ChromeBrowserWorker
-else:
-    cls = FirefoxBrowserWorker
-
-
-render_pool = RenderPool(
-    cls, config.browser_count, config.render_host, port, config.render_max_fail
-)
-
-
-_nb_driver = nonebot.get_driver()
-
-
-@_nb_driver.on_startup
-async def start_up():
-    await render_pool.fill()
-
-
-def get_render_pool() -> RenderPool:
-    return render_pool

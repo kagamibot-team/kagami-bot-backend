@@ -11,7 +11,7 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.common.command_deco import limited, listen_message, match_regex
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.zhuagx import (
     UpdateData,
     get_latest_version,

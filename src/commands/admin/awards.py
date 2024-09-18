@@ -16,7 +16,7 @@ from src.common.data.awards import download_award_image
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import level_repo
 from src.services.pool import PoolService
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.common import UserData
 from src.ui.types.inventory import BoxItemList, StorageData
 
