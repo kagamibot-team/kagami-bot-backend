@@ -22,7 +22,8 @@ def log_stream():
             line = log_file.readline()
             if line:
                 yield f"data: {line}\n\n"
-            time.sleep(0.1)
+            else:
+                time.sleep(0.1)
 
 
 @router.post("/broadcast")

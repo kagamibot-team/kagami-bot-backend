@@ -106,6 +106,13 @@ class UserRepository(DBRepository):
             .values({User.pick_max_cache: User.pick_max_cache + count})
         )
 
+    async def tmp(self):
+        await self.session.execute(
+            update(User)
+            .where(User.qq_id == 3095961868)
+            .values({User.qq_id: 3044882834})
+        )
+
     async def get_sign_in_info(self, uid: int) -> tuple[float, int]:
         """获得用户上次签到时间和签到次数
 
