@@ -154,7 +154,7 @@ class AddSlots(ShopProduct):
         return False
 
     async def background_color(self, uow: UnitOfWork, uid: int):
-        return "#9e9d95"
+        return "#97DD80"
 
     def match(self, name: str) -> bool:
         return name in ["加上限", "增加上限", "增加卡槽上限"]
@@ -175,7 +175,7 @@ class MergeMachine(ShopProduct):
         return "购买合成小哥机器的使用权"
 
     async def background_color(self, uow: UnitOfWork, uid: int):
-        return "#9e9d95"
+        return "#9E9D95"
 
     async def price(self, uow: UnitOfWork, uid: int):
         return 1200
