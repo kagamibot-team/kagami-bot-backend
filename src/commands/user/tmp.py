@@ -33,5 +33,6 @@ async def _(ctx: MessageContext, _: Arparma[Any]):
             pidr = await uow.pack.get_main_pack(info.result)
             nr = (await uow.awards.get_info(info.result)).name
             if pidr > 0 and pid1 != pidr and pid2 != pidr and pid3 != pidr:
+                await uow.recipes.reset_recipe(info.aid1, info.aid2, info.aid3)
                 res+=f"{rid}: {n1} + {n2} + {n3} -> {nr}\n"
     await ctx.send(f"res: {res}")
