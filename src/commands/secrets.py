@@ -1,4 +1,5 @@
 from nonebot_plugin_alconna import UniMessage
+from pathlib import Path
 
 from src.base.command_events import GroupContext
 from src.common.command_deco import listen_message, match_regex
@@ -29,6 +30,5 @@ async def _(ctx: GroupContext, _):
 
         await ctx.send(
             UniMessage()
-            .text("发现关键词，三小哥登场！！")
-            .image(path=kbs_info.image_path)
+            .image(path=Path("./res/三要素.png"))
         )
