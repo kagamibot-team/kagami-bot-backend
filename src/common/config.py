@@ -68,6 +68,24 @@ class Config(BaseModel):
     use_fake_browser: bool = False
     "是否使用假渲染器"
 
+    renderer: Literal["basic", "service"] = "basic"
+    "是否启用基于消息队列的渲染模式"
+
+    rabbitmq_host: str = "127.0.0.1"
+    "消息队列服务器地址"
+
+    rabbitmq_port: int = 5672
+    "消息队列服务器端口"
+
+    rabbitmq_account: str = ""
+    "消息队列服务器帐号"
+
+    rabbitmq_password: str = ""
+    "消息队列服务器密码"
+
+    rabbitmq_virtual_host: str = "/"
+    "消息队列的虚拟主机地址"
+
     frontend_dist: str = "./frontend/"
     "前端文件的地址"
 

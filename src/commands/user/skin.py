@@ -12,7 +12,7 @@ from src.common.command_deco import (
 from src.common.data.user import get_user_data
 from src.core.unit_of_work import get_unit_of_work
 from src.services.stats import StatService
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.inventory import BookBoxData, BoxItemList, DisplayBoxData, StorageData
 
 

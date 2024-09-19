@@ -19,7 +19,7 @@ from src.common.rd import get_random
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
 from src.services.stats import StatService
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.common import GetAward, AwardInfo
 from src.ui.types.recipe import MergeData, MergeMeta, RecipeArchiveData
 from src.ui.types.recipe import RecipeInfo
