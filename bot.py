@@ -9,6 +9,9 @@
 import os
 
 import nonebot
+import nonebot.config
+import nonebot.drivers
+import nonebot.drivers.fastapi
 from loguru import logger
 from nonebot.adapters.onebot.v11 import Adapter as OneBotV11Adapter
 
@@ -26,7 +29,6 @@ def pre_init():
     os.makedirs(os.path.join(".", "data", "backup"), exist_ok=True)
     os.makedirs(os.path.join(".", "data", "awards"), exist_ok=True)
     os.makedirs(os.path.join(".", "data", "skins"), exist_ok=True)
-    os.makedirs(os.path.join(".", "data", "kagami"), exist_ok=True)
     os.makedirs(os.path.join(".", "data", "temp"), exist_ok=True)
 
     # 注册日志管理器
@@ -56,15 +58,28 @@ def pre_init():
     )
 
 
+def nb_init():
+    logger.success("NoneBot is initializing...")
+    env = nonebot.config.Env()
+    _env_file = f".env.{env.environment}"
+    config = nonebot.config.Config(
+        _env_file=(
+            (".env", _env_file)
+            if isinstance(_env_file, (str, os.PathLike))
+            else _env_file
+        ),
+    )
+    logger.configure(extra={"nonebot_log_level": config.log_level})
+    nonebot._driver = nonebot.drivers.fastapi.Driver(env, config)
+
+
 def init():
     """
     初始化 bot，并加载所有需要的东西，包括检查数据库等
     """
 
     pre_init()
-
-    # 初始化 Nonebot 对象
-    nonebot.init()
+    nb_init()
 
     # 加载驱动器
     driver = nonebot.get_driver()
@@ -80,7 +95,6 @@ def init():
 
     nonebot.logger.info("正在检测数据表的更改")
     command.check(config)
-
     nonebot.logger.info("数据库没问题了")
 
     # 需要在 Nonebot 初始化完成后，才能导入插件内容
@@ -89,4 +103,4 @@ def init():
 
 if __name__ == "__main__":
     init()
-    nonebot.run()
+    nonebot.get_driver().run() # type: ignore
