@@ -13,6 +13,23 @@ from src.models.models import Recipe
 from src.services.pool import PoolService
 
 
+def calc_possibility(
+    lid1: int, lid2: int, lid3: int, lidr: int
+) -> float:
+    lidm = max(lid1, lid2, lid3)
+
+    rms = ((lid1**2 + lid2**2 + lid3**2) / 3) ** 0.5  # 三个等级的平方平均数
+    fvi = (rms / 5) ** (1 / 10)  # 变换为配方珍贵指数(0.851~1)
+
+    poss = 1 - lidr / 9  # 基础概率，由产物等级决定 (0.88, 0.77, 0.66, 0.55, 0.44)
+    poss = poss ** (
+        1 + (lidr - lidm) / 5
+    )  # 综合概率，由产物等级与材料最高级之差影响，升级则降低概率
+    poss = poss * fvi  # 最终概率，由配方珍贵程度影响，影响程度较小
+
+    logger.info(f"{1 - lidr/8}^(1 + {lidr - lidm}/5)*{fvi} = {poss}")
+    return poss
+
 async def generate_random_result(
     uow: UnitOfWork, a1: int, a2: int, a3: int
 ) -> tuple[int, float]:
@@ -56,16 +73,7 @@ async def generate_random_result(
 
     logger.info(f"{lid1}+{lid2}+{lid3}={lid} ({r}, [{a0}, {b0}])")
 
-    rms = ((lid1**2 + lid2**2 + lid3**2) / 3) ** 0.5  # 三个等级的平方平均数
-    fvi = (rms / 5) ** (1 / 10)  # 变换为配方珍贵指数(0.851~1)
-
-    poss = 1 - lid / 9  # 基础概率，由产物等级决定 (0.88, 0.77, 0.66, 0.55, 0.44)
-    poss = poss ** (
-        1 + (lid - lidm) / 5
-    )  # 综合概率，由产物等级与材料最高级之差影响，升级则降低概率
-    poss = poss * fvi  # 最终概率，由配方珍贵程度影响，影响程度较小
-
-    logger.info(f"{1 - lid/8}^(1 + {lid - lidm}/5)*{fvi} = {poss}")
+    poss = calc_possibility(lid1, lid2, lid3, lid)  # 用函数计算概率
 
     targets1 = await service.get_target_aids(a1)
     targets2 = await service.get_target_aids(a2)
