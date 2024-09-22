@@ -33,6 +33,8 @@ command_dict: dict[str, str] = {
     "mycj": "我的成就",
     "合成": "合成",
     "hc": "合成",
+    "合成档案": "合成档案",
+    "hcda": "合成档案",
     "小鹅猎场": "小鹅猎场",
     "xelc": "小鹅猎场",
     "购买猎场": "购买猎场",
@@ -152,6 +154,21 @@ command_content: dict[str, HelpData] = {
         optional_parameters=None,
         related_commands=None,
     ),
+    "合成档案": HelpData(
+        command="合成档案（hcda）",
+        description="消耗薯片，从全服合成历史中查询指定小哥的三条合成配方。配方按“自身库存满足配方需求的程度”从高到低排序，即三个小哥都有的配方会排在只拥有其中两个的前面。程度相同的则越新越前。\n零星到五星的查询价格为：1、2、4、8、16与32薯片。",
+        required_parameters=HelpParam(
+            note="",
+            content=[
+                HelpPair(
+                    key=r"{小哥名X}",
+                    value="查询合成出小哥X的配方。",
+                ),
+            ],
+        ),
+        optional_parameters=None,
+        related_commands=None,
+    ),
     "小鹅猎场": HelpData(
         command="小鹅猎场（xelc）",
         description="展示小鹅猎场界面。",
@@ -232,7 +249,7 @@ command_content: dict[str, HelpData] = {
     ),
     "小镜晚安": HelpData(
         command="小镜晚安",
-        description="使自己进入相对小镜bot的休眠模式，仅响应不含游戏性的部分指令，直至设定的起床时间为止。起床时间可设定为四点到十点的任意一个整点或半点，指令可使用时间则为21:00起至设定的起床时间为止。23:00前使用本指令，会奖励玩家50~100中随机量的薯片。",
+        description="使自己进入相对小镜bot的休眠模式，仅响应不含游戏性的部分指令，直至设定的起床时间为止。\n起床时间可设定为四点到十点的任意一个整点或半点，指令可使用时间则为21:00起至设定的起床时间为止。23:00前使用本指令，会奖励玩家50~100中随机量的薯片。",
         required_parameters=None,
         optional_parameters=HelpParam(
             note="",

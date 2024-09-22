@@ -1,12 +1,7 @@
-"""
-利用 Selenium 渲染图像
-"""
-
 import time
 from abc import abstractmethod
 from pathlib import Path
 
-import nonebot
 from loguru import logger
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
@@ -14,13 +9,12 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 
 from src.base.exceptions import KagamiRenderWarning
-from src.common.config import get_config
 from src.ui.base.browser_driver import (
     BaseBrowserDriverFactory,
     ChromeFactory,
     FirefoxFactory,
 )
-from src.ui.base.render_worker import RenderPool, RenderWorker
+from src.ui.base.render_worker import RenderWorker
 
 
 class BrowserWorker(RenderWorker):
@@ -107,6 +101,13 @@ class BrowserWorker(RenderWorker):
             lambda d: d.find_element(By.ID, "big_box")
         )
 
+        element_width = element.size["width"]
+        element_height = element.size["height"]
+
+        # self.driver.set_window_size(element_width + 150, element_height + 150)
+        self.driver.set_window_size(10000, 10000)
+        time.sleep(0.1)
+
         document_width = self.driver.execute_script(
             "return document.documentElement.scrollWidth"
         )
@@ -114,13 +115,14 @@ class BrowserWorker(RenderWorker):
             "return document.documentElement.scrollHeight"
         )
 
-        self.driver.set_window_size(document_width + 500, document_height + 500)
+        # self.driver.set_window_size(document_width + 50, document_height + 50)
 
+        logger.debug(f"Get Element Size {element_width} * {element_height}")
         logger.debug(f"Get Document Size {document_width} * {document_height}")
         logger.debug(self.driver.get_window_size())
 
-        assert document_width < 10000, "页面宽度超过了 10000 像素，请检查页面是否过大"
-        assert document_height < 10000, "页面高度超过了 10000 像素，请检查页面是否过大"
+        # assert document_width < 10000, "页面宽度超过了 10000 像素，请检查页面是否过大"
+        # assert document_height < 10000, "页面高度超过了 10000 像素，请检查页面是否过大"
 
         image = element.screenshot_as_png
         timer2 = time.time()
@@ -171,35 +173,3 @@ class FakeRenderWorker(RenderWorker):
 
     def _init(self) -> None:
         pass
-
-
-config = get_config()
-
-
-port = config.render_port
-if port == 0:
-    port = nonebot.get_driver().config.port
-
-if config.use_fake_browser:
-    cls = FakeRenderWorker
-elif config.browser == "chrome":
-    cls = ChromeBrowserWorker
-else:
-    cls = FirefoxBrowserWorker
-
-
-render_pool = RenderPool(
-    cls, config.browser_count, config.render_host, port, config.render_max_fail
-)
-
-
-_nb_driver = nonebot.get_driver()
-
-
-@_nb_driver.on_startup
-async def start_up():
-    await render_pool.fill()
-
-
-def get_render_pool() -> RenderPool:
-    return render_pool

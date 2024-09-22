@@ -1,8 +1,10 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
+from loguru import logger
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectNotFoundException
 from src.common.data.awards import get_award_info
+from src.common.data.recipe import calc_possibility
 from src.common.command_deco import (
     listen_message,
     match_alconna,
@@ -59,7 +61,7 @@ async def _(ctx: MessageContext, res: Arparma):
         Arg("name3", str),
         Option(
             "--result",
-            Arg("name4", str),
+            Arg("namer", str),
             alias=["-r", "结果", "成品", "收获"],
         ),
         Option(
@@ -67,7 +69,12 @@ async def _(ctx: MessageContext, res: Arparma):
             Arg("posi", float),
             alias=["-p", "概率", "频率", "收获率", "合成率", "成功率"],
         ),
-        Option("--reset", alias=["重置"]),
+        Option(
+            "--special",
+            Arg("mode", str),   # up：设定为以原概率为基础提升的固定概率；reset：保留合理产物，重置配方的概率与is_modified内容
+            alias=["-s", "特殊"],
+        ),
+        Option("--clear", alias=["清除"]),      # 完全清空配方，回到不存在此条配方的状态
     )
 )
 async def _(ctx: MessageContext, res: Arparma):
@@ -80,18 +87,71 @@ async def _(ctx: MessageContext, res: Arparma):
         a2 = await uow.awards.get_aid_strong(n2)
         a3 = await uow.awards.get_aid_strong(n3)
 
-        if res.exist("reset"):
+        if res.exist("clear"):
             await uow.recipes.reset_recipe(a1, a2, a3)
-            await ctx.reply("ok.")
+            await ctx.reply("ok.\n已清除配方。")
             return
+        
+        # 获取配方信息
+        rid = await uow.recipes.get_recipe_id(a1, a2, a3)
+        if rid is not None:
+            rinfo = await uow.recipes.get_recipe_info(rid)
+        else: rinfo = None
 
-        n4 = res.query[str]("name4")
-        a4 = None if n4 is None else await uow.awards.get_aid_strong(n4)
+        # 获取产物信息，若留空则取配方目前产物，若配方不存在则报错
+        nr = res.query[str]("namer")
+        if nr is not None:
+            ar = await uow.awards.get_aid_strong(nr)
+        else:
+            if rid is None or rinfo is None:
+                raise ObjectNotFoundException("配方")
+            ar = rinfo.result
+            nr = (await uow.awards.get_info(ar)).name
+
+        # 获取概率信息，若留空则取配方目前概率，若配方不存在则报错
         po = res.query[float]("posi")
+        if po is None:
+            if rid is None or rinfo is None:
+                raise ObjectNotFoundException("配方")
+            po = rinfo.possibility
 
-        await uow.recipes.update_recipe(a1, a2, a3, a4, po)
+        # 默认标记为特殊配方
+        mod = 1
 
-    await ctx.reply("ok.")
+        if res.exist("special"):
+            mode = res.query[str]("mode")
+
+            lid1 = await uow.awards.get_lid(a1)
+            lid2 = await uow.awards.get_lid(a2)
+            lid3 = await uow.awards.get_lid(a3)
+            lidr = await uow.awards.get_lid(ar)
+
+            # reset模式下产物需要满足正常配方的要求
+            if mode == "reset":
+                if max(lid1, lid2, lid3) - 1 > lidr:
+                    raise ValueError("产物等级错误")
+            
+                pid1 = await uow.pack.get_main_pack(a1)
+                pid2 = await uow.pack.get_main_pack(a2)
+                pid3 = await uow.pack.get_main_pack(a3)
+                pidr = await uow.pack.get_main_pack(ar)
+                if pidr > 0 and pid1 != pidr and pid2 != pidr and pid3 != pidr:
+                    raise ValueError("产物猎场错误")
+
+            poss = calc_possibility(lid1, lid2, lid3, lidr)
+            # up模式下设定为以原概率为基础提升的固定概率
+            if mode == "up":
+                po = 1 - (1 - poss)**2
+            # reset模式下还原概率，并标记为普通配方
+            if mode == "reset":
+                po = poss
+                mod = 0
+
+        await uow.recipes.update_recipe(a1, a2, a3, ar, po, mod)
+        
+        await ctx.reply(
+            f"ok.\n结果为：{n1} {n2} {n3} -> {nr}，概率为 {po*100}%，modified={mod}"
+        )
 
 
 @listen_message()
@@ -121,7 +181,7 @@ async def _(ctx: MessageContext):
             info3 = await get_award_info(uow, aid3)
             info = await get_award_info(uow, aid)
             msg.append(
-                f"{info1.name}+{info2.name}+{info3.name} 合成 {info.name}，"
+                f"{info1.name} {info2.name} {info3.name} -> {info.name}，"
                 f"概率为 {posi*100}%"
             )
 

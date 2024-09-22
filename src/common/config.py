@@ -36,6 +36,28 @@ class Config(BaseModel):
     autosave_interval: float = 600
     "数据库自动保存间隔，在 SQLite 数据库时启用，为负数时不自动保存，单位秒"
 
+    # ================
+    # | 消息队列设置 |
+    # ================
+
+    enable_rabbitmq_messages: bool = False
+    "未来将会投入使用的选项，是否接收来自 RabbitMQ 的消息"
+
+    rabbitmq_host: str = "127.0.0.1"
+    "消息队列服务器地址"
+
+    rabbitmq_port: int = 5672
+    "消息队列服务器端口"
+
+    rabbitmq_account: str = ""
+    "消息队列服务器帐号"
+
+    rabbitmq_password: str = ""
+    "消息队列服务器密码"
+
+    rabbitmq_virtual_host: str = "/"
+    "消息队列的虚拟主机地址"
+
     # =========================
     # |  Onebot V11 API 设置  |
     # =========================
@@ -67,6 +89,9 @@ class Config(BaseModel):
 
     use_fake_browser: bool = False
     "是否使用假渲染器"
+
+    renderer: Literal["basic", "service"] = "basic"
+    "是否启用基于消息队列的渲染模式"
 
     frontend_dist: str = "./frontend/"
     "前端文件的地址"

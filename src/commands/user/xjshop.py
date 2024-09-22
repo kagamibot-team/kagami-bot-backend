@@ -16,7 +16,7 @@ from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.services.shop import ShopFreezed, ShopProductFreezed, build_xjshop
 from src.services.stats import StatService
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.common import UserData
 from src.ui.types.inventory import BookBoxData, DisplayBoxData
 from src.ui.types.xjshop import BuyData, Product, ProductGroup, ShopDisplay
@@ -45,6 +45,7 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
                             color=product.background_color,
                             notation_down=f"{int(product.price)}薯片",
                             sold_out_overlay=product.is_sold_out,
+                            black_overlay=product.is_sold_out,
                         ),
                     )
                     for product in products

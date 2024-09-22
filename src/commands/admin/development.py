@@ -25,7 +25,7 @@ from src.common.command_deco import (
     require_admin,
 )
 from src.common.save_file_handler import pack_save
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import ChromeBrowserWorker, FirefoxBrowserWorker, get_render_pool
 
 
 @listen_message()
@@ -114,6 +114,8 @@ async def _(ctx: OnebotContext):
         Option("--reload", Arg("browser_work_id", str), alias=["-r"]),
         Option("--clean", alias=["-c"]),
         Option("--reload-all", alias=["-a"]),
+        Option("--push", Arg("browser_type", str), alias="-p"),
+        Option("--kill", Arg("browser_work_id", str), alias=["-k"]),
     )
 )
 async def _(ctx: GroupContext, res: Arparma[Any]):
@@ -121,7 +123,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 
     if res.exist("list"):
         ls = "当前闲置的渲染器："
-        idle, working = await pool.get_worker_list()
+        idle, working, starting = await pool.get_worker_list()
         for worker in idle:
             ls += "\n- " + str(worker)
         ls += "\n\n当前正在工作的渲染器："
@@ -130,6 +132,12 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
                 "\n- "
                 + str(worker)
                 + f" 已经工作 {time.time() - worker.last_render_begin:.2f} 秒了"
+            )
+        ls += "\n\n当前正在启动的渲染器："
+        for worker in starting:
+            ls += (
+                "\n- "
+                + str(worker)
             )
         await ctx.reply(ls)
         return
@@ -148,6 +156,25 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
 
     if res.exist("reload-all"):
         await pool.reload()
+        await ctx.reply("ok.")
+        return
+    
+    if res.exist("push"):
+        br_type = res.query[str]("browser_type") or ""
+        if br_type.upper() == "CHROME":
+            await pool.put(ChromeBrowserWorker)
+            await ctx.reply("ok.")
+        elif br_type.upper() == "FIREFOX":
+            await pool.put(FirefoxBrowserWorker)
+            await ctx.reply("ok.")
+        else:
+            await ctx.reply(f"未知的渲染器类型：{br_type}")
+        return
+
+    if res.exist("kill"):
+        work_id = res.query[str]("browser_work_id")
+        assert work_id is not None
+        await pool.kill(work_id)
         await ctx.reply("ok.")
         return
 

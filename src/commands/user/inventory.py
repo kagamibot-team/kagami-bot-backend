@@ -4,15 +4,16 @@ from loguru import logger
 from nonebot_plugin_alconna import UniMessage
 from src.base.command_events import MessageContext
 from src.base.exceptions import KagamiRangeError
-from src.common.command_deco import listen_message, match_alconna
+from src.common.command_deco import listen_message, match_alconna, require_admin
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
 from src.common.data.user import get_user_data
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import Level
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.common import AwardInfo
 from src.ui.types.inventory import BookBoxData, DisplayBoxData, StorageData, BoxItemList
+from src.ui.types.common import UserData
 
 
 def build_display(
@@ -39,10 +40,10 @@ def build_display(
                 ),
                 title1=d.name,
             )
-            if d.level.lid >= 4:
-                obj.display_box.do_glow = True
+            # if d.level.lid >= 4:
+            #     obj.display_box.do_glow = True
         # 如果提供了库存和统计信息，则显示之
-        if storage is not None and d.aid in storage and storage[d.aid] > 0:
+        if storage is not None and d.aid in storage and (stats is None or stats[d.aid] > 0): # kc时没传stats，zhuajd时需要stats > 0
             obj.display_box.notation_down = str(storage[d.aid])
         if stats is not None and d.aid in stats and stats[d.aid] > 0:
             obj.display_box.notation_up = str(stats[d.aid])

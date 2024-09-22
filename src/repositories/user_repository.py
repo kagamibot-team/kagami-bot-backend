@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, delete
 
 from src.base.exceptions import LackException
 
@@ -35,6 +35,19 @@ class UserRepository(DBRepository):
         await self.assure(qqid)
         query = select(User.data_id).filter(User.qq_id == str(qqid))
         result = (await self.session.execute(query)).scalar_one()
+        return result
+
+    async def get_qqid(self, uid: int | str) -> int:
+        """根据用户的 data_id 获取用户的 qqid
+
+        Args:
+            uid (int | str): 用户的 data_id
+
+        Returns:
+            int: 用户的 qqid
+        """
+        query = select(User.qq_id).filter(User.data_id == str(uid))
+        result = int((await self.session.execute(query)).scalar_one())
         return result
 
     async def update_catch_time(self, uid: int, count_remain: int, last_calc: float):

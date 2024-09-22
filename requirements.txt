@@ -14,3 +14,5 @@ freezegun
 imagetext-py
 packaging
 selenium
+pika
+pika-stubs

@@ -2,7 +2,7 @@ from typing import Any, TypeVar
 
 from nonebot_plugin_alconna import UniMessage
 
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.common import DisplayAward
 from src.ui.types.zhua import ZhuaData
 from src.ui.views.award import AwardDisplay
