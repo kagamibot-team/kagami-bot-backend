@@ -35,7 +35,7 @@ class RecipeRepository(DBRepository):
 
         return (await self.session.execute(query)).tuples().one_or_none()
 
-    async def get_recipe_id(self, aid1: int, aid2: int, aid3: int) -> int:
+    async def get_recipe_id(self, aid1: int, aid2: int, aid3: int) -> int | None:
         """获得某个合成配方的 ID
 
         Args:
@@ -53,7 +53,7 @@ class RecipeRepository(DBRepository):
             Recipe.award1 == aid1, Recipe.award2 == aid2, Recipe.award3 == aid3
         )
 
-        return (await self.session.execute(query)).scalar_one()
+        return (await self.session.execute(query)).scalar_one_or_none()
 
     async def get_recipe_info(self, data_id: int) -> RecipeInfo | None:
         """获得某个合成配方的详细信息
@@ -70,6 +70,9 @@ class RecipeRepository(DBRepository):
         ).filter(Recipe.data_id == data_id)
         result = await self.session.execute(query)
         if not result.fetchall():
+            return None
+        info = (await self.session.execute(query)).tuples().one_or_none()
+        if info is None:
             return None
         a1, a2, a3, poss, ar, crt, upd = (await self.session.execute(query)).tuples().one()
 
@@ -141,6 +144,7 @@ class RecipeRepository(DBRepository):
         aid3: int,
         aidres: int | None,
         possibility: float | None,
+        modified: int,
     ) -> None:
         """更新一个配方
 
@@ -177,7 +181,7 @@ class RecipeRepository(DBRepository):
                 {
                     Recipe.result: aidres,
                     Recipe.possibility: possibility,
-                    Recipe.modified: 1,
+                    Recipe.modified: modified,
                 }
             )
         )

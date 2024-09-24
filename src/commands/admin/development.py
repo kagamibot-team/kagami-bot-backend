@@ -25,7 +25,7 @@ from src.common.command_deco import (
     require_admin,
 )
 from src.common.save_file_handler import pack_save
-from src.ui.base.browser import ChromeBrowserWorker, FirefoxBrowserWorker, get_render_pool
+from src.ui.base.render import ChromeBrowserWorker, FirefoxBrowserWorker, get_render_pool
 
 
 @listen_message()

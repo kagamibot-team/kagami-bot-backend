@@ -5,7 +5,7 @@ from nonebot_plugin_alconna import Image, UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
-from src.commands.user.inventory import build_display
+from src.commands.user.inventory import build_display, calc_progress
 from src.common.command_deco import (
     listen_message,
     match_alconna,
@@ -16,7 +16,7 @@ from src.common.data.awards import download_award_image
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import level_repo
 from src.services.pool import PoolService
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.common import UserData
 from src.ui.types.inventory import BoxItemList, StorageData
 
@@ -153,13 +153,13 @@ async def _(ctx: MessageContext):
         Option(
             "等级",
             Arg("等级名字", str),
-            alias=["--level", "级别", "-l", "-L"],
+            alias=["--level", "级别", "-l", "-L", "lv"],
             compact=True,
         ),
         Option(
             "猎场",
             Arg("猎场序号", int),
-            alias=["--pack", "小鹅猎场", "-p", "-P"],
+            alias=["--pack", "小鹅猎场", "-p", "-P", "lc"],
             compact=True,
         ),
     )
@@ -219,3 +219,47 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         ),
     )
     await ctx.send(UniMessage.image(raw=img))
+
+
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna(
+        ["::"],
+        "re:(test_leaderboard)",
+    )
+)
+async def _(ctx: MessageContext, res: Arparma[Any]):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        pack_max = await uow.settings.get_pack_count()
+        pack_progress: list[list[tuple[int, float]]] = [[] for _ in range(0, pack_max + 1)]
+        users = await uow.users.all_users()
+        for uid in users:
+            for pid in range(0, pack_max + 1):
+                lid = None
+                aids = await uow.awards.get_aids(lid, pid if pid > 0 else None)
+                aids2 = await uow.awards.get_aids(lid, 0)
+                aids = list(set(aids) | set(aids2))
+                aids.sort()
+
+                inventory_dict = await uow.inventories.get_inventory_dict(uid, aids)
+                stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
+
+                grouped_aids = await uow.awards.group_by_level(aids)
+                grouped_aids_filtered = [
+                    (
+                        uow.levels.get_by_id(i),
+                        [(v if stats_dict.get(v, 0) > 0 else None) for v in vs],
+                    )
+                    for i, vs in grouped_aids.items()
+                ]
+                progress = calc_progress(grouped_aids_filtered)
+                pack_progress[pid].append((await uow.users.get_qqid(uid), progress))
+
+    for pid in range(0, pack_max + 1):
+        pack_progress[pid].sort(key=lambda x: x[1], reverse=True)
+        progress_name = "总" if pid == 0 else f"{pid}号猎场"
+        message = f"~ {progress_name}进度排行榜 ~\n"
+        for uid, progress in pack_progress[pid][:10]:
+            message += f"{uid}: {progress * 100:.2f}%\n"
+        await ctx.send(UniMessage.text(message))

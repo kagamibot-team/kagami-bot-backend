@@ -2,7 +2,7 @@ import asyncio
 import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 from loguru import logger
 from pydantic import BaseModel
@@ -129,14 +129,14 @@ class RenderPool(Generic[T]):
     starting: set[RenderWorker]
     working: set[RenderWorker]
     worker_pool: asyncio.Queue[RenderWorker]
-    cls: type[T]
+    cls: Callable[[], T]
     count: int
     host: str
     port: int
     max_fail: int
 
     def __init__(
-        self, cls: type[T], count: int, host: str, port: int, max_fail: int
+        self, cls: Callable[[], T], count: int, host: str, port: int, max_fail: int
     ) -> None:
         self.executor = ThreadPoolExecutor()
         self.worker_pool = asyncio.Queue()
@@ -149,12 +149,12 @@ class RenderPool(Generic[T]):
         self.working = set()
         self.starting = set()
 
-    async def put(self, cls: type[RenderWorker] | None = None) -> None:
+    async def put(self, cls: Callable[[], T] | None = None) -> None:
         if cls is None:
             cls = self.cls
         asyncio.create_task(self._worker_initializer(cls))
 
-    async def _worker_initializer(self, cls: type[RenderWorker] | None = None) -> None:
+    async def _worker_initializer(self, cls: Callable[[], T] | None = None) -> None:
         if cls is None:
             cls = self.cls
         loop = asyncio.get_event_loop()

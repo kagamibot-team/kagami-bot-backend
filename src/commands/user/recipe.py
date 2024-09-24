@@ -3,6 +3,7 @@ from nonebot_plugin_alconna import UniMessage
 
 from loguru import logger
 from src.base.command_events import GroupContext
+from src.base.exceptions import ObjectNotFoundException
 from src.base.event.event_root import throw_event
 from src.common.command_deco import (
     limited,
@@ -18,7 +19,7 @@ from src.common.rd import get_random
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
 from src.services.stats import StatService
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.common import GetAward, AwardInfo
 from src.ui.types.recipe import MergeData, MergeMeta, RecipeArchiveData
 from src.ui.types.recipe import RecipeInfo
@@ -75,6 +76,8 @@ async def _(ctx: GroupContext, res: Arparma):
 
         aid, succeed = await try_merge(uow, uid, a1, a2, a3)
         rid = await uow.recipes.get_recipe_id(a1, a2, a3)
+        if rid is None:
+            raise ObjectNotFoundException("配方")
         stid1, stid2 = await StatService(uow).hc(uid, rid, succeed, aid, cost)
         if aid == -1:
             info = await generate_random_info()
@@ -171,7 +174,7 @@ async def _(ctx: GroupContext, res: Arparma):
             if recipe_id[1] not in seen:
                 recipe = await uow.recipes.get_recipe_info(recipe_id[1])
                 if recipe is None:
-                    continue # 可能要报个错啥的但是不太会写
+                    raise ObjectNotFoundException("配方")
                 recipe.stat_id = recipe_id[0]
                 recipe.updated_at = recipe_id[2]
 

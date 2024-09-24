@@ -593,6 +593,20 @@ updates = [
                 content="榆木华：增加四五星获得时的发光，优化小哥边框，修复售罄的表现", tags=["特性", "修复", "界面"]
             ),
         ]
+    ),
+    VersionData(
+        version="1.2.3",
+        updates=[
+            UpdateContentData(
+                content="更改部分界面样式", tags=["界面"]
+            ),
+            UpdateContentData(
+                content="榆木华：调整金暴性的表现", tags=["特性"]
+            ),
+            UpdateContentData(
+                content="榆木华：删除所有猎场信息错误的配方（合成档案的使用不受影响）", tags=["修复"]
+            ),
+        ]
     )
 ]
 

@@ -12,7 +12,7 @@ from src.common.command_deco import interval_at_start
 from src.common.config import get_config
 from src.common.webhook import send_webhook
 from src.core.unit_of_work import get_unit_of_work
-from src.ui.base.browser import get_render_pool
+from src.ui.base.render import get_render_pool
 from src.ui.types.zhuagx import UpdateData, get_latest_version
 
 
