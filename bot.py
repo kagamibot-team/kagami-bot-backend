@@ -89,13 +89,13 @@ def init():
         with open("./data/db.sqlite3", "wb") as _:
             pass
 
-    nonebot.logger.info("检查数据库状态")
+    logger.info("检查数据库状态")
     config = Config("./alembic.ini")
     command.upgrade(config, "head")
 
-    nonebot.logger.info("正在检测数据表的更改")
+    logger.info("正在检测数据表的更改")
     command.check(config)
-    nonebot.logger.info("数据库没问题了")
+    logger.info("数据库没问题了")
 
     # 需要在 Nonebot 初始化完成后，才能导入插件内容
     __import__("src")
