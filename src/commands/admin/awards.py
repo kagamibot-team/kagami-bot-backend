@@ -5,7 +5,7 @@ from nonebot_plugin_alconna import Image, UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
-from src.commands.user.inventory import build_display, calc_progress
+from src.commands.user.inventory import build_display, calc_progress, calc_gedu
 from src.common.command_deco import (
     listen_message,
     match_alconna,
@@ -230,7 +230,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         "re:(test_leaderboard)",
     )
 )
-async def _(ctx: MessageContext, res: Arparma[Any]):
+async def _(ctx: MessageContext, _: Arparma[Any]):
     async with get_unit_of_work(ctx.sender_id) as uow:
         pack_max = await uow.settings.get_pack_count()
         pack_progress: list[list[tuple[int, float]]] = [[] for _ in range(0, pack_max + 1)]
@@ -254,13 +254,62 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                     )
                     for i, vs in grouped_aids.items()
                 ]
-                progress = calc_progress(grouped_aids_filtered)
+                if pid == 0:
+                    progress = calc_gedu(grouped_aids_filtered)[0]
+                else:
+                    progress = calc_progress(grouped_aids_filtered)
                 pack_progress[pid].append((await uow.users.get_qqid(uid), progress))
 
     for pid in range(0, pack_max + 1):
         pack_progress[pid].sort(key=lambda x: x[1], reverse=True)
-        progress_name = "总" if pid == 0 else f"{pid}号猎场"
-        message = f"~ {progress_name}进度排行榜 ~\n"
+        progress_name = "总哥度" if pid == 0 else f"{pid}号猎场进度"
+        message = f"~ {progress_name}排行榜 ~\n"
         for uid, progress in pack_progress[pid][:10]:
-            message += f"{uid}: {progress * 100:.2f}%\n"
+            if pid == 0:
+                message += f"{uid}: {int(progress)}\n"
+            else:
+                message += f"{uid}: {progress * 100:.2f}%\n"
         await ctx.send(UniMessage.text(message))
+
+        
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna(
+        ["::"],
+        "re:(test_achievement)",
+        Arg("achievement", str),
+    )
+)
+async def _(ctx: MessageContext, res: Arparma[Any]):
+    achieve_dict: dict[str, list[str]] = {
+        "兔子大家族": ["小沣", "小铃仙", "大学生小哥", "伪物小哥", "兔女郎小哥"],
+        "小小大我": ["大我", "小我"],
+        "庭师完全体": ["小妖梦", "半灵小哥"],
+        "诶——这个嘛……": ["小玉手", "小哥箱"],
+        "小小合成部": ["小华", "小可怜", "小水瓶子"],
+    }
+    achieve_name = res.query[str]("achievement")
+    if achieve_name not in achieve_dict: return
+
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        listSta: list[str] = []
+        listSto: list[str] = []
+        users = await uow.users.all_users()
+        for uid in users:
+            qqid = await uow.users.get_qqid(uid)
+            flagSta = True
+            flagSto = True
+            for award in achieve_dict[achieve_name]:
+                aid = await uow.awards.get_aid(award)
+                if aid is None: break
+                if await uow.inventories.get_stats(uid, aid) == 0: flagSta = False
+                if await uow.inventories.get_storage(uid, aid) == 0: flagSto = False
+            if flagSta: listSta.append(str(qqid))
+            if flagSto: listSto.append(str(qqid))
+
+        await ctx.send(UniMessage.text(f"成就【{achieve_name}】：\n数据库内共有{len(users)}个用户，其中{len(listSta)}个用户满足统计要求，{len(listSto)}个用户满足库存要求。"))
+        if 0 < len(listSta) < 20:
+            await ctx.send(UniMessage.text(f"满足统计要求的：\n{"\n".join(listSta)}"))
+        if 0 < len(listSto) < 20:
+            await ctx.send(UniMessage.text(f"满足库存要求的：\n{"\n".join(listSto)}"))

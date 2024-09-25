@@ -607,6 +607,17 @@ updates = [
                 content="榆木华：删除所有猎场信息错误的配方（合成档案的使用不受影响）", tags=["修复"]
             ),
         ]
+    ),
+    VersionData(
+        version="1.2.4",
+        updates=[
+            UpdateContentData(
+                content="榆木华：将抓进度中的进度百分比改为“哥度”。", tags=["特性", "界面"]
+            ),
+            UpdateContentData(
+                content="榆木华：将mysp显示的值修复为整数。", tags=["修复"]
+            ),
+        ]
     )
 ]
 

@@ -56,14 +56,15 @@ def calc_progress(grouped_awards: Iterable[tuple[Level, list[int | None]]]) -> f
     param: int = 10  # 榆木华定义的常数
     denominator: float = 0
     progress: float = 0
+    # logger.info(grouped_awards)
 
     for level, awards in grouped_awards:
         if level.weight == 0:
             continue
         numerator: float = 1 / (level.weight ** (1 / param))
-        logger.info(
-            f"{level.display_name}: {level.weight} ^ {1 / param} = " f"{numerator}"
-        )
+        # logger.info(
+        #     f"{level.display_name}: {level.weight} ^ {1 / param} = " f"{numerator}"
+        # )
         denominator += numerator
         if len(awards) != 0:
             progress += numerator * (
@@ -73,6 +74,23 @@ def calc_progress(grouped_awards: Iterable[tuple[Level, list[int | None]]]) -> f
             progress += 1 * numerator
 
     return progress / denominator if denominator != 0 else 0
+
+
+def calc_gedu(grouped_awards: Iterable[tuple[Level, list[int | None]]]) -> tuple[int, int]:
+    list_gedu = [0, 29, 42, 63, 96, 220]
+    # logger.info(grouped_awards)
+    your_gedu = 0
+    total_gedu = 0
+    
+    for level, awards in grouped_awards:
+        if level.weight == 0:
+            continue
+        for aid in awards:
+            total_gedu += list_gedu[level.lid]
+            if aid is not None:
+                your_gedu += list_gedu[level.lid]
+
+    return your_gedu, total_gedu
 
 
 @listen_message()
@@ -160,6 +178,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             for i, vs in grouped_aids.items()
         ]
         progress = calc_progress(grouped_aids_filtered)
+        your_gedu, total_gedu = calc_gedu(grouped_aids_filtered)
 
         calculating_groups = (5, 4, 3, 2, 1, 0)
         if lid is not None:
@@ -190,7 +209,13 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
     pack_det = "" if pack_index is None else f"{pack_index} 猎场 "
     level_det = "" if level is None else f"{level.display_name} "
-    progress_det = "" if level is not None else f" {progress * 100:.2f}%"
+    if level is None:
+        if pack_index is None:
+            progress_det = f"小哥收集哥度：{your_gedu}/{total_gedu}。"
+        else:
+            progress_det = f" {progress * 100:.2f}%"
+    else:
+        progress_det = ""
 
     img = await get_render_pool().render(
         "storage",
