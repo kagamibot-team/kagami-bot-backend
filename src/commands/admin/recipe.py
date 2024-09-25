@@ -54,6 +54,34 @@ async def _(ctx: MessageContext, res: Arparma):
 @require_admin()
 @match_alconna(
     Alconna(
+        "re:(算概率)",
+        ["::"],
+        Arg("name1", int),
+        Arg("name2", int),
+        Arg("name3", int),
+        Arg("namer", int),
+    )
+)
+async def _(ctx: MessageContext, res: Arparma):
+    lid1 = res.query[int]("name1", 0)
+    lid2 = res.query[int]("name2", 0)
+    lid3 = res.query[int]("name3", 0)
+    lidr = res.query[int]("namer", 0)
+
+    if lid1 < 0 or lid2 < 0 or lid3 < 0 or lidr < 0 or lid1 > 5 or lid2 > 5 or lid3 > 5 or lidr > 5:
+        raise ValueError("等级错误")
+
+    poss = calc_possibility(lid1, lid2, lid3, lidr)
+
+    await ctx.reply(
+        f"{lid1}+{lid2}+{lid3} -> {lidr}，概率为 {poss*100}%。"
+    )
+
+
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna(
         "re:(更改|改变|设置|调整|添加|新增|增加)(合成)?配方",
         ["::"],
         Arg("name1", str),
@@ -128,7 +156,7 @@ async def _(ctx: MessageContext, res: Arparma):
 
             # reset模式下产物需要满足正常配方的要求
             if mode == "reset":
-                if max(lid1, lid2, lid3) - 1 > lidr:
+                if lidr == 0 or max(lid1, lid2, lid3) - 1 > lidr:
                     raise ValueError("产物等级错误")
             
                 pid1 = await uow.pack.get_main_pack(a1)

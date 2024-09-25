@@ -199,9 +199,10 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 if len(_infos) <= 0:
                     continue
                 view = build_display(_infos)
+                count = len(_aids[i])
                 groups.append(
                     BoxItemList(
-                        title=lvl.display_name,
+                        title=lvl.display_name + f"：共{count}个",
                         title_color=lvl.color,
                         elements=view,
                     )
