@@ -12,4 +12,4 @@ async def _(ctx: MessageContext, _):
         uid = await uow.users.get_uid(ctx.sender_id)
         res = await uow.money.get(uid)
 
-    await ctx.reply(UniMessage(f"你有 {res} 薯片"))
+    await ctx.reply(UniMessage(f"你有 {int(res)} 薯片"))

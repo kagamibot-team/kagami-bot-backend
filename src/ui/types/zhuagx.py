@@ -519,7 +519,7 @@ updates = [
             ),
             UpdateContentData(content="修复了小镜晚安的连胜日期问题", tags=["修复"]),
             UpdateContentData(
-                content="榆木华：调整了小镜 Bot 的帮助信息", tags=["特性"]
+                content="榆木华：调整了小镜 Bot 的帮助信息", tags=["功能"]
             ),
             UpdateContentData(content="修复了重复汇报版本更新的问题", tags=["修复"]),
         ],
@@ -605,6 +605,20 @@ updates = [
             ),
             UpdateContentData(
                 content="榆木华：删除所有猎场信息错误的配方（合成档案的使用不受影响）", tags=["修复"]
+            ),
+        ]
+    ),
+    VersionData(
+        version="1.2.4",
+        updates=[
+            UpdateContentData(
+                content="榆木华：将抓进度中的进度百分比改为“哥度”。", tags=["特性", "界面"]
+            ),
+            UpdateContentData(
+                content="榆木华：新增“我有多少哥度（mygd）”指令。", tags=["功能"]
+            ),
+            UpdateContentData(
+                content="榆木华：将mysp显示的值修复为整数。", tags=["修复"]
             ),
         ]
     )

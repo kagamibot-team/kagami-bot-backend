@@ -52,7 +52,7 @@ class AwardRepository(DBRepository):
                 {
                     Award.level_id: lid,
                     Award.name: name,
-                    Award.main_pack_id: -1,
+                    Award.main_pack_id: -2,
                 }
             )
         )
@@ -220,7 +220,7 @@ class AwardRepository(DBRepository):
         """
         获得所有可以合成的零星小哥
         """
-        q = select(Award.data_id).filter(Award.level_id == 0)
+        q = select(Award.data_id).where(Award.level_id == 0).where(Award.main_pack_id == -1)
         r = await self.session.execute(q)
         return set(r.scalars())
 
