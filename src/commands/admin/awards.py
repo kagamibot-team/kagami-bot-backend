@@ -329,6 +329,6 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
         await ctx.send(UniMessage.text(f"成就【{achieve_name}】：\n数据库内共有{len(users)}个用户，其中{len(listSta)}个用户满足统计要求，{len(listSto)}个用户满足库存要求。"))
         if 0 < len(listSta) < 20:
-            await ctx.send(UniMessage.text(f"满足统计要求的：\n{"\n".join(listSta)}"))
+            await ctx.send(UniMessage.text(f"满足统计要求的：\n{'\n'.join(listSta)}"))
         if 0 < len(listSto) < 20:
-            await ctx.send(UniMessage.text(f"满足库存要求的：\n{"\n".join(listSto)}"))
+            await ctx.send(UniMessage.text(f"满足库存要求的：\n{'\n'.join(listSto)}"))
