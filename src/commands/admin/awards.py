@@ -182,6 +182,16 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
         groups: list[BoxItemList] = []
 
+        grouped_aids = await uow.awards.group_by_level(aids)
+        grouped_aids_filtered = [
+            (
+                uow.levels.get_by_id(i),
+                [v for v in vs],
+            )
+            for i, vs in grouped_aids.items()
+        ]
+        total_gedu = calc_gedu(grouped_aids_filtered) # type: ignore
+
         if lid is not None:
             infos = [infos[aid] for aid in aids]
             view = build_display(infos)
@@ -200,9 +210,17 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                     continue
                 view = build_display(_infos)
                 count = len(_aids[i])
+
+                aids_level = [
+                    (
+                        uow.levels.get_by_id(i),
+                        [v for v in _aids[i]],
+                    )
+                ]
+                gedu = calc_gedu(aids_level) # type: ignore
                 groups.append(
                     BoxItemList(
-                        title=lvl.display_name + f"：共{count}个",
+                        title=lvl.display_name + f"：共{count}个，哥度为：{gedu}",
                         title_color=lvl.color,
                         elements=view,
                     )
@@ -210,13 +228,14 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
     pack_det = "" if pack_index is None else f"{pack_index} 猎场 "
     level_det = "" if level is None else f"{level.display_name} "
+    progress_det = f" 总哥度为：{total_gedu}"
 
     img = await get_render_pool().render(
         "storage",
         data=StorageData(
             user=UserData(),
             boxes=groups,
-            title_text=pack_det + level_det + "抓小哥进度",
+            title_text=pack_det + level_det + "抓小哥进度" + progress_det,
         ),
     )
     await ctx.send(UniMessage.image(raw=img))
@@ -255,7 +274,7 @@ async def _(ctx: MessageContext, _: Arparma[Any]):
                     for i, vs in grouped_aids.items()
                 ]
                 if pid == 0:
-                    progress = calc_gedu(grouped_aids_filtered)[0]
+                    progress = calc_gedu(grouped_aids_filtered)
                 else:
                     progress = calc_progress(grouped_aids_filtered)
                 pack_progress[pid].append((await uow.users.get_qqid(uid), progress))

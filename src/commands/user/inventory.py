@@ -4,7 +4,7 @@ from loguru import logger
 from nonebot_plugin_alconna import UniMessage
 from src.base.command_events import MessageContext
 from src.base.exceptions import KagamiRangeError
-from src.common.command_deco import listen_message, match_alconna, require_admin
+from src.common.command_deco import listen_message, match_alconna, match_regex
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
 from src.common.data.user import get_user_data
@@ -76,12 +76,12 @@ def calc_progress(grouped_awards: Iterable[tuple[Level, list[int | None]]]) -> f
     return progress / denominator if denominator != 0 else 0
 
 
-def calc_gedu(grouped_awards: Iterable[tuple[Level, list[int | None]]]) -> tuple[int, int]:
-    list_gedu = [0, 29, 42, 63, 96, 220]
+def calc_gedu(grouped_awards: Iterable[tuple[Level, list[int | None]]]) -> int:
+    list_gedu = [0, 29, 43, 64, 97, 220]
     # logger.info(grouped_awards)
     your_gedu = 0
     total_gedu = 0
-    
+
     for level, awards in grouped_awards:
         if level.weight == 0:
             continue
@@ -90,7 +90,7 @@ def calc_gedu(grouped_awards: Iterable[tuple[Level, list[int | None]]]) -> tuple
             if aid is not None:
                 your_gedu += list_gedu[level.lid]
 
-    return your_gedu, total_gedu
+    return your_gedu
 
 
 @listen_message()
@@ -178,7 +178,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             for i, vs in grouped_aids.items()
         ]
         progress = calc_progress(grouped_aids_filtered)
-        your_gedu, total_gedu = calc_gedu(grouped_aids_filtered)
+        your_gedu = calc_gedu(grouped_aids_filtered)
 
         calculating_groups = (5, 4, 3, 2, 1, 0)
         if lid is not None:
@@ -211,7 +211,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
     level_det = "" if level is None else f"{level.display_name} "
     if level is None:
         if pack_index is None:
-            progress_det = f"小哥收集哥度：{your_gedu}/{total_gedu}。"
+            progress_det = f" - 小哥收集哥度：{your_gedu}"
         else:
             progress_det = f" {progress * 100:.2f}%"
     else:
@@ -226,3 +226,26 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         ),
     )
     await ctx.send(UniMessage.image(raw=img))
+
+
+@listen_message()
+@match_regex("^(mygd|我有多少哥度)$")
+async def _(ctx: MessageContext, _):
+    async with get_unit_of_work() as uow:
+        uid = await uow.users.get_uid(ctx.sender_id)
+        aids = await uow.awards.get_aids()
+        aids.sort()
+
+        inventory_dict = await uow.inventories.get_inventory_dict(uid, aids)
+        stats_dict = {i: v[0] + v[1] for i, v in inventory_dict.items()}
+        grouped_aids = await uow.awards.group_by_level(aids)
+        grouped_aids_filtered = [
+            (
+                uow.levels.get_by_id(i),
+                [(v if stats_dict.get(v, 0) > 0 else None) for v in vs],
+            )
+            for i, vs in grouped_aids.items()
+        ]
+        res = calc_gedu(grouped_aids_filtered)
+
+    await ctx.reply(UniMessage(f"你有 {int(res)} 哥度"))
