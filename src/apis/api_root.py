@@ -1,11 +1,13 @@
-from pathlib import Path
 import time
+from pathlib import Path
+
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from src.apis.restful.base import APIWrapper
 from src.base.onebot.onebot_tools import broadcast
+from src.ui.types.zhuagx import get_latest_version
 
 router = APIRouter()
 
@@ -43,3 +45,11 @@ async def sse_logs():
     这是一个 SSE 接口，用于传输日志
     """
     return StreamingResponse(log_stream(), media_type="text/event-stream")
+
+
+@router.get("/version")
+async def version():
+    """
+    获得当前环境的服务端版本
+    """
+    return APIWrapper(data=get_latest_version().version)
