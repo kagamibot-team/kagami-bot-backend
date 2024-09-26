@@ -45,6 +45,8 @@ command_dict: dict[str, str] = {
     "xjshop": "小镜商店",
     "我有多少薯片": "我有多少薯片",
     "mysp": "我有多少薯片",
+    "我有多少哥度": "我有多少哥度",
+    "mygd": "我有多少哥度",
     "皮肤进度": "皮肤进度",
     "pfjd": "皮肤进度",
     "切换皮肤": "切换皮肤",
@@ -216,6 +218,13 @@ command_content: dict[str, HelpData] = {
     "我有多少薯片": HelpData(
         command="我有多少薯片（mysp）",
         description="展示个人薯片量，暂仅用文字说明。",
+        required_parameters=None,
+        optional_parameters=None,
+        related_commands=None,
+    ),
+    "我有多少哥度": HelpData(
+        command="我有多少哥度（mygd）",
+        description="展示总哥度数值，暂仅用文字说明。",
         required_parameters=None,
         optional_parameters=None,
         related_commands=None,
