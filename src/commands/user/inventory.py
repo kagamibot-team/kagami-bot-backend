@@ -156,9 +156,13 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 "猎场序号", f"大于 0 且不超过 {pack_max} 的值", pack_index
             )
 
-        aids = await uow.awards.get_aids(lid, pack_index)
+        aids1 = await uow.awards.get_aids(lid, pack_index)
         aids2 = await uow.awards.get_aids(lid, 0)
-        aids = list(set(aids) | set(aids2))
+        raw_aids = list(set(aids1) | set(aids2))
+        aids: list[int] = []
+        for aid in raw_aids:
+            if await uow.pack.get_main_pack(aid) <= pack_max:
+                aids.append(aid)
         aids.sort()
         infos = await uow.awards.get_info_dict(aids)
 
