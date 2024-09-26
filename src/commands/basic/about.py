@@ -23,7 +23,6 @@ from src.base.exceptions import ObjectNotFoundException
 
 
 @listen_message()
-@limited
 @match_regex(r"^(抓小哥|zhua) ?(更新|gx|upd|update)( \d*)?$")
 async def _(ctx: MessageContext, res: Match[str]):
     count = 3  # 每页展示的数量
@@ -44,7 +43,6 @@ async def _(ctx: MessageContext, res: Match[str]):
 
 
 @listen_message()
-@limited
 @match_regex(r"^(抓小哥|zhua) ?(帮助|help)( .+)?$")
 async def _(ctx: MessageContext, res: Match[str]):
     command = (res.group(3) or "").strip()
@@ -59,7 +57,6 @@ async def _(ctx: MessageContext, res: Match[str]):
 
 
 @listen_message()
-@limited
 @match_regex("^(关于 ?小?镜 ?([bB]ot)?|kagami ?about)$")
 async def _(ctx: MessageContext, *_):
     try:

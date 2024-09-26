@@ -1,6 +1,6 @@
 from typing import Any
 
-from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
+from arclet.alconna import Alconna, Arg, ArgFlag, Arparma, Option
 
 from src.base.command_events import MessageContext
 from src.common.command_deco import (
@@ -52,6 +52,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         Arg("对方", int),
         Arg("名称", str),
         Arg("数量", int, flags=[ArgFlag.OPTIONAL]),
+        Option("--clear", alias=["清除"]),      # 完全清空统计数据
     )
 )
 async def _(ctx: MessageContext, res: Arparma[Any]):
@@ -68,9 +69,13 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
     async with get_unit_of_work() as uow:
         uid = await uow.users.get_uid(target)
         aid = await uow.awards.get_aid_strong(name)
-        await uow.inventories.give(uid, aid, number, False)
 
-    await ctx.reply("给了。")
+        if res.exist("clear"):
+            await uow.inventories.set_inventory(uid, aid, 0, 0)
+            await ctx.reply("清了。")
+        else:
+            await uow.inventories.give(uid, aid, number, False)
+            await ctx.reply("给了。")
 
 
 @listen_message()
