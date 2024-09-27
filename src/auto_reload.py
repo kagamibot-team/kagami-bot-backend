@@ -66,8 +66,8 @@ def reload():
 
     for command in alconna_manager.get_commands():
         alconna_manager.delete(command)
-    for key in root.keys():
-        root[key] = PriorityList()
+    for key in root.listeners.keys():
+        root.listeners[key] = PriorityList()
     for p in loaded_modules:
         try:
             importlib.reload(p)

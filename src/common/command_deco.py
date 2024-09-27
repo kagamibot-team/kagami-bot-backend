@@ -12,7 +12,7 @@ from nonebot_plugin_alconna import UniMessage
 from selenium.common.exceptions import WebDriverException
 
 from src.base.command_events import GroupContext, MessageContext
-from src.base.event.event_manager import EventManager
+from src.base.event.event_manager import EventDispatcher
 from src.base.event.event_root import root
 from src.base.event.event_timer import addInterval, addTimeout
 from src.base.exceptions import KagamiCoreException, KagamiStopIteration
@@ -145,7 +145,7 @@ def debug_only():
     return wrapper
 
 
-def listen_message(manager: EventManager = root, priority: int = 0):
+def listen_message(manager: EventDispatcher = root, priority: int = 0):
     """添加 Onebot 事件监听器
 
     Args:

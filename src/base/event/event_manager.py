@@ -21,7 +21,7 @@ def _isinstance(obj: Any, typ: type):
         return False
 
 
-class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
+class EventDispatcher:
     """
     用于整个 Bot 的事件系统
 
@@ -44,15 +44,24 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
     如果想要触发事件而不等待处理函数执行完成，可以使用 `event.throw(event)` 方法。
     """
 
+    listeners: dict[type[Any], PriorityList[Listener[Any]]]
+    children: set["EventDispatcher"]
+    parents: set["EventDispatcher"]
+
+    def __init__(self) -> None:
+        self.listeners = {}
+        self.children = set()
+        self.parents = set()
+
     def listen(self, evtType: type[TV_contra], *, priority: int = 0):
         """
         监听事件，`evtType` 表示事件类型，`priority` 表示优先级，优先级高的函数会先执行。
         """
 
         def decorator(func: Listener[TV_contra]):
-            if evtType not in self.keys():
-                self[evtType] = PriorityList()
-            self[evtType].add(priority=priority, item=func)
+            if evtType not in self.listeners.keys():
+                self.listeners[evtType] = PriorityList()
+            self.listeners[evtType].add(priority=priority, item=func)
 
         return decorator
 
@@ -73,7 +82,7 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
         """
 
         begin = time.time()
-        for key, vals in self.items():
+        for key, vals in self.listeners.items():
             if _isinstance(evt, key):
                 for l in vals:
                     try:
@@ -89,7 +98,7 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
 
         tasks: set[asyncio.Task[Any]] = set()
 
-        for key, vals in self.items():
+        for key, vals in self.listeners.items():
             if _isinstance(evt, key):
                 for l in vals:
                     task = asyncio.create_task(l(evt))
@@ -97,4 +106,4 @@ class EventManager(dict[type[Any], PriorityList[Listener[Any]]]):
                     task.add_done_callback(tasks.discard)
 
 
-__all__ = ["EventManager", "Listener"]
+__all__ = ["EventDispatcher", "Listener"]

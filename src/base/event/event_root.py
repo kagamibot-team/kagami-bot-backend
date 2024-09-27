@@ -14,7 +14,7 @@ from nonebot.adapters.onebot.v11 import (
 )
 
 from src.base.command_events import GroupContext
-from src.base.event.event_manager import EventManager
+from src.base.event.event_manager import EventDispatcher
 from src.base.onebot.onebot_events import (
     GroupMessageEmojiLike,
     GroupPoke,
@@ -26,7 +26,7 @@ from src.base.onebot.onebot_tools import record_last_context
 from src.common.config import get_config
 
 
-def activate_root(event_root: EventManager):
+def activate_root(event_root: EventDispatcher):
     """激活事件监听器，让事件监听器挂载到 Nonebot 原生的事件上
 
     Args:
@@ -84,7 +84,7 @@ async def emit_event(event: Any):
     await root.emit(event)
 
 
-root = EventManager()
+root = EventDispatcher()
 
 
 __all__ = ["root", "activate_root"]
