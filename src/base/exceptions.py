@@ -198,3 +198,15 @@ class KagamiRenderException(KagamiCoreException):
         return (
             f"渲染图片的时候出了点问题！请联系 PT 修复呀！报错的渲染器：{self.work_id}"
         )
+
+
+class CDKeyException(KagamiCoreException):
+    """兑换 CDKey 时的报错的基类"""
+
+    @property
+    def message(self) -> str:
+        return "兑换 CDKey 的时候出现了错误！"
+
+
+class CDKeyNoAttempt(CDKeyException):
+    """CDKey 尝试次数达到上限"""
