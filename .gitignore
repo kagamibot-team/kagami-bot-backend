@@ -26,3 +26,6 @@ pyvenv.cfg
 /htmlcov
 .coverage
 .pytest_cache
+
+# 隐藏代码
+/secret
