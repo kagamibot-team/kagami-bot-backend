@@ -166,8 +166,9 @@ async def _(ctx: GroupContext, res: Arparma):
             product.image_name = "blank_placeholder.png"
             product.color = "#696361"
 
-
-        recipe_ids = await uow.stats.get_merge_by_product(aid)  # [0]是stat_id，[1]是recipe_id，[2]是update_at
+        if await uow.pack.get_main_pack(aid) != -1:
+            recipe_ids = await uow.stats.get_merge_by_product(aid)  # [0]是stat_id，[1]是recipe_id，[2]是update_at
+        else: recipe_ids = []
         unique_recipes: list[list[RecipeInfo]] = [[], [], [], []]
         seen: set[int] = set() # 去重
         for recipe_id in recipe_ids:
