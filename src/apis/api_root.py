@@ -29,14 +29,16 @@ import time
 from pathlib import Path
 
 
-def log_stream(log_file_path=Path("./data/log.log"), last_n_lines=50):
+def log_stream(
+    log_file_path=Path("./data/log.log"),
+    last_n_lines=50,
+    block_size=1024,
+) -> Generator[str, Any, NoReturn]:
     with open(log_file_path, "rb") as log_file:
         log_file.seek(0, os.SEEK_END)
-        block_size = 11
 
         lines = []
         buffer = b""
-
 
         # 第一步：往回追溯 50 行
         while len(lines) < last_n_lines + 1 and log_file.tell() > 0:
@@ -61,7 +63,7 @@ def log_stream(log_file_path=Path("./data/log.log"), last_n_lines=50):
             lines = decoded_data.splitlines()
 
         # 这时第一行可能不完整，我们截断
-        lines = lines[-last_n_lines + 1:]
+        lines = lines[-last_n_lines + 1 :]
 
         for line in lines:
             yield f"data: {line}\n\n"
