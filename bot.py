@@ -60,6 +60,8 @@ def pre_init():
 
 def nb_init():
     logger.success("NoneBot is initializing...")
+
+    # 加载配置文件
     env = nonebot.config.Env()
     _env_file = f".env.{env.environment}"
     config = nonebot.config.Config(
@@ -70,6 +72,8 @@ def nb_init():
         ),
     )
     logger.configure(extra={"nonebot_log_level": config.log_level})
+
+    # 加载 FastAPI 驱动器
     nonebot._driver = nonebot.drivers.fastapi.Driver(env, config)
 
 
