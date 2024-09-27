@@ -45,12 +45,11 @@ class EventDispatcher:
     """
 
     listeners: dict[type[Any], PriorityList[Listener[Any]]]
-    children: set["EventDispatcher"]
-    parents: set["EventDispatcher"]
+    linked: set["EventDispatcher"]
 
     def __init__(self) -> None:
         self.listeners = {}
-        self.children = set()
+        self.linked = set()
         self.parents = set()
 
     def listen(self, evtType: type[TV_contra], *, priority: int = 0):
@@ -76,11 +75,20 @@ class EventDispatcher:
 
         return decorator
 
-    async def emit(self, evt: Any):
+    def link(self, sub_dispatcher: "EventDispatcher"):
+        self.linked.add(sub_dispatcher)
+        sub_dispatcher.linked.add(self)
+
+    async def emit(
+        self, evt: Any, proceeded_dispatcher: set["EventDispatcher"] | None = None
+    ):
         """
         触发事件，并等待事件处理函数执行完成。
         """
 
+        proceeded_dispatcher = proceeded_dispatcher or set()
+        if self in proceeded_dispatcher:
+            return
         begin = time.time()
         for key, vals in self.listeners.items():
             if _isinstance(evt, key):
@@ -89,21 +97,29 @@ class EventDispatcher:
                         await l(evt)
                     except KagamiStopIteration:
                         break
+        for node in self.linked:
+            await node.emit(evt, proceeded_dispatcher | {self})
         logger.debug(f"Event {repr(evt)} emitted in {time.time() - begin}s")
 
-    async def throw(self, evt: Any):
+    async def throw(
+        self, evt: Any, proceeded_dispatcher: set["EventDispatcher"] | None = None
+    ):
         """
         触发事件，并立即返回。
         """
 
+        proceeded_dispatcher = proceeded_dispatcher or set()
+        if self in proceeded_dispatcher:
+            return
         tasks: set[asyncio.Task[Any]] = set()
-
         for key, vals in self.listeners.items():
             if _isinstance(evt, key):
                 for l in vals:
                     task = asyncio.create_task(l(evt))
                     tasks.add(task)
                     task.add_done_callback(tasks.discard)
+        for node in self.linked:
+            await node.throw(evt, proceeded_dispatcher | {self})
 
 
 __all__ = ["EventDispatcher", "Listener"]

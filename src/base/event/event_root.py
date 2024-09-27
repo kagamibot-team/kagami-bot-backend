@@ -14,7 +14,7 @@ from nonebot.adapters.onebot.v11 import (
 )
 
 from src.base.command_events import GroupContext
-from src.base.event.event_manager import EventDispatcher
+from src.base.event.event_dispatcher import EventDispatcher
 from src.base.onebot.onebot_events import (
     GroupMessageEmojiLike,
     GroupPoke,

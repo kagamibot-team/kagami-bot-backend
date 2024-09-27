@@ -12,7 +12,7 @@ from nonebot_plugin_alconna import UniMessage
 from selenium.common.exceptions import WebDriverException
 
 from src.base.command_events import GroupContext, MessageContext
-from src.base.event.event_manager import EventDispatcher
+from src.base.event.event_dispatcher import EventDispatcher
 from src.base.event.event_root import root
 from src.base.event.event_timer import addInterval, addTimeout
 from src.base.exceptions import KagamiCoreException, KagamiStopIteration
