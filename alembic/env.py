@@ -2,20 +2,21 @@ from __future__ import annotations
 
 import asyncio
 
-from alembic import context
+import nonebot
 from sqlalchemy import Connection
-from sqlalchemy.util import await_only
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.util import await_only
+
+from alembic import context
 
 # 初始化 Nonebot
 
-import nonebot
 
 nonebot.init()
 
-import src.models
-import src.models.base
 import src.common.config
+import src.models.models
+import src.models.base
 
 # Alembic Config 对象, 它提供正在使用的 .ini 文件中的值.
 config = context.config

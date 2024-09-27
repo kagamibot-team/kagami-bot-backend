@@ -16,3 +16,5 @@ packaging
 selenium
 pika
 pika-stubs
+pytest
+coverage

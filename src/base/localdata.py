@@ -1,3 +1,7 @@
+"""
+该文件有废弃的可能。
+"""
+
 from datetime import datetime
 from pathlib import Path
 

@@ -21,3 +21,7 @@ pyvenv.cfg
 
 # IDEA
 /.idea
+
+# 测试文件
+/htmlcov
+.coverage

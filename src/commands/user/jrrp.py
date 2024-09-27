@@ -1,7 +1,7 @@
 import time
 
 from src.base.command_events import GroupContext
-from src.base.local_storage import LocalStorageManager
+from src.base.localdata import LocalStorageManager
 from src.base.onebot.onebot_enum import QQEmoji
 from src.common.command_deco import limited, listen_message, match_regex, require_awake
 from src.common.rd import get_random

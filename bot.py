@@ -17,6 +17,7 @@ from nonebot.adapters.onebot.v11 import Adapter as OneBotV11Adapter
 
 from alembic import command
 from alembic.config import Config
+from src import init_src
 
 
 def pre_init():
@@ -102,9 +103,9 @@ def init():
     logger.info("数据库没问题了")
 
     # 需要在 Nonebot 初始化完成后，才能导入插件内容
-    __import__("src")
+    init_src()
 
 
 if __name__ == "__main__":
     init()
-    nonebot.get_driver().run() # type: ignore
+    nonebot.get_driver().run()  # type: ignore
