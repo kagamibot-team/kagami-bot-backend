@@ -3,7 +3,13 @@ from datetime import datetime
 from sqlalchemy import delete, insert, select, update
 
 from src.base.repository import DBRepository
-from src.models.cdkey import CDKey, CDKeyBatch, CDKeyBatchAward, CDKeyUsage
+from src.models.cdkey import (
+    CDKey,
+    CDKeyAttempt,
+    CDKeyBatch,
+    CDKeyBatchAward,
+    CDKeyUsage,
+)
 from src.ui.types.cdkey import CDKeyBatchAwardData, CDKeyBatchMeta
 
 
@@ -196,3 +202,49 @@ class CDKeyRepository(DBRepository):
         q = select(CDKeyUsage.uid).filter(CDKeyUsage.cdk_id == cdk_id)
         r = await self.session.execute(q)
         return set(r.scalars().all())
+
+    # ------------ #
+    # CDK 兑换记录 #
+    # ------------ #
+
+    async def clear_attempts(self, uid: int, dt: datetime) -> None:
+        """
+        清理掉一个时间期限之前的所有 CDKey 尝试
+        """
+        q = delete(CDKeyAttempt).filter(
+            CDKeyAttempt.uid == uid, CDKeyAttempt.created_at <= dt
+        )
+        await self.session.execute(q)
+
+    async def add_attempt(self, uid: int, cdkey: str) -> None:
+        """
+        添加一次 CDKey 的尝试
+        """
+        q = insert(CDKeyAttempt).values(
+            {
+                CDKeyAttempt.uid: uid,
+                CDKeyAttempt.cdkey: cdkey,
+            }
+        )
+        await self.session.execute(q)
+
+    async def get_attempts(self, uid: int) -> list[str]:
+        """
+        获得用户记录中的所有兑换尝试
+        """
+        q = select(CDKeyAttempt.cdkey).filter(CDKeyAttempt.uid == uid)
+        r = await self.session.execute(q)
+        return list(r.scalars().all())
+
+    async def get_first_attempt_time(self, uid: int) -> datetime | None:
+        """
+        获得记录中第一个兑换尝试的时间
+        """
+        q = (
+            select(CDKeyAttempt.created_at)
+            .filter(CDKeyAttempt.uid == uid)
+            .order_by(CDKeyAttempt.created_at)
+            .limit(1)
+        )
+        r = await self.session.execute(q)
+        return r.scalar_one_or_none()

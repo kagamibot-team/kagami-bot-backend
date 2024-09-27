@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.base import Base, BaseMixin
@@ -54,3 +54,14 @@ class CDKeyUsage(Base, BaseMixin):
 
     cdk_id = Column(Integer, ForeignKey('catch_cdk.data_id', ondelete='CASCADE'))
     uid = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
+
+
+class CDKeyAttempt(Base, BaseMixin):
+    """
+    储存兑换 CDKey 的尝试，用于限制用户一天只能兑换多少 CDKey
+    """
+
+    __tablename__ = "catch_cdk_attempt"
+
+    uid = Column(Integer, ForeignKey('catch_user_data.data_id', ondelete='CASCADE'))
+    cdkey = Column(String, nullable=False)  # 用户输入的 CDKey
