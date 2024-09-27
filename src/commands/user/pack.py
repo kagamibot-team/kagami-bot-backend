@@ -27,13 +27,13 @@ from src.ui.types.common import UserData
 
 async def get_pack_data(uow: UnitOfWork, user: UserData):
     packs: list[SingleLiechang] = []
+    bulletin_award = [0, 160, 374, 494]
     uid = user.uid
 
     for i in range(1, await uow.settings.get_pack_count() + 1):
         aids = await uow.pack.get_main_aids_of_pack(i)
         grouped = await uow.awards.group_by_level(aids)
         grouped = {d: v for d, v in grouped.items() if len(v) > 0}
-        top_lid = max(grouped.keys())
 
         acount = [
             LiechangCountInfo(
@@ -59,7 +59,7 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
                 pack_id=i,
                 award_count=acount,
                 featured_award=await get_award_info(
-                    uow, list(grouped[top_lid])[0], uid
+                    uow, bulletin_award[i], uid
                 ),
                 unlocked=i in await uow.user_pack.get_own(uid),
             )
