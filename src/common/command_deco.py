@@ -36,9 +36,9 @@ def match_alconna(rule: Alconna[Sequence[Any]]):
     """
 
     def wrapper(
-        func: Callable[[GroupContext, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
+        func: Callable[[TE, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
     ):
-        async def inner(ctx: GroupContext):
+        async def inner(ctx: TE):
             try:
                 result = rule.parse(ctx.message)
             except SyntaxError as e:
@@ -67,8 +67,8 @@ def match_regex(rule: str):
         rule (str): 正则表达式规则。
     """
 
-    def wrapper(func: Callable[[GroupContext, re.Match[str]], Coroutine[Any, Any, T]]):
-        async def inner(ctx: GroupContext):
+    def wrapper(func: Callable[[TE, re.Match[str]], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TE):
             if not ctx.is_text_only():
                 return
 
@@ -91,8 +91,8 @@ def match_literal(text: str):
         text (str): 指定文本。
     """
 
-    def wrapper(func: Callable[[GroupContext], Coroutine[Any, Any, T]]):
-        async def inner(ctx: GroupContext):
+    def wrapper(func: Callable[[TE], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TE):
             if not ctx.is_text_only():
                 return
 
@@ -109,8 +109,8 @@ def match_literal(text: str):
 def require_admin():
     """限制只有管理员才能执行该命令。"""
 
-    def wrapper(func: Callable[[GroupContext, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: GroupContext, *args: Unpack[TA]):
+    def wrapper(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
+        async def inner(ctx: TE, *args: Unpack[TA]):
             if isAdmin(ctx):
                 return await func(ctx, *args)
 

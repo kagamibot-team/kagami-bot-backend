@@ -6,13 +6,15 @@ import importlib
 
 from loguru import logger
 
+from src.base.event.event_dispatcher import EventDispatcher
 from src.common.config import get_config
 
 
-def load_secret_code():
+def load_secret_code(root: EventDispatcher):
     try:
         module = importlib.import_module("secret")
-        module.init()
+        res = module.init()
+        root.link(res)
     except ModuleNotFoundError as e:
         logger.error("请检查是否下载了 secret 代码包！")
         raise e from e
@@ -29,4 +31,4 @@ def init_src():
     init_routers()
 
     if get_config().load_secret_code:
-        load_secret_code()
+        load_secret_code(root)
