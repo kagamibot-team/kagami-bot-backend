@@ -32,30 +32,36 @@ from pathlib import Path
 def log_stream(log_file_path=Path("./data/log.log"), last_n_lines=50):
     with open(log_file_path, "rb") as log_file:
         log_file.seek(0, os.SEEK_END)
-        block_size = 1024
+        block_size = 11
 
         lines = []
         buffer = b""
-        incomplete_characters = b""
 
-        while len(lines) < last_n_lines and log_file.tell() > 0:
+
+        # 第一步：往回追溯 50 行
+        while len(lines) < last_n_lines + 1 and log_file.tell() > 0:
+            # 判断现在能往回读多少，然后读
             seek_offset = min(block_size, log_file.tell())
             log_file.seek(-seek_offset, os.SEEK_CUR)
             buffer = log_file.read(seek_offset) + buffer
+
+            # 刚刚读了，读回来
             log_file.seek(-seek_offset, os.SEEK_CUR)
 
-            try:
-                decoded_data = (incomplete_characters + buffer).decode("utf-8")
-                incomplete_characters = b""
-            except UnicodeDecodeError as e:
-                decoded_data = (incomplete_characters + buffer[: e.start]).decode(
-                    "utf-8"
-                )
-                incomplete_characters = buffer[e.start :]
+            decoded_data = ""
+            while len(buffer) > 0:
+                try:
+                    decoded_data = buffer.decode("utf-8")
+                    break
+                except UnicodeDecodeError as e:
+                    # 这时候很有可能是开头的一个字符被截断，我们试着往前一个步长
+                    log_file.seek(1, os.SEEK_CUR)
+                    buffer = buffer[1:]
 
             lines = decoded_data.splitlines()
 
-        lines = lines[-last_n_lines:]
+        # 这时第一行可能不完整，我们截断
+        lines = lines[-last_n_lines + 1:]
 
         for line in lines:
             yield f"data: {line}\n\n"
