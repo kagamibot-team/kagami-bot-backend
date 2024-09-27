@@ -147,6 +147,7 @@ class PoolService:
         """
         购买一个猎场（失败就抛出异常）
         """
+        price = [0, 0, 1000, 3000]
 
         max_count = await self.uow.settings.get_pack_count()
         own_packs = await self.uow.user_pack.get_own(uid)
@@ -156,7 +157,7 @@ class PoolService:
         if pack_id <= 0 or pack_id > max_count:
             raise ObjectNotFoundException("猎场")
 
-        await self.uow.money.use(uid, 1000)
+        await self.uow.money.use(uid, price[pack_id])
         await self.uow.user_pack.add_own(uid, pack_id)
 
     async def toggle_up_pool(self, uid: int) -> int | None:
