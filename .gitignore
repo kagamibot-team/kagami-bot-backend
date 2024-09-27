@@ -25,3 +25,4 @@ pyvenv.cfg
 # 测试文件
 /htmlcov
 .coverage
+.pytest_cache
