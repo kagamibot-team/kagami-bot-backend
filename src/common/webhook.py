@@ -7,7 +7,7 @@ import requests
 from requests.exceptions import RequestException
 
 from src.common.config import get_config
-from utils.threading import make_async
+from src.common.threading import make_async
 
 
 @make_async

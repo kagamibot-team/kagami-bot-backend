@@ -5,7 +5,7 @@ from typing import Any, Callable, Coroutine, TypeVar
 from loguru import logger
 
 from src.base.exceptions import KagamiStopIteration
-from utils.collections import PriorityList
+from src.common.collections import PriorityList
 
 T = TypeVar("T")
 TV_contra = TypeVar("TV_contra", contravariant=True)

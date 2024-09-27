@@ -16,7 +16,7 @@ from src.core.unit_of_work import UnitOfWork
 from src.models.level import level_repo
 from src.models.models import *
 from src.ui.base.strange import make_strange
-from utils.threading import make_async
+from src.common.threading import make_async
 
 
 async def get_award_info(

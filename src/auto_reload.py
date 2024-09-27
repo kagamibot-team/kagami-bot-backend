@@ -14,7 +14,7 @@ from loguru import logger
 from nonebot import get_driver
 
 from src.base.event.event_root import root
-from utils.collections import PriorityList
+from src.common.collections import PriorityList
 
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
