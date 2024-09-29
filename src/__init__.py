@@ -17,7 +17,7 @@ def load_secret_code(root: EventDispatcher):
         root.link(res)
     except ModuleNotFoundError as e:
         logger.error("请检查是否下载了 secret 代码包！")
-        raise e from e
+        raise e from e  # 这里抛出错误以后，将阻止程序启动。
 
 
 def init_src():
