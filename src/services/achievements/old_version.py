@@ -104,8 +104,9 @@ class MergeTripleAchievement(DisplayWhenAchievedAchievement):
         await uow.money.add(uid, 50)
 
 
-register_achievement(AllOneStarAchievement())
-register_achievement(NiceCatchAchievement())
-register_achievement(TimerAchievement())
-register_achievement(TripleAchivement())
-register_achievement(MergeTripleAchievement())
+def register_old_version_achievements():
+    register_achievement(AllOneStarAchievement())
+    register_achievement(NiceCatchAchievement())
+    register_achievement(TimerAchievement())
+    register_achievement(TripleAchivement())
+    register_achievement(MergeTripleAchievement())

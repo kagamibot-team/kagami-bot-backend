@@ -25,10 +25,12 @@ def init_src():
 
     from .apis.init import init_routers
     from .auto_reload import init
+    from .services.achievements.old_version import register_old_version_achievements
 
     activate_root(root)
     init()
     init_routers()
+    register_old_version_achievements()
 
     if get_config().load_secret_code:
         load_secret_code(root)
