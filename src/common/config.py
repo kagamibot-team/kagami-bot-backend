@@ -19,6 +19,9 @@ class Config(BaseModel):
     my_name: list[str] = ["小镜", "柊镜"]
     "小镜 Bot 的名字，用于呼叫 Bot"
 
+    global_data_filename: str = "global_data.json"
+    "全局数据的名字"
+
     # ================
     # |  数据库设置  |
     # ================
@@ -168,6 +171,10 @@ class Config(BaseModel):
         if self.db_type == "sqlite":
             return f"sqlite+aiosqlite:///./data/{self.sqlite_dbname}"
         return f"postgresql+asyncpg:///{self.pg_username}:{self.pg_password}@{self.pg_host}:{self.pg_port}/{self.pg_dbname}"
+
+    @property
+    def global_data_path(self) -> Path:
+        return Path("./data") / self.global_data_filename
 
 
 def get_config() -> Config:

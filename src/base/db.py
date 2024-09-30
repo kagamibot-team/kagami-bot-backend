@@ -19,11 +19,13 @@ class DatabaseManager:
 
     def __init__(
         self,
-        database_uri: str = get_config().sqlalchemy_database_url,
+        database_uri: str | None = None,
     ):
         """
         初始化数据库管理类
         """
+        if database_uri is None:
+            database_uri = get_config().sqlalchemy_database_url
         self.sql_engine = create_async_engine(database_uri)
         self.session_factory = async_sessionmaker(
             self.sql_engine,
@@ -78,7 +80,3 @@ class DatabaseManager:
         if single is None:
             raise RuntimeError("数据库管理对象还没有被初始化")
         return single
-
-
-# 现在还没有形成完整的依赖注入范式，所以，只能先在这里初始化单例，以后再改
-DatabaseManager.init_single()

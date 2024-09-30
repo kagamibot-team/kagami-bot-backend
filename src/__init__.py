@@ -6,6 +6,7 @@ import importlib
 
 from loguru import logger
 
+from src.base.db import DatabaseManager
 from src.base.event.event_dispatcher import EventDispatcher
 from src.common.config import get_config
 
@@ -25,12 +26,14 @@ def init_src():
 
     from .apis.init import init_routers
     from .auto_reload import init
-    from .services.achievements.old_version import register_old_version_achievements
+    from .services.achievements.old_version import \
+        register_old_version_achievements
 
     activate_root(root)
     init()
     init_routers()
     register_old_version_achievements()
+    DatabaseManager.init_single()
 
     if get_config().load_secret_code:
         load_secret_code(root)

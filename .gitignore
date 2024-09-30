@@ -22,6 +22,10 @@ pyvenv.cfg
 # IDEA
 /.idea
 
+# VSCode
+/.vscode
+/.vscode/settings.json
+
 # 测试文件
 /htmlcov
 .coverage

@@ -74,7 +74,7 @@ class LocalStorage:
         self.load()
         val = self.data.get(key, {})
         try:
-            return cls.model_validate(val, strict=True)
+            return cls.model_validate(val)
         except ValidationError as e:
             logger.warning(f"在验证数据时出错：{e}")
             if allow_overwrite or key not in self.data:
@@ -92,7 +92,7 @@ class LocalStorage:
             val (BaseModel | dict[str, Any]): 值
         """
         if isinstance(val, BaseModel):
-            val = val.model_dump()
+            val = val.model_dump(mode="json")
         self.data[key] = val
         self.write()
 
