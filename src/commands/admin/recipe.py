@@ -3,6 +3,7 @@ from arclet.alconna import Alconna, Arg, Arparma, Option
 from loguru import logger
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectNotFoundException
+from src.ui.types.recipe import RecipeInfo
 from src.common.data.awards import get_award_info
 from src.common.data.recipe import calc_possibility
 from src.common.command_deco import (
@@ -214,3 +215,40 @@ async def _(ctx: MessageContext):
             )
 
     await ctx.send("所有的特殊配方：\n" + "\n".join(msg))
+
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna(
+        ["::"],
+        "re:(所有配方)",
+        Arg("产物小哥", str)
+    )
+)
+async def _(ctx: MessageContext, res: Arparma):
+    name = res.query[str]("产物小哥")
+    if name == None:
+        return
+    msg = ""
+    
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        aid = await uow.awards.get_aid_strong(name)
+
+        if await uow.pack.get_main_pack(aid) != -1:
+            recipe_ids = await uow.stats.get_merge_by_product(aid)  # [0]是stat_id，[1]是recipe_id，[2]是update_at
+        else: recipe_ids = []
+        seen: set[int] = set() # 去重
+        for recipe_id in recipe_ids:
+            if recipe_id[1] not in seen:
+                recipe = await uow.recipes.get_recipe_info(recipe_id[1])
+                if recipe is None:
+                    raise ObjectNotFoundException("配方")
+
+                n1 = (await uow.awards.get_info(recipe.aid1)).name
+                n2 = (await uow.awards.get_info(recipe.aid2)).name
+                n3 = (await uow.awards.get_info(recipe.aid3)).name
+
+                msg += (f"{n1} {n2} {n3}\n")
+                seen.add(recipe_id[1])
+
+    await ctx.send(f"{ name }的所有配方：\n" + "".join(msg))
