@@ -3,12 +3,7 @@ from abc import ABC, abstractmethod
 
 from pydantic import BaseModel
 
-from src.common.dataclasses.game_events import (
-    DummyEvent,
-    MergeEvent,
-    UserDataUpdatedEvent,
-    UserTryCatchEvent,
-)
+from src.common.dataclasses.game_events import DummyEvent, UserDataUpdatedEvent
 from src.core.unit_of_work import UnitOfWork
 
 

@@ -1,3 +1,5 @@
+from loguru import logger
+
 from src.base.exceptions import (
     DoNotHaveException,
     ObjectNotFoundException,
@@ -5,7 +7,6 @@ from src.base.exceptions import (
 )
 from src.core.unit_of_work import UnitOfWork
 from src.repositories.up_pool_repository import UpPoolInfo
-from loguru import logger
 
 
 class PoolService:

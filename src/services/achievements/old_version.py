@@ -1,17 +1,16 @@
 from src.common.dataclasses.game_events import (
-    DummyEvent,
     MergeEvent,
     UserDataUpdatedEvent,
     UserTryCatchEvent,
 )
+from src.core.unit_of_work import UnitOfWork
 
-from src.services.achievements.base import (
-    NoPriseAchievement, 
+from .base import (
     AlwaysDisplayAchievement,
     DisplayWhenAchievedAchievement,
+    NoPriseAchievement,
     register_achievement,
 )
-from src.core.unit_of_work import UnitOfWork
 
 
 class AllOneStarAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
