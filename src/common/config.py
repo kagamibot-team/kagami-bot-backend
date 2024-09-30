@@ -23,11 +23,31 @@ class Config(BaseModel):
     # |  数据库设置  |
     # ================
 
-    sqlalchemy_database_url: str = "sqlite+aiosqlite:///./data/db.sqlite3"
-    "数据库 URI"
+    db_type: Literal["sqlite", "postgresql"] = "sqlite"
+    "使用的数据库类型"
 
     autosave_interval: float = 600
-    "数据库自动保存间隔，在 SQLite 数据库时启用，为负数时不自动保存，单位秒"
+    """
+    SQLite 数据库自动保存间隔，为负数时不自动保存，单位秒
+    """
+
+    sqlite_dbname: str = "db.sqlite3"
+    "SQLite 数据库的文件名"
+
+    pg_username: str = "postgresql"
+    "PG 数据库用户名"
+
+    pg_password: str = "123456"
+    "PG 数据库密码"
+
+    pg_host: str = "localhost"
+    "PG 数据库主机"
+
+    pg_port: int = 5432
+    "PG 数据库端口"
+
+    pg_dbname: str = "kagami"
+    "PG 数据库名字"
 
     # ================
     # | 消息队列设置 |
@@ -141,6 +161,13 @@ class Config(BaseModel):
     @property
     def frontend_path(self):
         return Path(self.frontend_dist)
+
+    @property
+    def sqlalchemy_database_url(self) -> str:
+        "数据库 URI"
+        if self.db_type == "sqlite":
+            return f"sqlite+aiosqlite:///./data/{self.sqlite_dbname}"
+        return f"postgresql+asyncpg:///{self.pg_username}:{self.pg_password}@{self.pg_host}:{self.pg_port}/{self.pg_dbname}"
 
 
 def get_config() -> Config:
