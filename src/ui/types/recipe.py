@@ -1,7 +1,9 @@
-from pydantic import BaseModel
 from datetime import datetime
 
+from pydantic import BaseModel
+
 from src.ui.types.common import AwardInfo, GetAward, UserData
+from src.ui.types.liechang import DialogueMessage
 
 
 class MergeMeta(BaseModel):
@@ -32,6 +34,7 @@ class MergeData(BaseModel):  # 传递给前端用的合成信息
         status="",
         is_strange=False,
     )
+    dialog: DialogueMessage | None = None
 
 
 class RecipeArchiveData(BaseModel):
