@@ -1,14 +1,9 @@
 from typing import Awaitable, Callable
 
-from pydantic import BaseModel
-
 from src.base.command_events import MessageContext
 from src.base.localstorage import LocalStorage
 from src.common.config import get_config
-
-
-class GlobalFlags(BaseModel):
-    activity_hua_out: bool = False
+from src.ui.types.common import GlobalFlags
 
 
 def global_flags():

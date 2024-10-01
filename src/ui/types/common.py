@@ -81,3 +81,7 @@ class GetAward(BaseModel):
 
 class DisplayAward(GetAward):
     stats: str = ""
+
+
+class GlobalFlags(BaseModel):
+    activity_hua_out: bool = False
