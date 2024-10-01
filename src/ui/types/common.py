@@ -85,3 +85,12 @@ class DisplayAward(GetAward):
 
 class GlobalFlags(BaseModel):
     activity_hua_out: bool = False
+
+
+class DialogueMessage(BaseModel):
+    text: str
+    speaker: str
+    face: str
+
+    def dump_str(self):
+        return f"{self.speaker} {self.face}：{self.text}"

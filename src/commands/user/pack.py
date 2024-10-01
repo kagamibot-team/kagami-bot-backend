@@ -13,16 +13,15 @@ from src.common.command_deco import (
     require_awake,
 )
 from src.common.data.awards import get_award_info
+from src.common.dialogue import DialogFrom, get_dialog
+from src.common.global_flags import global_flags
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.services.pool import PoolService
 from src.services.stats import StatService
 from src.ui.base.render import get_render_pool
-from src.ui.types.liechang import LiechangCountInfo, LiechangData, SingleLiechang
-from src.ui.views.pack import (
-    get_random_expression,
-)
 from src.ui.types.common import UserData
+from src.ui.types.liechang import LiechangCountInfo, LiechangData, SingleLiechang
 
 
 async def get_pack_data(uow: UnitOfWork, user: UserData):
@@ -58,18 +57,23 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
             SingleLiechang(
                 pack_id=i,
                 award_count=acount,
-                featured_award=await get_award_info(
-                    uow, bulletin_award[i], uid
-                ),
+                featured_award=await get_award_info(uow, bulletin_award[i], uid),
                 unlocked=i in await uow.user_pack.get_own(uid),
             )
         )
+
+    # 判断现在是不是活动状态，如果是，则将对话源切换为鸽子的
+    async with global_flags() as data:
+        dialog_from = DialogFrom.pigeon if data.activity_hua_out else DialogFrom.lqr
+
+    # 从文件中读取对话清单
+    dialogs = get_dialog(dialog_from)
 
     return LiechangData(
         packs=packs,
         user=user,
         selecting=await uow.user_pack.get_using(uid),
-        dialogue=get_random_expression(get_random()),
+        dialogue=get_random().choice(dialogs),
         chips=int(await uow.money.get(uid)),
     )
 
