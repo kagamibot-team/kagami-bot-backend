@@ -1,8 +1,10 @@
 from nonebot_plugin_alconna import At, Emoji, Image, Text
 
-from src.base.command_events import GroupContext
+from src.base.command_events import GroupContext, MessageContext
+from src.base.event.event_root import root
 from src.base.onebot.onebot_tools import broadcast
-from src.common.command_deco import listen_message, require_admin
+from src.common.command_deco import listen_message, match_literal, require_admin
+from src.common.global_flags import global_flags
 from src.common.localize_image import localize_image
 
 
@@ -31,3 +33,13 @@ async def _(ctx: GroupContext):
             return
 
     await broadcast(ctx.bot, msg)
+
+
+@root.listen(MessageContext)
+@require_admin()
+@match_literal("::toggle-hua-out")
+async def _(ctx: MessageContext):
+    async with global_flags() as data:
+        data.activity_hua_out = not data.activity_hua_out
+        res = data.activity_hua_out
+    await ctx.reply(f"华出活动模式已经切换为 {res} 了。")
