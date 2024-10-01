@@ -2,6 +2,8 @@
 和数据库有关的模块
 """
 
+from typing import Any
+
 import sqlalchemy
 import sqlalchemy.event
 from sqlalchemy import PoolProxiedConnection, text
@@ -10,6 +12,19 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from src.common.config import get_config
 
 __all__ = ["DatabaseManager"]
+
+
+def _sqlite_optimize(dbapi_connection: PoolProxiedConnection, _: Any) -> None:
+    """
+    执行和 SQLite 有关的优化指令，调整 SQLite 的工作模式
+    """
+
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON;")
+    cursor.execute("PRAGMA threading_mode = MULTITHREAD;")
+    cursor.execute("PRAGMA busy_timeout = 30000;")
+    cursor.execute("PRAGMA journal_mode=WAL;")
+    cursor.close()
 
 
 class DatabaseManager:
@@ -33,17 +48,11 @@ class DatabaseManager:
             expire_on_commit=False,
             autoflush=False,
         )
-
         if database_uri.startswith("sqlite+aiosqlite:///"):
-
-            @sqlalchemy.event.listens_for(self.sql_engine.sync_engine, "connect")
-            def _(dbapi_connection: PoolProxiedConnection, _):
-                cursor = dbapi_connection.cursor()
-                cursor.execute("PRAGMA foreign_keys=ON;")
-                cursor.execute("PRAGMA threading_mode = MULTITHREAD;")
-                cursor.execute("PRAGMA busy_timeout = 30000;")
-                cursor.execute("PRAGMA journal_mode=WAL;")
-                cursor.close()
+            sqlalchemy.event.listens_for(
+                self.sql_engine.sync_engine,
+                "connect",
+            )(_sqlite_optimize)
 
     async def manual_checkpoint(self):
         """
