@@ -15,7 +15,9 @@ class DialogFrom(Enum):
     hecheng_huaout = Path("./res/dialog/华出_猎场.txt")
 
 
-def handle_single_line_dialogue(text: str) -> DialogueMessage | None:
+def handle_single_line_dialogue(text: str | DialogueMessage) -> DialogueMessage | None:
+    if isinstance(text, DialogueMessage):
+        return text
     scene = None
     if "|" in text:
         scene, text = text.split("|", maxsplit=1)
@@ -26,6 +28,10 @@ def handle_single_line_dialogue(text: str) -> DialogueMessage | None:
     if " " not in first:
         return None
     speaker, face = first.split(" ", maxsplit=1)
+    speaker = speaker.strip()
+    face = face.strip()
+    if len(speaker) == 0 or len(face) == 0:
+        return None
     return DialogueMessage(
         text=second,
         speaker=speaker,
@@ -35,11 +41,21 @@ def handle_single_line_dialogue(text: str) -> DialogueMessage | None:
 
 
 def get_dialog(
-    origin: DialogFrom = DialogFrom.liechang_normal,
+    origin: (
+        DialogFrom | list[DialogueMessage | str] | list[DialogueMessage] | Path
+    ) = DialogFrom.liechang_normal,
     allowed_scene: set[str] | None = None,
 ) -> list[DialogueMessage]:
-    with open(origin.value, "r", encoding="utf-8") as f:
-        val = f.readlines()
+    val = []
+    if isinstance(origin, DialogFrom):
+        origin = origin.value
+    if isinstance(origin, Path):
+        with open(origin, "r", encoding="utf-8") as f:
+            val = f.readlines()
+
+    if isinstance(origin, list):
+        val = origin
+
     val = [handle_single_line_dialogue(i) for i in val]
     val = [i for i in val if i is not None]
     if allowed_scene is not None:
