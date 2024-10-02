@@ -44,6 +44,7 @@ class RecipeArchiveData(BaseModel):
     cost_chip: int
     own_chip: int
     good_enough: bool
+    dialog: DialogueMessage | None = None
 
 
 class RecipeInfo(BaseModel):  # 一整条配方信息
