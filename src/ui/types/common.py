@@ -91,6 +91,7 @@ class DialogueMessage(BaseModel):
     text: str
     speaker: str
     face: str
+    scene: set[str] | None = None
 
     def dump_str(self):
         return f"{self.speaker} {self.face}：{self.text}"
