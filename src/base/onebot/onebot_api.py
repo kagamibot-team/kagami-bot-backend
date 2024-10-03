@@ -13,11 +13,8 @@
 
 import asyncio
 import datetime
-from io import BytesIO
 from typing import Any
 
-import PIL
-import PIL.Image
 import requests
 from nonebot.adapters.onebot.v11.exception import ActionFailed
 from pydantic import BaseModel

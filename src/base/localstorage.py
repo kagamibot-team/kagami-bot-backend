@@ -158,7 +158,13 @@ class LocalStorageContext(Generic[T]):
         return False
 
     async def __aenter__(self):
+        logger.debug(
+            f"尝试获取当前上下文的锁 DATA_CLASS={self.data.__class__.__name__}"
+        )
         await self.parent.lock.acquire()
+        logger.debug(
+            f"成功获取上下文的锁 DATA_CLASS={self.data.__class__.__name__}"
+        )
         return self.__enter__()
 
     async def __aexit__(
@@ -168,4 +174,7 @@ class LocalStorageContext(Generic[T]):
         exc_tb: TracebackType | None,
     ):
         self.parent.lock.release()
+        logger.debug(
+            f"释放了上下文的锁 DATA_CLASS={self.data.__class__.__name__}"
+        )
         return self.__exit__(exc_type, exc_cal, exc_tb)
