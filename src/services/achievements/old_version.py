@@ -81,7 +81,7 @@ class TripleAchivement(NoPriseAchievement, AlwaysDisplayAchievement):
 
 class MergeTripleAchievement(DisplayWhenAchievedAchievement):
     name: str = "合成：三小哥"
-    description: str = "用三个小哥合成三小哥"
+    description: str = "用三个小哥合成三小哥。"
     prise_description: str | None = "50 薯片"
 
     async def validate_achievement(
