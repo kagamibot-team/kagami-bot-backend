@@ -96,6 +96,9 @@ class Config(BaseModel):
     reload_info_interval: int = 60
     "刷新群成员信息的间隔，单位秒，小于等于 0 则不刷新"
 
+    no_broadcast_group: list[int] = []
+    "不广播消息的群组"
+
     # ==================
     # |  图片渲染设置  |
     # ==================

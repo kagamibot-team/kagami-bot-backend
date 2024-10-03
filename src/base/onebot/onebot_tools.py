@@ -42,6 +42,8 @@ async def broadcast(
             continue
         if require_admin and group.group_id not in get_config().admin_groups:
             continue
+        if group.group_id in get_config().no_broadcast_group:
+            continue
 
         await send_group_msg(bot, group.group_id, message)
         await asyncio.sleep(0.2)
