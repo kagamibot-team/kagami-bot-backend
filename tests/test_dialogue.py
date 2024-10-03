@@ -77,7 +77,9 @@ class TestDialogue(TestCase):
         self.assertListEqual([A], get_dialog([A]))
         self.assertListEqual([A, B], get_dialog([A, B]))
         self.assertListEqual([A, B], get_dialog([A, B, D], set(["scene_a"])))
-        self.assertListEqual([A, B, D], get_dialog([A, B, C, D], set(["scene_a", "scene_c"])))
+        self.assertListEqual(
+            [A, B, D], get_dialog([A, B, C, D], set(["scene_a", "scene_c"]))
+        )
 
     def test_assure_file_exists(self):
         for origin in DialogFrom:

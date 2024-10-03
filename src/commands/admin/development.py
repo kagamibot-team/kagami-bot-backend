@@ -25,7 +25,11 @@ from src.common.command_deco import (
     require_admin,
 )
 from src.common.save_file_handler import pack_save
-from src.ui.base.render import ChromeBrowserWorker, FirefoxBrowserWorker, get_render_pool
+from src.ui.base.render import (
+    ChromeBrowserWorker,
+    FirefoxBrowserWorker,
+    get_render_pool,
+)
 
 
 @listen_message()
@@ -135,10 +139,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
             )
         ls += "\n\n当前正在启动的渲染器："
         for worker in starting:
-            ls += (
-                "\n- "
-                + str(worker)
-            )
+            ls += "\n- " + str(worker)
         await ctx.reply(ls)
         return
 
@@ -158,7 +159,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
         await pool.reload()
         await ctx.reply("ok.")
         return
-    
+
     if res.exist("push"):
         br_type = res.query[str]("browser_type") or ""
         if br_type.upper() == "CHROME":

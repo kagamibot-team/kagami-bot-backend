@@ -26,8 +26,7 @@ def init_src():
 
     from .apis.init import init_routers
     from .auto_reload import init
-    from .services.achievements.old_version import \
-        register_old_version_achievements
+    from .services.achievements.old_version import register_old_version_achievements
 
     activate_root(root)
     init()

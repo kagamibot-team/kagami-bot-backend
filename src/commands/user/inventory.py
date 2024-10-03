@@ -43,7 +43,11 @@ def build_display(
             # if d.level.lid >= 4:
             #     obj.display_box.do_glow = True
         # 如果提供了库存和统计信息，则显示之
-        if storage is not None and d.aid in storage and (stats is None or stats[d.aid] > 0): # kc时没传stats，zhuajd时需要stats > 0
+        if (
+            storage is not None
+            and d.aid in storage
+            and (stats is None or stats[d.aid] > 0)
+        ):  # kc时没传stats，zhuajd时需要stats > 0
             obj.display_box.notation_down = str(storage[d.aid])
         if stats is not None and d.aid in stats and stats[d.aid] > 0:
             obj.display_box.notation_up = str(stats[d.aid])

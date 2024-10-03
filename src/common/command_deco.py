@@ -35,9 +35,7 @@ def match_alconna(rule: Alconna[Sequence[Any]]):
         rule (Alconna[UniMessage[Any]]): 输入的 Alconna 规则。
     """
 
-    def wrapper(
-        func: Callable[[TE, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]
-    ):
+    def wrapper(func: Callable[[TE, Arparma[Sequence[Any]]], Coroutine[Any, Any, T]]):
         async def inner(ctx: TE):
             try:
                 result = rule.parse(ctx.message)

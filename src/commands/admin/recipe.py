@@ -69,14 +69,21 @@ async def _(ctx: MessageContext, res: Arparma):
     lid3 = res.query[int]("name3", 0)
     lidr = res.query[int]("namer", 0)
 
-    if lid1 < 0 or lid2 < 0 or lid3 < 0 or lidr < 0 or lid1 > 5 or lid2 > 5 or lid3 > 5 or lidr > 5:
+    if (
+        lid1 < 0
+        or lid2 < 0
+        or lid3 < 0
+        or lidr < 0
+        or lid1 > 5
+        or lid2 > 5
+        or lid3 > 5
+        or lidr > 5
+    ):
         raise ValueError("等级错误")
 
     poss = calc_possibility(lid1, lid2, lid3, lidr)
 
-    await ctx.reply(
-        f"{lid1}+{lid2}+{lid3} -> {lidr}，概率为 {poss*100}%。"
-    )
+    await ctx.reply(f"{lid1}+{lid2}+{lid3} -> {lidr}，概率为 {poss*100}%。")
 
 
 @listen_message()
@@ -100,10 +107,12 @@ async def _(ctx: MessageContext, res: Arparma):
         ),
         Option(
             "--special",
-            Arg("mode", str),   # up：设定为以原概率为基础提升的固定概率；reset：保留合理产物，重置配方的概率与is_modified内容
+            Arg(
+                "mode", str
+            ),  # up：设定为以原概率为基础提升的固定概率；reset：保留合理产物，重置配方的概率与is_modified内容
             alias=["-s", "特殊"],
         ),
-        Option("--clear", alias=["清除"]),      # 完全清空配方，回到不存在此条配方的状态
+        Option("--clear", alias=["清除"]),  # 完全清空配方，回到不存在此条配方的状态
     )
 )
 async def _(ctx: MessageContext, res: Arparma):
@@ -120,12 +129,13 @@ async def _(ctx: MessageContext, res: Arparma):
             await uow.recipes.reset_recipe(a1, a2, a3)
             await ctx.reply("ok.\n已清除配方。")
             return
-        
+
         # 获取配方信息
         rid = await uow.recipes.get_recipe_id(a1, a2, a3)
         if rid is not None:
             rinfo = await uow.recipes.get_recipe_info(rid)
-        else: rinfo = None
+        else:
+            rinfo = None
 
         # 获取产物信息，若留空则取配方目前产物，若配方不存在则报错
         nr = res.query[str]("namer")
@@ -159,7 +169,7 @@ async def _(ctx: MessageContext, res: Arparma):
             if mode == "reset":
                 if lidr == 0 or max(lid1, lid2, lid3) - 1 > lidr:
                     raise ValueError("产物等级错误")
-            
+
                 pid1 = await uow.pack.get_main_pack(a1)
                 pid2 = await uow.pack.get_main_pack(a2)
                 pid3 = await uow.pack.get_main_pack(a3)
@@ -170,14 +180,14 @@ async def _(ctx: MessageContext, res: Arparma):
             poss = calc_possibility(lid1, lid2, lid3, lidr)
             # up模式下设定为以原概率为基础提升的固定概率
             if mode == "up":
-                po = 1 - (1 - poss)**2
+                po = 1 - (1 - poss) ** 2
             # reset模式下还原概率，并标记为普通配方
             if mode == "reset":
                 po = poss
                 mod = 0
 
         await uow.recipes.update_recipe(a1, a2, a3, ar, po, mod)
-        
+
         await ctx.reply(
             f"ok.\n结果为：{n1} {n2} {n3} -> {nr}，概率为 {po*100}%，modified={mod}"
         )
@@ -216,28 +226,26 @@ async def _(ctx: MessageContext):
 
     await ctx.send("所有的特殊配方：\n" + "\n".join(msg))
 
+
 @listen_message()
 @require_admin()
-@match_alconna(
-    Alconna(
-        ["::"],
-        "re:(所有配方)",
-        Arg("产物小哥", str)
-    )
-)
+@match_alconna(Alconna(["::"], "re:(所有配方)", Arg("产物小哥", str)))
 async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("产物小哥")
     if name == None:
         return
     msg = ""
-    
+
     async with get_unit_of_work(ctx.sender_id) as uow:
         aid = await uow.awards.get_aid_strong(name)
 
         if await uow.pack.get_main_pack(aid) != -1:
-            recipe_ids = await uow.stats.get_merge_by_product(aid)  # [0]是stat_id，[1]是recipe_id，[2]是update_at
-        else: recipe_ids = []
-        seen: set[int] = set() # 去重
+            recipe_ids = await uow.stats.get_merge_by_product(
+                aid
+            )  # [0]是stat_id，[1]是recipe_id，[2]是update_at
+        else:
+            recipe_ids = []
+        seen: set[int] = set()  # 去重
         for recipe_id in recipe_ids:
             if recipe_id[1] not in seen:
                 recipe = await uow.recipes.get_recipe_info(recipe_id[1])
@@ -248,7 +256,7 @@ async def _(ctx: MessageContext, res: Arparma):
                 n2 = (await uow.awards.get_info(recipe.aid2)).name
                 n3 = (await uow.awards.get_info(recipe.aid3)).name
 
-                msg += (f"{n1} {n2} {n3}\n")
+                msg += f"{n1} {n2} {n3}\n"
                 seen.add(recipe_id[1])
 
     await ctx.send(f"{ name }的所有配方：\n" + "".join(msg))

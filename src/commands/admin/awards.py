@@ -190,7 +190,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             )
             for i, vs in grouped_aids.items()
         ]
-        total_gedu = calc_gedu(grouped_aids_filtered) # type: ignore
+        total_gedu = calc_gedu(grouped_aids_filtered)  # type: ignore
 
         if lid is not None:
             infos = [infos[aid] for aid in aids]
@@ -217,7 +217,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                         [v for v in _aids[i]],
                     )
                 ]
-                gedu = calc_gedu(aids_level) # type: ignore
+                gedu = calc_gedu(aids_level)  # type: ignore
                 groups.append(
                     BoxItemList(
                         title=lvl.display_name + f"：共{count}个，哥度为：{gedu}",
@@ -252,7 +252,9 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 async def _(ctx: MessageContext, _: Arparma[Any]):
     async with get_unit_of_work(ctx.sender_id) as uow:
         pack_max = await uow.settings.get_pack_count()
-        pack_progress: list[list[tuple[int, float]]] = [[] for _ in range(0, pack_max + 1)]
+        pack_progress: list[list[tuple[int, float]]] = [
+            [] for _ in range(0, pack_max + 1)
+        ]
         users = await uow.users.all_users()
         for uid in users:
             for pid in range(0, pack_max + 1):
@@ -290,7 +292,7 @@ async def _(ctx: MessageContext, _: Arparma[Any]):
                 message += f"{uid}: {progress * 100:.2f}%\n"
         await ctx.send(UniMessage.text(message))
 
-        
+
 @listen_message()
 @require_admin()
 @match_alconna(
@@ -309,7 +311,8 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         "小小合成部": ["小华", "小可怜", "小水瓶子"],
     }
     achieve_name = res.query[str]("achievement")
-    if achieve_name not in achieve_dict: return
+    if achieve_name not in achieve_dict:
+        return
 
     async with get_unit_of_work(ctx.sender_id) as uow:
         listSta: list[str] = []
@@ -321,14 +324,23 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             flagSto = True
             for award in achieve_dict[achieve_name]:
                 aid = await uow.awards.get_aid(award)
-                if aid is None: break
-                if await uow.inventories.get_stats(uid, aid) == 0: flagSta = False
-                if await uow.inventories.get_storage(uid, aid) == 0: flagSto = False
-            if flagSta: listSta.append(str(qqid))
-            if flagSto: listSto.append(str(qqid))
+                if aid is None:
+                    break
+                if await uow.inventories.get_stats(uid, aid) == 0:
+                    flagSta = False
+                if await uow.inventories.get_storage(uid, aid) == 0:
+                    flagSto = False
+            if flagSta:
+                listSta.append(str(qqid))
+            if flagSto:
+                listSto.append(str(qqid))
 
-        await ctx.send(UniMessage.text(f"成就【{achieve_name}】：\n数据库内共有{len(users)}个用户，其中{len(listSta)}个用户满足统计要求，{len(listSto)}个用户满足库存要求。"))
+        await ctx.send(
+            UniMessage.text(
+                f"成就【{achieve_name}】：\n数据库内共有{len(users)}个用户，其中{len(listSta)}个用户满足统计要求，{len(listSto)}个用户满足库存要求。"
+            )
+        )
         if 0 < len(listSta) < 20:
-            await ctx.send(UniMessage.text("满足统计要求的：\n" + '\n'.join(listSta)))
+            await ctx.send(UniMessage.text("满足统计要求的：\n" + "\n".join(listSta)))
         if 0 < len(listSto) < 20:
-            await ctx.send(UniMessage.text("满足库存要求的：\n" + '\n'.join(listSto)))
+            await ctx.send(UniMessage.text("满足库存要求的：\n" + "\n".join(listSto)))

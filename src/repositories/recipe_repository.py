@@ -66,7 +66,13 @@ class RecipeRepository(DBRepository):
         """
 
         query = select(
-            Recipe.award1, Recipe.award2, Recipe.award3, Recipe.possibility, Recipe.result, Recipe.created_at, Recipe.updated_at
+            Recipe.award1,
+            Recipe.award2,
+            Recipe.award3,
+            Recipe.possibility,
+            Recipe.result,
+            Recipe.created_at,
+            Recipe.updated_at,
         ).filter(Recipe.data_id == data_id)
         result = await self.session.execute(query)
         if not result.fetchall():
@@ -74,7 +80,9 @@ class RecipeRepository(DBRepository):
         info = (await self.session.execute(query)).tuples().one_or_none()
         if info is None:
             return None
-        a1, a2, a3, poss, ar, crt, upd = (await self.session.execute(query)).tuples().one()
+        a1, a2, a3, poss, ar, crt, upd = (
+            (await self.session.execute(query)).tuples().one()
+        )
 
         return RecipeInfo(
             recipe_id=data_id,
@@ -96,12 +104,14 @@ class RecipeRepository(DBRepository):
         Returns:
             list[int]: 合成配方的 ID 们
         """
-        query = select(Recipe.data_id).filter(
-            Recipe.result == aid
-        ).order_by(desc(Recipe.updated_at)).limit(10)
+        query = (
+            select(Recipe.data_id)
+            .filter(Recipe.result == aid)
+            .order_by(desc(Recipe.updated_at))
+            .limit(10)
+        )
 
         return [(row[0]) for row in (await self.session.execute(query)).all()]
-
 
     async def add_recipe(
         self,

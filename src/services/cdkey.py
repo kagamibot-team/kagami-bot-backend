@@ -19,6 +19,5 @@ class CDKeyService:
         """
         await self.clean(uid)
         return len(await self.uow.cdkey.get_attempts(uid)) < 3
-    
-    async def claim(self, uid: int, cdkey: str):
-        ...
+
+    async def claim(self, uid: int, cdkey: str): ...
