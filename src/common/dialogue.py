@@ -12,7 +12,7 @@ class DialogFrom(Enum):
     liechang_normal = Path("./res/dialog/通常_猎场.txt")
     liechang_huaout = Path("./res/dialog/华出_猎场.txt")
     hecheng_normal = Path("./res/dialog/通常_合成部.txt")
-    hecheng_huaout = Path("./res/dialog/华出_猎场.txt")
+    hecheng_huaout = Path("./res/dialog/华出_合成部.txt")
 
 
 def handle_single_line_dialogue(text: str | DialogueMessage) -> DialogueMessage | None:
