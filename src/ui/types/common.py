@@ -6,6 +6,7 @@ from pathlib import Path
 import PIL
 import PIL.Image
 from loguru import logger
+from nonebot import get_driver
 from pydantic import BaseModel, computed_field
 
 from src.common.times import now_datetime
@@ -102,12 +103,18 @@ class HuaOutMessage(BaseModel):
     msg_time: datetime.datetime
     content: str
     success: bool
+    recalc: bool = True
 
     def to_string(self) -> str:
         # 【华】2024/10/04 17:38:04（已换算）
         # 「诶……好像不太对……？」
+        _rec = "（已换算）" if self.recalc else ""
         _time = self.msg_time.strftime("%Y/%m/%d %H:%M:%S")
-        return f"【{self.speaker}】{_time}（已换算）\n「{self.content}」"
+        return f"【{self.speaker}】{_time}{_rec}\n「{self.content}」"
+
+
+def get_msg_cooldown() -> float:
+    return 600.0 if get_driver().env != 'dev' else 10.0
 
 
 class GlobalFlags(BaseModel):
@@ -122,7 +129,7 @@ class GlobalFlags(BaseModel):
             now_time = now_datetime()
         if self.last_wrong_time is None:
             return True
-        return (now_time - self.last_wrong_time).total_seconds() > 600
+        return (now_time - self.last_wrong_time).total_seconds() > get_msg_cooldown()
 
     def send_message(
         self,
@@ -130,6 +137,7 @@ class GlobalFlags(BaseModel):
         content: str,
         msg_time: datetime.datetime | None = None,
         success: bool = True,
+        recalc: bool = False,
     ):
         """
         储存一条消息
@@ -141,6 +149,7 @@ class GlobalFlags(BaseModel):
             content=content,
             msg_time=msg_time,
             success=success,
+            recalc=recalc,
         )
         self.messages.append(obj)
         return obj
