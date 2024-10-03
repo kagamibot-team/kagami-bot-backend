@@ -559,7 +559,8 @@ updates = [
         version="1.2.0",
         updates=[
             UpdateContentData(
-                content="榆木华：上线合成档案查询功能，请输入“抓小哥帮助 合成档案”查看详细内容", tags=["功能"]
+                content="榆木华：上线合成档案查询功能，请输入“抓小哥帮助 合成档案”查看详细内容",
+                tags=["功能"],
             ),
             UpdateContentData(
                 content="榆木华：合成界面添加剩余库存量的显示", tags=["特性", "界面"]
@@ -571,48 +572,42 @@ updates = [
     ),
     VersionData(
         version="1.2.1",
-        updates=[
-            UpdateContentData(
-                content="热更新，修复了若干 Bug", tags=["修复"]
-            )
-        ]
+        updates=[UpdateContentData(content="热更新，修复了若干 Bug", tags=["修复"])],
     ),
     VersionData(
         version="1.2.2",
         updates=[
-            UpdateContentData(
-                content="修正合成档案功能的错误可用范围", tags=["修复"]
-            ),
+            UpdateContentData(content="修正合成档案功能的错误可用范围", tags=["修复"]),
             UpdateContentData(
                 content="榆木华：修正合成百变小哥获得皮肤的异常表现", tags=["修复"]
             ),
             UpdateContentData(
-                content="榆木华：修正抓进度中消耗完的小哥不显示库存为0的问题", tags=["修复", "界面"]
+                content="榆木华：修正抓进度中消耗完的小哥不显示库存为0的问题",
+                tags=["修复", "界面"],
             ),
             UpdateContentData(
-                content="榆木华：增加四五星获得时的发光，优化小哥边框，修复售罄的表现", tags=["特性", "修复", "界面"]
+                content="榆木华：增加四五星获得时的发光，优化小哥边框，修复售罄的表现",
+                tags=["特性", "修复", "界面"],
             ),
-        ]
+        ],
     ),
     VersionData(
         version="1.2.3",
         updates=[
+            UpdateContentData(content="更改部分界面样式", tags=["界面"]),
+            UpdateContentData(content="榆木华：调整金暴性的表现", tags=["特性"]),
             UpdateContentData(
-                content="更改部分界面样式", tags=["界面"]
+                content="榆木华：删除所有猎场信息错误的配方（合成档案的使用不受影响）",
+                tags=["修复"],
             ),
-            UpdateContentData(
-                content="榆木华：调整金暴性的表现", tags=["特性"]
-            ),
-            UpdateContentData(
-                content="榆木华：删除所有猎场信息错误的配方（合成档案的使用不受影响）", tags=["修复"]
-            ),
-        ]
+        ],
     ),
     VersionData(
         version="1.2.4",
         updates=[
             UpdateContentData(
-                content="榆木华：将抓进度中的进度百分比改为“哥度”。", tags=["特性", "界面"]
+                content="榆木华：将抓进度中的进度百分比改为“哥度”。",
+                tags=["特性", "界面"],
             ),
             UpdateContentData(
                 content="榆木华：新增“我有多少哥度（mygd）”指令。", tags=["功能"]
@@ -620,8 +615,12 @@ updates = [
             UpdateContentData(
                 content="榆木华：将mysp显示的值修复为整数。", tags=["修复"]
             ),
-        ]
-    )
+        ],
+    ),
+    VersionData(
+        version="1.2.5",
+        updates=[UpdateContentData(content="常规更新")],
+    ),
 ]
 
 

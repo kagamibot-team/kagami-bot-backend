@@ -16,6 +16,15 @@ class ModelB(BaseModel):
     int_value: int = 0
 
 
+class ModelElement(BaseModel):
+    a: str
+    b: int
+
+
+class ModelBase(BaseModel):
+    ls: list[ModelElement] = []
+
+
 class TestBaseFunction(TestCase):
     def test_basic_function(self):
         with tempfile.TemporaryDirectory() as d:
@@ -58,6 +67,22 @@ class TestBaseFunction(TestCase):
                 self.assertTrue(data.boolean_value)
                 self.assertEqual(data.int_value, 114)
 
+    def test_list(self):
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d)
+            fp = base / "test.json"
+            ls = LocalStorage(fp)
+
+            with ls.context("test", ModelBase) as data:
+                data.ls.append(ModelElement(a="123", b=1))
+                data.ls.append(ModelElement(a="124", b=1))
+
+            with ls.context("test", ModelBase) as data:
+                data.ls[0].a = "126"
+
+            with ls.context("test", ModelBase) as data:
+                self.assertEqual(data.ls[0].a, "126")
+
     def test_exceptions(self):
         with tempfile.TemporaryDirectory() as d:
             # 测试母文件夹不存在时的情况
@@ -80,19 +105,23 @@ class TestBaseFunction(TestCase):
 
             ls.data["test"] = {"boolean_value": 31}
             ls.write()
+
             def broken():
                 ls.get_item("test", ModelA, allow_overwrite=False)
+
             self.assertRaises(ValidationError, broken)
 
             # 测试在处理数据的中途报错
             with ls.context("test2", ModelB) as data:
                 data.boolean_value = True
                 data.int_value = 42
+
             def broken2():
                 with ls.context("test2", ModelB) as data:
                     data.boolean_value = False
                     data.int_value = 114
                     raise ValueError("test exception")
+
             self.assertRaises(ValueError, broken2)
             with ls.context("test2", ModelB) as data:
                 self.assertTrue(data.boolean_value)

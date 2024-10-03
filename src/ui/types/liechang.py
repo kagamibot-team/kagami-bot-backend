@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from src.ui.types.common import AwardInfo, LevelData, UserData
+from src.ui.types.common import AwardInfo, DialogueMessage, LevelData, UserData
 
 
 class LiechangCountInfo(BaseModel):
@@ -14,12 +14,6 @@ class SingleLiechang(BaseModel):
     award_count: list[LiechangCountInfo]
     featured_award: AwardInfo
     unlocked: bool
-
-
-class DialogueMessage(BaseModel):
-    text: str
-    speaker: str
-    face: str
 
 
 class LiechangData(BaseModel):

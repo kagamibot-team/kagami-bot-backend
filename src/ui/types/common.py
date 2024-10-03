@@ -81,3 +81,20 @@ class GetAward(BaseModel):
 
 class DisplayAward(GetAward):
     stats: str = ""
+
+
+class GlobalFlags(BaseModel):
+    activity_hua_out: bool = False
+
+
+class DialogueMessage(BaseModel):
+    text: str
+    speaker: str
+    face: str
+    scene: set[str] | None = None
+
+    def dump_str(self):
+        leading = ""
+        if self.scene is not None:
+            leading = ",".join(self.scene)
+        return f"{leading}{self.speaker} {self.face}：{self.text}"

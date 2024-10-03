@@ -27,9 +27,15 @@ class CDKeyBatchAward(Base, BaseMixin):
 
     __tablename__ = "catch_cdk_batch_award"
 
-    batch_id = Column(Integer, ForeignKey('catch_cdk_batch.data_id', ondelete='CASCADE'))
-    aid = Column(Integer, ForeignKey('catch_award.data_id', ondelete='CASCADE'), nullable=True)
-    sid = Column(Integer, ForeignKey('catch_skin.data_id', ondelete='CASCADE'), nullable=True)
+    batch_id = Column(
+        Integer, ForeignKey("catch_cdk_batch.data_id", ondelete="CASCADE")
+    )
+    aid = Column(
+        Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"), nullable=True
+    )
+    sid = Column(
+        Integer, ForeignKey("catch_skin.data_id", ondelete="CASCADE"), nullable=True
+    )
     chips: Mapped[int] = mapped_column(nullable=True)
     quantity: Mapped[int] = mapped_column(default=1)
 
@@ -42,7 +48,7 @@ class CDKey(Base, BaseMixin):
     __tablename__ = "catch_cdk"
 
     code: Mapped[str] = mapped_column(unique=True)
-    batch_id = Column(Integer, ForeignKey('catch_cdk_batch.data_id'))
+    batch_id = Column(Integer, ForeignKey("catch_cdk_batch.data_id"))
 
 
 class CDKeyUsage(Base, BaseMixin):
@@ -52,7 +58,7 @@ class CDKeyUsage(Base, BaseMixin):
 
     __tablename__ = "catch_cdk_usage"
 
-    cdk_id = Column(Integer, ForeignKey('catch_cdk.data_id', ondelete='CASCADE'))
+    cdk_id = Column(Integer, ForeignKey("catch_cdk.data_id", ondelete="CASCADE"))
     uid = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
 
 
@@ -63,5 +69,5 @@ class CDKeyAttempt(Base, BaseMixin):
 
     __tablename__ = "catch_cdk_attempt"
 
-    uid = Column(Integer, ForeignKey('catch_user_data.data_id', ondelete='CASCADE'))
+    uid = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
     cdkey = Column(String, nullable=False)  # 用户输入的 CDKey

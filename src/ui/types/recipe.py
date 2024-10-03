@@ -1,7 +1,9 @@
-from pydantic import BaseModel
 from datetime import datetime
 
+from pydantic import BaseModel
+
 from src.ui.types.common import AwardInfo, GetAward, UserData
+from src.ui.types.liechang import DialogueMessage
 
 
 class MergeMeta(BaseModel):
@@ -12,7 +14,7 @@ class MergeMeta(BaseModel):
     is_strange: bool
 
 
-class MergeData(BaseModel): # 传递给前端用的合成信息
+class MergeData(BaseModel):  # 传递给前端用的合成信息
     inputs: tuple[AwardInfo, AwardInfo, AwardInfo]
     after_storages: tuple[int, int, int, int]
     light_off: tuple[bool, bool, bool, bool]
@@ -32,6 +34,7 @@ class MergeData(BaseModel): # 传递给前端用的合成信息
         status="",
         is_strange=False,
     )
+    dialog: DialogueMessage | None = None
 
 
 class RecipeArchiveData(BaseModel):
@@ -41,8 +44,10 @@ class RecipeArchiveData(BaseModel):
     cost_chip: int
     own_chip: int
     good_enough: bool
+    dialog: DialogueMessage | None = None
 
-class RecipeInfo(BaseModel): # 一整条配方信息
+
+class RecipeInfo(BaseModel):  # 一整条配方信息
     recipe_id: int
     stat_id: int = 0
     aid1: int

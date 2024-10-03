@@ -13,9 +13,7 @@ from src.models.models import Recipe
 from src.services.pool import PoolService
 
 
-def calc_possibility(
-    lid1: int, lid2: int, lid3: int, lidr: int
-) -> float:
+def calc_possibility(lid1: int, lid2: int, lid3: int, lidr: int) -> float:
     lidm = max(lid1, lid2, lid3)
 
     rms = ((lid1**2 + lid2**2 + lid3**2) / 3) ** 0.5  # 三个等级的平方平均数
@@ -29,6 +27,7 @@ def calc_possibility(
 
     logger.info(f"{1 - lidr/8}^(1 + {lidr - lidm}/5)*{fvi} = {poss}")
     return poss
+
 
 async def generate_random_result(
     uow: UnitOfWork, a1: int, a2: int, a3: int

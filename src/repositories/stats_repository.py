@@ -322,5 +322,7 @@ class StatsRepository(DBRepository):
             .where(StatRecord.linked_aid == aid)
         ).order_by(desc(StatRecord.updated_at))
 
-        return [(row[0], row[1], row[2]) for row in (await self.session.execute(query)).all()]
-    
+        return [
+            (row[0], row[1], row[2])
+            for row in (await self.session.execute(query)).all()
+        ]

@@ -52,7 +52,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         Arg("对方", int),
         Arg("名称", str),
         Arg("数量", int, flags=[ArgFlag.OPTIONAL]),
-        Option("--clear", alias=["清除"]),      # 完全清空统计数据
+        Option("--clear", alias=["清除"]),  # 完全清空统计数据
     )
 )
 async def _(ctx: MessageContext, res: Arparma[Any]):

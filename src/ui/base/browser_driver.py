@@ -35,7 +35,7 @@ class ChromeFactory(BaseBrowserDriverFactory):
         opt.add_argument("--disable-notifications")
 
         # 不报告 TensorFlow Lite XNNPACK
-        opt.add_argument('--log-level=1')
+        opt.add_argument("--log-level=1")
 
         # 为了防止白屏，先移动走
         opt.add_argument("--window-position=-2400,-2400")

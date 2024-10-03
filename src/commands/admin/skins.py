@@ -148,7 +148,6 @@ async def _(ctx: MessageContext, res: Arparma):
                 await session.execute(
                     update(Skin).where(Skin.data_id == sid).values({Skin.image: fp})
                 )
-
     await ctx.send("ok.")
 
 

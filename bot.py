@@ -32,6 +32,11 @@ def pre_init():
     os.makedirs(os.path.join(".", "data", "skins"), exist_ok=True)
     os.makedirs(os.path.join(".", "data", "temp"), exist_ok=True)
 
+    # 保证数据库文件本身存在
+    if not os.path.exists("./data/db.sqlite3"):
+        with open("./data/db.sqlite3", "wb") as _:
+            pass
+
     # 注册日志管理器
     logger.add(
         "./data/log.log",
@@ -60,9 +65,18 @@ def pre_init():
 
 
 def nb_init():
-    logger.success("NoneBot is initializing...")
+    """
+    初始化 Nonebot 引擎。在 Nonebot 从项目中解耦之前，无法移除。
+    """
+
+    logger.success("NoneBot 引擎正在初始化")
 
     # 加载配置文件
+    # TODO: 将这里的配置文件读取也解耦，完全自己实现，然后从 dotenv 开始转移到 config.json 中
+    #       在未来，如果需要将小镜 BOT 核心迁移到 Docker 容器中，则需要保证能够通过 Docker 的
+    #       环境变量注入来控制需要启用的选项。当然，未来也会支持直接在管理面板中直接更改一些配
+    #       置，并且支持热更新。
+
     env = nonebot.config.Env()
     _env_file = f".env.{env.environment}"
     config = nonebot.config.Config(
@@ -89,10 +103,6 @@ def init():
     # 加载驱动器
     driver = nonebot.get_driver()
     driver.register_adapter(OneBotV11Adapter)  # type: ignore
-
-    if not os.path.exists("./data/db.sqlite3"):
-        with open("./data/db.sqlite3", "wb") as _:
-            pass
 
     logger.info("检查数据库状态")
     config = Config("./alembic.ini")

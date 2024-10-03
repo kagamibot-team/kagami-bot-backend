@@ -119,6 +119,21 @@ class AwardRepository(DBRepository):
             raise ObjectNotFoundException("小哥")
         return aid
 
+    async def get_aids_strong(self, *names: str) -> list[int]:
+        """强制获得一些小哥 ID，如果没有就报错
+
+        Args:
+            name (str): 小哥的名字
+
+        Returns:
+            int: 小哥的 ID
+        """
+        aids = [await self.get_aid(name) for name in names]
+        if None in aids:
+            raise ObjectNotFoundException("小哥")
+        aids = [aid for aid in aids if aid is not None]
+        return aids
+
     async def set_alias(self, aid: int, name: str):
         """设置一个小哥的别名
 
@@ -220,7 +235,11 @@ class AwardRepository(DBRepository):
         """
         获得所有可以合成的零星小哥
         """
-        q = select(Award.data_id).where(Award.level_id == 0).where(Award.main_pack_id == -1)
+        q = (
+            select(Award.data_id)
+            .where(Award.level_id == 0)
+            .where(Award.main_pack_id == -1)
+        )
         r = await self.session.execute(q)
         return set(r.scalars())
 

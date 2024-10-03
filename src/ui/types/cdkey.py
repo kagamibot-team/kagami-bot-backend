@@ -20,6 +20,7 @@ class CDKeyBatchAwardData(BaseModel):
     - 如果是皮肤，则会忽略 quantity
     - 如果是薯片，则会忽略 data_id
     """
+
     award_type: Literal["award", "skin", "chips"]
     data_id: int = 0
     quantity: int = 1

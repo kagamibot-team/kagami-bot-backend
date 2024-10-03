@@ -1,3 +1,5 @@
+import functools
+from random import Random
 from arclet.alconna import Alconna, Arg, Arparma
 from nonebot_plugin_alconna import UniMessage
 
@@ -15,6 +17,8 @@ from src.common.data.awards import generate_random_info, get_award_info, use_awa
 from src.common.data.recipe import try_merge
 from src.common.data.user import get_user_data
 from src.common.dataclasses.game_events import MergeEvent
+from src.common.dialogue import DialogFrom, get_dialog
+from src.common.global_flags import global_flags
 from src.common.rd import get_random
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
@@ -54,9 +58,7 @@ async def _(ctx: GroupContext, res: Arparma):
             await ctx.reply("你没有买小哥合成凭证，被门口的保安拦住了。")
             return
 
-        a1 = await uow.awards.get_aid_strong(n1)
-        a2 = await uow.awards.get_aid_strong(n2)
-        a3 = await uow.awards.get_aid_strong(n3)
+        a1, a2, a3 = await uow.awards.get_aids_strong(n1, n2, n3)
         info1 = await get_award_info(uow, a1)
         info2 = await get_award_info(uow, a2)
         info3 = await get_award_info(uow, a3)
@@ -76,17 +78,14 @@ async def _(ctx: GroupContext, res: Arparma):
 
         aid, succeed = await try_merge(uow, uid, a1, a2, a3)
         rid = await uow.recipes.get_recipe_id(a1, a2, a3)
-        if rid is None:
-            raise ObjectNotFoundException("配方")
-        stid1, stid2 = await StatService(uow).hc(uid, rid, succeed, aid, cost)
+        assert rid is not None, "配方在数据库中丢失"
+        stid1, _ = await StatService(uow).hc(uid, rid, succeed, aid, cost)
+
         if aid == -1:
+            # 乱码小哥，丢失
             info = await generate_random_info()
             add = get_random().randint(1, 100)
-            data = GetAward(
-                info=info,
-                count=add,
-                is_new=False,
-            )
+            data = GetAward(info=info, count=add, is_new=False)
             aft_stor = 0
         else:
             if aid == 35:
@@ -103,13 +102,7 @@ async def _(ctx: GroupContext, res: Arparma):
             await uow.inventories.give(uid, aid, add)
             aft_stor = await uow.inventories.get_storage(uid, aid)
 
-        if succeed:
-            status = "成功！"
-        elif aid in (89, -1):
-            status = "失败！"
-        else:
-            status = "失败？"
-
+        status = "成功！" if succeed else ("失败！" if aid in (89, -1) else "失败？")
         user = await get_user_data(ctx, uow)
         merge_info = MergeData(
             inputs=(info1, info2, info3),
@@ -127,6 +120,7 @@ async def _(ctx: GroupContext, res: Arparma):
                 is_strange=status == "失败？",
             ),
         )
+        bind_dialog(merge_info)
 
     await ctx.send(
         UniMessage.image(raw=await get_render_pool().render("recipe", merge_info))
@@ -134,14 +128,53 @@ async def _(ctx: GroupContext, res: Arparma):
     await throw_event(MergeEvent(user_data=user, merge_view=merge_info))
 
 
+def is_strange(data: MergeData) -> bool:
+    return functools.reduce(
+        lambda x, y: x or y,
+        map(
+            lambda info: info.level.lid == 0 and info.aid != 89,
+            (*data.inputs, data.output.info),
+        ),
+    )
+
+
+def bind_dialog(
+    data: MergeData, hua_out: bool | None = None, random: Random | None = None
+) -> None:
+    if hua_out is None:
+        with global_flags() as gf:
+            hua_out = gf.activity_hua_out
+
+    if random is None:
+        random = get_random()
+
+    flags: set[str]
+    if not hua_out:
+        diag_from = DialogFrom.hecheng_normal
+        if random.random() < 0.1:
+            flags = set(("__aqu",))
+        elif (oaid := data.output.info.aid) in (9, 34, 98):
+            flags = set((f"out_{oaid}",))
+        elif is_strange(data):
+            flags = set(("zero",))
+        else:
+            lvin = max(map(lambda info: info.level.lid, data.inputs))
+            flags = set((f"lv{lvin}_lv{data.output.info.level.lid}",))
+    else:
+        diag_from = DialogFrom.hecheng_huaout
+        if is_strange(data):
+            flags = set(("zero",))
+        elif (oaid := data.output.info.aid) in (9, 34, 75, 98):
+            flags = set((f"out_{oaid}",))
+        else:
+            flags = set((f"outlv{data.output.info.level.lid}",))
+
+    data.dialog = random.choice(get_dialog(diag_from, flags))
+
+
 @listen_message()
 @limited
-@match_alconna(
-    Alconna(
-        "re:(合成|hc)(档案|da)",
-        Arg("产物小哥", str)
-    )
-)
+@match_alconna(Alconna("re:(合成|hc)(档案|da)", Arg("产物小哥", str)))
 @require_awake
 async def _(ctx: GroupContext, res: Arparma):
     costs = {0: 1, 1: 2, 2: 4, 3: 8, 4: 16, 5: 32}
@@ -149,28 +182,31 @@ async def _(ctx: GroupContext, res: Arparma):
     name = res.query[str]("产物小哥")
     if name == None:
         return
-    
+
     async with get_unit_of_work(ctx.sender_id) as uow:
         uid = await uow.users.get_uid(ctx.sender_id)
 
         if not await uow.user_flag.have(uid, "合成"):
             await ctx.reply("你没有买小哥合成凭证，被门口的保安拦住了。")
             return
-        
+
         aid = await uow.awards.get_aid_strong(name)
         product = await uow.awards.get_info(aid)
         after = await uow.money.use(uid, costs[product.level.lid])
 
         stat = await uow.inventories.get_stats(uid, aid)
-        if stat == 0: #没见过
+        if stat == 0:  # 没见过
             product.image_name = "blank_placeholder.png"
             product.color = "#696361"
 
         if await uow.pack.get_main_pack(aid) != -1:
-            recipe_ids = await uow.stats.get_merge_by_product(aid)  # [0]是stat_id，[1]是recipe_id，[2]是update_at
-        else: recipe_ids = []
+            recipe_ids = await uow.stats.get_merge_by_product(
+                aid
+            )  # [0]是stat_id，[1]是recipe_id，[2]是update_at
+        else:
+            recipe_ids = []
         unique_recipes: list[list[RecipeInfo]] = [[], [], [], []]
-        seen: set[int] = set() # 去重
+        seen: set[int] = set()  # 去重
         for recipe_id in recipe_ids:
             if recipe_id[1] not in seen:
                 recipe = await uow.recipes.get_recipe_info(recipe_id[1])
@@ -191,8 +227,12 @@ async def _(ctx: GroupContext, res: Arparma):
                 elif recipe.aid1 != recipe.aid2 and recipe.aid2 == recipe.aid3:
                     cnt = (sto1 if sto1 < 1 else 1) + (sto2 if sto2 < 2 else 2)
                 else:
-                    cnt = (sto1 if sto1 < 1 else 1) + (sto2 if sto2 < 1 else 1)+ (sto3 if sto3 < 1 else 1)
-                
+                    cnt = (
+                        (sto1 if sto1 < 1 else 1)
+                        + (sto2 if sto2 < 1 else 1)
+                        + (sto3 if sto3 < 1 else 1)
+                    )
+
                 logger.info(f"{n1} {sto1} {sto2} {sto3} cnt {cnt}")
 
                 unique_recipes[cnt].append(recipe)
@@ -203,7 +243,8 @@ async def _(ctx: GroupContext, res: Arparma):
         good_enough = False
         for i in range(3, -1, -1):
             for recipe in unique_recipes[i]:
-                if i == 3: good_enough = True
+                if i == 3:
+                    good_enough = True
                 recipes.append(recipe)
         for i in range(3):
             stor = await uow.inventories.get_storage(uid, product.aid)
@@ -219,24 +260,32 @@ async def _(ctx: GroupContext, res: Arparma):
                 sto3 = await uow.inventories.get_storage(uid, recipe.aid3)
 
                 if recipe.aid1 == recipe.aid2 and recipe.aid2 == recipe.aid3:
-                    off1 = (sto1 < 1); off2 = (sto2 < 2); off3 = (sto3 < 3)
+                    off1 = sto1 < 1
+                    off2 = sto2 < 2
+                    off3 = sto3 < 3
                 elif recipe.aid1 == recipe.aid2 and recipe.aid2 != recipe.aid3:
-                    off1 = (sto1 < 1); off2 = (sto2 < 2); off3 = (sto3 < 1)
+                    off1 = sto1 < 1
+                    off2 = sto2 < 2
+                    off3 = sto3 < 1
                 elif recipe.aid1 != recipe.aid2 and recipe.aid2 == recipe.aid3:
-                    off1 = (sto1 < 1); off2 = (sto2 < 1); off3 = (sto3 < 2)
+                    off1 = sto1 < 1
+                    off2 = sto2 < 1
+                    off3 = sto3 < 2
                 else:
-                    off1 = (sto1 < 1); off2 = (sto2 < 1); off3 = (sto3 < 1)
-        
+                    off1 = sto1 < 1
+                    off2 = sto2 < 1
+                    off3 = sto3 < 1
+
                 stat = await uow.inventories.get_stats(uid, recipe.aid1)
-                if stat == 0: #没见过
+                if stat == 0:  # 没见过
                     award1.image_name = "blank_placeholder.png"
                     award1.color = "#696361"
                 stat = await uow.inventories.get_stats(uid, recipe.aid2)
-                if stat == 0: #没见过
+                if stat == 0:  # 没见过
                     award2.image_name = "blank_placeholder.png"
                     award2.color = "#696361"
                 stat = await uow.inventories.get_stats(uid, recipe.aid3)
-                if stat == 0: #没见过
+                if stat == 0:  # 没见过
                     award3.image_name = "blank_placeholder.png"
                     award3.color = "#696361"
 
@@ -253,7 +302,7 @@ async def _(ctx: GroupContext, res: Arparma):
                         ),
                         recipe_id=recipes[i].recipe_id,
                         stat_id=recipes[i].stat_id,
-                        last_time=recipe.updated_at.strftime("%m月%d日%H时%M分")
+                        last_time=recipe.updated_at.strftime("%m月%d日%H时%M分"),
                     )
                 )
             else:
@@ -273,17 +322,19 @@ async def _(ctx: GroupContext, res: Arparma):
                         stat_id=0,
                     )
                 )
-        
+
         user = await get_user_data(ctx, uow)
-        archive_info=RecipeArchiveData(
+        archive_info = RecipeArchiveData(
             user=user,
             recipes=recipes_display,
             product=product,
             cost_chip=costs[product.level.lid],
             own_chip=int(after),
-            good_enough=good_enough
+            good_enough=good_enough,
         )
 
     await ctx.send(
-        UniMessage.image(raw=await get_render_pool().render("recipe_archive", archive_info))
+        UniMessage.image(
+            raw=await get_render_pool().render("recipe_archive", archive_info)
+        )
     )

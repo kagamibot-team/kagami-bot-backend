@@ -1,3 +1,4 @@
+import asyncio
 import json
 from pathlib import Path
 from types import TracebackType
@@ -7,6 +8,9 @@ from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
+
+
+locks: dict[Path, asyncio.Lock] = {}
 
 
 class LocalStorage:
@@ -29,6 +33,11 @@ class LocalStorage:
         self.path = path
         assert path.name, "提供的地址应该有一个文件名"
         self.load()
+
+    @property
+    def lock(self):
+        locks.setdefault(self.path, asyncio.Lock())
+        return locks[self.path]
 
     def load(self):
         """尝试从文件中读取数据"""
@@ -74,7 +83,7 @@ class LocalStorage:
         self.load()
         val = self.data.get(key, {})
         try:
-            return cls.model_validate(val, strict=True)
+            return cls.model_validate(val)
         except ValidationError as e:
             logger.warning(f"在验证数据时出错：{e}")
             if allow_overwrite or key not in self.data:
@@ -92,7 +101,7 @@ class LocalStorage:
             val (BaseModel | dict[str, Any]): 值
         """
         if isinstance(val, BaseModel):
-            val = val.model_dump()
+            val = val.model_dump(mode="json")
         self.data[key] = val
         self.write()
 
@@ -147,3 +156,16 @@ class LocalStorageContext(Generic[T]):
 
         # 代表该异常将会向外传播
         return False
+
+    async def __aenter__(self):
+        await self.parent.lock.acquire()
+        return self.__enter__()
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_cal: BaseException | None,
+        exc_tb: TracebackType | None,
+    ):
+        self.parent.lock.release()
+        return self.__exit__(exc_type, exc_cal, exc_tb)
