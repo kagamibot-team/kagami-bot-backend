@@ -154,7 +154,7 @@ def bind_dialog(
         if random.random() < 0.1:
             flags = set(("__aqu",))
         elif (oaid := data.output.info.aid) in (9, 34, 98):
-            flags = set((f"out_{oaid}",))
+            flags = set((f"out{oaid}",))
         elif is_strange(data):
             flags = set(("zero",))
         else:
@@ -165,7 +165,7 @@ def bind_dialog(
         if is_strange(data):
             flags = set(("zero",))
         elif (oaid := data.output.info.aid) in (9, 34, 75, 98):
-            flags = set((f"out_{oaid}",))
+            flags = set((f"out{oaid}",))
         else:
             flags = set((f"outlv{data.output.info.level.lid}",))
 
