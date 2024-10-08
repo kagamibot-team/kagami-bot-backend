@@ -2,6 +2,7 @@
 data.json
 dev_*.py
 .vscode
+.vscode/settings.json
 
 # Python 虚拟环境和其他文件
 __pycache__
