@@ -6,7 +6,11 @@ from src.base.event.event_root import root
 from src.base.onebot.onebot_tools import tell
 from src.common.dataclasses.game_events import UserDataUpdatedEvent
 from src.core.unit_of_work import get_unit_of_work
-from src.services.achievements import Achievement, get_achievement_service
+from src.services.achievements.base import (
+    Achievement,
+    AnnounceRule,
+    get_achievement_service,
+)
 from src.ui.types.common import UserData
 
 
@@ -27,5 +31,8 @@ async def _(event: UserDataUpdatedEvent):
         results = await service.update(uow, event)
 
     if len(results) > 0:
-        message = await render_achievement_message(event.user_data, results)
+        message = await render_achievement_message(
+            event.user_data,
+            [r for r in results if r.announce_rule != AnnounceRule.no_announcement],
+        )
         await tell(int(event.user_data.qqid), message)

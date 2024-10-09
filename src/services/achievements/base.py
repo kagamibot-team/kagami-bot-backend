@@ -1,20 +1,101 @@
 import base64
 from abc import ABC, abstractmethod
+from enum import Enum
+from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
+from src.base.resources import Resource, static_res
 from src.common.dataclasses.game_events import DummyEvent, UserDataUpdatedEvent
 from src.core.unit_of_work import UnitOfWork
 
 
+class AchievementType(Enum):
+    """
+    成就的类型，只会影响视图
+    """
+
+    advancement = 1
+    "进度，比较像谁都可以达到的类型，例如游玩的里程碑"
+
+    goal = 2
+    "目标，可以努努力达到的类型，而且不一定是必须要达到的"
+
+    challenge = 3
+    "挑战，需要凹才能做到的事情"
+
+
+class DisplayRule(Enum):
+    """
+    显示成就有哪些条件
+    """
+
+    always_display = 1
+    "一直展示的成就，反正就是会出现在成就的清单中"
+
+    blur_until_achieve = 2
+    """
+    在达成之前就显示在成就清单中，但是会模糊图标，只有成就名字，
+    而成就的描述需要被隐藏。
+    """
+
+    hide_until_achieve = 3
+    "在达成之前不会展示"
+
+    always_hide = 4
+    "一直隐藏，永远不会展示出来"
+
+
+class AnnounceRule(Enum):
+    """
+    告知成就的方式
+    """
+
+    ## 算了，不要这个，感觉没有情景会用到
+    # broadcast = 1
+    # "开大喇叭广播给所有人，请谨慎使用"
+
+    default = 0
+    "在上一次对方输入指令的地方告知他人"
+
+    no_announcement = -1
+    "不告知"
+
+
 class Achievement(BaseModel, ABC):
     """
-    最基础的成就
+    最基础的成就。这里是成就的元数据。
     """
 
     name: str
+    "成就的名字，简短有力"
+
     description: str
+    "成就的描述，比较短，但能够说明怎么达成这个成就"
+
     prise_description: str | None = None
+    "奖励的描述，如果为 None 代表没有奖励"
+
+    image: Resource = static_res("blank_placeholder.png")
+    "成就的图标"
+
+    achievement_type: AchievementType = AchievementType.advancement
+    "成就的类型，只影响成就的视图"
+
+    display_rule: DisplayRule = DisplayRule.always_display
+    "成就的显示规则"
+
+    announce_rule: AnnounceRule = AnnounceRule.default
+    "成就的广播规则"
+
+    @computed_field
+    @property
+    def image_url(self) -> str:
+        return self.image.compress_image().url
+
+    @property
+    def image_path(self) -> Path:
+        return self.image.path
 
     @property
     def flag(self) -> str:
@@ -49,18 +130,6 @@ class Achievement(BaseModel, ABC):
         """
 
     @abstractmethod
-    async def check_can_display(self, uow: UnitOfWork, uid: int) -> bool:
-        """判断一个成就能不能被展示出来
-
-        Args:
-            uow (UnitOfWork): 工作单元
-            uid (int): 用户 ID
-
-        Returns:
-            bool: 是否展示出来
-        """
-
-    @abstractmethod
     async def prise(self, uow: UnitOfWork, uid: int) -> None:
         """给一个玩家给予成就奖励
 
@@ -84,21 +153,6 @@ class NoPriseAchievement(Achievement):
         return
 
 
-class AlwaysDisplayAchievement(Achievement):
-    async def check_can_display(self, uow: UnitOfWork, uid: int) -> bool:
-        return True
-
-
-class NeverDisplayAchievement(Achievement):
-    async def check_can_display(self, uow: UnitOfWork, uid: int) -> bool:
-        return False
-
-
-class DisplayWhenAchievedAchievement(Achievement):
-    async def check_can_display(self, uow: UnitOfWork, uid: int) -> bool:
-        return await self.have_got(uow, uid)
-
-
 class DummyAchievement(Achievement):
     """
     只能由 DummyEvent 触发的成就。这里的奖励还没有定义，需要子类再进行定义
@@ -112,20 +166,6 @@ class DummyAchievement(Achievement):
         if not isinstance(event, DummyEvent):
             return False
         return event.data == self.dummy_data
-
-
-class TestAchievement(DummyAchievement, NoPriseAchievement):
-    """
-    嗯这玩意是用于测试的，所以不给奖励
-    """
-
-    name: str = "测试成就"
-    description: str = "测试成就的描述"
-    dummy_data: str = "test_trigger"
-    can_display: bool = False
-
-    async def check_can_display(self, uow: UnitOfWork, uid: int) -> bool:
-        return self.can_display
 
 
 class AchievementService:
@@ -167,7 +207,7 @@ service = AchievementService()
 
 def get_achievement_service() -> AchievementService:
     """
-    获得一个存有成就的服务
+    获得当前 App 正在运行的成就服务
     """
     return service
 
@@ -176,4 +216,4 @@ def register_achievement(achievement: Achievement):
     """
     注册一个成就
     """
-    service.register(achievement)
+    get_achievement_service().register(achievement)

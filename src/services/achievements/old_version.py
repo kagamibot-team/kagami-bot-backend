@@ -6,14 +6,14 @@ from src.common.dataclasses.game_events import (
 from src.core.unit_of_work import UnitOfWork
 
 from .base import (
-    AlwaysDisplayAchievement,
-    DisplayWhenAchievedAchievement,
+    Achievement,
+    DisplayRule,
     NoPriseAchievement,
     register_achievement,
 )
 
 
-class AllOneStarAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
+class AllOneStarAchievement(NoPriseAchievement):
     name: str = "七(一)星连珠"
     description: str = "嗯……一次性抽到七个一星！？"
 
@@ -31,7 +31,7 @@ class AllOneStarAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
         return count >= 7
 
 
-class NiceCatchAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
+class NiceCatchAchievement(NoPriseAchievement):
     name: str = "欧皇附体"
     description: str = "一次抓到了两个四星（或者以上）"
 
@@ -50,7 +50,7 @@ class NiceCatchAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
         return count >= 2
 
 
-class TimerAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
+class TimerAchievement(NoPriseAchievement):
     name: str = "读秒大师"
     description: str = "什么！剩余零秒？！"
 
@@ -62,7 +62,7 @@ class TimerAchievement(NoPriseAchievement, AlwaysDisplayAchievement):
         return event.data.meta.need_time == "0秒"
 
 
-class TripleAchivement(NoPriseAchievement, AlwaysDisplayAchievement):
+class TripleAchivement(NoPriseAchievement):
     name: str = "三 小 哥"
     description: str = "一次抓到三个同一个小哥？"
 
@@ -79,10 +79,12 @@ class TripleAchivement(NoPriseAchievement, AlwaysDisplayAchievement):
         return False
 
 
-class MergeTripleAchievement(DisplayWhenAchievedAchievement):
+class MergeTripleAchievement(Achievement):
     name: str = "合成：三小哥"
     description: str = "用三个小哥合成三小哥。"
     prise_description: str | None = "50 薯片"
+
+    display_rule: DisplayRule = DisplayRule.hide_until_achieve
 
     async def validate_achievement(
         self, uow: UnitOfWork, event: UserDataUpdatedEvent
