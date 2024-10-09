@@ -61,11 +61,13 @@ class LocalStorage:
         with open(self.path, "w") as f:
             json.dump(self.data, f)
 
-    def get_item(self, key: str, cls: type[T], allow_overwrite: bool = False) -> T:
+    def get_item(
+        self, key: str | None, cls: type[T], allow_overwrite: bool = False
+    ) -> T:
         """获得一个元素
 
         Args:
-            key (str): 这个元素的键
+            key (str | None): 这个元素的键
             cls (type[T]): Pydantic 模型
             allow_overwrite (bool, optional): 是否允许在出错时重写。如果不允许，则会抛出错误
 
@@ -81,37 +83,43 @@ class LocalStorage:
                 ```
         """
         self.load()
-        val = self.data.get(key, {})
+        if key is None:
+            val = self.data
+        else:
+            val = self.data.get(key, {})
         try:
             return cls.model_validate(val)
         except ValidationError as e:
             logger.warning(f"在验证数据时出错：{e}")
             if allow_overwrite or key not in self.data:
                 data = cls()
-                self.data[key] = data.model_dump()
+                self.set_item(key, data)
                 return data
             else:
                 raise e from e
 
-    def set_item(self, key: str, val: BaseModel | dict[str, Any]):
+    def set_item(self, key: str | None, val: BaseModel | dict[str, Any]):
         """设置 LocalStorage 的值
 
         Args:
-            key (str): 键
+            key (str | None): 键
             val (BaseModel | dict[str, Any]): 值
         """
         if isinstance(val, BaseModel):
             val = val.model_dump(mode="json")
-        self.data[key] = val
+        if key is None:
+            self.data = val
+        else:
+            self.data[key] = val
         self.write()
 
     def context(
-        self, key: str, cls: type[T], allow_overwrite: bool = False
+        self, key: str | None, cls: type[T], allow_overwrite: bool = False
     ) -> "LocalStorageContext[T]":
         """获得一个用于更改数据的上下文
 
         Args:
-            key (str): 键
+            key (str | None): 键
             cls (type[T]): Pydantic 类型
             allow_overwrite (bool, optional): 是否允许在出错时覆盖数据
 
@@ -137,7 +145,7 @@ class LocalStorageContext(Generic[T]):
     持久化数据的上下文管理
     """
 
-    def __init__(self, data: T, parent: LocalStorage, parent_key: str) -> None:
+    def __init__(self, data: T, parent: LocalStorage, parent_key: str | None) -> None:
         self.data = data
         self.parent = parent
         self.parent_key = parent_key
@@ -162,9 +170,7 @@ class LocalStorageContext(Generic[T]):
             f"尝试获取当前上下文的锁 DATA_CLASS={self.data.__class__.__name__}"
         )
         await self.parent.lock.acquire()
-        logger.debug(
-            f"成功获取上下文的锁 DATA_CLASS={self.data.__class__.__name__}"
-        )
+        logger.debug(f"成功获取上下文的锁 DATA_CLASS={self.data.__class__.__name__}")
         return self.__enter__()
 
     async def __aexit__(
@@ -174,7 +180,5 @@ class LocalStorageContext(Generic[T]):
         exc_tb: TracebackType | None,
     ):
         self.parent.lock.release()
-        logger.debug(
-            f"释放了上下文的锁 DATA_CLASS={self.data.__class__.__name__}"
-        )
+        logger.debug(f"释放了上下文的锁 DATA_CLASS={self.data.__class__.__name__}")
         return self.__exit__(exc_type, exc_cal, exc_tb)

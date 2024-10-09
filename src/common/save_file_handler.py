@@ -135,7 +135,7 @@ async def pack_save(filename: str | None = None):
     Returns:
         Path: 压缩包存到了哪里
     """
-    await collect_images()
+    # await collect_images()
 
     filename = filename or f"save-{now_datetime().strftime('%Y-%m-%dT%H_%M_%S')}.zip"
     fp = pathlib.Path("./data/backup/") / filename

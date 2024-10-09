@@ -21,6 +21,12 @@ class ModelElement(BaseModel):
     b: int
 
 
+class ModelData(BaseModel):
+    data_a: ModelA = ModelA()
+    data_b: ModelB = ModelB()
+    number: int = 0
+
+
 class ModelBase(BaseModel):
     ls: list[ModelElement] = []
 
@@ -57,6 +63,14 @@ class TestBaseFunction(TestCase):
             item = ls.get_item("test2", ModelB)
             self.assertTrue(item.boolean_value)
             self.assertEqual(item.int_value, 0)
+            item.int_value = 100
+            ls.set_item("test2", item)
+            
+            # 测试数据的降级
+            item = ls.get_item("test2", ModelA)
+            ls.set_item("test2", item)
+            item = ls.get_item("test2", ModelB)
+            self.assertEqual(item.int_value, 0)
 
             # 测试上下文
             with ls.context("test10", ModelB) as data:
@@ -65,6 +79,24 @@ class TestBaseFunction(TestCase):
 
             with ls2.context("test10", ModelB) as data:
                 self.assertTrue(data.boolean_value)
+                self.assertEqual(data.int_value, 114)
+
+    def test_none(self):
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d)
+            fp = base / "test.json"
+            ls = LocalStorage(fp)
+
+            # 测试全局类型的读写
+            with ls.context(None, ModelData) as data:
+                self.assertEqual(data.number, 0)
+                data.number = 1
+                data.data_b.int_value = 114
+
+            with ls.context(None, ModelData) as data:
+                self.assertEqual(data.number, 1)
+
+            with ls.context("data_b", ModelB) as data:
                 self.assertEqual(data.int_value, 114)
 
     def test_list(self):
