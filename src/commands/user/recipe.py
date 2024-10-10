@@ -151,9 +151,14 @@ def bind_dialog(
     flags: set[str]
     if not hua_out:
         diag_from = DialogFrom.hecheng_normal
-        if random.random() < 0.1:
-            flags = set(("__aqu",))
-        elif (oaid := data.output.info.aid) in (9, 34, 98):
+        if random.random() < 0.3:
+            if is_strange(data):
+                flags = set(("aqu_zero",))
+            elif (oaid := data.output.info.aid) in (9, 34, 75, 98):
+                flags = set((f"aqu_out{oaid}",))
+            else:
+                flags = set((f"aqu_outlv{data.output.info.level.lid}",))
+        elif (oaid := data.output.info.aid) in (9, 34, 98, 516):
             flags = set((f"out{oaid}",))
         elif is_strange(data):
             flags = set(("zero",))

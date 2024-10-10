@@ -1,4 +1,5 @@
 from arclet.alconna import Alconna, Arg, Arparma, Option
+from loguru import logger
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectNotFoundException
@@ -258,3 +259,41 @@ async def _(ctx: MessageContext, res: Arparma):
                 seen.add(recipe_id[1])
 
     await ctx.send(f"{ name }的所有配方：\n" + "".join(msg))
+
+
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna(
+        ["::"],
+        "re:(test_zero)",
+    )
+)
+async def _(ctx: MessageContext, _: Arparma):
+    async with get_unit_of_work() as uow:
+        msg = "所有通用小哥配方：\n"
+        for i in range(1, 20713):
+            info = await uow.recipes.get_recipe_info(i)
+            if info is None:
+                continue
+            if (await uow.awards.get_info(info.aid1)).level.lid == 0:
+                continue
+            if (await uow.awards.get_info(info.aid2)).level.lid == 0:
+                continue
+            if (await uow.awards.get_info(info.aid3)).level.lid == 0:
+                continue
+            if await uow.pack.get_main_pack(info.aid1) > 0:
+                continue
+            if await uow.pack.get_main_pack(info.aid2) > 0:
+                continue
+            if await uow.pack.get_main_pack(info.aid3) > 0:
+                continue
+
+            logger.info(f"{i} 号准备就绪")
+            n1 = (await uow.awards.get_info(info.aid1)).name
+            n2 = (await uow.awards.get_info(info.aid2)).name
+            n3 = (await uow.awards.get_info(info.aid3)).name
+            nr = (await uow.awards.get_info(info.result)).name
+            msg += f"{i}: {n1} {n2} {n3} -> {nr}\n"
+    
+        await ctx.send(msg)
