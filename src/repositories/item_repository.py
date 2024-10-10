@@ -49,7 +49,8 @@ class ItemRepository(DBRepository):
         """
         await self.assure(uid, item_id)
         q = select(ItemInventory.count, ItemInventory.stats).where(
-            ItemInventory.uid == uid
+            ItemInventory.uid == uid,
+            ItemInventory.item_id == item_id,
         )
         r = await self.session.execute(q)
         return r.tuples().one()
@@ -78,3 +79,14 @@ class ItemRepository(DBRepository):
             raise LackException(item_id, delta, count + delta)
         await self.set(uid, item_id, count, stats)
         return count
+
+    async def get_dict(self, uid: int) -> dict[str, tuple[int, int]]:
+        """
+        获得拥有量和统计量的字典
+        """
+        q = select(
+            ItemInventory.item_id, ItemInventory.count, ItemInventory.stats
+        ).where(ItemInventory.uid == uid)
+        r = await self.session.execute(q)
+        d = {i: (c, s) for i, c, s in r.tuples().all()}
+        return d

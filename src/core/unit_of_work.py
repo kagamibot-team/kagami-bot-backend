@@ -24,7 +24,9 @@ from typing import Self
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.lock_manager import get_lock
+from src.models.item import ItemInventory
 from src.models.level import level_repo
+from src.repositories.item_repository import ItemRepository
 from src.repositories.skin_inventory_repository import SkinInventoryRepository
 from src.repositories.stats_repository import StatsRepository
 from src.repositories.up_pool_repository import PackRepository, UpPoolRepository
@@ -171,6 +173,10 @@ class UnitOfWork:
     @property
     def stats(self):
         return StatsRepository(self.session)
+    
+    @property
+    def items(self):
+        return ItemRepository(self.session)
 
 
 def get_unit_of_work(qqid: str | int | None = None):
