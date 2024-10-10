@@ -16,5 +16,6 @@ class ItemInventory(Base, BaseMixin):
     __tablename__ = "catch_item_inventory"
 
     item_id: Mapped[str] = mapped_column()
-    count: Mapped[int] = mapped_column()
+    count: Mapped[int] = mapped_column(default=0, server_default="0")
+    stats: Mapped[int] = mapped_column(default=0, server_default="0")
     uid = Column(Integer, ForeignKey("catch_user_data.data_id", ondelete="CASCADE"))
