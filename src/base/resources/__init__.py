@@ -32,7 +32,7 @@ class Resource(BaseModel):
             width = None
         if height is not None and height <= 0:
             height = None
-            
+
         # 生成文件名
         fn = self.get_hash()
         if width is not None:

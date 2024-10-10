@@ -1,8 +1,7 @@
 import asyncio
 import re
 from functools import partial
-from typing import (Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple,
-                    Unpack)
+from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple, Unpack
 
 from arclet.alconna import Alconna, Arparma
 from arclet.alconna.exceptions import ArgumentMissing, ParamsUnmatched
