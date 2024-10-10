@@ -150,7 +150,7 @@ def bind_dialog(
 
     flags: set[str]
     if not hua_out:
-        diag_from = DialogFrom.hecheng_normal
+        dialog_from = DialogFrom.hecheng_normal
         if random.random() < 0.3:
             if is_strange(data):
                 flags = set(("aqu_zero",))
@@ -166,7 +166,7 @@ def bind_dialog(
             lvin = max(map(lambda info: info.level.lid, data.inputs))
             flags = set((f"lv{lvin}_lv{data.output.info.level.lid}",))
     else:
-        diag_from = DialogFrom.hecheng_huaout
+        dialog_from = DialogFrom.hecheng_huaout
         if is_strange(data):
             flags = set(("zero",))
         elif (oaid := data.output.info.aid) in (9, 34, 75, 98):
@@ -174,7 +174,7 @@ def bind_dialog(
         else:
             flags = set((f"outlv{data.output.info.level.lid}",))
 
-    data.dialog = random.choice(get_dialog(diag_from, flags))
+    data.dialog = random.choice(get_dialog(dialog_from, flags))
 
 
 @listen_message()

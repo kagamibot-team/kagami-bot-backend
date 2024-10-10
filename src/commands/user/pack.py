@@ -1,4 +1,5 @@
 from typing import Any
+from random import Random
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import UniMessage
@@ -64,6 +65,7 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
 
     # 判断现在是不是活动状态，如果是，则将对话源切换为鸽子的
     async with global_flags() as data:
+        hua_out = data.activity_hua_out
         dialog_from = (
             DialogFrom.liechang_huaout
             if data.activity_hua_out
@@ -71,13 +73,23 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
         )
 
     # 从文件中读取对话清单
-    dialogs = get_dialog(dialog_from)
-
+    random = get_random()
+    flags: set[str]
+    if hua_out:
+        dialog_from = DialogFrom.liechang_huaout
+        flags = set(("p",))
+    else:
+        dialog_from = DialogFrom.liechang_normal
+        if random.random() < 0.25:
+            flags = set(("p",))
+        else:
+            flags = set(("l",))
+        
     return LiechangData(
         packs=packs,
         user=user,
         selecting=await uow.user_pack.get_using(uid),
-        dialogue=get_random().choice(dialogs),
+        dialogue=random.choice(get_dialog(dialog_from, flags)),
         chips=int(await uow.money.get(uid)),
     )
 
