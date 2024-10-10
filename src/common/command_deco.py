@@ -1,3 +1,4 @@
+import asyncio
 import re
 from functools import partial
 from typing import Any, Callable, Coroutine, Sequence, TypeVar, TypeVarTuple, Unpack
@@ -8,7 +9,6 @@ from loguru import logger
 from nonebot import get_driver
 from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import UniMessage
-
 from selenium.common.exceptions import WebDriverException
 
 from src.base.command_events import GroupContext, MessageContext
@@ -152,7 +152,7 @@ def listen_message(manager: EventDispatcher = root, priority: int = 0):
 
     def wrapper(func: Callable[[GroupContext], Coroutine[Any, Any, T]]):
         manager.listen(GroupContext, priority=priority)(
-            kagami_exception_handler()(func)
+            limit_no_spam(kagami_exception_handler()(func))
         )
 
     return wrapper
@@ -272,6 +272,28 @@ def limited(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
                 return
 
         await func(ctx, *args)
+
+    return _func
+
+
+NO_SPAM_LOCKS: dict[int, asyncio.Lock] = {}
+
+
+def limit_no_spam(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
+    """
+    限制不能够疯狂刷屏的指令
+    """
+
+    async def _func(ctx: TE, *arg: *TA):
+        if ctx.sender_id not in NO_SPAM_LOCKS:
+            NO_SPAM_LOCKS[ctx.sender_id] = asyncio.Lock()
+
+        lock = NO_SPAM_LOCKS[ctx.sender_id]
+        if lock.locked():
+            return
+
+        async with lock:
+            await func(ctx, *arg)
 
     return _func
 

@@ -65,7 +65,7 @@ class TestBaseFunction(TestCase):
             self.assertEqual(item.int_value, 0)
             item.int_value = 100
             ls.set_item("test2", item)
-            
+
             # 测试数据的降级
             item = ls.get_item("test2", ModelA)
             ls.set_item("test2", item)

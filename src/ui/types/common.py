@@ -114,7 +114,7 @@ class HuaOutMessage(BaseModel):
 
 
 def get_msg_cooldown() -> float:
-    return 600.0 if get_driver().env != 'dev' else 10.0
+    return 600.0 if get_driver().env != "dev" else 10.0
 
 
 class GlobalFlags(BaseModel):

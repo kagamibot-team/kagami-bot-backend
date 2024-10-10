@@ -295,5 +295,5 @@ async def _(ctx: MessageContext, _: Arparma):
             n3 = (await uow.awards.get_info(info.aid3)).name
             nr = (await uow.awards.get_info(info.result)).name
             msg += f"{i}: {n1} {n2} {n3} -> {nr}\n"
-    
+
         await ctx.send(msg)
