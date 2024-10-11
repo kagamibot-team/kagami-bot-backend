@@ -117,19 +117,6 @@ def require_admin():
     return wrapper
 
 
-def requireOperatorInGroup():
-    """限制只有小镜是管理员的群才能执行该命令。"""
-
-    def wrapper(func: Callable[[GroupContext, *TA], Coroutine[Any, Any, T]]):
-        async def inner(ctx: GroupContext, *args: Unpack[TA]):
-            if await ctx.is_group_admin():
-                return await func(ctx, *args)
-
-        return inner
-
-    return wrapper
-
-
 def debug_only():
     """限制只有 DEV 环境下才能执行该命令。"""
 
@@ -296,16 +283,3 @@ def limit_no_spam(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
             await func(ctx, *arg)
 
     return _func
-
-
-__all__ = [
-    "match_alconna",
-    "match_regex",
-    "match_literal",
-    "require_admin",
-    "requireOperatorInGroup",
-    "debug_only",
-    "listen_message",
-    "interval_at_start",
-    "timeout_at_start",
-]

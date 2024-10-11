@@ -4,6 +4,7 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 
 from src.base.command_events import MessageContext
+from src.base.exceptions import KagamiArgumentException, KagamiRangeError
 from src.base.resources import Resource, static_res
 from src.core.unit_of_work import UnitOfWork
 
@@ -13,6 +14,18 @@ T = TypeVar("T")
 class UseItemArgs(BaseModel):
     count: int = 1
     target_uid: int | None = None
+
+    def require_count_range(self, n_min: int | None = None, n_max: int | None = None):
+        if n_min is not None and self.count < n_min:
+            raise KagamiRangeError("物品数量", f"至少为 {n_min}", self.count)
+        if n_max is not None and self.count > n_max:
+            raise KagamiRangeError("物品数量", f"不超过 {n_max}", self.count)
+        
+    def require_target(self, required: bool = True):
+        if required and self.target_uid is None:
+            raise KagamiArgumentException("要制定一个人哦")
+        elif not required and self.target_uid is not None:
+            raise KagamiArgumentException("不用制定目标哦")
 
 
 class BaseItem(BaseModel, Generic[T], ABC):
@@ -46,6 +59,12 @@ class BaseItem(BaseModel, Generic[T], ABC):
         """
         能否使用这个物品，如果需要更改逻辑，请重载这个函数
         """
+
+    async def use_item_in_db(self, uow: UnitOfWork, uid: int, count: int):
+        """
+        在数据库中使用对应数量的当前物品
+        """
+        return await uow.items.use(uid, self.name, count)
 
     @abstractmethod
     async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> T:

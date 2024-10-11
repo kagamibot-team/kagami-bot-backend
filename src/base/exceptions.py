@@ -200,13 +200,13 @@ class KagamiRenderException(KagamiCoreException):
         )
 
 
-class CDKeyException(KagamiCoreException):
-    """兑换 CDKey 时的报错的基类"""
+class KagamiArgumentException(KagamiCoreException):
+    """其他参数有误时的报错"""
+
+    def __init__(self, arg: str) -> None:
+        super().__init__()
+        self.arg = arg
 
     @property
     def message(self) -> str:
-        return "兑换 CDKey 的时候出现了错误！"
-
-
-class CDKeyNoAttempt(CDKeyException):
-    """CDKey 尝试次数达到上限"""
+        return f"{self.arg}"
