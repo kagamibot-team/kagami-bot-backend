@@ -617,10 +617,8 @@ updates = [
             ),
         ],
     ),
-    VersionData(
-        version="1.2.5",
-        updates=[UpdateContentData(content="常规更新")],
-    ),
+    VersionData(version="1.2.5", updates=[UpdateContentData(content="常规更新")]),
+    VersionData(version="1.2.6", updates=[UpdateContentData(content="更改了一些对话")]),
 ]
 
 
