@@ -116,7 +116,7 @@ class Achievement(BaseModel, ABC):
         return await uow.user_flag.have(uid, self.flag)
 
     @abstractmethod
-    async def validate_achievement(
+    async def is_achievement_completed(
         self, uow: UnitOfWork, event: UserDataUpdatedEvent
     ) -> bool:
         """判断一个人有没有达成成就的条件
@@ -160,7 +160,7 @@ class DummyAchievement(Achievement):
 
     dummy_data: str
 
-    async def validate_achievement(
+    async def is_achievement_completed(
         self, uow: UnitOfWork, event: UserDataUpdatedEvent
     ) -> bool:
         if not isinstance(event, DummyEvent):
@@ -194,7 +194,7 @@ class AchievementService:
         for a in self.achievements:
             if await a.have_got(uow, event.uid):
                 continue
-            if await a.validate_achievement(uow, event):
+            if await a.is_achievement_completed(uow, event):
                 await a.prise(uow, event.uid)
                 await uow.user_flag.add(event.uid, a.flag)
                 achieved.append(a)
