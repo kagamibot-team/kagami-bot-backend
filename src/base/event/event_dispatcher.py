@@ -46,6 +46,7 @@ class EventDispatcher:
 
     listeners: dict[type[Any], PriorityList[Listener[Any]]]
     linked: set["EventDispatcher"]
+    parents: set["EventDispatcher"]
 
     def __init__(self) -> None:
         self.listeners = {}
