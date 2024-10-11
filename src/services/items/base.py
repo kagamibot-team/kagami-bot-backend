@@ -1,7 +1,13 @@
+from abc import ABC, abstractmethod
+from typing import Any, Generic, TypeVar
+
 from pydantic import BaseModel
 
+from src.base.command_events import MessageContext
 from src.base.resources import Resource, static_res
 from src.core.unit_of_work import UnitOfWork
+
+T = TypeVar("T")
 
 
 class UseItemArgs(BaseModel):
@@ -9,9 +15,10 @@ class UseItemArgs(BaseModel):
     target_uid: int | None = None
 
 
-class BaseItem(BaseModel):
+class BaseItem(BaseModel, Generic[T], ABC):
     """
-    物品的基类
+    物品的基类。其中的泛型 T 是在函数间进行信息传输的量。
+    在继承的时候，请使用泛型类的方式声明这个类型
     """
 
     name: str
@@ -34,19 +41,34 @@ class BaseItem(BaseModel):
     物品的物品组
     """
 
+    @abstractmethod
     async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
         """
         能否使用这个物品，如果需要更改逻辑，请重载这个函数
         """
-        return False
 
-    async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> None:
+    @abstractmethod
+    async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> T:
         """
         使用这个物品触发的逻辑，如果需要更改逻辑，请重载这个函数。
         在这里，你需要实现物品减少的逻辑，并告知用于你使用了这个物品的相关消息。
-
-        在这里发送消息，你需要从 src.base.onebot.onebot_tools 中导入 tell 函数。
         """
+
+    @abstractmethod
+    async def send_use_message(self, ctx: MessageContext, data: T):
+        """
+        在这里，实现告知玩家物品使用结果的逻辑。
+        """
+
+
+class UnuseableItem(BaseItem[None]):
+    async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
+        return False
+
+    async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> None:
+        return None
+
+    async def send_use_message(self, ctx: MessageContext, data: None):
         return None
 
 
@@ -61,12 +83,12 @@ class ItemService:
     物品服务
     """
 
-    items: dict[str, BaseItem]
+    items: dict[str, BaseItem[Any]]
 
     def __init__(self) -> None:
         self.items = {}
 
-    def register(self, item: BaseItem) -> None:
+    def register(self, item: BaseItem[Any]) -> None:
         assert (
             item.name not in self.items
         ), f"物品名 {item.name} 发生冲突了，请检查是否有重复注册"
@@ -119,7 +141,7 @@ def get_item_service() -> ItemService:
     return _global_service
 
 
-def register_item(item: BaseItem):
+def register_item(item: BaseItem[Any]):
     """
     注册物品
     """
