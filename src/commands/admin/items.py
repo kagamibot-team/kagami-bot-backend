@@ -1,22 +1,26 @@
 from re import Match
 
+from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_alconna import At, Reply, Text
+
 from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_dispatcher import EventDispatcher
-from src.common.command_deco import match_regex, require_admin
+from src.base.event.event_root import root
+from src.common.command_deco import kagami_exception_handler, limit_no_spam, match_regex, require_admin
 from src.core.unit_of_work import get_unit_of_work
-from src.services.items.base import get_item_service
-from nonebot.adapters.onebot.v11 import MessageSegment
-
+from src.services.items.base import ItemService, UseItemArgs, get_item_service
 
 dispatcher = EventDispatcher()
 
 
 @dispatcher.listen(MessageContext)
+@kagami_exception_handler()
+@limit_no_spam
 @require_admin()
-@match_regex(r"^::背包 ?(\d+)?$")
+@match_regex(r"^(::)?背包 ?(\d+)?$")
 async def _(ctx: MessageContext, res: Match[str]):
-    _target: str | None = res.group(1)
+    # _admin_key = res.group(1) is not None
+    _target: str | None = res.group(2)
     if _target is None:
         target = ctx.sender_id
     else:
@@ -31,6 +35,8 @@ async def _(ctx: MessageContext, res: Match[str]):
 
 
 @dispatcher.listen(MessageContext)
+@kagami_exception_handler()
+@limit_no_spam
 @require_admin()
 async def _(ctx: MessageContext):
     msg = ctx.message
@@ -38,6 +44,7 @@ async def _(ctx: MessageContext):
     use_keyword: bool = False
     use_name: str | None = None
     for part in msg:
+        print(use_target, use_keyword, use_name, part)
         if isinstance(part, At):
             if use_target is None:
                 use_target = int(part.target)
@@ -46,7 +53,11 @@ async def _(ctx: MessageContext):
         elif isinstance(part, Reply):
             if use_target is not None:
                 return
-            if part.origin is not None and isinstance((origin:=part.origin), MessageSegment) and isinstance(ctx, GroupContext):
+            if (
+                part.origin is not None
+                and isinstance((origin := part.origin), MessageSegment)
+                and isinstance(ctx, GroupContext)
+            ):
                 msgid: str | None = origin.data.get("id", None)
                 if msgid is None:
                     continue
@@ -59,4 +70,47 @@ async def _(ctx: MessageContext):
                     return
                 use_target = int(uid)
         elif isinstance(part, Text):
-            ...
+            content = part.text
+            content = content.replace("\n", " ").replace("\t", " ")
+            for word in content.split(" "):
+                if word.startswith("使用"):
+                    word = word[2:]
+                    use_keyword = True
+                    word = word.strip()
+                if len(word) > 0 and use_name is not None:
+                    return
+                elif len(word) > 0:
+                    use_name = word
+
+    if not use_keyword or use_name is None:
+        return
+
+    async with get_unit_of_work() as uow:
+        isv = get_item_service()
+        item = isv.get_item_strong(use_name)
+        arg = UseItemArgs(count=1, target_uid=use_target)
+        uid = await uow.users.get_uid(ctx.sender_id)
+        data = await item.use(uow, uid, arg)
+        await item.send_use_message(ctx, data)
+
+
+@dispatcher.listen(MessageContext)
+@kagami_exception_handler()
+@require_admin()
+@match_regex(r"^::给物品 (\d+) (.+?)( -?\d+)?$")
+async def _(ctx: MessageContext, res: Match[str]):
+    target = int(res.group(1))
+    item_name: str = res.group(2)
+    item_count = int(res.group(3) or 1)
+
+    async with get_unit_of_work() as uow:
+        isv = ItemService()
+        _item = isv.get_item(item_name)
+        if _item is not None:
+            item_name = _item.name
+        await uow.items.give(await uow.users.get_uid(target), item_name, item_count)
+
+    await ctx.reply("ok.")
+
+
+root.link(dispatcher)

@@ -184,8 +184,8 @@ def kagami_exception_handler():
     当有小镜 Bot 内部抛出的 KagamiCoreException 错误时，把错误告知给用户。
     """
 
-    def deco(func: Callable[[GroupContext], Coroutine[None, None, T]]):
-        async def inner(ctx: GroupContext) -> T | None:
+    def deco(func: Callable[[TE], Coroutine[None, None, T]]):
+        async def inner(ctx: TE) -> T | None:
             try:
                 return await func(ctx)
             except ArgumentMissing as e:

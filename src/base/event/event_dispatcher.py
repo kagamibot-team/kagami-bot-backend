@@ -100,7 +100,7 @@ class EventDispatcher:
                         break
         for node in self.linked:
             await node.emit(evt, proceeded_dispatcher | {self})
-        logger.debug(f"Event {repr(evt)} emitted in {time.time() - begin}s")
+        logger.trace(f"Event {repr(evt)} emitted in {time.time() - begin}s")
 
     async def throw(
         self, evt: Any, proceeded_dispatcher: set["EventDispatcher"] | None = None

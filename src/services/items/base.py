@@ -4,7 +4,7 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 
 from src.base.command_events import MessageContext
-from src.base.exceptions import KagamiArgumentException, KagamiRangeError
+from src.base.exceptions import KagamiArgumentException, KagamiRangeError, ObjectNotFoundException
 from src.base.resources import Resource, static_res
 from src.core.unit_of_work import UnitOfWork
 
@@ -20,7 +20,7 @@ class UseItemArgs(BaseModel):
             raise KagamiRangeError("物品数量", f"至少为 {n_min}", self.count)
         if n_max is not None and self.count > n_max:
             raise KagamiRangeError("物品数量", f"不超过 {n_max}", self.count)
-        
+
     def require_target(self, required: bool = True):
         if required and self.target_uid is None:
             raise KagamiArgumentException("要制定一个人哦")
@@ -53,6 +53,9 @@ class BaseItem(BaseModel, Generic[T], ABC):
     """
     物品的物品组
     """
+
+    alt_names: set[str] = set()
+    "物品的别名"
 
     @abstractmethod
     async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
@@ -107,11 +110,23 @@ class ItemService:
     def __init__(self) -> None:
         self.items = {}
 
+    def get_item(self, item_name: str) -> BaseItem[Any] | None:
+        return self.items.get(item_name, None)
+    
+    def get_item_strong(self, item_name: str) -> BaseItem[Any]:
+        item = self.get_item(item_name)
+        if item is None:
+            raise ObjectNotFoundException("物品")
+        return item
+
     def register(self, item: BaseItem[Any]) -> None:
-        assert (
-            item.name not in self.items
-        ), f"物品名 {item.name} 发生冲突了，请检查是否有重复注册"
-        self.items[item.name] = item
+        self._register(item.name, item)
+        for alt in item.alt_names:
+            self._register(alt, item)
+
+    def _register(self, name: str, item: BaseItem[Any]) -> None:
+        assert name not in self.items, f"物品名 {name} 发生冲突了，请检查是否有重复注册"
+        self.items[name] = item
 
     async def get_inventory_displays(
         self, uow: UnitOfWork, uid: int | None
@@ -124,6 +139,7 @@ class ItemService:
 
         if uid is not None:
             inventory = await uow.items.get_dict(uid)
+            print(inventory)
             for key, (count, stats) in inventory.items():
                 if key not in self.items:
                     continue
