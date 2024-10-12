@@ -619,6 +619,21 @@ updates = [
     ),
     VersionData(version="1.2.5", updates=[UpdateContentData(content="常规更新")]),
     VersionData(version="1.2.6", updates=[UpdateContentData(content="更改了一些对话")]),
+    VersionData(
+        version="1.2.7",
+        updates=[
+            UpdateContentData(
+                content="更换字体，以解决“忽”、“耀”等字显示错误的问题。", tags=["界面"]
+            ),
+            UpdateContentData(
+                content="榆木华：抓进度与库存中，装备了皮肤的小哥现在将显示皮肤。",
+                tags=["界面"],
+            ),
+            UpdateContentData(
+                content="榆木华：修正了抓小哥界面 1 号猎场不显示的问题。", tags=["界面"]
+            ),
+        ],
+    ),
 ]
 
 

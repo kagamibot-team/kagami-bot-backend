@@ -7,6 +7,7 @@ from src.base.exceptions import KagamiRangeError
 from src.common.command_deco import listen_message, match_alconna, match_regex
 from arclet.alconna import Alconna, Arg, Arparma, Option
 
+from src.common.data.awards import get_award_info
 from src.common.data.user import get_user_data
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import Level
@@ -104,6 +105,8 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         user = await get_user_data(ctx, uow)
         aids = await uow.awards.get_aids()
         infos = list((await uow.awards.get_info_dict(aids)).values())
+        for index, value in enumerate(infos):
+            infos[index] = await get_award_info(uow, infos[index].aid, user.uid)
         inventory_dict = await uow.inventories.get_inventory_dict(user.uid, aids)
 
     storage_dict = {i: v[0] for i, v in inventory_dict.items()}
@@ -168,7 +171,10 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             if await uow.pack.get_main_pack(aid) <= pack_max:
                 aids.append(aid)
         aids.sort()
+
         infos = await uow.awards.get_info_dict(aids)
+        for aid in infos:
+            infos[aid] = await get_award_info(uow, aid, user.uid)
 
         inventory_dict = await uow.inventories.get_inventory_dict(user.uid, aids)
 
