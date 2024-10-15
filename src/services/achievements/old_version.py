@@ -17,7 +17,7 @@ class AllOneStarAchievement(NoPriseAchievement):
     name: str = "七(一)星连珠"
     description: str = "嗯……一次性抽到七个一星！？"
 
-    async def validate_achievement(
+    async def is_achievement_completed(
         self, uow: UnitOfWork, event: UserDataUpdatedEvent
     ) -> bool:
         if not isinstance(event, UserTryCatchEvent):
@@ -35,7 +35,7 @@ class NiceCatchAchievement(NoPriseAchievement):
     name: str = "欧皇附体"
     description: str = "一次抓到了两个四星（或者以上）"
 
-    async def validate_achievement(
+    async def is_achievement_completed(
         self, uow: UnitOfWork, event: UserDataUpdatedEvent
     ) -> bool:
         if not isinstance(event, UserTryCatchEvent):
@@ -54,7 +54,7 @@ class TimerAchievement(NoPriseAchievement):
     name: str = "读秒大师"
     description: str = "什么！剩余零秒？！"
 
-    async def validate_achievement(
+    async def is_achievement_completed(
         self, uow: UnitOfWork, event: UserDataUpdatedEvent
     ) -> bool:
         if not isinstance(event, UserTryCatchEvent):
@@ -66,7 +66,7 @@ class TripleAchivement(NoPriseAchievement):
     name: str = "三 小 哥"
     description: str = "一次抓到三个同一个小哥？"
 
-    async def validate_achievement(
+    async def is_achievement_completed(
         self, uow: UnitOfWork, event: UserDataUpdatedEvent
     ) -> bool:
         if not isinstance(event, UserTryCatchEvent):
@@ -86,7 +86,7 @@ class MergeTripleAchievement(Achievement):
 
     display_rule: DisplayRule = DisplayRule.hide_until_achieve
 
-    async def validate_achievement(
+    async def is_achievement_completed(
         self, uow: UnitOfWork, event: UserDataUpdatedEvent
     ) -> bool:
         if not isinstance(event, MergeEvent):

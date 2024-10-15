@@ -115,7 +115,7 @@ class Config(BaseModel):
     frontend_dist: str = "./frontend/"
     "前端文件的地址"
 
-    browser_count: int = 3
+    browser_count: int = 1
     "打开的浏览器数量"
 
     render_host: str = "127.0.0.1"

@@ -1,17 +1,37 @@
+from abc import ABC, abstractmethod
+from typing import Any, Generic, TypeVar
+
 from pydantic import BaseModel
 
+from src.base.command_events import MessageContext
+from src.base.exceptions import KagamiArgumentException, KagamiRangeError, ObjectNotFoundException
 from src.base.resources import Resource, static_res
 from src.core.unit_of_work import UnitOfWork
+
+T = TypeVar("T")
 
 
 class UseItemArgs(BaseModel):
     count: int = 1
     target_uid: int | None = None
 
+    def require_count_range(self, n_min: int | None = None, n_max: int | None = None):
+        if n_min is not None and self.count < n_min:
+            raise KagamiRangeError("物品数量", f"至少为 {n_min}", self.count)
+        if n_max is not None and self.count > n_max:
+            raise KagamiRangeError("物品数量", f"不超过 {n_max}", self.count)
 
-class BaseItem(BaseModel):
+    def require_target(self, required: bool = True):
+        if required and self.target_uid is None:
+            raise KagamiArgumentException("要制定一个人哦")
+        elif not required and self.target_uid is not None:
+            raise KagamiArgumentException("不用制定目标哦")
+
+
+class BaseItem(BaseModel, Generic[T], ABC):
     """
-    物品的基类
+    物品的基类。其中的泛型 T 是在函数间进行信息传输的量。
+    在继承的时候，请使用泛型类的方式声明这个类型
     """
 
     name: str
@@ -34,19 +54,43 @@ class BaseItem(BaseModel):
     物品的物品组
     """
 
+    alt_names: set[str] = set()
+    "物品的别名"
+
+    @abstractmethod
     async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
         """
         能否使用这个物品，如果需要更改逻辑，请重载这个函数
         """
-        return False
 
-    async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> None:
+    async def use_item_in_db(self, uow: UnitOfWork, uid: int, count: int):
+        """
+        在数据库中使用对应数量的当前物品
+        """
+        return await uow.items.use(uid, self.name, count)
+
+    @abstractmethod
+    async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> T:
         """
         使用这个物品触发的逻辑，如果需要更改逻辑，请重载这个函数。
         在这里，你需要实现物品减少的逻辑，并告知用于你使用了这个物品的相关消息。
-
-        在这里发送消息，你需要从 src.base.onebot.onebot_tools 中导入 tell 函数。
         """
+
+    @abstractmethod
+    async def send_use_message(self, ctx: MessageContext, data: T):
+        """
+        在这里，实现告知玩家物品使用结果的逻辑。
+        """
+
+
+class UnuseableItem(BaseItem[None]):
+    async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
+        return False
+
+    async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> None:
+        return None
+
+    async def send_use_message(self, ctx: MessageContext, data: None):
         return None
 
 
@@ -61,16 +105,28 @@ class ItemService:
     物品服务
     """
 
-    items: dict[str, BaseItem]
+    items: dict[str, BaseItem[Any]]
 
     def __init__(self) -> None:
         self.items = {}
 
-    def register(self, item: BaseItem) -> None:
-        assert (
-            item.name not in self.items
-        ), f"物品名 {item.name} 发生冲突了，请检查是否有重复注册"
-        self.items[item.name] = item
+    def get_item(self, item_name: str) -> BaseItem[Any] | None:
+        return self.items.get(item_name, None)
+    
+    def get_item_strong(self, item_name: str) -> BaseItem[Any]:
+        item = self.get_item(item_name)
+        if item is None:
+            raise ObjectNotFoundException("物品")
+        return item
+
+    def register(self, item: BaseItem[Any]) -> None:
+        self._register(item.name, item)
+        for alt in item.alt_names:
+            self._register(alt, item)
+
+    def _register(self, name: str, item: BaseItem[Any]) -> None:
+        assert name not in self.items, f"物品名 {name} 发生冲突了，请检查是否有重复注册"
+        self.items[name] = item
 
     async def get_inventory_displays(
         self, uow: UnitOfWork, uid: int | None
@@ -83,6 +139,7 @@ class ItemService:
 
         if uid is not None:
             inventory = await uow.items.get_dict(uid)
+            print(inventory)
             for key, (count, stats) in inventory.items():
                 if key not in self.items:
                     continue
@@ -119,7 +176,7 @@ def get_item_service() -> ItemService:
     return _global_service
 
 
-def register_item(item: BaseItem):
+def register_item(item: BaseItem[Any]):
     """
     注册物品
     """

@@ -40,7 +40,12 @@ class MessageContext(ABC):
     async def send(self, message: UniMessage[Any] | str) -> Any: ...
 
     @abstractmethod
-    async def reply(self, message: UniMessage[Any] | str) -> Any: ...
+    async def reply(
+        self,
+        message: UniMessage[Any] | str,
+        ref: bool = False,
+        at: bool = True,
+    ) -> Any: ...
 
     @abstractmethod
     async def get_sender_name(self) -> str: ...
@@ -88,7 +93,7 @@ class OnebotContext(MessageContext, Generic[TE]):
         message: Iterable[Any] | str,
         ref: bool = False,
         at: bool = True,
-    ):
+    ) -> Any:
         """回复从 Context 来的消息
 
         Args:

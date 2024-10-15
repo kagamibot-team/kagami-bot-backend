@@ -23,6 +23,7 @@ def load_secret_code(root: EventDispatcher):
 
 def init_src():
     from src.base.event.event_root import activate_root, root
+    from src.services.items import register_inner_items
 
     from .apis.init import init_routers
     from .auto_reload import init
@@ -32,6 +33,7 @@ def init_src():
     init()
     init_routers()
     register_old_version_achievements()
+    register_inner_items()
     DatabaseManager.init_single()
 
     if get_config().load_secret_code:
