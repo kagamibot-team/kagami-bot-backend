@@ -1,6 +1,8 @@
-from sqlalchemy import insert, select, update, delete
+from dataclasses import dataclass
+from sqlalchemy import insert, select, update
 
 from src.base.exceptions import LackException
+from src.common.dataclasses.user import UserTime
 
 from ..base.repository import DBRepository
 from ..models.models import User
@@ -218,6 +220,42 @@ class UserRepository(DBRepository):
         设置起床时间
         """
         q = update(User).where(User.data_id == uid).values({User.get_up_time: ts})
+        await self.session.execute(q)
+
+
+@dataclass
+class UserCatchTimeItself:
+    slot_count: int
+    slot_empty: int
+    last_updated_timestamp: float
+
+
+class UserCatchTimeRepository(DBRepository):
+    """
+    和玩家抓小哥数据有关的 Repo
+    """
+
+    async def get_user_time(self, uid: int) -> UserCatchTimeItself:
+        q = select(
+            User.pick_max_cache,
+            User.pick_count_remain,
+            User.pick_count_last_calculated,
+        ).where(User.data_id == uid)
+        r = await self.session.execute(q)
+        slot_count, slot_empty, slot_calctime = r.tuples().one()
+        return UserCatchTimeItself(
+            slot_count=slot_count,
+            slot_empty=slot_empty,
+            last_updated_timestamp=slot_calctime,
+        )
+
+    async def set_user_time(self, uid: int, data: UserTime) -> None:
+        # 注意：这里只更新跟用户数据有关的，不动全局变量
+        d = {
+            User.pick_count_remain: data.slot_empty,
+            User.pick_count_last_calculated: data.last_updated_timestamp,
+        }
+        q = update(User).where(User.data_id == uid).values(d)
         await self.session.execute(q)
 
 

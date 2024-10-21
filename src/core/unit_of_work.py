@@ -32,6 +32,7 @@ from src.repositories.stats_repository import StatsRepository
 from src.repositories.up_pool_repository import PackRepository, UpPoolRepository
 from src.repositories.user_repository import (
     MoneyRepository,
+    UserCatchTimeRepository,
     UserFlagRepository,
     UserPackRepository,
 )
@@ -103,14 +104,14 @@ class UnitOfWork:
 
     @property
     def users(self):
-        """用户信息仓库"""
-
         return UserRepository(self.session)
 
     @property
-    def inventories(self):
-        """库存仓库"""
+    def user_catch_time(self):
+        return UserCatchTimeRepository(self.session)
 
+    @property
+    def inventories(self):
         return InventoryRepository(self.session)
 
     @property
@@ -173,7 +174,7 @@ class UnitOfWork:
     @property
     def stats(self):
         return StatsRepository(self.session)
-    
+
     @property
     def items(self):
         return ItemRepository(self.session)

@@ -4,7 +4,11 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 
 from src.base.command_events import MessageContext
-from src.base.exceptions import KagamiArgumentException, KagamiRangeError, ObjectNotFoundException
+from src.base.exceptions import (
+    KagamiArgumentException,
+    KagamiRangeError,
+    ObjectNotFoundException,
+)
 from src.base.resources import Resource, static_res
 from src.core.unit_of_work import UnitOfWork
 
@@ -95,7 +99,7 @@ class UnuseableItem(BaseItem[None]):
 
 
 class ItemInventoryDisplay(BaseModel):
-    meta: BaseItem
+    meta: BaseItem[Any]
     count: int = -1
     stats: int = -1
 
@@ -112,7 +116,7 @@ class ItemService:
 
     def get_item(self, item_name: str) -> BaseItem[Any] | None:
         return self.items.get(item_name, None)
-    
+
     def get_item_strong(self, item_name: str) -> BaseItem[Any]:
         item = self.get_item(item_name)
         if item is None:

@@ -1,6 +1,5 @@
 from typing import Any, Iterable
 
-from loguru import logger
 from nonebot_plugin_alconna import UniMessage
 from src.base.command_events import MessageContext
 from src.base.exceptions import KagamiRangeError
@@ -14,7 +13,6 @@ from src.models.level import Level
 from src.ui.base.render import get_render_pool
 from src.ui.types.common import AwardInfo
 from src.ui.types.inventory import BookBoxData, DisplayBoxData, StorageData, BoxItemList
-from src.ui.types.common import UserData
 
 
 def build_display(
@@ -106,7 +104,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         aids = await uow.awards.get_aids()
         infos = list((await uow.awards.get_info_dict(aids)).values())
         for index, value in enumerate(infos):
-            infos[index] = await get_award_info(uow, infos[index].aid, user.uid)
+            infos[index] = await get_award_info(uow, value.aid, user.uid)
         inventory_dict = await uow.inventories.get_inventory_dict(user.uid, aids)
 
     storage_dict = {i: v[0] for i, v in inventory_dict.items()}
