@@ -71,29 +71,6 @@ class UserRepository(DBRepository):
             )
         )
 
-    async def get_catch_time_data(self, uid: int) -> tuple[int, int, float]:
-        """获得玩家抓小哥的时间数据
-
-        Args:
-            uid (int): 玩家的 uid
-
-        Returns:
-            tuple[int, int, float]: 分别是卡槽数、剩余次数、上次计算时间
-        """
-        return (
-            (
-                await self.session.execute(
-                    select(
-                        User.pick_max_cache,
-                        User.pick_count_remain,
-                        User.pick_count_last_calculated,
-                    ).where(User.data_id == uid)
-                )
-            )
-            .tuples()
-            .one()
-        )
-
     async def add_slot_count(self, uid: int, count: int = 1):
         """为一个用户添加一个卡槽
 
@@ -248,15 +225,6 @@ class UserCatchTimeRepository(DBRepository):
             slot_empty=slot_empty,
             last_updated_timestamp=slot_calctime,
         )
-
-    async def set_user_time(self, uid: int, data: UserTime) -> None:
-        # 注意：这里只更新跟用户数据有关的，不动全局变量
-        d = {
-            User.pick_count_remain: data.slot_empty,
-            User.pick_count_last_calculated: data.last_updated_timestamp,
-        }
-        q = update(User).where(User.data_id == uid).values(d)
-        await self.session.execute(q)
 
 
 class MoneyRepository(DBRepository):

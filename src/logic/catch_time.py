@@ -16,7 +16,9 @@ def recalculate_time(data: UserTime, now: float | None = None) -> UserTime:
 
     if time_delta < 0:
         # 时间怎么倒流了？！？！
-        logger.warning(f"时间倒流了吗？NOW = {now_t}; LAST_CALC = {data.last_updated_timestamp}")
+        logger.warning(
+            f"时间倒流了吗？NOW = {now_t}; LAST_CALC = {data.last_updated_timestamp}"
+        )
         return data
     if data.interval <= 0:
         # 测试环境中，你们很喜欢把周期调成 0，嗯
@@ -59,5 +61,5 @@ async def uow_calculate_time(uow: UnitOfWork, uid: int) -> UserTime:
             interval=await uow.settings.get_interval(),
         )
     )
-    await uow.user_catch_time.set_user_time(uid, data)
+    await uow.users.update_catch_time(uid, data.slot_empty, data.last_updated_timestamp)
     return data

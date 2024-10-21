@@ -135,8 +135,8 @@ class AddSlots(ShopProduct):
     def type(self):
         return "道具"
 
-    async def _slots(self, uow: UnitOfWork, uid: int):
-        return (await uow.users.get_catch_time_data(uid))[0]
+    async def _slots(self, uow: UnitOfWork, uid: int) -> int:
+        return (await uow.user_catch_time.get_user_time(uid)).slot_count
 
     async def title(self, uow: UnitOfWork, uid: int):
         return "增加卡槽上限"
