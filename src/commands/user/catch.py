@@ -91,7 +91,7 @@ async def picks(uow: UnitOfWork, user: UserData, count: int | None = None):
         user_time.slot_empty - spent_count,
         user_time.last_updated_timestamp,
     )
-    await uow.money.add(uid, pick_result.money)
+    await uow.chips.add(uid, pick_result.money)
     await stats.zhua_get_chips(uid, int(pick_result.money))
     pack_id = await uow.user_pack.get_using(uid)
 
@@ -100,7 +100,7 @@ async def picks(uow: UnitOfWork, user: UserData, count: int | None = None):
         meta=ZhuaMeta(
             field_from=pack_id,
             get_chip=int(pick_result.money),
-            own_chip=int(await uow.money.get(uid)),
+            own_chip=int(await uow.chips.get(uid)),
             remain_time=user_time.slot_empty - spent_count,
             max_time=user_time.slot_count,
             need_time=timedelta_text(

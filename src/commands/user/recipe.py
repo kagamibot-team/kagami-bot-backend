@@ -71,7 +71,7 @@ async def _(ctx: GroupContext, res: Arparma):
         for aid, use in using.items():
             await use_award(uow, uid, aid, use)
 
-        after = await uow.money.use(uid, cost)
+        after = await uow.chips.use(uid, cost)
         aft_sto1 = await uow.inventories.get_storage(uid, a1)
         aft_sto2 = await uow.inventories.get_storage(uid, a2)
         aft_sto3 = await uow.inventories.get_storage(uid, a3)
@@ -197,7 +197,7 @@ async def _(ctx: GroupContext, res: Arparma):
 
         aid = await uow.awards.get_aid_strong(name)
         product = await uow.awards.get_info(aid)
-        after = await uow.money.use(uid, costs[product.level.lid])
+        after = await uow.chips.use(uid, costs[product.level.lid])
 
         stat = await uow.inventories.get_stats(uid, aid)
         if stat == 0:  # 没见过

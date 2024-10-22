@@ -102,7 +102,7 @@ class MergeTripleAchievement(Achievement):
         return False
 
     async def prise(self, uow: UnitOfWork, uid: int) -> None:
-        await uow.money.add(uid, 50)
+        await uow.chips.add(uid, 50)
 
 
 def register_old_version_achievements():

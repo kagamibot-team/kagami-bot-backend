@@ -127,7 +127,7 @@ async def goodnight(ctx: GroupContext, res: Arparma):
         awarding = 0
         if 21 <= now_time.hour < 23:
             awarding = get_random().randint(50, 100)
-            await uow.money.add(uid, awarding)
+            await uow.chips.add(uid, awarding)
 
         await uow.users.set_getup_time(uid, target.timestamp())
         name = await uow.users.name(qqid=ctx.sender_id)

@@ -31,7 +31,8 @@ from src.repositories.skin_inventory_repository import SkinInventoryRepository
 from src.repositories.stats_repository import StatsRepository
 from src.repositories.up_pool_repository import PackRepository, UpPoolRepository
 from src.repositories.user_repository import (
-    MoneyRepository,
+    BiscuitRepository,
+    ChipsRepository,
     UserCatchTimeRepository,
     UserFlagRepository,
     UserPackRepository,
@@ -116,44 +117,35 @@ class UnitOfWork:
 
     @property
     def settings(self):
-        """设置仓库"""
-
         return SettingRepository(self.session)
 
     @property
     def recipes(self):
-        """合成配方仓库"""
-
         return RecipeRepository(self.session)
 
     @property
     def awards(self):
-        """小哥仓库"""
-
         return AwardRepository(self.session)
 
     @property
     def skins(self):
-        """皮肤仓库"""
-
         return SkinRepository(self.session)
 
     @property
     def levels(self):
-        """等级仓库"""
-
-        # return LevelRepository()
         return level_repo
 
     @property
     def skin_inventory(self):
-        """皮肤记录仓库"""
-
         return SkinInventoryRepository(self.session)
 
     @property
-    def money(self):
-        return MoneyRepository(self.session)
+    def chips(self):
+        return ChipsRepository(self.session)
+
+    @property
+    def biscuit(self):
+        return BiscuitRepository(self.session)
 
     @property
     def user_flag(self):

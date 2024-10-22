@@ -94,9 +94,7 @@ class UserRepository(DBRepository):
         Returns:
             tuple[float, int]: 上次签到时间、签到次数
         """
-        query = select(User.sign_last_time, User.sign_count).filter(
-            User.data_id == uid
-        )
+        query = select(User.sign_last_time, User.sign_count).filter(User.data_id == uid)
         return (await self.session.execute(query)).tuples().one()
 
     async def set_sign_in_info(
@@ -167,9 +165,7 @@ class UserRepository(DBRepository):
         """
         获得上一次早睡时间的时间戳
         """
-        q = select(User.sleep_last_time, User.sleep_count).filter(
-            User.data_id == uid
-        )
+        q = select(User.sleep_last_time, User.sleep_count).filter(User.data_id == uid)
         r = await self.session.execute(q)
         return r.tuples().one()
 
@@ -227,7 +223,7 @@ class UserCatchTimeRepository(DBRepository):
         )
 
 
-class MoneyRepository(DBRepository):
+class ChipsRepository(DBRepository):
     async def get(self, uid: int) -> float:
         """获得用户现在有多少薯片
 
@@ -242,7 +238,7 @@ class MoneyRepository(DBRepository):
             await self.session.execute(select(User.chips).filter(User.data_id == uid))
         ).scalar_one()
 
-    async def set(self, uid: int, money: float):
+    async def set(self, uid: int, chips: float):
         """设置用户要有多少薯片
 
         Args:
@@ -251,10 +247,10 @@ class MoneyRepository(DBRepository):
         """
 
         await self.session.execute(
-            update(User).where(User.data_id == uid).values({User.chips: money})
+            update(User).where(User.data_id == uid).values({User.chips: chips})
         )
 
-    async def add(self, uid: int, money: float):
+    async def add(self, uid: int, chips: float):
         """增加用户的薯片数量
 
         Args:
@@ -262,9 +258,9 @@ class MoneyRepository(DBRepository):
             money (float): 薯片数量
         """
 
-        await self.set(uid, (await self.get(uid)) + money)
+        await self.set(uid, (await self.get(uid)) + chips)
 
-    async def use(self, uid: int, money: float, report: bool = True) -> float:
+    async def use(self, uid: int, chips: float, report: bool = True) -> float:
         """消耗薯片
 
         Args:
@@ -277,20 +273,45 @@ class MoneyRepository(DBRepository):
         """
 
         current = await self.get(uid)
-        if current - money < 0 and report:
-            raise LackException("薯片", money, current)
-        await self.set(uid, current - money)
-        return current - money
+        if current - chips < 0 and report:
+            raise LackException("薯片", chips, current)
+        await self.set(uid, current - chips)
+        return current - chips
+
+
+class BiscuitRepository(DBRepository):
+    async def get(self, uid: int) -> int:
+        q = select(User.biscuit).where(User.data_id == uid)
+        r = await self.session.execute(q)
+        return r.scalar_one()
+
+    async def set(self, uid: int, biscuit: int) -> None:
+        q = (
+            update(User)
+            .where(User.data_id == uid)
+            .values(
+                {
+                    User.biscuit: biscuit,
+                }
+            )
+        )
+        await self.session.execute(q)
+
+    async def add(self, uid: int, biscuit: int) -> None:
+        cu = await self.get(uid)
+        await self.set(uid, cu + biscuit)
+
+    async def use(self, uid: int, biscuit: int) -> None:
+        cu = await self.get(uid)
+        if cu < biscuit:
+            raise LackException("饼干", biscuit, cu)
+        await self.set(uid, cu - biscuit)
 
 
 class UserFlagRepository(DBRepository):
     async def get(self, uid: int) -> set[str]:
         return set(
-            (
-                await self.session.execute(
-                    select(User.flags).filter(User.data_id == uid)
-                )
-            )
+            (await self.session.execute(select(User.flags).filter(User.data_id == uid)))
             .scalar_one()
             .split(",")
         )
