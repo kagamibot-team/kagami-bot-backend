@@ -36,7 +36,7 @@ async def _(ctx: GroupContext, _):
         moneydelta = (1 - get_random().random() ** ((count - 1) * 0.2 + 1)) * 90 + 10
         moneydelta = int(moneydelta)
 
-        await uow.money.add(uid, moneydelta)
+        await uow.chips.add(uid, moneydelta)
         await uow.users.set_sign_in_info(uid, time.time(), count)
         await StatService(uow).sign(uid)
 

@@ -158,7 +158,7 @@ class PoolService:
         if pack_id <= 0 or pack_id > max_count:
             raise ObjectNotFoundException("猎场")
 
-        await self.uow.money.use(uid, price[pack_id])
+        await self.uow.chips.use(uid, price[pack_id])
         await self.uow.user_pack.add_own(uid, pack_id)
 
     async def toggle_up_pool(self, uid: int) -> int | None:
@@ -197,7 +197,7 @@ class PoolService:
         if upid in await self.uow.up_pool.get_own(uid, pack):
             raise SoldOutException(f"{pack} 号猎场的猎场升级")
         info = await self.uow.up_pool.get_pool_info(upid)
-        await self.uow.money.use(uid, info.cost)
+        await self.uow.chips.use(uid, info.cost)
         await self.uow.up_pool.add_own(uid, upid)
         return info
 

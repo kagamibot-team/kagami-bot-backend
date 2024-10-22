@@ -64,32 +64,33 @@ class User(Base, BaseMixin):
     __tablename__ = "catch_user_data"
 
     qq_id: Mapped[str] = mapped_column(unique=True, index=True)
-    money: Mapped[float] = mapped_column(default=0.0)
 
-    pick_count_remain: Mapped[int] = mapped_column(default=0)
-    pick_count_last_calculated: Mapped[float] = mapped_column(default=0)
-    pick_time_delta: Mapped[float] = mapped_column(default=7200)
-    pick_max_cache: Mapped[int] = mapped_column(default=1)
+    chips: Mapped[float] = mapped_column(default=0.0)
+    biscuit: Mapped[int] = mapped_column(default=0, server_default="0")
+
+    slot_empty: Mapped[int] = mapped_column(default=0)
+    slot_last_time: Mapped[float] = mapped_column(default=0)
+    slot_count: Mapped[int] = mapped_column(default=1)
 
     # 20240622 追加
     # 和签到有关的两个字段
-    last_sign_in_time: Mapped[float] = mapped_column(default=0, server_default="0")
-    sign_in_count: Mapped[int] = mapped_column(default=0, server_default="0")
+    sign_last_time: Mapped[float] = mapped_column(default=0, server_default="0")
+    sign_count: Mapped[int] = mapped_column(default=0, server_default="0")
 
     # Feature flag: 未来可能会启用的若干项，现在先开个字段
-    feature_flag: Mapped[str] = mapped_column(default="", server_default="")
+    flags: Mapped[str] = mapped_column(default="", server_default="")
 
     # 20240704 追加
     # 和早睡有关的两个字段
-    last_sleep_early_time: Mapped[float] = mapped_column(default=0, server_default="0")
-    sleep_early_count: Mapped[int] = mapped_column(default=0, server_default="0")
+    sleep_last_time: Mapped[float] = mapped_column(default=0, server_default="0")
+    sleep_count: Mapped[int] = mapped_column(default=0, server_default="0")
     get_up_time: Mapped[float] = mapped_column(default=0, server_default="0")
 
     # 20240729 追加
     # 用户的特殊称呼不再在配置文件中设置，太麻烦了
     special_call: Mapped[str] = mapped_column(default="", server_default="")
 
-    using_pack: Mapped[int] = mapped_column(default=1, server_default="1")
+    using_pid: Mapped[int] = mapped_column(default=1, server_default="1")
     "用户正在使用的猎场"
 
     using_up_pool = Column(
@@ -118,7 +119,7 @@ class Skin(Base, BaseMixin):
     description: Mapped[str] = mapped_column(default="")
     image: Mapped[str] = mapped_column(default=DEFAULT_IMG)
     price: Mapped[float] = mapped_column(default=-1.0)
-    award_id = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+    aid = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
 
 
 class SkinAltName(Base, BaseMixin, AltNameMixin):

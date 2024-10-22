@@ -1,99 +1,48 @@
-import time
-
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from loguru import logger
 
 from src.common.dataclasses.user import UserTime
+from src.common.times import now_datetime
 from src.core.unit_of_work import UnitOfWork
-from src.models.models import Global, User
 
 
-async def getInterval(session: AsyncSession):
-    dt = (await session.execute(select(Global.catch_interval))).scalar_one_or_none()
-
-    if dt is None:
-        config = Global()
-        session.add(config)
-        await session.flush()
-
-        return 3600
-    return dt
-
-
-async def updateUserTime(
-    session: AsyncSession, uid: int, count_remain: int, last_calc: float
-):
-    """更新玩家抓小哥的时间
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户在数据库中的 ID
-        count_remain (int): 剩余抓的次数
-        last_calc (float): 上一次计算抓的时间
-    """
-
-    await session.execute(
-        update(User)
-        .where(User.data_id == uid)
-        .values(
-            {
-                User.pick_count_remain: count_remain,
-                User.pick_count_last_calculated: last_calc,
-            }
-        )
-    )
-
-
-async def calculateTime(session: AsyncSession, uid: int) -> UserTime:
-    """
-    根据当前时间，重新计算玩家抓小哥的时间和上限。
-    该函数不会更新数据库中的数据。
-
-    Args:
-        session (AsyncSession): 数据库会话
-        uid (int): 用户在数据库中的 ID
-    """
-
-    maxPickCount, pick_count_remain, pick_count_last_calculated = (
-        (
-            await session.execute(
-                select(
-                    User.pick_max_cache,
-                    User.pick_count_remain,
-                    User.pick_count_last_calculated,
-                ).where(User.data_id == uid)
-            )
-        )
-        .tuples()
-        .one()
-    )
-    pickInterval = await getInterval(session)
-    now = time.time()
-
-    if pickInterval == 0:
-        pick_count_remain = max(maxPickCount, pick_count_remain)
-        pick_count_last_calculated = now
-    elif pick_count_remain >= maxPickCount:
-        pick_count_last_calculated = now
+def recalculate_time(data: UserTime, now: float | None = None) -> UserTime:
+    # 这里把时间分出来了，为了方便做单元测试
+    if now is None:
+        now_t = now_datetime().timestamp()
     else:
-        cycles = int((now - pick_count_last_calculated) / pickInterval)
-        pick_count_last_calculated += cycles * pickInterval
-        pick_count_remain += cycles
+        now_t = now
 
-        if pick_count_remain > maxPickCount:
-            pick_count_remain = maxPickCount
-            pick_count_last_calculated = now
+    time_delta = now_t - data.last_updated_timestamp
 
-    return UserTime(
-        pickMax=maxPickCount,
-        pickRemain=pick_count_remain,
-        pickLastUpdated=pick_count_last_calculated,
-        interval=pickInterval,
-    )
+    if time_delta < 0:
+        # 时间怎么倒流了？！？！
+        logger.warning(
+            f"时间倒流了吗？NOW = {now_t}; LAST_CALC = {data.last_updated_timestamp}"
+        )
+        return data
+    if data.interval <= 0:
+        # 测试环境中，你们很喜欢把周期调成 0，嗯
+        data.slot_empty = data.slot_count
+        data.last_updated_timestamp = now_t
+    elif data.slot_empty >= data.slot_count:
+        # 已经收集满了，把时间直接挪到现在
+        data.last_updated_timestamp = now_t
+    else:
+        collected = int(time_delta / data.interval)
+        data.slot_empty += collected
+
+        if data.slot_empty >= data.slot_count:
+            # 收集满了
+            data.slot_empty = data.slot_count
+            data.last_updated_timestamp = now_t
+        else:
+            data.last_updated_timestamp += data.interval * collected
+
+    return data
 
 
 async def uow_calculate_time(uow: UnitOfWork, uid: int) -> UserTime:
-    """*重构需要* 根据当前时间，重新计算玩家抓小哥的时间和上限，并更新数据库中的数据。
+    """根据当前时间，重新计算玩家抓小哥的时间和上限，并更新数据库中的数据。
 
     Args:
         uow (UnitOfWork): 工作单元
@@ -102,4 +51,15 @@ async def uow_calculate_time(uow: UnitOfWork, uid: int) -> UserTime:
     Returns:
         UserTime: 玩家抓小哥的时间和上限信息
     """
-    return await calculateTime(uow.session, uid)
+
+    data = await uow.user_catch_time.get_user_time(uid)
+    data = recalculate_time(
+        UserTime(
+            slot_count=data.slot_count,
+            slot_empty=data.slot_empty,
+            last_updated_timestamp=data.last_updated_timestamp,
+            interval=await uow.settings.get_interval(),
+        )
+    )
+    await uow.users.update_catch_time(uid, data.slot_empty, data.last_updated_timestamp)
+    return data

@@ -2,6 +2,7 @@
 利用 Selenium 渲染图像
 """
 
+from typing import Any
 import nonebot
 from src.common.config import get_config
 from src.ui.base.browser_worker import (
@@ -49,5 +50,5 @@ async def start_up():
     await render_pool.fill()
 
 
-def get_render_pool() -> RenderPool:
+def get_render_pool() -> RenderPool[Any]:
     return render_pool

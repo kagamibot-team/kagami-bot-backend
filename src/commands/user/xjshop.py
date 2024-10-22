@@ -109,7 +109,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 uid=uid, qqid=str(ctx.sender_id), name=await ctx.sender_name
             )
             freezed_shop = await shop.freeze(uow, uid)
-            money = await uow.money.get(uid)
+            money = await uow.chips.get(uid)
             await StatService(uow).check_xjshop(uid)
         msg = await shop_default_message(user, freezed_shop, money)
         await ctx.send(msg)
@@ -131,6 +131,6 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 costs += await prod.price(uow, uid)
                 prods.append(await prod.freeze(uow, uid))
                 await prod.gain(uow, uid)
-            remain = await uow.money.use(uid, costs)
+            remain = await uow.chips.use(uid, costs)
             await StatService(uow).xjshop_buy(uid, int(costs))
         await ctx.send(await shop_buy_message(user, prods, remain))

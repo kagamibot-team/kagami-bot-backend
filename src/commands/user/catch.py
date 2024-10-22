@@ -1,5 +1,6 @@
 import re
 import time
+from typing import Any
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import At, Reply, Text
@@ -39,12 +40,7 @@ def timedelta_text(seconds: float):
     return result
 
 
-async def picks(
-    uow: UnitOfWork,
-    user: UserData,
-    count: int | None = None,
-    group_id: int | None = None,
-):
+async def picks(uow: UnitOfWork, user: UserData, count: int | None = None):
     """在一次数据库操作中抓小哥。流程如下：
     - 刷新计算用户的时间，包括抓小哥的时间和可以抓的次数
     - 抓一次小哥，先把结果存在内存中
@@ -66,12 +62,12 @@ async def picks(
     stats = StatService(uow)
 
     if count is None:
-        count = user_time.pickRemain
+        count = user_time.slot_empty
 
-    if count <= 0 and user_time.pickRemain != 0:
+    if count <= 0 and user_time.slot_empty != 0:
         raise KagamiRangeError("抓小哥次数", "大于 0 的数", count)
 
-    count = min(user_time.pickRemain, count)
+    count = min(user_time.slot_empty, count)
     count = max(0, count)
 
     pick_result = await pickAwards(uow, uid, count)
@@ -92,10 +88,10 @@ async def picks(
 
     await uow.users.update_catch_time(
         uid,
-        user_time.pickRemain - spent_count,
-        user_time.pickLastUpdated,
+        user_time.slot_empty - spent_count,
+        user_time.last_updated_timestamp,
     )
-    await uow.money.add(uid, pick_result.money)
+    await uow.chips.add(uid, pick_result.money)
     await stats.zhua_get_chips(uid, int(pick_result.money))
     pack_id = await uow.user_pack.get_using(uid)
 
@@ -104,11 +100,11 @@ async def picks(
         meta=ZhuaMeta(
             field_from=pack_id,
             get_chip=int(pick_result.money),
-            own_chip=int(await uow.money.get(uid)),
-            remain_time=user_time.pickRemain - spent_count,
-            max_time=user_time.pickMax,
+            own_chip=int(await uow.chips.get(uid)),
+            remain_time=user_time.slot_empty - spent_count,
+            max_time=user_time.slot_count,
             need_time=timedelta_text(
-                user_time.pickLastUpdated + user_time.interval - time.time()
+                user_time.last_updated_timestamp + user_time.interval - time.time()
             ),
         ),
         catchs=catchs,
@@ -123,18 +119,13 @@ async def picks(
     Alconna("re:(抓小哥|zhua|抓抓)", Arg("count", int, flags=[ArgFlag.OPTIONAL]))
 )
 @require_awake
-async def _(ctx: GroupContext, result: Arparma):
+async def _(ctx: GroupContext, result: Arparma[Any]):
     count = result.query[int]("count")
     if count is None:
         count = 1
     async with get_unit_of_work(ctx.sender_id) as uow:
         ud = await get_user_data(ctx, uow)
-        msg = await picks(
-            uow,
-            ud,
-            count,
-            group_id=ctx.group_id,
-        )
+        msg = await picks(uow, ud, count)
         await StatService(uow).zhua_command(ud.uid)
     await ctx.send(await render_catch_message(msg))
 
@@ -146,11 +137,7 @@ async def _(ctx: GroupContext, result: Arparma):
 async def _(ctx: GroupContext, _):
     async with get_unit_of_work(ctx.sender_id) as uow:
         ud = await get_user_data(ctx, uow)
-        msg = await picks(
-            uow,
-            ud,
-            group_id=ctx.group_id,
-        )
+        msg = await picks(uow, ud)
         await StatService(uow).kz_command(ud.uid)
     await ctx.send(await render_catch_message(msg))
 
@@ -169,14 +156,9 @@ async def _(ctx: GroupContext):
         await uow.user_flag.add(uid, "是")
         utime = await uow_calculate_time(uow, uid)
         await StatService(uow).shi(uid)
-    if utime.pickRemain > 0:
+    if utime.slot_empty > 0:
         async with get_unit_of_work(ctx.sender_id) as uow:
-            msg = await picks(
-                uow,
-                await get_user_data(ctx, uow),
-                1,
-                group_id=ctx.group_id,
-            )
+            msg = await picks(uow, await get_user_data(ctx, uow), 1)
         await ctx.send(await render_catch_message(msg))
     elif "是" not in flags_before:
         await ctx.reply("收到。", ref=True)

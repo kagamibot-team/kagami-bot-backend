@@ -79,17 +79,11 @@ def nb_init():
 
     env = nonebot.config.Env()
     _env_file = f".env.{env.environment}"
-    config = nonebot.config.Config(
-        _env_file=(
-            (".env", _env_file)
-            if isinstance(_env_file, (str, os.PathLike))
-            else _env_file
-        ),
-    )
+    config = nonebot.config.Config(_env_file=(".env", _env_file))
     logger.configure(extra={"nonebot_log_level": config.log_level})
 
     # 加载 FastAPI 驱动器
-    nonebot._driver = nonebot.drivers.fastapi.Driver(env, config)
+    nonebot._driver = nonebot.drivers.fastapi.Driver(env, config)  # type: ignore
 
 
 def init():
