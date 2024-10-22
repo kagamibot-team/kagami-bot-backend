@@ -65,8 +65,8 @@ class UserRepository(DBRepository):
             .where(User.data_id == uid)
             .values(
                 {
-                    User.pick_count_remain: count_remain,
-                    User.pick_count_last_calculated: last_calc,
+                    User.slot_empty: count_remain,
+                    User.slot_last_time: last_calc,
                 }
             )
         )
@@ -82,7 +82,7 @@ class UserRepository(DBRepository):
         await self.session.execute(
             update(User)
             .where(User.data_id == uid)
-            .values({User.pick_max_cache: User.pick_max_cache + count})
+            .values({User.slot_count: User.slot_count + count})
         )
 
     async def get_sign_in_info(self, uid: int) -> tuple[float, int]:
@@ -94,7 +94,7 @@ class UserRepository(DBRepository):
         Returns:
             tuple[float, int]: 上次签到时间、签到次数
         """
-        query = select(User.last_sign_in_time, User.sign_in_count).filter(
+        query = select(User.sign_last_time, User.sign_count).filter(
             User.data_id == uid
         )
         return (await self.session.execute(query)).tuples().one()
@@ -118,8 +118,8 @@ class UserRepository(DBRepository):
             .where(User.data_id == uid)
             .values(
                 {
-                    User.last_sign_in_time: last_sign_in_time,
-                    User.sign_in_count: sign_in_count,
+                    User.sign_last_time: last_sign_in_time,
+                    User.sign_count: sign_in_count,
                 }
             )
         )
@@ -167,7 +167,7 @@ class UserRepository(DBRepository):
         """
         获得上一次早睡时间的时间戳
         """
-        q = select(User.last_sleep_early_time, User.sleep_early_count).filter(
+        q = select(User.sleep_last_time, User.sleep_count).filter(
             User.data_id == uid
         )
         r = await self.session.execute(q)
@@ -180,7 +180,7 @@ class UserRepository(DBRepository):
         q = (
             update(User)
             .filter(User.data_id == uid)
-            .values({User.last_sleep_early_time: ts, User.sleep_early_count: count})
+            .values({User.sleep_last_time: ts, User.sleep_count: count})
         )
         await self.session.execute(q)
 
@@ -214,9 +214,9 @@ class UserCatchTimeRepository(DBRepository):
 
     async def get_user_time(self, uid: int) -> UserCatchTimeItself:
         q = select(
-            User.pick_max_cache,
-            User.pick_count_remain,
-            User.pick_count_last_calculated,
+            User.slot_count,
+            User.slot_empty,
+            User.slot_last_time,
         ).where(User.data_id == uid)
         r = await self.session.execute(q)
         slot_count, slot_empty, slot_calctime = r.tuples().one()
@@ -239,7 +239,7 @@ class MoneyRepository(DBRepository):
         """
 
         return (
-            await self.session.execute(select(User.money).filter(User.data_id == uid))
+            await self.session.execute(select(User.chips).filter(User.data_id == uid))
         ).scalar_one()
 
     async def set(self, uid: int, money: float):
@@ -251,7 +251,7 @@ class MoneyRepository(DBRepository):
         """
 
         await self.session.execute(
-            update(User).where(User.data_id == uid).values({User.money: money})
+            update(User).where(User.data_id == uid).values({User.chips: money})
         )
 
     async def add(self, uid: int, money: float):
@@ -288,7 +288,7 @@ class UserFlagRepository(DBRepository):
         return set(
             (
                 await self.session.execute(
-                    select(User.feature_flag).filter(User.data_id == uid)
+                    select(User.flags).filter(User.data_id == uid)
                 )
             )
             .scalar_one()
@@ -306,7 +306,7 @@ class UserFlagRepository(DBRepository):
         await self.session.execute(
             update(User)
             .where(User.data_id == uid)
-            .values({User.feature_flag: ",".join(flags)})
+            .values({User.flags: ",".join(flags)})
         )
 
     async def add(self, uid: int, flag: str):
@@ -368,12 +368,12 @@ class UserPackRepository(DBRepository):
         """
         获得用户目前在第几个猎场
         """
-        q = select(User.using_pack).filter(User.data_id == uid)
+        q = select(User.using_pid).filter(User.data_id == uid)
         return (await self.session.execute(q)).scalar_one()
 
     async def set_using(self, uid: int, idx: int) -> None:
         """
         设置用户目前在第几个猎场
         """
-        q = update(User).where(User.data_id == uid).values({User.using_pack: idx})
+        q = update(User).where(User.data_id == uid).values({User.using_pid: idx})
         await self.session.execute(q)

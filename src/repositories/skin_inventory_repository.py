@@ -43,7 +43,7 @@ class SkinInventoryRepository(DBRepository):
             .join(Skin, Skin.data_id == SkinRecord.skin_id)
             .filter(
                 SkinRecord.user_id == uid,
-                Skin.award_id == aid,
+                Skin.aid == aid,
                 SkinRecord.selected == 1,
             )
             .limit(1)
@@ -64,7 +64,7 @@ class SkinInventoryRepository(DBRepository):
             .where(
                 SkinRecord.user_id == uid,
                 SkinRecord.skin_id.in_(
-                    select(Skin.data_id).join(SkinRecord).where(Skin.award_id == aid)
+                    select(Skin.data_id).join(SkinRecord).where(Skin.aid == aid)
                 ),
             )
             .values({SkinRecord.selected: 0})
@@ -81,7 +81,7 @@ class SkinInventoryRepository(DBRepository):
         """
 
         aid = await self.session.scalar(
-            select(Skin.award_id).where(Skin.data_id == sid)
+            select(Skin.aid).where(Skin.data_id == sid)
         )
         assert aid is not None
 
@@ -134,7 +134,7 @@ class SkinInventoryRepository(DBRepository):
         """
 
         query = (
-            select(Skin.award_id, SkinRecord.skin_id)
+            select(Skin.aid, SkinRecord.skin_id)
             .join(Skin, Skin.data_id == SkinRecord.skin_id)
             .filter(SkinRecord.user_id == uid, SkinRecord.selected == 1)
         )
@@ -155,7 +155,7 @@ class SkinInventoryRepository(DBRepository):
         query = select(SkinRecord.skin_id).filter(SkinRecord.user_id == uid)
         if aid is not None:
             query = query.join(Skin, Skin.data_id == SkinRecord.skin_id).filter(
-                Skin.award_id == aid
+                Skin.aid == aid
             )
 
         return list((await self.session.execute(query)).scalars())
@@ -173,7 +173,7 @@ class SkinInventoryRepository(DBRepository):
             .where(
                 SkinRecord.user_id == uid,
                 Skin.data_id == SkinRecord.skin_id,
-                Skin.award_id == aid,
+                Skin.aid == aid,
             )
             .values({SkinRecord.selected: 0})
         )

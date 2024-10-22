@@ -52,7 +52,7 @@ class SkinRepository(DBRepository):
 
         q = select(
             Skin.data_id,
-            Skin.award_id,
+            Skin.aid,
             Skin.name,
             Skin.description,
             Skin.image,
@@ -105,7 +105,7 @@ class SkinRepository(DBRepository):
 
         q = (
             insert(Skin)
-            .values({Skin.award_id: aid, Skin.name: name})
+            .values({Skin.aid: aid, Skin.name: name})
             .returning(Skin.data_id)
         )
         return (await self.session.execute(q)).scalar_one()
@@ -144,7 +144,7 @@ class SkinRepository(DBRepository):
 
         return (
             await self.session.execute(
-                select(Skin.award_id).filter(Skin.data_id == sid)
+                select(Skin.aid).filter(Skin.data_id == sid)
             )
         ).scalar_one()
 
@@ -156,7 +156,7 @@ class SkinRepository(DBRepository):
         return set(
             (
                 await self.session.execute(
-                    select(Skin.data_id).filter(Skin.award_id == aid)
+                    select(Skin.data_id).filter(Skin.aid == aid)
                 )
             )
             .scalars()
