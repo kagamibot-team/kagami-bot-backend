@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 
 import PIL
 import PIL.Image
-
-from src.common.threading import make_async
+import PIL.ImageFilter
 
 
 class BaseImageMiddleware(ABC):
@@ -12,10 +11,10 @@ class BaseImageMiddleware(ABC):
     """
 
     @abstractmethod
-    def _handle(self, image: PIL.Image.Image) -> PIL.Image.Image: ...
+    def handle(self, image: PIL.Image.Image) -> PIL.Image.Image: ...
 
-    async def handle(self, image: PIL.Image.Image) -> PIL.Image.Image:
-        return await make_async(self._handle)(image)
+    def to_string(self) -> str:
+        return self.__class__.__name__
 
 
 class ResizeMiddleware(BaseImageMiddleware):
@@ -27,5 +26,23 @@ class ResizeMiddleware(BaseImageMiddleware):
         self.width = width
         self.height = height
 
-    def _handle(self, image: PIL.Image.Image) -> PIL.Image.Image:
+    def handle(self, image: PIL.Image.Image) -> PIL.Image.Image:
         return image.resize((self.width, self.height))
+
+    def to_string(self) -> str:
+        return f"ResizeMiddleware({self.width}, {self.height})"
+
+
+class BlurMiddleware(BaseImageMiddleware):
+    """
+    对 PILLOW 图像进行模糊
+    """
+
+    def __init__(self, radius: int):
+        self.radius = radius
+
+    def handle(self, image: PIL.Image.Image) -> PIL.Image.Image:
+        return image.filter(PIL.ImageFilter.BoxBlur(self.radius))
+
+    def to_string(self) -> str:
+        return f"BlurMiddleware({self.radius})"

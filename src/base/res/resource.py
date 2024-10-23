@@ -4,7 +4,7 @@ from pathlib import Path
 import PIL
 import PIL.Image
 
-from src.common.threading import make_async
+from .urls import resource_url_registerator
 
 
 class IResource(ABC):
@@ -32,4 +32,4 @@ class LocalResource(IResource):
 
     @property
     def url(self) -> str:
-        return str(self._path.relative_to(Path(__file__).parent.parent.parent.parent))
+        return resource_url_registerator.register(self.path)

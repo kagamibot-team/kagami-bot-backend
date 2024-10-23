@@ -1,45 +1,50 @@
 from abc import ABC, abstractmethod
 from hashlib import sha256
 from pathlib import Path
+import tempfile
 
-import aiofiles
+from loguru import logger
 
 from src.base.res.middleware.filter import ITextFilter
 from src.base.res.middleware.image import BaseImageMiddleware
 from src.base.res.resource import IResource, LocalResource
-from src.common.threading import make_async
 from src.ui.base.tools import image_to_bytes
 
 
 class IStorageStrategy(ABC):
     @abstractmethod
-    async def exists(self, file_name: str) -> bool:
+    def exists(self, file_name: str) -> bool:
         """检查文件是否存在"""
 
     @abstractmethod
-    async def get(self, file_name: str) -> IResource:
+    def get(self, file_name: str) -> IResource:
         """获取文件内容"""
 
     @abstractmethod
-    async def can_put(self, file_name: str) -> bool:
+    def can_put(self, file_name: str) -> bool:
         """检查是否可以写入文件"""
 
     @abstractmethod
-    async def put(self, file_name: str, data: bytes) -> IResource:
+    def put(self, file_name: str, data: bytes) -> IResource:
         """上传文件内容"""
+
+    def __call__(self, file_name: str) -> IResource:
+        if not self.exists(file_name):
+            raise FileNotFoundError(f"File {file_name} not found")
+        return self.get(file_name)
 
 
 class IWriteableStorageStrategy(IStorageStrategy):
-    async def can_put(self, file_name: str) -> bool:
+    def can_put(self, file_name: str) -> bool:
         """检查是否可以写入文件"""
         return True
 
 
 class IReadonlyStorageStrategy(IStorageStrategy):
-    async def put(self, file_name: str, data: bytes) -> IResource:
+    def put(self, file_name: str, data: bytes) -> IResource:
         raise NotImplementedError("Readonly storage strategy can't put data")
 
-    async def can_put(self, file_name: str) -> bool:
+    def can_put(self, file_name: str) -> bool:
         return False
 
 
@@ -51,10 +56,10 @@ class StaticStorageStrategy(IReadonlyStorageStrategy):
     def __init__(self, root: Path = Path("./res")):
         self.root = root
 
-    async def exists(self, file_name: str) -> bool:
+    def exists(self, file_name: str) -> bool:
         return (self.root / file_name).exists()
 
-    async def get(self, file_name: str) -> IResource:
+    def get(self, file_name: str) -> IResource:
         return LocalResource(self.root / file_name)
 
 
@@ -66,18 +71,45 @@ class FileStorageStrategy(IWriteableStorageStrategy):
     def __init__(self, root: Path = Path("./data")):
         self.root = root
 
-    async def exists(self, file_name: str) -> bool:
+    def exists(self, file_name: str) -> bool:
         return (self.root / file_name).exists()
 
-    async def get(self, file_name: str) -> IResource:
+    def get(self, file_name: str) -> IResource:
         return LocalResource(self.root / file_name)
 
-    async def put(self, file_name: str, data: bytes) -> IResource:
+    def put(self, file_name: str, data: bytes) -> IResource:
         # 先确保文件夹存在
         self.root.mkdir(parents=True, exist_ok=True)
-        async with aiofiles.open(self.root / file_name, "wb") as f:
-            await f.write(data)
-        return await self.get(file_name)
+        self.root.joinpath(file_name).write_bytes(data)
+        return self.get(file_name)
+
+
+class TempdirStorageStrategy(IWriteableStorageStrategy):
+    """
+    临时文件夹储存方案
+    """
+
+    tempdir: tempfile.TemporaryDirectory[str] | None = None
+
+    def __init__(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.root = Path(self.tempdir.name)
+
+    def exists(self, file_name: str) -> bool:
+        return (self.root / file_name).exists()
+
+    def get(self, file_name: str) -> IResource:
+        return LocalResource(self.root / file_name)
+
+    def put(self, file_name: str, data: bytes) -> IResource:
+        self.root.joinpath(file_name).write_bytes(data)
+        return self.get(file_name)
+
+    # 需要管理声明周期。当程序退出时，需要清理临时文件夹
+    def __del__(self):
+        if self.tempdir is not None:
+            self.tempdir.cleanup()
+            self.tempdir = None
 
 
 class ShadowStorageStrategy(IReadonlyStorageStrategy):
@@ -100,25 +132,31 @@ class ShadowStorageStrategy(IReadonlyStorageStrategy):
         self.task_chain = task_chain or []
         self.suffix = suffix
 
-    async def exists(self, file_name: str) -> bool:
-        return await self.main.exists(file_name)
+    def exists(self, file_name: str) -> bool:
+        return self.main.exists(file_name)
 
     def get_output_file_name(self, res: IResource) -> str:
         # 先读取原图像，sha256 后添加后缀
         data = res.path.read_bytes()
+        data += self.suffix.encode()
+        for task in self.task_chain:
+            data += task.to_string().encode()
         return sha256(data).hexdigest() + self.suffix
 
-    async def get(self, file_name: str) -> IResource:
-        image = await self.main.get(file_name)
+    def get(self, file_name: str) -> IResource:
+        image = self.main.get(file_name)
         if self.shadow.exists(self.get_output_file_name(image)):
             # 如果图像存在，就不重复处理了
-            return await self.shadow.get(self.get_output_file_name(image))
+            return self.shadow.get(self.get_output_file_name(image))
         image_obj = image.load_pil_image()
+        logger.debug(
+            f"Processing image {file_name} with {len(self.task_chain)} middlewares"
+        )
         for task in self.task_chain:
-            image_obj = await task.handle(image_obj)
-        return await self.shadow.put(
+            image_obj = task.handle(image_obj)
+        return self.shadow.put(
             self.get_output_file_name(image),
-            await make_async(image_to_bytes)(image_obj, suffix=self.suffix),
+            image_to_bytes(image_obj, suffix=self.suffix),
         )
 
 
@@ -130,10 +168,10 @@ class JustFallBackStorageStrategy(IReadonlyStorageStrategy):
     def __init__(self, fp: Path = Path("./res/小镜指.jpg")):
         self.fp = fp
 
-    async def exists(self, file_name: str) -> bool:
+    def exists(self, file_name: str) -> bool:
         return self.fp.exists()
 
-    async def get(self, file_name: str) -> IResource:
+    def get(self, file_name: str) -> IResource:
         return LocalResource(self.fp)
 
 
@@ -156,21 +194,21 @@ class FilteredStorageStrategy(IStorageStrategy):
             filters = []
         self.filters = filters
 
-    async def exists(self, file_name: str) -> bool:
-        return await self.strategy.exists(file_name) and all(
-            [await filter.match(file_name) for filter in self.filters]
+    def exists(self, file_name: str) -> bool:
+        return self.strategy.exists(file_name) and all(
+            [filter.match(file_name) for filter in self.filters]
         )
 
-    async def get(self, file_name: str) -> IResource:
-        return await self.strategy.get(file_name)
+    def get(self, file_name: str) -> IResource:
+        return self.strategy.get(file_name)
 
-    async def can_put(self, file_name: str) -> bool:
+    def can_put(self, file_name: str) -> bool:
         return all(
-            [await filter.match(file_name) for filter in self.filters]
-        ) and await self.strategy.can_put(file_name)
+            [filter.match(file_name) for filter in self.filters]
+        ) and self.strategy.can_put(file_name)
 
-    async def put(self, file_name: str, data: bytes) -> IResource:
-        return await self.strategy.put(file_name, data)
+    def put(self, file_name: str, data: bytes) -> IResource:
+        return self.strategy.put(file_name, data)
 
 
 class CombinedStorageStrategy(IStorageStrategy):
@@ -181,21 +219,21 @@ class CombinedStorageStrategy(IStorageStrategy):
     def __init__(self, strategies: list[IStorageStrategy]):
         self.strategies = strategies
 
-    async def exists(self, file_name: str) -> bool:
-        return any([await strategy.exists(file_name) for strategy in self.strategies])
+    def exists(self, file_name: str) -> bool:
+        return any([strategy.exists(file_name) for strategy in self.strategies])
 
-    async def get(self, file_name: str) -> IResource:
+    def get(self, file_name: str) -> IResource:
         for strategy in self.strategies:
-            if await strategy.exists(file_name):
-                return await strategy.get(file_name)
+            if strategy.exists(file_name):
+                return strategy.get(file_name)
         raise FileNotFoundError(file_name)
 
-    async def put(self, file_name: str, data: bytes) -> IResource:
+    def put(self, file_name: str, data: bytes) -> IResource:
         for strategy in self.strategies:
-            if await strategy.can_put(file_name):
+            if strategy.can_put(file_name):
                 continue
-            return await strategy.put(file_name, data)
+            return strategy.put(file_name, data)
         raise ValueError("No writable strategy")
 
-    async def can_put(self, file_name: str) -> bool:
-        return any([await strategy.can_put(file_name) for strategy in self.strategies])
+    def can_put(self, file_name: str) -> bool:
+        return any([strategy.can_put(file_name) for strategy in self.strategies])

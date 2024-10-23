@@ -23,13 +23,6 @@ from src.ui.types.xjshop import BuyData, Product, ProductGroup, ShopDisplay
 
 
 async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
-    def trans_image(path: Path) -> str:
-        if path.parent == Path("./res"):
-            return "/kagami-res/" + path.name
-        if path.parent == Path("./data/temp"):
-            return "/kagami/file/temp/" + path.name
-        return "/kagami-res/blank_placeholder.png"
-
     shop_data = ShopDisplay(
         user=user,
         chips=int(money),
@@ -41,7 +34,7 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
                         title1=product.title,
                         title2=product.description,
                         display_box=DisplayBoxData(
-                            image=trans_image(product.image),
+                            image=product.image.url,
                             color=product.background_color,
                             notation_down=f"{int(product.price)}薯片",
                             sold_out_overlay=product.is_sold_out,

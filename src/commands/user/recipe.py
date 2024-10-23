@@ -7,6 +7,7 @@ from loguru import logger
 from src.base.command_events import GroupContext
 from src.base.exceptions import ObjectNotFoundException
 from src.base.event.event_root import throw_event
+from src.base.res import blank_placeholder
 from src.common.command_deco import (
     limited,
     listen_message,
@@ -201,7 +202,7 @@ async def _(ctx: GroupContext, res: Arparma):
 
         stat = await uow.inventories.get_stats(uid, aid)
         if stat == 0:  # 没见过
-            product.image_name = "blank_placeholder.png"
+            product._img_resource = blank_placeholder()
             product.color = "#696361"
 
         if await uow.pack.get_main_pack(aid) != -1:
@@ -283,15 +284,15 @@ async def _(ctx: GroupContext, res: Arparma):
 
                 stat = await uow.inventories.get_stats(uid, recipe.aid1)
                 if stat == 0:  # 没见过
-                    award1.image_name = "blank_placeholder.png"
+                    award1._img_resource = blank_placeholder()
                     award1.color = "#696361"
                 stat = await uow.inventories.get_stats(uid, recipe.aid2)
                 if stat == 0:  # 没见过
-                    award2.image_name = "blank_placeholder.png"
+                    award2._img_resource = blank_placeholder()
                     award2.color = "#696361"
                 stat = await uow.inventories.get_stats(uid, recipe.aid3)
                 if stat == 0:  # 没见过
-                    award3.image_name = "blank_placeholder.png"
+                    award3._img_resource = blank_placeholder()
                     award3.color = "#696361"
 
                 recipes_display.append(

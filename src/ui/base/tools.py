@@ -30,6 +30,17 @@ def mix_color(
 def image_to_bytes(img: PIL.Image.Image, suffix: str = ".png") -> bytes:
     arr = np.array(img)
 
+    if arr.ndim == 2:
+        arr = cv2.cvtColor(arr, cv2.COLOR_GRAY2BGR)
+    if arr.shape[2] == 2:
+        lightness, alpha = cv2.split(arr)
+        arr = np.zeros((lightness.shape[0], lightness.shape[1], 4), dtype=np.uint8)
+
+        # Assign channels
+        arr[:, :, 0] = lightness  # Red channel
+        arr[:, :, 1] = lightness  # Green channel
+        arr[:, :, 2] = lightness  # Blue channel
+        arr[:, :, 3] = alpha  # Alpha channel
     if arr.shape[2] == 3:
         arr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
     else:

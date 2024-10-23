@@ -8,6 +8,7 @@ from pathlib import Path
 import src
 from src.base.res.resource import IResource
 import src.ui
+from src.ui.base.tools import image_to_bytes
 import src.ui.types
 import src.ui.types.common
 from src.base.exceptions import LackException
@@ -47,11 +48,11 @@ async def generate_random_info(uow: UnitOfWork):
         aids.update(await uow.pack.get_main_aids_of_pack(pid))
     aids.update(await uow.awards.get_aids(lid=0))
     for aid in aids:
-        sources.append(await KagamiResourceManagers.xiaoge.get(f"aid_{aid}.png"))
+        sources.append(KagamiResourceManagers.xiaoge(f"aid_{aid}.png"))
 
     sids: set[int] = set(i[0] for i in await uow.skins.all())
     for sid in sids:
-        sources.append(await KagamiResourceManagers.xiaoge.get(f"sid_{sid}.png"))
+        sources.append(KagamiResourceManagers.xiaoge(f"sid_{sid}.png"))
 
     # 生成乱码
     rlen = get_random().randint(2, 4)
@@ -59,17 +60,15 @@ async def generate_random_info(uow: UnitOfWork):
     rchar = lambda: chr(get_random().randint(0x4E00, 0x9FFF))
     img = await make_async(make_strange)(sources)
     img_name = f"tmp_{uuid.uuid4().hex}.png"
-    img.save(Path("./data/temp/") / img_name)
 
     return src.ui.types.common.AwardInfo(
         name="".join((rchar() for _ in range(rlen))),
         description="".join((rchar() for _ in range(rlen2))),
-        image_name=img_name,
-        image_type="temp",
         level=level_repo.get_data_by_id(0),
         color=level_repo.get_data_by_id(0).color,
         aid=-1,
         sorting=0,
+        _img_resource=KagamiResourceManagers.tmp.put(img_name, image_to_bytes(img)),
     )
 
 
@@ -89,4 +88,4 @@ async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
 
 async def download_award_image(aid: int, url: str):
     data = await download(url)
-    await KagamiResourceManagers.xiaoge.put(f"aid_{aid}.png", data)
+    KagamiResourceManagers.xiaoge.put(f"aid_{aid}.png", data)

@@ -17,6 +17,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from src.base.onebot.onebot_tools import get_avatar_cached
+from src.base.res import KagamiResourceManagers
 from src.common.config import get_config
 from src.ui.base.backend_pages import BackendDataManager
 
@@ -67,6 +68,14 @@ async def skin_image(image_name: str):
 async def temp_image(image_name: str):
     fp = Path("./data/temp/") / image_name
     if not fp.exists():
+        return HTMLResponse("<html><body>404!</body></html>", 404)
+    return FileResponse(fp)
+
+
+@router.get("/file/registered/{image_name}")
+async def registered_image(image_name: str):
+    fp = KagamiResourceManagers.url_manager.registered_reverse.get(image_name)
+    if fp is None or not fp.exists():
         return HTMLResponse("<html><body>404!</body></html>", 404)
     return FileResponse(fp)
 

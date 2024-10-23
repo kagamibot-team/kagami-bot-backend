@@ -1,21 +1,18 @@
-import hashlib
 from abc import ABC, abstractmethod
-from pathlib import Path
-
-import PIL
-import PIL.Image
-import PIL.ImageFilter
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 from src.base.exceptions import ObjectNotFoundException
+from src.base.res import KagamiResourceManagers
+from src.base.res.resource import IResource
 from src.core.unit_of_work import UnitOfWork
 
 
-class ShopProductFreezed(BaseModel):
+@dataclass
+class ShopProductFreezed:
     title: str
     description: str
     background_color: str
-    image: Path
+    image: IResource
     price: float
     is_sold_out: bool
     type: str
@@ -58,7 +55,7 @@ class ShopProduct(ABC):
         """成功购买一个商品时触发的操作"""
 
     @abstractmethod
-    async def image(self, uow: UnitOfWork, uid: int) -> Path:
+    async def image(self, uow: UnitOfWork, uid: int) -> IResource:
         """商品的图片"""
 
     @property
@@ -83,23 +80,11 @@ class SkinProduct(ShopProduct):
     def type(self):
         return "皮肤"
 
-    @property
-    def cache(self) -> Path:
-        return Path("./data/temp") / (
-            "blurred_"
-            + hashlib.md5(Path(self._image).read_bytes()).hexdigest()
-            + ".png"
-        )
-
     async def title(self, uow: UnitOfWork, uid: int):
         return "皮肤" + self._title
 
     async def image(self, uow: UnitOfWork, uid: int):
-        if not self.cache.exists():
-            raw = PIL.Image.open(self._image)
-            raw = raw.filter(PIL.ImageFilter.BoxBlur(100))
-            raw.save(self.cache)
-        return self.cache
+        return KagamiResourceManagers.xiaoge_blurred(f"sid_{self.sid}.png")
 
     async def description(self, uow: UnitOfWork, uid: int):
         return f"{self._aname}的皮肤"
@@ -145,7 +130,7 @@ class AddSlots(ShopProduct):
         return f"增加卡槽上限至{await self._slots(uow, uid) + 1}"
 
     async def image(self, uow: UnitOfWork, uid: int):
-        return Path("./res/add1.png")
+        return KagamiResourceManagers.res("add1.png")
 
     async def price(self, uow: UnitOfWork, uid: int) -> float:
         return 25 * (2 ** (await self._slots(uow, uid)))
@@ -181,7 +166,7 @@ class MergeMachine(ShopProduct):
         return 1200
 
     async def image(self, uow: UnitOfWork, uid: int):
-        return Path("./res/merge_machine.png")
+        return KagamiResourceManagers.res("merge_machine.png")
 
     async def is_sold_out(self, uow: UnitOfWork, uid: int) -> bool:
         return await uow.user_flag.have(uid, "合成")

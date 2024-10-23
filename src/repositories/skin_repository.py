@@ -143,9 +143,7 @@ class SkinRepository(DBRepository):
         """
 
         return (
-            await self.session.execute(
-                select(Skin.aid).filter(Skin.data_id == sid)
-            )
+            await self.session.execute(select(Skin.aid).filter(Skin.data_id == sid))
         ).scalar_one()
 
     async def get_all_sids_of_one_award(self, aid: int):
@@ -154,20 +152,15 @@ class SkinRepository(DBRepository):
         """
 
         return set(
-            (
-                await self.session.execute(
-                    select(Skin.data_id).filter(Skin.aid == aid)
-                )
-            )
+            (await self.session.execute(select(Skin.data_id).filter(Skin.aid == aid)))
             .scalars()
             .all()
         )
 
     async def link(self, sid: int, info: AwardInfo):
-        q = select(Skin.name, Skin.description, Skin.image).filter(Skin.data_id == sid)
-        sn, sd, si = (await self.session.execute(q)).tuples().one()
+        q = select(Skin.name, Skin.description).filter(Skin.data_id == sid)
+        sn, sd = (await self.session.execute(q)).tuples().one()
         if len(sd) > 0:
             info.description = sd
-        info.image_name = Path(si).name
-        info.image_type = "skins"
         info.skin_name = sn
+        info.sid = sid
