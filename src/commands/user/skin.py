@@ -77,7 +77,7 @@ async def _(ctx: MessageContext, _):
             title1="???",
         )
 
-        for sid, aid, sname, _, _, _ in all_skins:
+        for sid, aid, sname, _, _ in all_skins:
             if sid not in skin_inventory:
                 boxes.append(unknown_box)
                 continue

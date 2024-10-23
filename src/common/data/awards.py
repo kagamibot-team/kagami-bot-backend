@@ -35,7 +35,7 @@ async def get_award_info(
     return data
 
 
-async def generate_random_info(uow: UnitOfWork):
+async def generate_random_info(uow: UnitOfWork) -> src.ui.types.common.AwardInfo:
     """
     生成一个合成失败时的乱码小哥信息
     """
@@ -61,15 +61,16 @@ async def generate_random_info(uow: UnitOfWork):
     img = await make_async(make_strange)(sources)
     img_name = f"tmp_{uuid.uuid4().hex}.png"
 
-    return src.ui.types.common.AwardInfo(
+    aif = src.ui.types.common.AwardInfo(
         name="".join((rchar() for _ in range(rlen))),
         description="".join((rchar() for _ in range(rlen2))),
         level=level_repo.get_data_by_id(0),
         color=level_repo.get_data_by_id(0).color,
         aid=-1,
         sorting=0,
-        _img_resource=KagamiResourceManagers.tmp.put(img_name, image_to_bytes(img)),
     )
+    aif._img_resource = KagamiResourceManagers.tmp.put(img_name, image_to_bytes(img))
+    return aif
 
 
 async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):

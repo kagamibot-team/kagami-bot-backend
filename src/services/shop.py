@@ -105,11 +105,10 @@ class SkinProduct(ShopProduct):
         await uow.skin_inventory.give(uid, self.sid)
 
     def __init__(
-        self, sid: int, name: str, image: str, aname: str, price: float, bgc: str
+        self, sid: int, name: str, aname: str, price: float, bgc: str
     ) -> None:
         self.sid = sid
         self._title = name
-        self._image = image
         self._aname = aname
         self._bgc = bgc
         self._price = price
@@ -238,10 +237,10 @@ async def build_xjshop(uow: UnitOfWork) -> ShopService:
     # service.register(SignHint())
 
     # 注册皮肤信息
-    for sid, aid, sname, _, simage, price in await uow.skins.all():
+    for sid, aid, sname, _, price in await uow.skins.all():
         if price <= 0:
             continue
         info = await uow.awards.get_info(aid)
-        service.register(SkinProduct(sid, sname, simage, info.name, price, info.color))
+        service.register(SkinProduct(sid, sname, info.name, price, info.color))
 
     return service

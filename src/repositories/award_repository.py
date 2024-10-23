@@ -153,7 +153,6 @@ class AwardRepository(DBRepository):
         name: str | None = None,
         description: str | None = None,
         lid: int | None = None,
-        image: str | Path | None = None,
         pack_id: int | None = None,
         sorting: int | None = None,
     ):
@@ -164,7 +163,6 @@ class AwardRepository(DBRepository):
             name (str | None): 名字
             description (str | None): 描述
             lid (int | None): 等级 ID
-            image (str | Path | None): 图片
             pack_id (int | None): 小哥所在的猎场，0 代表所有，-1 代表不出现
             sorting (int | None): 排序的优先级
         """
@@ -176,8 +174,6 @@ class AwardRepository(DBRepository):
             query = query.values({Award.description: description})
         if lid is not None:
             query = query.values({Award.level_id: lid})
-        if image is not None:
-            query = query.values({Award.image: Path(image).as_posix()})
         if pack_id is not None:
             query = query.values({Award.main_pack_id: pack_id})
         if sorting is not None:
@@ -231,10 +227,10 @@ class AwardRepository(DBRepository):
         return dict(r.tuples().all())
 
     async def get_info(self, aid: int) -> AwardInfo:
-        q = select(
-            Award.description, Award.name, Award.level_id, Award.image, Award.sorting
-        ).filter(Award.data_id == aid)
-        d, n, l, i, s = (await self.session.execute(q)).tuples().one()
+        q = select(Award.description, Award.name, Award.level_id, Award.sorting).filter(
+            Award.data_id == aid
+        )
+        d, n, l, s = (await self.session.execute(q)).tuples().one()
         lv = level_repo.get_data_by_id(l)
 
         return AwardInfo(
@@ -252,7 +248,6 @@ class AwardRepository(DBRepository):
             Award.description,
             Award.name,
             Award.level_id,
-            Award.image,
             Award.sorting,
         ).filter(Award.data_id.in_(aids))
         tpls = (await self.session.execute(q)).tuples().all()
@@ -266,5 +261,5 @@ class AwardRepository(DBRepository):
                 aid=aid,
                 sorting=s,
             )
-            for aid, d, n, l, i, s in tpls
+            for aid, d, n, l, s in tpls
         }

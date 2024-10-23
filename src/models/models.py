@@ -11,8 +11,6 @@ from .item import ItemInventory
 from .stats import StatRecord
 from .up_pool import UpPool
 
-DEFAULT_IMG = os.path.join(".", "res", "default.png")
-
 
 class Global(Base, BaseMixin):
     """
@@ -29,7 +27,6 @@ class Global(Base, BaseMixin):
 class Award(Base, BaseMixin):
     __tablename__ = "catch_award"
 
-    image: Mapped[str] = mapped_column(default=DEFAULT_IMG)
     name: Mapped[str] = mapped_column(default="", unique=True, index=True)
     description: Mapped[str] = mapped_column(default="")
     sorting: Mapped[int] = mapped_column(default=0)
@@ -117,7 +114,6 @@ class Skin(Base, BaseMixin):
 
     name: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column(default="")
-    image: Mapped[str] = mapped_column(default=DEFAULT_IMG)
     price: Mapped[float] = mapped_column(default=-1.0)
     aid = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
 

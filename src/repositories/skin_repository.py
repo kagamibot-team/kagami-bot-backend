@@ -19,35 +19,23 @@ class SkinRepository(DBRepository):
         d = delete(Skin).where(Skin.data_id == data_id)
         await self.session.execute(d)
 
-    async def get_all_images(self) -> dict[int, str]:
-        qa = select(Skin.data_id, Skin.image)
-        return {row[0]: row[1] for row in (await self.session.execute(qa)).tuples()}
-
-    async def update_image(self, data_id: int, image: str | Path) -> None:
-        u = (
-            update(Skin)
-            .where(Skin.data_id == data_id)
-            .values({Skin.image: Path(image).as_posix()})
-        )
-        await self.session.execute(u)
-
-    async def get_info(self, sid: int) -> tuple[str, str, str]:
+    async def get_info(self, sid: int) -> tuple[str, str]:
         """获得一个皮肤的信息
 
         Args:
             sid (int): 皮肤的 ID
 
         Returns:
-            tuple[str, str, str]: 名字，描述，图
+            tuple[str, str]: 名字，描述
         """
-        q = select(Skin.name, Skin.description, Skin.image).filter(Skin.data_id == sid)
+        q = select(Skin.name, Skin.description).filter(Skin.data_id == sid)
         return (await self.session.execute(q)).tuples().one()
 
-    async def all(self) -> list[tuple[int, int, str, str, str, float]]:
+    async def all(self) -> list[tuple[int, int, str, str, float]]:
         """获得所有皮肤的信息
 
         Returns:
-            list[tuple[int, int, str, str, str, float]]: 皮肤 ID，对应小哥 ID，名字，描述，图，价格
+            list[tuple[int, int, str, str, float]]: 皮肤 ID，对应小哥 ID，名字，描述，价格
         """
 
         q = select(
@@ -55,7 +43,6 @@ class SkinRepository(DBRepository):
             Skin.aid,
             Skin.name,
             Skin.description,
-            Skin.image,
             Skin.price,
         )
         return list((await self.session.execute(q)).tuples().all())

@@ -29,7 +29,7 @@ async def _(ctx: MessageContext, res: Arparma):
 
         boxes: list[BookBoxData] = []
 
-        for sid, aid, sname, _, _, _ in all_skins:
+        for sid, aid, sname, _, _ in all_skins:
             info = infos[aid]
             await uow.skins.link(sid, info)
             boxes.append(
@@ -144,10 +144,7 @@ async def _(ctx: MessageContext, res: Arparma):
             if imageUrl is None:
                 logger.warning(f"名字叫 {name} 的皮肤的图片地址为空。")
             else:
-                fp = await downloadSkinImage(sid, imageUrl)
-                await session.execute(
-                    update(Skin).where(Skin.data_id == sid).values({Skin.image: fp})
-                )
+                await downloadSkinImage(sid, imageUrl)
     await ctx.send("ok.")
 
 

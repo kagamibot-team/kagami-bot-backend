@@ -126,7 +126,6 @@ async def _(ctx: MessageContext, res: Arparma):
             name=newName,
             description="".join(_description),
             lid=lid,
-            image=image,
             pack_id=pack_id,
             sorting=sorting,
         )
