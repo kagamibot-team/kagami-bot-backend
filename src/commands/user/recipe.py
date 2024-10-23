@@ -83,7 +83,7 @@ async def _(ctx: GroupContext, res: Arparma):
 
         if aid == -1:
             # 乱码小哥，丢失
-            info = await generate_random_info()
+            info = await generate_random_info(uow)
             add = get_random().randint(1, 100)
             data = GetAward(info=info, count=add, is_new=False)
             aft_stor = 0

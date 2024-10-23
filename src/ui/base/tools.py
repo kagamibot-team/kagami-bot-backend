@@ -1,7 +1,7 @@
-import PIL
-import PIL.Image
 import cv2
 import numpy as np
+import PIL
+import PIL.Image
 
 
 def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
@@ -27,7 +27,7 @@ def mix_color(
     )
 
 
-def image_to_bytes(img: PIL.Image.Image):
+def image_to_bytes(img: PIL.Image.Image, suffix: str = ".png") -> bytes:
     arr = np.array(img)
 
     if arr.shape[2] == 3:
@@ -35,7 +35,7 @@ def image_to_bytes(img: PIL.Image.Image):
     else:
         arr = cv2.cvtColor(arr, cv2.COLOR_BGRA2RGBA)
 
-    _, im = cv2.imencode(".png", arr)
+    _, im = cv2.imencode(suffix, arr)
 
     return im.tobytes()
 

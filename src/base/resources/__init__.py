@@ -14,16 +14,16 @@ class Resource(BaseModel):
     path: Path
     url: str
 
-    def read_bytes(self):
+    def read_bytes(self) -> bytes:
         return self.path.read_bytes()
 
-    def get_hash(self):
+    def get_hash(self) -> str:
         return hashlib.sha256(self.read_bytes()).hexdigest()
 
-    def get_pillow_image(self):
+    def get_pillow_image(self) -> PIL.Image.Image:
         return PIL.Image.open(self.path)
 
-    def compress_image(self, width: int | None = None, height: int | None = None):
+    def compress_image(self, width: int | None = None, height: int | None = None) -> "Resource":
         """
         获得压缩后的图像
         """

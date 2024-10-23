@@ -16,27 +16,6 @@ class AwardRepository(DBRepository):
     小哥的仓库
     """
 
-    async def get_all_images(self) -> dict[int, str]:
-        """获得目前含有的所有图片
-
-        Returns:
-            dict[int, str]: 字典，是 Aid 到图片地址的字典
-        """
-        qa = select(Award.data_id, Award.image)
-        return {row[0]: row[1] for row in (await self.session.execute(qa)).tuples()}
-
-    async def update_image(self, data_id: int, image: str | Path) -> None:
-        """更改小哥的图片
-
-        Args:
-            data_id (int): 小哥的 ID
-            image (str | Path): 图片的地址
-        """
-        if not isinstance(image, str):
-            image = image.as_posix()
-        u = update(Award).where(Award.data_id == data_id).values(image=image)
-        await self.session.execute(u)
-
     async def add_award(self, name: str, lid: int):
         """添加一个小哥
 
