@@ -44,7 +44,7 @@ async def _(ctx: MessageContext):
     use_keyword: bool = False
     use_name: str | None = None
     for part in msg:
-        print(use_target, use_keyword, use_name, part)
+        # print(use_target, use_keyword, use_name, part)
         if isinstance(part, At):
             if use_target is None:
                 use_target = int(part.target)

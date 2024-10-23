@@ -143,7 +143,7 @@ class ItemService:
 
         if uid is not None:
             inventory = await uow.items.get_dict(uid)
-            print(inventory)
+            # print(inventory)
             for key, (count, stats) in inventory.items():
                 if key not in self.items:
                     continue
