@@ -1,4 +1,6 @@
 from typing import Any
+import PIL
+import PIL.Image
 
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from nonebot_plugin_alconna import Image, UniMessage
@@ -344,3 +346,24 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             await ctx.send(UniMessage.text("满足统计要求的：\n" + "\n".join(listSta)))
         if 0 < len(listSto) < 20:
             await ctx.send(UniMessage.text("满足库存要求的：\n" + "\n".join(listSto)))
+
+
+@listen_message()
+@require_admin()
+@match_alconna(
+    Alconna(
+        ["::"],
+        "re:(test_size)",
+    )
+)
+async def _(ctx: MessageContext, res: Arparma[Any]):
+    async with get_unit_of_work(ctx.sender_id) as uow:
+        msg = ""
+        aids = await uow.awards.get_aids()
+        for aid in aids:
+            award = await uow.awards.get_info(aid)
+            img = PIL.Image.open(award.image_path)
+            width, height = img.size
+            if width != 2000:
+                msg += f"{award.name}（{aid}）：{width}x{height}\n"
+        await ctx.send(UniMessage.text(msg))
