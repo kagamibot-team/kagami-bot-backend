@@ -163,12 +163,12 @@ def downgrade() -> None:
     op.create_table(
         "catch_level",
         sa.Column("name", sa.VARCHAR(), nullable=False),
-        sa.Column("weight", sa.FLOAT(), nullable=False),
+        sa.Column("weight", sa.FLOAT(), nullable=False),  # type: ignore
         sa.Column("color_code", sa.VARCHAR(), nullable=False),
         sa.Column("data_id", sa.INTEGER(), nullable=False),
         sa.Column("created_at", sa.DATETIME(), nullable=False),
         sa.Column("updated_at", sa.DATETIME(), nullable=False),
-        sa.Column("price", sa.FLOAT(), server_default=sa.text("'0.0'"), nullable=False),
+        sa.Column("price", sa.FLOAT(), server_default=sa.text("'0.0'"), nullable=False),  # type: ignore
         sa.Column(
             "sorting_priority",
             sa.INTEGER(),
@@ -311,7 +311,7 @@ def downgrade() -> None:
     )
     op.create_table(
         "catch_catch_group",
-        sa.Column("weight", sa.FLOAT(), server_default=sa.text("'0'"), nullable=False),
+        sa.Column("weight", sa.FLOAT(), server_default=sa.text("'0'"), nullable=False),  # type: ignore
         sa.Column("time_limit_rule", sa.VARCHAR(), nullable=False),
         sa.Column("data_id", sa.INTEGER(), nullable=False),
         sa.Column("created_at", sa.DATETIME(), nullable=False),

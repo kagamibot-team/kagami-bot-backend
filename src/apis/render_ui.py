@@ -17,6 +17,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from src.base.onebot.onebot_tools import get_avatar_cached
+from src.base.res import KagamiResourceManagers
 from src.common.config import get_config
 from src.ui.base.backend_pages import BackendDataManager
 
@@ -45,28 +46,10 @@ async def request_data(data_id: str):
     return data
 
 
-@router.get("/file/awards/{image_name}")
-async def award_image(image_name: str):
-    fp = Path("./data/awards/") / image_name
-    if not fp.exists():
-        return HTMLResponse("<html><body>404!</body></html>", 404)
-
-    # [TODO] 未来，有图片缓存以后，改造成直接获得小哥图片的形式
-    return FileResponse(fp)
-
-
-@router.get("/file/skins/{image_name}")
-async def skin_image(image_name: str):
-    fp = Path("./data/skins/") / image_name
-    if not fp.exists():
-        return HTMLResponse("<html><body>404!</body></html>", 404)
-    return FileResponse(fp)
-
-
-@router.get("/file/temp/{image_name}")
-async def temp_image(image_name: str):
-    fp = Path("./data/temp/") / image_name
-    if not fp.exists():
+@router.get("/file/registered/{image_name}")
+async def registered_image(image_name: str):
+    fp = KagamiResourceManagers.url_manager.registered_reverse.get(image_name)
+    if fp is None or not fp.exists():
         return HTMLResponse("<html><body>404!</body></html>", 404)
     return FileResponse(fp)
 

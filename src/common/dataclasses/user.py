@@ -3,7 +3,7 @@ from pydantic.dataclasses import dataclass
 
 @dataclass
 class UserTime:
-    pickMax: int
-    pickRemain: int
-    pickLastUpdated: float
+    slot_count: int
+    slot_empty: int
+    last_updated_timestamp: float
     interval: float

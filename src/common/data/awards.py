@@ -6,17 +6,20 @@ import uuid
 from pathlib import Path
 
 import src
+from src.base.res.resource import IResource
 import src.ui
+from src.ui.base.tools import image_to_bytes
 import src.ui.types
 import src.ui.types.common
 from src.base.exceptions import LackException
-from src.common.download import download, writeData
+from src.base.res import KagamiResourceManagers
+from src.common.download import download
 from src.common.rd import get_random
+from src.common.threading import make_async
 from src.core.unit_of_work import UnitOfWork
 from src.models.level import level_repo
 from src.models.models import *
 from src.ui.base.strange import make_strange
-from src.common.threading import make_async
 
 
 async def get_award_info(
@@ -32,28 +35,42 @@ async def get_award_info(
     return data
 
 
-async def generate_random_info():
+async def generate_random_info(uow: UnitOfWork) -> src.ui.types.common.AwardInfo:
     """
     生成一个合成失败时的乱码小哥信息
     """
 
+    # 获取所有的小哥和皮肤图片
+    sources: list[IResource] = []
+
+    aids: set[int] = set()
+    for pid in range(0, await uow.settings.get_pack_count() + 1):
+        aids.update(await uow.pack.get_main_aids_of_pack(pid))
+    aids.update(await uow.awards.get_aids(lid=0))
+    for aid in aids:
+        sources.append(KagamiResourceManagers.xiaoge(f"aid_{aid}.png"))
+
+    sids: set[int] = set(i[0] for i in await uow.skins.all())
+    for sid in sids:
+        sources.append(KagamiResourceManagers.xiaoge(f"sid_{sid}.png"))
+
+    # 生成乱码
     rlen = get_random().randint(2, 4)
     rlen2 = get_random().randint(30, 90)
     rchar = lambda: chr(get_random().randint(0x4E00, 0x9FFF))
-    img = await make_async(make_strange)()
+    img = await make_async(make_strange)(sources)
     img_name = f"tmp_{uuid.uuid4().hex}.png"
-    img.save(Path("./data/temp/") / img_name)
 
-    return src.ui.types.common.AwardInfo(
+    aif = src.ui.types.common.AwardInfo(
         name="".join((rchar() for _ in range(rlen))),
         description="".join((rchar() for _ in range(rlen2))),
-        image_name=img_name,
-        image_type="temp",
         level=level_repo.get_data_by_id(0),
         color=level_repo.get_data_by_id(0).color,
         aid=-1,
         sorting=0,
     )
+    aif._img_resource = KagamiResourceManagers.tmp.put(img_name, image_to_bytes(img))
+    return aif
 
 
 async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
@@ -71,14 +88,5 @@ async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
 
 
 async def download_award_image(aid: int, url: str):
-    uIndex: int = 0
-
-    def _path():
-        return Path("./data/awards") / f"{aid}_{uIndex}.png"
-
-    while _path().exists():
-        uIndex += 1
-
-    await writeData(await download(url), _path())
-
-    return _path().as_posix()
+    data = await download(url)
+    KagamiResourceManagers.xiaoge.put(f"aid_{aid}.png", data)

@@ -27,9 +27,4 @@ async def download(url: str):
     return await loop.run_in_executor(None, request_new_tst, url)
 
 
-async def writeData(raw: bytes, target: str | Path):
-    with open(target, "wb") as f:
-        f.write(raw)
-
-
-__all__ = ["download", "writeData"]
+__all__ = ["download"]

@@ -1,6 +1,8 @@
-from sqlalchemy import insert, select, update, delete
+from dataclasses import dataclass
+from sqlalchemy import insert, select, update
 
 from src.base.exceptions import LackException
+from src.common.dataclasses.user import UserTime
 
 from ..base.repository import DBRepository
 from ..models.models import User
@@ -63,33 +65,10 @@ class UserRepository(DBRepository):
             .where(User.data_id == uid)
             .values(
                 {
-                    User.pick_count_remain: count_remain,
-                    User.pick_count_last_calculated: last_calc,
+                    User.slot_empty: count_remain,
+                    User.slot_last_time: last_calc,
                 }
             )
-        )
-
-    async def get_catch_time_data(self, uid: int) -> tuple[int, int, float]:
-        """获得玩家抓小哥的时间数据
-
-        Args:
-            uid (int): 玩家的 uid
-
-        Returns:
-            tuple[int, int, float]: 分别是卡槽数、剩余次数、上次计算时间
-        """
-        return (
-            (
-                await self.session.execute(
-                    select(
-                        User.pick_max_cache,
-                        User.pick_count_remain,
-                        User.pick_count_last_calculated,
-                    ).where(User.data_id == uid)
-                )
-            )
-            .tuples()
-            .one()
         )
 
     async def add_slot_count(self, uid: int, count: int = 1):
@@ -103,7 +82,7 @@ class UserRepository(DBRepository):
         await self.session.execute(
             update(User)
             .where(User.data_id == uid)
-            .values({User.pick_max_cache: User.pick_max_cache + count})
+            .values({User.slot_count: User.slot_count + count})
         )
 
     async def get_sign_in_info(self, uid: int) -> tuple[float, int]:
@@ -115,9 +94,7 @@ class UserRepository(DBRepository):
         Returns:
             tuple[float, int]: 上次签到时间、签到次数
         """
-        query = select(User.last_sign_in_time, User.sign_in_count).filter(
-            User.data_id == uid
-        )
+        query = select(User.sign_last_time, User.sign_count).filter(User.data_id == uid)
         return (await self.session.execute(query)).tuples().one()
 
     async def set_sign_in_info(
@@ -139,8 +116,8 @@ class UserRepository(DBRepository):
             .where(User.data_id == uid)
             .values(
                 {
-                    User.last_sign_in_time: last_sign_in_time,
-                    User.sign_in_count: sign_in_count,
+                    User.sign_last_time: last_sign_in_time,
+                    User.sign_count: sign_in_count,
                 }
             )
         )
@@ -188,9 +165,7 @@ class UserRepository(DBRepository):
         """
         获得上一次早睡时间的时间戳
         """
-        q = select(User.last_sleep_early_time, User.sleep_early_count).filter(
-            User.data_id == uid
-        )
+        q = select(User.sleep_last_time, User.sleep_count).filter(User.data_id == uid)
         r = await self.session.execute(q)
         return r.tuples().one()
 
@@ -201,7 +176,7 @@ class UserRepository(DBRepository):
         q = (
             update(User)
             .filter(User.data_id == uid)
-            .values({User.last_sleep_early_time: ts, User.sleep_early_count: count})
+            .values({User.sleep_last_time: ts, User.sleep_count: count})
         )
         await self.session.execute(q)
 
@@ -221,7 +196,34 @@ class UserRepository(DBRepository):
         await self.session.execute(q)
 
 
-class MoneyRepository(DBRepository):
+@dataclass
+class UserCatchTimeItself:
+    slot_count: int
+    slot_empty: int
+    last_updated_timestamp: float
+
+
+class UserCatchTimeRepository(DBRepository):
+    """
+    和玩家抓小哥数据有关的 Repo
+    """
+
+    async def get_user_time(self, uid: int) -> UserCatchTimeItself:
+        q = select(
+            User.slot_count,
+            User.slot_empty,
+            User.slot_last_time,
+        ).where(User.data_id == uid)
+        r = await self.session.execute(q)
+        slot_count, slot_empty, slot_calctime = r.tuples().one()
+        return UserCatchTimeItself(
+            slot_count=slot_count,
+            slot_empty=slot_empty,
+            last_updated_timestamp=slot_calctime,
+        )
+
+
+class ChipsRepository(DBRepository):
     async def get(self, uid: int) -> float:
         """获得用户现在有多少薯片
 
@@ -233,10 +235,10 @@ class MoneyRepository(DBRepository):
         """
 
         return (
-            await self.session.execute(select(User.money).filter(User.data_id == uid))
+            await self.session.execute(select(User.chips).filter(User.data_id == uid))
         ).scalar_one()
 
-    async def set(self, uid: int, money: float):
+    async def set(self, uid: int, chips: float):
         """设置用户要有多少薯片
 
         Args:
@@ -245,10 +247,10 @@ class MoneyRepository(DBRepository):
         """
 
         await self.session.execute(
-            update(User).where(User.data_id == uid).values({User.money: money})
+            update(User).where(User.data_id == uid).values({User.chips: chips})
         )
 
-    async def add(self, uid: int, money: float):
+    async def add(self, uid: int, chips: float):
         """增加用户的薯片数量
 
         Args:
@@ -256,9 +258,9 @@ class MoneyRepository(DBRepository):
             money (float): 薯片数量
         """
 
-        await self.set(uid, (await self.get(uid)) + money)
+        await self.set(uid, (await self.get(uid)) + chips)
 
-    async def use(self, uid: int, money: float, report: bool = True) -> float:
+    async def use(self, uid: int, chips: float, report: bool = True) -> float:
         """消耗薯片
 
         Args:
@@ -271,20 +273,45 @@ class MoneyRepository(DBRepository):
         """
 
         current = await self.get(uid)
-        if current - money < 0 and report:
-            raise LackException("薯片", money, current)
-        await self.set(uid, current - money)
-        return current - money
+        if current - chips < 0 and report:
+            raise LackException("薯片", chips, current)
+        await self.set(uid, current - chips)
+        return current - chips
+
+
+class BiscuitRepository(DBRepository):
+    async def get(self, uid: int) -> int:
+        q = select(User.biscuit).where(User.data_id == uid)
+        r = await self.session.execute(q)
+        return r.scalar_one()
+
+    async def set(self, uid: int, biscuit: int) -> None:
+        q = (
+            update(User)
+            .where(User.data_id == uid)
+            .values(
+                {
+                    User.biscuit: biscuit,
+                }
+            )
+        )
+        await self.session.execute(q)
+
+    async def add(self, uid: int, biscuit: int) -> None:
+        cu = await self.get(uid)
+        await self.set(uid, cu + biscuit)
+
+    async def use(self, uid: int, biscuit: int) -> None:
+        cu = await self.get(uid)
+        if cu < biscuit:
+            raise LackException("饼干", biscuit, cu)
+        await self.set(uid, cu - biscuit)
 
 
 class UserFlagRepository(DBRepository):
     async def get(self, uid: int) -> set[str]:
         return set(
-            (
-                await self.session.execute(
-                    select(User.feature_flag).filter(User.data_id == uid)
-                )
-            )
+            (await self.session.execute(select(User.flags).filter(User.data_id == uid)))
             .scalar_one()
             .split(",")
         )
@@ -300,7 +327,7 @@ class UserFlagRepository(DBRepository):
         await self.session.execute(
             update(User)
             .where(User.data_id == uid)
-            .values({User.feature_flag: ",".join(flags)})
+            .values({User.flags: ",".join(flags)})
         )
 
     async def add(self, uid: int, flag: str):
@@ -362,12 +389,12 @@ class UserPackRepository(DBRepository):
         """
         获得用户目前在第几个猎场
         """
-        q = select(User.using_pack).filter(User.data_id == uid)
+        q = select(User.using_pid).filter(User.data_id == uid)
         return (await self.session.execute(q)).scalar_one()
 
     async def set_using(self, uid: int, idx: int) -> None:
         """
         设置用户目前在第几个猎场
         """
-        q = update(User).where(User.data_id == uid).values({User.using_pack: idx})
+        q = update(User).where(User.data_id == uid).values({User.using_pid: idx})
         await self.session.execute(q)

@@ -30,7 +30,7 @@ class LevelRepository:
     管理小哥等级数据的数据管理器，在生产环境中应保持只读
     """
 
-    _LEVELS: dict[int, Level] = {}
+    _levels: dict[int, Level] = {}
 
     def register(
         self,
@@ -42,7 +42,7 @@ class LevelRepository:
         awarding: int,
         sorting_priority: int = 0,
     ):
-        self._LEVELS[id] = Level(
+        self._levels[id] = Level(
             lid=id,
             search_names=search_names,
             display_name=display_name,
@@ -53,7 +53,7 @@ class LevelRepository:
         )
 
     def clear(self):
-        self._LEVELS = {}
+        self._levels = {}
 
     def register_basics(self):
         self.register(1, ["一星", "一", "1"], "★", 65, "#C6C1BF", 2)
@@ -65,7 +65,7 @@ class LevelRepository:
 
     @property
     def levels(self):
-        return self._LEVELS
+        return self._levels
 
     @property
     def sorted(self):

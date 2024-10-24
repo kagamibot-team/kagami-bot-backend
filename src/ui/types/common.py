@@ -1,14 +1,12 @@
 import datetime
-import hashlib
 from enum import Enum
 from pathlib import Path
 
-import PIL
-import PIL.Image
-from loguru import logger
 from nonebot import get_driver
 from pydantic import BaseModel, computed_field
 
+from src.base.res import KagamiResourceManagers
+from src.base.res.resource import IResource
 from src.common.times import now_datetime
 
 
@@ -23,46 +21,43 @@ class AwardInfo(BaseModel):
     description: str = "未知小哥。"
     name: str = "？？？"
     color: str = "#696361"
-    image_name: str = "blank_placeholder.png"
-    image_type: str = ""
+    sid: int | None = None
     level: LevelData = LevelData()
     sorting: int = 0
     skin_name: str = ""
+    _img_resource: IResource | None = None
+
+    @property
+    def image_name(self) -> str:
+        if self.sid is not None:
+            return f"sid_{self.sid}.png"
+        return f"aid_{self.aid}.png"
+
+    @property
+    def image_resource(self) -> IResource:
+        if self._img_resource is not None:
+            return self._img_resource
+        return KagamiResourceManagers.xiaoge(self.image_name)
+
+    @property
+    def image_resource_small(self) -> IResource:
+        if self._img_resource is not None:
+            return self._img_resource
+        return KagamiResourceManagers.xiaoge_low(self.image_name)
 
     @property
     def image_path(self) -> Path:
-        if self.image_name == "default.png":
-            return Path("./res/default.png")
-        if self.image_name == "blank_placeholder.png":
-            return Path("./res/blank_placeholder.png")
-        return Path("./data") / self.image_type / self.image_name
+        return self.image_resource.path
 
     @computed_field
     @property
     def image_url_raw(self) -> str:
-        if self.image_name == "default.png":
-            return "/kagami-res/default.png"
-        if self.image_name == "blank_placeholder.png":
-            return "/kagami-res/blank_placeholder.png"
-        return f"/kagami/file/{self.image_type}/{self.image_name}"
+        return self.image_resource.url
 
     @computed_field
     @property
     def image_url(self) -> str:
-        if self.image_name == "default.png":
-            return "/kagami-res/default.png"
-        if self.image_name == "blank_placeholder.png":
-            return "/kagami-res/blank_placeholder.png"
-        _target_hash = hashlib.md5(
-            str(self.image_path).encode() + self.image_path.read_bytes()
-        ).hexdigest()
-        _target_path = Path("./data/temp/") / f"temp_{_target_hash}.png"
-        if not _target_path.exists():
-            logger.info(f"正在创建 {self.image_path} 的缩小文件")
-            img = PIL.Image.open(self.image_path)
-            img = img.resize((175, 140))
-            img.save(_target_path)
-        return f"/kagami/file/temp/temp_{_target_hash}.png"
+        return self.image_resource_small.url
 
     @computed_field
     @property

@@ -19,20 +19,10 @@ class BroadcastData(BaseModel):
     is_admin: bool = False
 
 
-import os
-import time
-from pathlib import Path
-
-
-import os
-import time
-from pathlib import Path
-
-
 def log_stream(
-    log_file_path=Path("./data/log.log"),
-    last_n_lines=50,
-    block_size=1024,
+    log_file_path: Path = Path("./data/log.log"),
+    last_n_lines: int = 50,
+    block_size: int = 1024,
 ) -> Generator[str, Any, NoReturn]:
     with open(log_file_path, "rb") as log_file:
         log_file.seek(0, os.SEEK_END)
@@ -55,7 +45,7 @@ def log_stream(
                 try:
                     decoded_data = buffer.decode("utf-8")
                     break
-                except UnicodeDecodeError as e:
+                except UnicodeDecodeError:
                     # 这时候很有可能是开头的一个字符被截断，我们试着往前一个步长
                     log_file.seek(1, os.SEEK_CUR)
                     buffer = buffer[1:]

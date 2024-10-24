@@ -1,5 +1,7 @@
+from typing import Any
 from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
+from sqlalchemy.orm import InstrumentedAttribute
 
 from src.base.exceptions import ObjectNotFoundException
 from src.base.repository import DBRepository
@@ -193,24 +195,18 @@ class UpPoolRepository(DBRepository):
         display: int | None = None,
         enabled: bool | None = None,
     ):
+        modify_dict: dict[InstrumentedAttribute[Any], Any] = {
+            UpPool.belong_pack: belong_pack,
+            UpPool.name: name,
+            UpPool.cost: cost,
+            UpPool.display: display,
+            UpPool.enabled: enabled,
+        }
+
         q = (
             update(UpPool)
             .where(UpPool.data_id == upid)
-            .values(
-                {
-                    i: v
-                    for i, v in (
-                        {
-                            UpPool.belong_pack: belong_pack,
-                            UpPool.name: name,
-                            UpPool.cost: cost,
-                            UpPool.display: display,
-                            UpPool.enabled: enabled,
-                        }
-                    ).items()
-                    if v is not None
-                }
-            )
+            .values({i: v for i, v in modify_dict.items() if v is not None})
         )
         await self.session.execute(q)
 

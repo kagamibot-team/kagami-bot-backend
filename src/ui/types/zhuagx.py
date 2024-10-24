@@ -634,6 +634,14 @@ updates = [
             ),
         ],
     ),
+    VersionData(
+        version="1.2.8",
+        updates=[
+            UpdateContentData(
+                content="修复了和抓小哥冷却时间判断有关的问题", tags=["修复"]
+            ),
+        ],
+    ),
 ]
 
 

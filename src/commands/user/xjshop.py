@@ -23,13 +23,6 @@ from src.ui.types.xjshop import BuyData, Product, ProductGroup, ShopDisplay
 
 
 async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
-    def trans_image(path: Path) -> str:
-        if path.parent == Path("./res"):
-            return "/kagami-res/" + path.name
-        if path.parent == Path("./data/temp"):
-            return "/kagami/file/temp/" + path.name
-        return "/kagami-res/blank_placeholder.png"
-
     shop_data = ShopDisplay(
         user=user,
         chips=int(money),
@@ -41,7 +34,7 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
                         title1=product.title,
                         title2=product.description,
                         display_box=DisplayBoxData(
-                            image=trans_image(product.image),
+                            image=product.image.url,
                             color=product.background_color,
                             notation_down=f"{int(product.price)}薯片",
                             sold_out_overlay=product.is_sold_out,
@@ -109,7 +102,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 uid=uid, qqid=str(ctx.sender_id), name=await ctx.sender_name
             )
             freezed_shop = await shop.freeze(uow, uid)
-            money = await uow.money.get(uid)
+            money = await uow.chips.get(uid)
             await StatService(uow).check_xjshop(uid)
         msg = await shop_default_message(user, freezed_shop, money)
         await ctx.send(msg)
@@ -131,6 +124,6 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 costs += await prod.price(uow, uid)
                 prods.append(await prod.freeze(uow, uid))
                 await prod.gain(uow, uid)
-            remain = await uow.money.use(uid, costs)
+            remain = await uow.chips.use(uid, costs)
             await StatService(uow).xjshop_buy(uid, int(costs))
         await ctx.send(await shop_buy_message(user, prods, remain))

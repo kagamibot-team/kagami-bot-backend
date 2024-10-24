@@ -64,7 +64,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         msg = await render_award_info_message(dt, count=sto, stats=sta)
         await ctx.send(msg)
     elif do_admin:
-        msg = (
+        msg: UniMessage[Any] = (
             UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
             .image(path=info.image_path)
             .text(

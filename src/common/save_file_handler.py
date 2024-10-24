@@ -5,12 +5,9 @@
 import asyncio
 import os
 import pathlib
-import shutil
 import zipfile
-from sqlalchemy import select, update
+
 from src.common.times import now_datetime
-from src.core.unit_of_work import get_unit_of_work
-from src.models.models import Award, Skin
 
 
 def move_file(src: pathlib.Path, dst: pathlib.Path):
@@ -31,74 +28,6 @@ def move_file(src: pathlib.Path, dst: pathlib.Path):
         os.remove(src)
     except PermissionError:
         pass
-
-
-async def collect_images():
-    """
-    将图像资源文件整理并置放到对应的文件夹，并将先前的图片文件备份到 Backup 中
-    """
-
-    async with get_unit_of_work() as uow:
-        session = uow.session
-        query = select(Award.data_id, Award.image)
-        awards = (await session.execute(query)).tuples()
-
-        folder = pathlib.Path("./data/awards/")
-        applied: set[pathlib.Path] = set()
-
-        for did, img in awards:
-            img_path = pathlib.Path(img)
-            if img_path.parent != folder:
-                target_path = folder / f"{did}_0.png"
-                if os.path.exists(img_path):
-                    shutil.move(img_path, target_path)
-                img_path = target_path
-                await session.execute(
-                    update(Award)
-                    .where(Award.data_id == did)
-                    .values({Award.image: img_path.as_posix()})
-                )
-            applied.add(img_path)
-
-        backup_dir = pathlib.Path("./data/backup/awards/")
-
-        if not os.path.exists(backup_dir):
-            os.mkdir(backup_dir)
-
-        for fp in folder.iterdir():
-            if fp not in applied:
-                target_path = backup_dir / fp.name
-                move_file(fp, target_path)
-
-        query2 = select(Skin.data_id, Skin.image)
-        skins = (await session.execute(query2)).tuples()
-
-        folder = pathlib.Path("./data/skins/")
-        applied: set[pathlib.Path] = set()
-
-        for did, img in skins:
-            img_path = pathlib.Path(img)
-            if img_path.parent != folder:
-                target_path = folder / f"{did}_0.png"
-                if os.path.exists(img_path):
-                    shutil.move(img_path, target_path)
-                img_path = target_path
-                await session.execute(
-                    update(Skin)
-                    .where(Skin.data_id == did)
-                    .values({Skin.image: img_path.as_posix()})
-                )
-            applied.add(img_path)
-
-        backup_dir = pathlib.Path("./data/backup/skins/")
-
-        if not os.path.exists(backup_dir):
-            os.mkdir(backup_dir)
-
-        for fp in folder.iterdir():
-            if fp not in applied:
-                target_path = backup_dir / fp.name
-                move_file(fp, target_path)
 
 
 def pack_save_task(zfp: pathlib.Path):

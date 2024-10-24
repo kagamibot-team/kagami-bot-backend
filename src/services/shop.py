@@ -1,21 +1,18 @@
-import hashlib
 from abc import ABC, abstractmethod
-from pathlib import Path
-
-import PIL
-import PIL.Image
-import PIL.ImageFilter
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 from src.base.exceptions import ObjectNotFoundException
+from src.base.res import KagamiResourceManagers
+from src.base.res.resource import IResource
 from src.core.unit_of_work import UnitOfWork
 
 
-class ShopProductFreezed(BaseModel):
+@dataclass
+class ShopProductFreezed:
     title: str
     description: str
     background_color: str
-    image: Path
+    image: IResource
     price: float
     is_sold_out: bool
     type: str
@@ -58,7 +55,7 @@ class ShopProduct(ABC):
         """成功购买一个商品时触发的操作"""
 
     @abstractmethod
-    async def image(self, uow: UnitOfWork, uid: int) -> Path:
+    async def image(self, uow: UnitOfWork, uid: int) -> IResource:
         """商品的图片"""
 
     @property
@@ -83,23 +80,11 @@ class SkinProduct(ShopProduct):
     def type(self):
         return "皮肤"
 
-    @property
-    def cache(self) -> Path:
-        return Path("./data/temp") / (
-            "blurred_"
-            + hashlib.md5(Path(self._image).read_bytes()).hexdigest()
-            + ".png"
-        )
-
     async def title(self, uow: UnitOfWork, uid: int):
         return "皮肤" + self._title
 
     async def image(self, uow: UnitOfWork, uid: int):
-        if not self.cache.exists():
-            raw = PIL.Image.open(self._image)
-            raw = raw.filter(PIL.ImageFilter.BoxBlur(100))
-            raw.save(self.cache)
-        return self.cache
+        return KagamiResourceManagers.xiaoge_blurred(f"sid_{self.sid}.png")
 
     async def description(self, uow: UnitOfWork, uid: int):
         return f"{self._aname}的皮肤"
@@ -120,11 +105,10 @@ class SkinProduct(ShopProduct):
         await uow.skin_inventory.give(uid, self.sid)
 
     def __init__(
-        self, sid: int, name: str, image: str, aname: str, price: float, bgc: str
+        self, sid: int, name: str, aname: str, price: float, bgc: str
     ) -> None:
         self.sid = sid
         self._title = name
-        self._image = image
         self._aname = aname
         self._bgc = bgc
         self._price = price
@@ -135,8 +119,8 @@ class AddSlots(ShopProduct):
     def type(self):
         return "道具"
 
-    async def _slots(self, uow: UnitOfWork, uid: int):
-        return (await uow.users.get_catch_time_data(uid))[0]
+    async def _slots(self, uow: UnitOfWork, uid: int) -> int:
+        return (await uow.user_catch_time.get_user_time(uid)).slot_count
 
     async def title(self, uow: UnitOfWork, uid: int):
         return "增加卡槽上限"
@@ -145,7 +129,7 @@ class AddSlots(ShopProduct):
         return f"增加卡槽上限至{await self._slots(uow, uid) + 1}"
 
     async def image(self, uow: UnitOfWork, uid: int):
-        return Path("./res/add1.png")
+        return KagamiResourceManagers.res("add1.png")
 
     async def price(self, uow: UnitOfWork, uid: int) -> float:
         return 25 * (2 ** (await self._slots(uow, uid)))
@@ -181,7 +165,7 @@ class MergeMachine(ShopProduct):
         return 1200
 
     async def image(self, uow: UnitOfWork, uid: int):
-        return Path("./res/merge_machine.png")
+        return KagamiResourceManagers.res("merge_machine.png")
 
     async def is_sold_out(self, uow: UnitOfWork, uid: int) -> bool:
         return await uow.user_flag.have(uid, "合成")
@@ -253,10 +237,10 @@ async def build_xjshop(uow: UnitOfWork) -> ShopService:
     # service.register(SignHint())
 
     # 注册皮肤信息
-    for sid, aid, sname, _, simage, price in await uow.skins.all():
+    for sid, aid, sname, _, price in await uow.skins.all():
         if price <= 0:
             continue
         info = await uow.awards.get_info(aid)
-        service.register(SkinProduct(sid, sname, simage, info.name, price, info.color))
+        service.register(SkinProduct(sid, sname, info.name, price, info.color))
 
     return service

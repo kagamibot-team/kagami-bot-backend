@@ -16,27 +16,6 @@ class AwardRepository(DBRepository):
     小哥的仓库
     """
 
-    async def get_all_images(self) -> dict[int, str]:
-        """获得目前含有的所有图片
-
-        Returns:
-            dict[int, str]: 字典，是 Aid 到图片地址的字典
-        """
-        qa = select(Award.data_id, Award.image)
-        return {row[0]: row[1] for row in (await self.session.execute(qa)).tuples()}
-
-    async def update_image(self, data_id: int, image: str | Path) -> None:
-        """更改小哥的图片
-
-        Args:
-            data_id (int): 小哥的 ID
-            image (str | Path): 图片的地址
-        """
-        if not isinstance(image, str):
-            image = image.as_posix()
-        u = update(Award).where(Award.data_id == data_id).values(image=image)
-        await self.session.execute(u)
-
     async def add_award(self, name: str, lid: int):
         """添加一个小哥
 
@@ -174,7 +153,6 @@ class AwardRepository(DBRepository):
         name: str | None = None,
         description: str | None = None,
         lid: int | None = None,
-        image: str | Path | None = None,
         pack_id: int | None = None,
         sorting: int | None = None,
     ):
@@ -185,7 +163,6 @@ class AwardRepository(DBRepository):
             name (str | None): 名字
             description (str | None): 描述
             lid (int | None): 等级 ID
-            image (str | Path | None): 图片
             pack_id (int | None): 小哥所在的猎场，0 代表所有，-1 代表不出现
             sorting (int | None): 排序的优先级
         """
@@ -197,8 +174,6 @@ class AwardRepository(DBRepository):
             query = query.values({Award.description: description})
         if lid is not None:
             query = query.values({Award.level_id: lid})
-        if image is not None:
-            query = query.values({Award.image: Path(image).as_posix()})
         if pack_id is not None:
             query = query.values({Award.main_pack_id: pack_id})
         if sorting is not None:
@@ -252,18 +227,16 @@ class AwardRepository(DBRepository):
         return dict(r.tuples().all())
 
     async def get_info(self, aid: int) -> AwardInfo:
-        q = select(
-            Award.description, Award.name, Award.level_id, Award.image, Award.sorting
-        ).filter(Award.data_id == aid)
-        d, n, l, i, s = (await self.session.execute(q)).tuples().one()
+        q = select(Award.description, Award.name, Award.level_id, Award.sorting).filter(
+            Award.data_id == aid
+        )
+        d, n, l, s = (await self.session.execute(q)).tuples().one()
         lv = level_repo.get_data_by_id(l)
 
         return AwardInfo(
             description=d,
             name=n,
             color=lv.color,
-            image_name=Path(i).name,
-            image_type="awards",
             level=lv,
             aid=aid,
             sorting=s,
@@ -275,7 +248,6 @@ class AwardRepository(DBRepository):
             Award.description,
             Award.name,
             Award.level_id,
-            Award.image,
             Award.sorting,
         ).filter(Award.data_id.in_(aids))
         tpls = (await self.session.execute(q)).tuples().all()
@@ -285,11 +257,9 @@ class AwardRepository(DBRepository):
                 description=d,
                 name=n,
                 color=level_repo.get_data_by_id(l).color,
-                image_name=Path(i).name,
-                image_type="awards",
                 level=level_repo.get_data_by_id(l),
                 aid=aid,
                 sorting=s,
             )
-            for aid, d, n, l, i, s in tpls
+            for aid, d, n, l, s in tpls
         }
