@@ -642,6 +642,17 @@ updates = [
             ),
         ],
     ),
+    VersionData(
+        version="1.2.9",
+        updates=[
+            UpdateContentData(
+                content="修复了展示小哥的一处逻辑漏洞", tags=["修复"]
+            ),
+            UpdateContentData(
+                content="调整了后端的资源管理内核", tags=["核心"]
+            )
+        ]
+    )
 ]
 
 
