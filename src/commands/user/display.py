@@ -4,7 +4,7 @@ from arclet.alconna import Alconna, Arg, Arparma, Option
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
-from src.base.exceptions import DoNotHaveException
+from src.base.exceptions import DoNotHaveException, KagamiArgumentException
 from src.common.command_deco import listen_message, match_alconna
 from src.common.data.awards import get_award_info
 from src.core.unit_of_work import get_unit_of_work
@@ -49,6 +49,8 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             sid = await uow.skins.get_sid_strong(skin_name)
             if not do_admin and not await uow.skin_inventory.do_user_have(uid, sid):
                 raise DoNotHaveException(skin_name)
+            if await uow.skins.get_aid(sid) != aid:
+                raise KagamiArgumentException("这个皮肤不是这个小哥的！")
             uid = None
         if do_admin:
             uid = None
