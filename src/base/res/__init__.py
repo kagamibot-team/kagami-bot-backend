@@ -46,10 +46,7 @@ class KagamiResourceManagers:
     xiaoge_blurred = ShadowStorageStrategy(
         xiaoge,
         FileStorageStrategy(Path("./data/temp/blurred")),
-        [
-            ResizeMiddleware(175, 140),
-            BlurMiddleware(10)
-        ],
+        [ResizeMiddleware(175, 140), BlurMiddleware(10)],
     )
 
     tmp = TempdirStorageStrategy()

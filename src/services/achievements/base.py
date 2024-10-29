@@ -5,7 +5,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, computed_field
 
-from src.base.resources import Resource, static_res
+from src.base.res import KagamiResourceManagers
+from src.base.res.resource import IResource
 from src.common.dataclasses.game_events import DummyEvent, UserDataUpdatedEvent
 from src.core.unit_of_work import UnitOfWork
 
@@ -76,7 +77,7 @@ class Achievement(BaseModel, ABC):
     prise_description: str | None = None
     "奖励的描述，如果为 None 代表没有奖励"
 
-    image: Resource = static_res("blank_placeholder.png")
+    image: IResource = KagamiResourceManagers.res("blank_placeholder.png")
     "成就的图标"
 
     achievement_type: AchievementType = AchievementType.advancement
@@ -91,7 +92,7 @@ class Achievement(BaseModel, ABC):
     @computed_field
     @property
     def image_url(self) -> str:
-        return self.image.compress_image().url
+        return self.image.url
 
     @property
     def image_path(self) -> Path:

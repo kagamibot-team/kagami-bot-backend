@@ -11,11 +11,6 @@ class ResourceURLRegisterator:
         if path in self.registered:
             return self.registered[path]
 
-        # hashed = hex(hash(path))
-
-        # Instead, use sha256 to generate
-        # a unique hash for the path.
-
         hashed = sha256(path.read_bytes()).hexdigest()
         url = f"/kagami/file/registered/{hashed}"
         self.registered[path] = url

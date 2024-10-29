@@ -9,7 +9,8 @@ from src.base.exceptions import (
     KagamiRangeError,
     ObjectNotFoundException,
 )
-from src.base.resources import Resource, static_res
+from src.base.res import KagamiResourceManagers
+from src.base.res.resource import IResource
 from src.core.unit_of_work import UnitOfWork
 
 T = TypeVar("T")
@@ -44,7 +45,7 @@ class BaseItem(BaseModel, Generic[T], ABC):
     description: str
     "物品的描述"
 
-    image: Resource = static_res("blank_placeholder.png")
+    image: IResource = KagamiResourceManagers.res("blank_placeholder.png")
     "物品的图片"
 
     item_sorting: float = 0.0
