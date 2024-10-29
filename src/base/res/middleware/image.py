@@ -17,6 +17,18 @@ class BaseImageMiddleware(ABC):
         return self.__class__.__name__
 
 
+class ToRGBAMiddleware(BaseImageMiddleware):
+    """
+    将 PILLOW 图像转换为 RGBA
+    """
+
+    def handle(self, image: PIL.Image.Image) -> PIL.Image.Image:
+        return image.convert("RGBA")
+
+    def to_string(self) -> str:
+        return "ToRGBAMiddleware"
+
+
 class ResizeMiddleware(BaseImageMiddleware):
     """
     对 PILLOW 图像进行缩放

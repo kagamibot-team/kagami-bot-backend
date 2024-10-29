@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from src.base.res.middleware.filter import WithPrefixFilter
-from src.base.res.middleware.image import BlurMiddleware, ResizeMiddleware
+from src.base.res.middleware.image import BlurMiddleware, ResizeMiddleware, ToRGBAMiddleware
 from src.base.res.strategy import (
     CombinedStorageStrategy,
     FileStorageStrategy,
@@ -40,14 +40,14 @@ class KagamiResourceManagers:
     xiaoge_low = ShadowStorageStrategy(
         xiaoge,
         FileStorageStrategy(Path("./data/temp/low")),
-        ResizeMiddleware(175, 140),
+        [ResizeMiddleware(175, 140), ToRGBAMiddleware()],
     )
     "低分辨率的小哥和皮肤图片资源"
 
     xiaoge_blurred = ShadowStorageStrategy(
         xiaoge,
         FileStorageStrategy(Path("./data/temp/blurred")),
-        [ResizeMiddleware(175, 140), BlurMiddleware(10)],
+        [ResizeMiddleware(175, 140), BlurMiddleware(10), ToRGBAMiddleware()],
     )
 
     tmp = TempdirStorageStrategy()
