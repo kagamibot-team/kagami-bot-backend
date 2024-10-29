@@ -37,12 +37,16 @@ class AwardInfo(BaseModel):
     def image_resource(self) -> IResource:
         if self._img_resource is not None:
             return self._img_resource
+        if self.aid <= 0:
+            return KagamiResourceManagers.xiaoge("blank_placeholder.png")
         return KagamiResourceManagers.xiaoge(self.image_name)
 
     @property
     def image_resource_small(self) -> IResource:
         if self._img_resource is not None:
             return self._img_resource
+        if self.aid <= 0:
+            return KagamiResourceManagers.xiaoge_low("blank_placeholder.png")
         return KagamiResourceManagers.xiaoge_low(self.image_name)
 
     @property

@@ -31,6 +31,7 @@ class KagamiResourceManagers:
             FilteredStorageStrategy(
                 FileStorageStrategy(Path("./data/skins")), WithPrefixFilter("sid_")
             ),
+            StaticStorageStrategy(Path("./res")),
             JustFallBackStorageStrategy(Path("./res/default.png")),
         ]
     )
