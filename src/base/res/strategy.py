@@ -60,7 +60,7 @@ class StaticStorageStrategy(IReadonlyStorageStrategy):
         return (self.root / file_name).exists()
 
     def get(self, file_name: str) -> IResource:
-        return LocalResource(self.root / file_name)
+        return LocalResource(local_path=self.root / file_name)
 
 
 class FileStorageStrategy(IWriteableStorageStrategy):
@@ -75,7 +75,7 @@ class FileStorageStrategy(IWriteableStorageStrategy):
         return (self.root / file_name).exists()
 
     def get(self, file_name: str) -> IResource:
-        return LocalResource(self.root / file_name)
+        return LocalResource(local_path=self.root / file_name)
 
     def put(self, file_name: str, data: bytes) -> IResource:
         # 先确保文件夹存在
@@ -99,7 +99,7 @@ class TempdirStorageStrategy(IWriteableStorageStrategy):
         return (self.root / file_name).exists()
 
     def get(self, file_name: str) -> IResource:
-        return LocalResource(self.root / file_name)
+        return LocalResource(local_path=self.root / file_name)
 
     def put(self, file_name: str, data: bytes) -> IResource:
         self.root.joinpath(file_name).write_bytes(data)
@@ -172,7 +172,7 @@ class JustFallBackStorageStrategy(IReadonlyStorageStrategy):
         return self.fp.exists()
 
     def get(self, file_name: str) -> IResource:
-        return LocalResource(self.fp)
+        return LocalResource(local_path=self.fp)
 
 
 class FilteredStorageStrategy(IStorageStrategy):

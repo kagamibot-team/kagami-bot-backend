@@ -3,16 +3,19 @@ from pathlib import Path
 
 import PIL
 import PIL.Image
+from pydantic import BaseModel, computed_field
 
 from .urls import resource_url_registerator
 
 
-class IResource(ABC):
+class IResource(ABC, BaseModel):
+    @computed_field
     @property
     @abstractmethod
     def path(self) -> Path:
         """资源的路径"""
 
+    @computed_field
     @property
     @abstractmethod
     def url(self) -> str:
@@ -22,14 +25,15 @@ class IResource(ABC):
         return PIL.Image.open(self.path)
 
 
-class LocalResource(IResource):
-    def __init__(self, path: Path):
-        self._path = path
+class LocalResource(IResource, BaseModel):
+    local_path: Path
 
+    @computed_field
     @property
     def path(self) -> Path:
-        return self._path
+        return self.local_path
 
+    @computed_field
     @property
     def url(self) -> str:
         return resource_url_registerator.register(self.path)
