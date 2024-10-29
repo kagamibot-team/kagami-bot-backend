@@ -17,6 +17,8 @@ from src.base.command_events import GroupContext, MessageContext, OnebotContext
 from src.base.db import DatabaseManager
 from src.base.onebot.onebot_api import get_group_list
 from src.base.onebot.onebot_tools import update_cached_name
+from src.base.res import KagamiResourceManagers
+from src.base.res.strategy import FileStorageStrategy
 from src.common.command_deco import (
     listen_message,
     match_alconna,
@@ -186,3 +188,15 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
         "::browser-pool --clean  # 清理不可用的渲染器\n"
         "::browser-pool --reload-all  # 重载所有渲染器"
     )
+
+
+@listen_message()
+@require_admin()
+@match_literal("::clear-shadow-cache")
+async def _(ctx: MessageContext):
+    shadow = KagamiResourceManagers.xiaoge_low.shadow
+    assert isinstance(shadow, FileStorageStrategy)
+    files = [f for f in shadow.root.iterdir()]
+    for file in files:
+        file.unlink(True)
+    await ctx.reply("ok.")
