@@ -5,7 +5,7 @@ from unittest import TestCase
 import PIL
 import PIL.Image
 
-from src.base.res.middleware.filter import WithPrefixFilter
+from src.base.res.middleware.filter import WithPrefixFilter, WithSuffixFilter
 from src.base.res.middleware.image import ResizeMiddleware
 from src.base.res.strategy import (
     CombinedStorageStrategy,
@@ -105,16 +105,19 @@ class TestStrategy(TestCase):
         with tempfile.TemporaryDirectory() as tempdir:
             path = Path(tempdir)
 
-            (path / "base2").mkdir()
-            (path / "base2" / "tmp_234").write_bytes(b"114")
-            (path / "base2" / "other_345").write_bytes(b"2341")
+            (path / "base3").mkdir()
+            (path / "base3" / "tmp_234").write_bytes(b"114")
+            (path / "base3" / "other_345").write_bytes(b"2341")
 
             strategy1 = FilteredStorageStrategy(
                 FileStorageStrategy(path / "base1"), WithPrefixFilter("tmp_")
             )
-            strategy2 = StaticStorageStrategy(path / "base2")
+            strategy2 = FilteredStorageStrategy(
+                FileStorageStrategy(path / "base2"), WithSuffixFilter("qwe")
+            )
+            strategy3 = StaticStorageStrategy(path / "base3")
 
-            strategy = CombinedStorageStrategy([strategy1, strategy2])
+            strategy = CombinedStorageStrategy([strategy1, strategy2, strategy3])
 
             strategy1.put("tmp_123", b"123123")
 
@@ -123,3 +126,14 @@ class TestStrategy(TestCase):
             self.assertFalse(strategy.exists("tmp_2345"))
             self.assertTrue(strategy.exists("other_345"))
             self.assertFalse(strategy.exists("other_456"))
+
+            strategy.put("tmp_345", b"333")
+            self.assertTrue(strategy1.exists("tmp_345"))
+            self.assertFalse(strategy2.exists("tmp_345"))
+
+            strategy.put("qweqwe", b"999")
+            self.assertFalse(strategy1.exists("qweqwe"))
+            self.assertTrue(strategy2.exists("qweqwe"))
+
+            with self.assertRaises(ValueError):
+                strategy.put("something_else", b"123123")

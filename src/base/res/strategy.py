@@ -230,7 +230,7 @@ class CombinedStorageStrategy(IStorageStrategy):
 
     def put(self, file_name: str, data: bytes) -> IResource:
         for strategy in self.strategies:
-            if strategy.can_put(file_name):
+            if not strategy.can_put(file_name):
                 continue
             return strategy.put(file_name, data)
         raise ValueError("No writable strategy")
