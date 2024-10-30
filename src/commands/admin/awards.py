@@ -1,3 +1,4 @@
+import re
 from typing import Any
 import PIL
 import PIL.Image
@@ -12,6 +13,7 @@ from src.common.command_deco import (
     listen_message,
     match_alconna,
     match_literal,
+    match_regex,
     require_admin,
 )
 from src.common.data.awards import download_award_image
@@ -366,3 +368,22 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             if width != 2000:
                 msg += f"{award.name}（{aid}）：{width}x{height}\n"
         await ctx.send(UniMessage.text(msg))
+
+
+@listen_message()
+@require_admin()
+@match_regex("^:: ?全服发 ?(.+)$")
+async def _(ctx: MessageContext, res: re.Match[str]):
+    # 槽哥说，这个指令是万圣节活动要用的。
+    # 所以我就写在这里了。
+    # 你们读代码的，嗯，忽略这里吧。
+    
+    result = res.group(1)
+    if result is None:
+        return
+    async with get_unit_of_work() as uow:
+        aid = await uow.awards.get_aid_strong(result)
+        uids = await uow.users.all_users()
+        for uid in uids:
+            await uow.inventories.give(uid, aid, 1)
+    await ctx.reply("给了。")
