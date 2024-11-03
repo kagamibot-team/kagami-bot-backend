@@ -227,10 +227,14 @@ class AwardRepository(DBRepository):
         return dict(r.tuples().all())
 
     async def get_info(self, aid: int) -> AwardInfo:
-        q = select(Award.description, Award.name, Award.level_id, Award.sorting).filter(
-            Award.data_id == aid
-        )
-        d, n, l, s = (await self.session.execute(q)).tuples().one()
+        q = select(
+            Award.description,
+            Award.name,
+            Award.level_id,
+            Award.sorting,
+            Award.main_pack_id,
+        ).filter(Award.data_id == aid)
+        d, n, l, s, p = (await self.session.execute(q)).tuples().one()
         lv = level_repo.get_data_by_id(l)
 
         return AwardInfo(
@@ -240,6 +244,7 @@ class AwardRepository(DBRepository):
             level=lv,
             aid=aid,
             sorting=s,
+            pid=p,
         )
 
     async def get_info_dict(self, aids: Iterable[int]) -> dict[int, AwardInfo]:
@@ -249,6 +254,7 @@ class AwardRepository(DBRepository):
             Award.name,
             Award.level_id,
             Award.sorting,
+            Award.main_pack_id,
         ).filter(Award.data_id.in_(aids))
         tpls = (await self.session.execute(q)).tuples().all()
 
@@ -260,6 +266,7 @@ class AwardRepository(DBRepository):
                 level=level_repo.get_data_by_id(l),
                 aid=aid,
                 sorting=s,
+                pid=p,
             )
-            for aid, d, n, l, s in tpls
+            for aid, d, n, l, s, p in tpls
         }

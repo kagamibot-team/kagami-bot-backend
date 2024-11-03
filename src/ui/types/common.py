@@ -26,6 +26,7 @@ class AwardInfo(BaseModel):
     sorting: int = 0
     skin_name: str = ""
     _img_resource: IResource | None = None
+    pid: int = -1   # 猎场 ID，目前仅在 zhuajd 中使用到了
 
     @property
     def image_name(self) -> str:

@@ -138,6 +138,6 @@ class TestStrategy(TestCase):
 
             with self.assertRaises(ValueError):
                 strategy.put("something_else", b"123123")
-                
+
             self.assertEqual(strategy.get("tmp_345").path, path / "base1" / "tmp_345")
             self.assertEqual(strategy.get("tmp_234").path, path / "base3" / "tmp_234")

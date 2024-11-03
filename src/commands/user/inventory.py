@@ -1,18 +1,18 @@
 from typing import Any, Iterable
 
+from arclet.alconna import Alconna, Arg, Arparma, Option
 from nonebot_plugin_alconna import UniMessage
+
 from src.base.command_events import MessageContext
 from src.base.exceptions import KagamiRangeError
 from src.common.command_deco import listen_message, match_alconna, match_regex
-from arclet.alconna import Alconna, Arg, Arparma, Option
-
 from src.common.data.awards import get_award_info
 from src.common.data.user import get_user_data
 from src.core.unit_of_work import get_unit_of_work
 from src.models.level import Level
 from src.ui.base.render import get_render_pool
 from src.ui.types.common import AwardInfo
-from src.ui.types.inventory import BookBoxData, DisplayBoxData, StorageData, BoxItemList
+from src.ui.types.inventory import BookBoxData, BoxItemList, DisplayBoxData, StorageData
 
 
 def build_display(
@@ -20,6 +20,14 @@ def build_display(
     storage: dict[int, int] | None = None,
     stats: dict[int, int] | None = None,
 ) -> list[BookBoxData]:
+    """
+    将 Info 列表转换为 BookBoxData 列表视图
+
+    如果提供了库存和统计信息，则会考虑玩家是否拥有的实际情况，
+
+    决定是否显示该物品
+    """
+
     elements: list[BookBoxData] = []
 
     for d in info:
@@ -166,9 +174,9 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         raw_aids = list(set(aids1) | set(aids2))
         aids: list[int] = []
         for aid in raw_aids:
+            # 保证列表中的小哥不是未推出的猎场里面的
             if await uow.pack.get_main_pack(aid) <= pack_max:
                 aids.append(aid)
-        aids.sort()
 
         infos = await uow.awards.get_info_dict(aids)
         for aid in infos:
@@ -182,6 +190,8 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         groups: list[BoxItemList] = []
 
         grouped_aids = await uow.awards.group_by_level(aids)
+
+        # 将未拥有的小哥过滤为 None
         grouped_aids_filtered = [
             (
                 uow.levels.get_by_id(i),
@@ -189,6 +199,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             )
             for i, vs in grouped_aids.items()
         ]
+
         progress = calc_progress(grouped_aids_filtered)
         your_gedu = calc_gedu(grouped_aids_filtered)
 
@@ -202,7 +213,10 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
 
             lvl = uow.levels.get_by_id(i)
             _infos = [infos[aid] for aid in grouped_aids[i]]
-            _infos = sorted(_infos, key=lambda x: x.aid)
+            _infos = sorted(
+                _infos,
+                key=lambda x: (max(x.pid, 0), x.aid),
+            )
             if i == 0:
                 # 零星小哥的特殊处理
                 _infos = [i for i in _infos if stats_dict.get(i.aid, 0) > 0]
