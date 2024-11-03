@@ -19,6 +19,7 @@ from src.base.onebot.onebot_api import get_group_list
 from src.base.onebot.onebot_tools import update_cached_name
 from src.base.res import KagamiResourceManagers
 from src.base.res.strategy import FileStorageStrategy
+from src.common import config
 from src.common.command_deco import (
     listen_message,
     match_alconna,
@@ -27,6 +28,7 @@ from src.common.command_deco import (
     require_admin,
 )
 from src.common.save_file_handler import pack_save
+from src.ui.base.rabbitmq_worker import RabbitMQWorker
 from src.ui.base.render import (
     ChromeBrowserWorker,
     FirefoxBrowserWorker,
@@ -169,6 +171,17 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
             await ctx.reply("ok.")
         elif br_type.upper() == "FIREFOX":
             await pool.put(FirefoxBrowserWorker)
+            await ctx.reply("ok.")
+        elif br_type.upper() == "RABBITMQ":
+            await pool.put(
+                lambda: RabbitMQWorker(
+                    config.get_config().rabbitmq_host,
+                    config.get_config().rabbitmq_port,
+                    config.get_config().rabbitmq_virtual_host,
+                    config.get_config().rabbitmq_account,
+                    config.get_config().rabbitmq_password,
+                )
+            )
             await ctx.reply("ok.")
         else:
             await ctx.reply(f"未知的渲染器类型：{br_type}")
