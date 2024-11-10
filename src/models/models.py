@@ -100,6 +100,10 @@ class User(Base, BaseMixin):
     own_packs: Mapped[str] = mapped_column(default="1", server_default="'1'")
     "用户有哪些猎场"
 
+    # 20241104 追加
+    # 上次购买皮肤盲盒的时间
+    buy_skin_box_last_time: Mapped[float] = mapped_column(default=0, server_default="0")
+
 
 class SkinRecord(Base, BaseMixin):
     __tablename__ = "catch_skin_inventory"
@@ -116,6 +120,14 @@ class Skin(Base, BaseMixin):
     description: Mapped[str] = mapped_column(default="")
     price: Mapped[float] = mapped_column(default=-1.0)
     aid = Column(Integer, ForeignKey("catch_award.data_id", ondelete="CASCADE"))
+
+    # 20241104 追加
+
+    biscuit: Mapped[int] = mapped_column(default=0, server_default="0")
+    "在皮肤商店中售卖的饼干价格，设置成小于等于 0 的值则代表不售卖"
+
+    level: Mapped[int] = mapped_column(default=0, server_default="0")
+    "皮肤的等级，具体请参照文档"
 
 
 class SkinAltName(Base, BaseMixin, AltNameMixin):

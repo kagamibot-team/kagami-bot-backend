@@ -3,16 +3,14 @@
 """
 
 import uuid
-from pathlib import Path
 
 import src
-from src.base.res.resource import IResource
 import src.ui
-from src.ui.base.tools import image_to_bytes
 import src.ui.types
 import src.ui.types.common
 from src.base.exceptions import LackException
 from src.base.res import KagamiResourceManagers
+from src.base.res.resource import IResource
 from src.common.download import download
 from src.common.rd import get_random
 from src.common.threading import make_async
@@ -20,6 +18,7 @@ from src.core.unit_of_work import UnitOfWork
 from src.models.level import level_repo
 from src.models.models import *
 from src.ui.base.strange import make_strange
+from src.ui.base.tools import image_to_bytes
 
 
 async def get_award_info(
@@ -65,7 +64,6 @@ async def generate_random_info(uow: UnitOfWork) -> src.ui.types.common.AwardInfo
         name="".join((rchar() for _ in range(rlen))),
         description="".join((rchar() for _ in range(rlen2))),
         level=level_repo.get_data_by_id(0),
-        color=level_repo.get_data_by_id(0).color,
         aid=-1,
         sorting=0,
     )

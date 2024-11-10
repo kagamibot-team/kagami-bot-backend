@@ -1,13 +1,31 @@
-from pathlib import Path
-
+from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
 
 from src.base.exceptions import ObjectNotFoundException
+from src.base.res import KagamiResourceManagers
 from src.models.models import SkinAltName
 from src.ui.types.common import AwardInfo
 
 from ..base.repository import DBRepository
 from ..models.models import Skin
+
+
+class SkinData(BaseModel):
+    sid: int
+    aid: int
+    name: str
+    description: str
+    deprecated_price: float
+    biscuit_price: int
+    level: int
+
+    def link(self, award_info: AwardInfo) -> AwardInfo:
+        info = award_info.model_copy()
+        info.sid = self.sid
+        info.skin_name = self.name
+        info._img_resource = KagamiResourceManagers.xiaoge(f"sid_{self.sid}.png")
+        info.slevel = self.level
+        return info
 
 
 class SkinRepository(DBRepository):
@@ -151,3 +169,45 @@ class SkinRepository(DBRepository):
             info.description = sd
         info.skin_name = sn
         info.sid = sid
+
+    async def get_info_v2(self, sid: int) -> SkinData:
+        q = select(
+            Skin.aid,
+            Skin.name,
+            Skin.description,
+            Skin.price,
+            Skin.biscuit,
+            Skin.level,
+        ).filter(Skin.data_id == sid)
+
+        res = (await self.session.execute(q)).tuples().one()
+
+        return SkinData(
+            sid=sid,
+            aid=res[0],
+            name=res[1],
+            description=res[2],
+            deprecated_price=res[3],
+            biscuit_price=res[4],
+            level=res[5],
+        )
+
+    async def set_info_v2(self, sid: int, info: SkinData) -> None:
+        q = (
+            update(Skin)
+            .where(Skin.data_id == sid)
+            .values(
+                {
+                    Skin.name: info.name,
+                    Skin.description: info.description,
+                    Skin.price: info.deprecated_price,
+                    Skin.biscuit: info.biscuit_price,
+                    Skin.level: info.level,
+                }
+            )
+        )
+        await self.session.execute(q)
+
+    async def all_sid(self) -> set[int]:
+        q = select(Skin.data_id)
+        return set((await self.session.execute(q)).scalars().all())

@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from sqlalchemy import insert, select, update
 
 from src.base.exceptions import LackException
-from src.common.dataclasses.user import UserTime
 
 from ..base.repository import DBRepository
 from ..models.models import User
@@ -193,6 +192,25 @@ class UserRepository(DBRepository):
         设置起床时间
         """
         q = update(User).where(User.data_id == uid).values({User.get_up_time: ts})
+        await self.session.execute(q)
+
+    async def get_buy_skinbox_last_time(self, uid: int) -> float:
+        """
+        获得上次购买皮肤盲盒的时间
+        """
+        q = select(User.buy_skin_box_last_time).filter(User.data_id == uid)
+        r = await self.session.execute(q)
+        return r.scalar_one()
+
+    async def set_buy_skinbox_last_time(self, uid: int, ts: float):
+        """
+        设置上次购买皮肤盲盒的时间
+        """
+        q = (
+            update(User)
+            .where(User.data_id == uid)
+            .values({User.buy_skin_box_last_time: ts})
+        )
         await self.session.execute(q)
 
 

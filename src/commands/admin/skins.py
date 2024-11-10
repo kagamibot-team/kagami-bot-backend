@@ -24,22 +24,26 @@ from src.ui.types.inventory import BookBoxData, BoxItemList, DisplayBoxData, Sto
 )
 async def _(ctx: MessageContext, res: Arparma):
     async with get_unit_of_work(ctx.sender_id) as uow:
-        all_skins = await uow.skins.all()
-        infos = await uow.awards.get_info_dict([n[1] for n in all_skins])
+        sids = await uow.skins.all_sid()
+        sinfos = {sid: await uow.skins.get_info_v2(sid) for sid in sids}
+        ainfos = await uow.awards.get_info_dict(
+            set(sinfo.aid for sinfo in sinfos.values())
+        )
 
         boxes: list[BookBoxData] = []
 
-        for sid, aid, sname, _, _ in all_skins:
-            info = infos[aid]
-            await uow.skins.link(sid, info)
+        for sid in sids:
+            sinfo = sinfos[sid]
+            ainfo = sinfo.link(ainfos[sinfo.aid])
+
             boxes.append(
                 BookBoxData(
                     display_box=DisplayBoxData(
-                        image=info.image_url,
-                        color=info.color,
+                        image=ainfo.image_url,
+                        color=ainfo.color,
                     ),
-                    title1=sname,
-                    title2=info.name,
+                    title1=sinfo.name,
+                    title2=ainfo.name,
                 )
             )
 
