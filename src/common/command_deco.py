@@ -276,7 +276,7 @@ def limit_no_spam(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
             NO_SPAM_LOCKS[ctx.sender_id] = asyncio.Lock()
 
         lock = NO_SPAM_LOCKS[ctx.sender_id]
-        if lock.locked():
+        if lock.locked() and not isAdmin(ctx):
             return
 
         async with lock:
