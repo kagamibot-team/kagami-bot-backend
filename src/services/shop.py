@@ -5,6 +5,8 @@ from src.base.exceptions import ObjectNotFoundException
 from src.base.res import KagamiResourceManagers
 from src.base.res.resource import IResource
 from src.core.unit_of_work import UnitOfWork
+from src.repositories.skin_repository import SkinData
+from src.ui.types.common import AwardInfo
 
 
 @dataclass
@@ -81,37 +83,32 @@ class SkinProduct(ShopProduct):
         return "皮肤"
 
     async def title(self, uow: UnitOfWork, uid: int):
-        return "皮肤" + self._title
+        return "皮肤" + self.info.name
 
     async def image(self, uow: UnitOfWork, uid: int):
-        return KagamiResourceManagers.xiaoge_blurred(f"sid_{self.sid}.png")
+        return KagamiResourceManagers.xiaoge_blurred(f"sid_{self.info.sid}.png")
 
     async def description(self, uow: UnitOfWork, uid: int):
-        return f"{self._aname}的皮肤"
+        return f"{self.award.name}的皮肤"
 
     async def background_color(self, uow: UnitOfWork, uid: int):
-        return self._bgc
+        return self.award.color
 
     async def price(self, uow: UnitOfWork, uid: int):
-        return self._price
+        return self.info.deprecated_price
 
     async def is_sold_out(self, uow: UnitOfWork, uid: int) -> bool:
-        return await uow.skin_inventory.do_user_have(uid, self.sid)
+        return await uow.skin_inventory.do_user_have(uid, self.info.sid)
 
     def match(self, name: str) -> bool:
-        return name in (self._title, "皮肤" + self._title)
+        return name in (self.info.name, "皮肤" + self.info.name)
 
     async def gain(self, uow: UnitOfWork, uid: int):
-        await uow.skin_inventory.give(uid, self.sid)
+        await uow.skin_inventory.give(uid, self.info.sid)
 
-    def __init__(
-        self, sid: int, name: str, aname: str, price: float, bgc: str
-    ) -> None:
-        self.sid = sid
-        self._title = name
-        self._aname = aname
-        self._bgc = bgc
-        self._price = price
+    def __init__(self, award: AwardInfo, info: SkinData) -> None:
+        self.info = info
+        self.award = self.info.link(award)
 
 
 class AddSlots(ShopProduct):
@@ -177,26 +174,6 @@ class MergeMachine(ShopProduct):
         await uow.user_flag.add(uid, "合成")
 
 
-# class SignHint(ShopProduct):
-#     @property
-#     def type(self):
-#         return "道具"
-
-#     async def title(self, uow: UnitOfWork, uid: int) -> str:
-#         return "签到提醒"
-
-#     async def description(self, uow: UnitOfWork, uid: int) -> str:
-#         return "小镜会在合适的时候提醒你记得签到的，如果她还能找得到你"
-
-#     async def background_color(self, uow: UnitOfWork, uid: int):
-#         return "#9e9d95"
-
-#     async def price(self, uow: UnitOfWork, uid: int):
-#         return 800
-
-#     async def
-
-
 class ShopService:
     products: dict[str, list[ShopProduct]]
 
@@ -234,13 +211,13 @@ async def build_xjshop(uow: UnitOfWork) -> ShopService:
     # 注册道具
     service.register(MergeMachine())
     service.register(AddSlots())
-    # service.register(SignHint())
 
     # 注册皮肤信息
-    for sid, aid, sname, _, price in await uow.skins.all():
-        if price <= 0:
+    for sid in await uow.skins.all_sid():
+        sinfo = await uow.skins.get_info_v2(sid)
+        ainfo = await uow.awards.get_info(sinfo.aid)
+        if sinfo.deprecated_price <= 0:
             continue
-        info = await uow.awards.get_info(aid)
-        service.register(SkinProduct(sid, sname, info.name, price, info.color))
+        service.register(SkinProduct(ainfo, sinfo))
 
     return service

@@ -20,13 +20,48 @@ class AwardInfo(BaseModel):
     aid: int = 0
     description: str = "未知小哥。"
     name: str = "？？？"
-    color: str = "#696361"
+
     sid: int | None = None
+    slevel: int | None = None
     level: LevelData = LevelData()
     sorting: int = 0
     skin_name: str = ""
     _img_resource: IResource | None = None
-    pid: int = -1   # 猎场 ID，目前仅在 zhuajd 中使用到了
+    pid: int = -1  # 猎场 ID，目前仅在 zhuajd 中使用到了
+
+    @computed_field
+    @property
+    def display_lid(self) -> int:
+        """
+        这个 LID 也是屎山的一部分。
+
+        如果没有皮肤，则值落在 0 ~ 5 之间，代表小哥的六种等级
+
+        如果有皮肤，则值落在 10 ~ 14 之间，代表皮肤的等级
+        """
+
+        if self.sid is not None and self.slevel is not None:
+            return 10 + self.slevel
+        return self.level.lid
+
+    @computed_field
+    @property
+    def color(self) -> str:
+        level_map = {
+            0: "#9E9D95",
+            1: "#C6C1BF",
+            2: "#C0E8AE",
+            3: "#BDDAF5",
+            4: "#D4BCE3",
+            5: "#F1DD95",
+            # 10: "#E57D77",
+            10: "#696361",
+            11: "#75C16D",
+            12: "#6F93E7",
+            13: "#996FE0",
+            14: "#E8BD5A",
+        }
+        return level_map.get(self.display_lid, "#696361")
 
     @property
     def image_name(self) -> str:

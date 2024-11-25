@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+from src.base.res import blank_placeholder
 from src.ui.types.common import UserData
 
 
@@ -24,6 +25,16 @@ class BookBoxData(BaseModel):
     display_box: DisplayBoxData
     title1: str
     title2: str = ""
+
+    @staticmethod
+    def unknown():
+        return BookBoxData(
+            display_box=DisplayBoxData(
+                image=blank_placeholder().url,
+                color="#696361",
+            ),
+            title1="???",
+        )
 
 
 class BoxItemList(BaseModel):

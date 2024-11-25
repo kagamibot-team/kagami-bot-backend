@@ -1,13 +1,35 @@
-from pathlib import Path
-
+from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
+from typing_extensions import deprecated
 
 from src.base.exceptions import ObjectNotFoundException
+from src.base.res import KagamiResourceManagers
 from src.models.models import SkinAltName
 from src.ui.types.common import AwardInfo
 
 from ..base.repository import DBRepository
 from ..models.models import Skin
+
+
+class SkinData(BaseModel):
+    sid: int
+    aid: int
+    name: str
+    description: str
+    deprecated_price: float
+    biscuit_price: int
+    level: int
+
+    can_draw: bool
+    can_buy: bool
+
+    def link(self, award_info: AwardInfo) -> AwardInfo:
+        info = award_info.model_copy()
+        info.sid = self.sid
+        info.skin_name = self.name
+        info._img_resource = KagamiResourceManagers.xiaoge(f"sid_{self.sid}.png")
+        info.slevel = self.level
+        return info
 
 
 class SkinRepository(DBRepository):
@@ -19,6 +41,7 @@ class SkinRepository(DBRepository):
         d = delete(Skin).where(Skin.data_id == data_id)
         await self.session.execute(d)
 
+    @deprecated("皮肤系统已经进入 V2，这个函数不再使用")
     async def get_info(self, sid: int) -> tuple[str, str]:
         """获得一个皮肤的信息
 
@@ -31,6 +54,7 @@ class SkinRepository(DBRepository):
         q = select(Skin.name, Skin.description).filter(Skin.data_id == sid)
         return (await self.session.execute(q)).tuples().one()
 
+    @deprecated("皮肤系统已经进入 V2，请逐一获取皮肤信息")
     async def all(self) -> list[tuple[int, int, str, str, float]]:
         """获得所有皮肤的信息
 
@@ -79,7 +103,7 @@ class SkinRepository(DBRepository):
             raise ObjectNotFoundException("皮肤")
         return s
 
-    async def add_skin(self, aid: int, name: str) -> int:
+    async def create_skin(self, aid: int, name: str) -> int:
         """创建一个皮肤，注意这里会直接创建，请提前检查名字是否会重复
 
         Args:
@@ -144,6 +168,7 @@ class SkinRepository(DBRepository):
             .all()
         )
 
+    @deprecated("请直接使用 SkinInfo.link 方法")
     async def link(self, sid: int, info: AwardInfo):
         q = select(Skin.name, Skin.description).filter(Skin.data_id == sid)
         sn, sd = (await self.session.execute(q)).tuples().one()
@@ -151,3 +176,51 @@ class SkinRepository(DBRepository):
             info.description = sd
         info.skin_name = sn
         info.sid = sid
+
+    async def get_info_v2(self, sid: int) -> SkinData:
+        q = select(
+            Skin.aid,
+            Skin.name,
+            Skin.description,
+            Skin.price,
+            Skin.biscuit,
+            Skin.level,
+            Skin.can_be_pulled,
+            Skin.can_be_bought,
+        ).filter(Skin.data_id == sid)
+
+        res = (await self.session.execute(q)).tuples().one()
+
+        return SkinData(
+            sid=sid,
+            aid=res[0],
+            name=res[1],
+            description=res[2],
+            deprecated_price=res[3],
+            biscuit_price=res[4],
+            level=res[5],
+            can_draw=res[6] == 1,
+            can_buy=res[7] == 1,
+        )
+
+    async def set_info_v2(self, sid: int, info: SkinData) -> None:
+        q = (
+            update(Skin)
+            .where(Skin.data_id == sid)
+            .values(
+                {
+                    Skin.name: info.name,
+                    Skin.description: info.description,
+                    Skin.price: info.deprecated_price,
+                    Skin.biscuit: info.biscuit_price,
+                    Skin.level: info.level,
+                    Skin.can_be_bought: int(info.can_buy),
+                    Skin.can_be_pulled: int(info.can_draw),
+                }
+            )
+        )
+        await self.session.execute(q)
+
+    async def all_sid(self) -> set[int]:
+        q = select(Skin.data_id)
+        return set((await self.session.execute(q)).scalars().all())

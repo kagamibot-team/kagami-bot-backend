@@ -124,7 +124,7 @@ class SkinInventoryRepository(DBRepository):
             return False
         return True
 
-    async def get_using_list(self, uid: int) -> dict[int, int]:
+    async def get_using_dict(self, uid: int) -> dict[int, int]:
         """获得一个用户正在挂载的所有皮肤
         Args:
             uid (int): 用户 ID

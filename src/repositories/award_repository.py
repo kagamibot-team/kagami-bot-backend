@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Iterable
 
 from sqlalchemy import delete, insert, select, update
@@ -240,7 +239,6 @@ class AwardRepository(DBRepository):
         return AwardInfo(
             description=d,
             name=n,
-            color=lv.color,
             level=lv,
             aid=aid,
             sorting=s,
@@ -262,7 +260,6 @@ class AwardRepository(DBRepository):
             aid: AwardInfo(
                 description=d,
                 name=n,
-                color=level_repo.get_data_by_id(l).color,
                 level=level_repo.get_data_by_id(l),
                 aid=aid,
                 sorting=s,
