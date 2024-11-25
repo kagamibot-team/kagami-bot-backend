@@ -27,10 +27,12 @@ async def get_award_info(
     if uid is not None and sid is not None:
         raise ValueError("请不要同时启用 uid 和 sid 两个参数")
     data = await uow.awards.get_info(aid)
+
     if uid:
         sid = await uow.skin_inventory.get_using(uid, aid)
     if sid:
-        await uow.skins.link(sid, data)
+        sinfo = await uow.skins.get_info_v2(sid)
+        data = sinfo.link(data)
     return data
 
 

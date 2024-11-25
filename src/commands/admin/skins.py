@@ -6,7 +6,7 @@ from sqlalchemy import update
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectAlreadyExistsException
 from src.common.command_deco import listen_message, match_alconna, require_admin
-from src.common.data.skins import downloadSkinImage
+from src.common.data.skins import download_skin_image
 from src.core.unit_of_work import get_unit_of_work
 from src.models.models import Skin
 from src.ui.base.render import get_render_pool
@@ -83,72 +83,92 @@ async def _(ctx: MessageContext, res: Arparma):
         sid = await uow.skins.get_sid(sname)
         if sid is not None:
             raise ObjectAlreadyExistsException(f"皮肤 {sname}")
-        await uow.skins.add_skin(aid, sname)
+        await uow.skins.create_skin(aid, sname)
 
     await ctx.reply("ok.")
 
 
+MODIFY_SKIN_ALCONNA = Alconna(
+    "re:(修改|更改|调整|改变|设置|设定)皮肤",
+    ["::"],
+    Arg("皮肤原名", str),
+    Option(
+        "名字",
+        Arg("皮肤新名字", str),
+        alias=["--name", "名称", "-n", "-N"],
+        compact=True,
+    ),
+    Option(
+        "描述",
+        Arg("描述", MultiVar(str, flag="*"), seps="\n"),
+        alias=["--description", "-d", "-D"],
+        compact=True,
+    ),
+    Option(
+        "图片",
+        Arg("图片", Image),
+        alias=["--image", "照片", "-i", "-I"],
+    ),
+    Option(
+        "价格",
+        Arg("价格", float),
+        alias=["--price", "价钱", "售价", "-p", "-P"],
+    ),
+    Option(
+        "饼干价格",
+        Arg("饼干价格", int),
+        alias=["--biscuit", "-b", "-B", "饼干"],
+    ),
+    Option(
+        "等级",
+        Arg("等级", int),
+        alias=["--level", "-l", "-L"],
+    ),
+)
+
+
 @listen_message()
 @require_admin()
-@match_alconna(
-    Alconna(
-        "re:(修改|更改|调整|改变|设置|设定)皮肤",
-        ["::"],
-        Arg("皮肤原名", str),
-        Option(
-            "名字",
-            Arg("皮肤新名字", str),
-            alias=["--name", "名称", "-n", "-N"],
-            compact=True,
-        ),
-        Option(
-            "描述",
-            Arg("描述", MultiVar(str, flag="*"), seps="\n"),
-            alias=["--description", "-d", "-D"],
-            compact=True,
-        ),
-        Option("图片", Arg("图片", Image), alias=["--image", "照片", "-i", "-I"]),
-        Option(
-            "价格", Arg("价格", float), alias=["--price", "价钱", "售价", "-p", "-P"]
-        ),
-    )
-)
+@match_alconna(MODIFY_SKIN_ALCONNA)
 async def _(ctx: MessageContext, res: Arparma):
     name = res.query[str]("皮肤原名")
     assert name is not None
-    newName = res.query[str]("皮肤新名字")
+
+    new_name = res.query[str]("皮肤新名字")
     price = res.query[float]("价格")
-    _description = res.query[tuple[str]]("描述")
+    description_tuple = res.query[tuple[str]]("描述")
     image = res.query[Image]("图片")
+    biscuit = res.query[int]("饼干价格")
+    level = res.query[int]("等级")
 
     async with get_unit_of_work() as uow:
         sid = await uow.skins.get_sid_strong(name)
-        session = uow.session
+        info = await uow.skins.get_info_v2(sid)
 
-        if newName is not None:
-            await session.execute(
-                update(Skin).where(Skin.data_id == sid).values({Skin.name: newName})
-            )
+        if new_name is not None:
+            info.name = new_name
 
         if price is not None:
-            await session.execute(
-                update(Skin).where(Skin.data_id == sid).values({Skin.price: price})
-            )
+            info.deprecated_price = price
 
-        if _description is not None:
-            description = "\n".join(_description)
-            await session.execute(
-                update(Skin)
-                .where(Skin.data_id == sid)
-                .values({Skin.description: description})
-            )
+        if description_tuple is not None:
+            description = "\n".join(description_tuple)
+            info.description = description
+
+        if biscuit is not None:
+            info.biscuit_price = biscuit
+
+        if level is not None:
+            info.level = level
+            
+        await uow.skins.set_info_v2(sid, info)
 
         if image is not None:
             imageUrl = image.url
             if imageUrl is None:
                 logger.warning(f"名字叫 {name} 的皮肤的图片地址为空。")
             else:
-                await downloadSkinImage(sid, imageUrl)
+                await download_skin_image(sid, imageUrl)
     await ctx.send("ok.")
 
 

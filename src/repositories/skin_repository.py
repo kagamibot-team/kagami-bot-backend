@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
+from typing_extensions import deprecated
 
 from src.base.exceptions import ObjectNotFoundException
 from src.base.res import KagamiResourceManagers
@@ -37,6 +38,7 @@ class SkinRepository(DBRepository):
         d = delete(Skin).where(Skin.data_id == data_id)
         await self.session.execute(d)
 
+    @deprecated("皮肤系统已经进入 V2，这个函数不再使用")
     async def get_info(self, sid: int) -> tuple[str, str]:
         """获得一个皮肤的信息
 
@@ -97,7 +99,7 @@ class SkinRepository(DBRepository):
             raise ObjectNotFoundException("皮肤")
         return s
 
-    async def add_skin(self, aid: int, name: str) -> int:
+    async def create_skin(self, aid: int, name: str) -> int:
         """创建一个皮肤，注意这里会直接创建，请提前检查名字是否会重复
 
         Args:
@@ -162,6 +164,7 @@ class SkinRepository(DBRepository):
             .all()
         )
 
+    @deprecated("请直接使用 SkinInfo.link 方法")
     async def link(self, sid: int, info: AwardInfo):
         q = select(Skin.name, Skin.description).filter(Skin.data_id == sid)
         sn, sd = (await self.session.execute(q)).tuples().one()
