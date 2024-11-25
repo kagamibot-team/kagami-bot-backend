@@ -623,6 +623,12 @@ updates = [
             UpdateContent(content="修复了一些内核 Bug", tags=["修复"]),
         ],
     ),
+    VersionData(
+        version="1.2.11",
+        updates=[
+            UpdateContent(content="修改了和皮肤有关的底层逻辑", tags=["核心"]),
+        ],
+    )
 ]
 
 
