@@ -63,7 +63,7 @@ async def _(ctx: MessageContext, _):
         uid = await uow.users.get_uid(ctx.sender_id)
         user = await get_user_data(ctx, uow)
         skin_inventory = await uow.skin_inventory.get_list(uid)
-        using = await uow.skin_inventory.get_using_list(uid)
+        using = (await uow.skin_inventory.get_using_dict(uid)).values()
 
         sids = await uow.skins.all_sid()
         sinfos = {sid: await uow.skins.get_info_v2(sid) for sid in sids}
