@@ -28,6 +28,7 @@ from src.common.command_deco import (
     require_admin,
 )
 from src.common.save_file_handler import pack_save
+from src.core.unit_of_work import get_unit_of_work
 from src.ui.base.rabbitmq_worker import RabbitMQWorker
 from src.ui.base.render import (
     ChromeBrowserWorker,
@@ -212,4 +213,31 @@ async def _(ctx: MessageContext):
     files = [f for f in shadow.root.iterdir()]
     for file in files:
         file.unlink(True)
+    await ctx.reply("ok.")
+
+
+@listen_message()
+@require_admin()
+@match_literal("::migrate-skin-level")
+async def _(ctx: MessageContext):
+    async with get_unit_of_work() as uow:
+        level1 = "半条拖，走路炸弹兵，戴帽海盗，禁言，地鼠，神鹰，黑暗骑士，篮球，卡卡，大猫耳，无语企鹅，双子向日葵，暹罗，萌死哥Ⅱ，全模仿，匿奇，歼世，新月，🗿，曾哥，硬汉，小林，猫猫凉，大脸妹，中二病，哥别林"
+        level2 = "鬼子兵，最强，豌豆喷子，我的战争，快乐小登，透明人间，异端，凹小华，海森哥，杰拉鲁星哥，捣蛋猪，黑猴子，强尼银手，花心超人，拔叔，玩游戏机，生气太阳，冰糖葫芦，断罪，五星上将，犬作，1437小帝，超级塞亚哥，欢喜哥"
+        level3 = "骚灵三皮奶，顽皮偶像，JOKER，最终鬼畜妹，戴帽反色觉，女仆装，蜂巢，iMasuo，薯片霓虹，百变小哥系列，孜然赠予你，人类之心，小魅影，赤蛮奇wum，忍杀"
+        level4 = "我喜欢你，终极小望，债台高筑，很开心哦，骗吃骗喝，水塔将倾，文学少女，完美冻结，卒业式后，尼禄，千小本樱，极地小冲击，嘿嘿嗤笑，漫天花雨，填满灵魂，圆环之理，恶魔银庭"
+        level0 = "谎言舞者，超预告篇，小兔子洞，小小的我，三要素，小泡壳，研究员华，紫杀幽灵，卷毛鱼小哥"
+
+        for sid in await uow.skins.all_sid():
+            info = await uow.skins.get_info_v2(sid)
+            if info.name in level1:
+                info.level = 1
+            elif info.name in level2:
+                info.level = 2
+            elif info.name in level3:
+                info.level = 3
+            elif info.name in level4:
+                info.level = 4
+            elif info.name in level0:
+                info.level = 0
+            await uow.skins.set_info_v2(sid, info)
     await ctx.reply("ok.")
