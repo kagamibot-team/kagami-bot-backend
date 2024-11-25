@@ -225,7 +225,7 @@ async def _(ctx: MessageContext):
         level2 = "鬼子兵，最强，豌豆喷子，我的战争，快乐小登，透明人间，异端，凹小华，海森哥，杰拉鲁星哥，捣蛋猪，黑猴子，强尼银手，花心超人，拔叔，玩游戏机，生气太阳，冰糖葫芦，断罪，五星上将，犬作，1437小帝，超级塞亚哥，欢喜哥"
         level3 = "骚灵三皮奶，顽皮偶像，JOKER，最终鬼畜妹，戴帽反色觉，女仆装，蜂巢，iMasuo，薯片霓虹，百变小哥系列，孜然赠予你，人类之心，小魅影，赤蛮奇wum，忍杀"
         level4 = "我喜欢你，终极小望，债台高筑，很开心哦，骗吃骗喝，水塔将倾，文学少女，完美冻结，卒业式后，尼禄，千小本樱，极地小冲击，嘿嘿嗤笑，漫天花雨，填满灵魂，圆环之理，恶魔银庭"
-        level0 = "谎言舞者，超预告篇，小兔子洞，小小的我，三要素，小泡壳，研究员华，紫杀幽灵，卷毛鱼小哥"
+        n_cd = "谎言舞者，超预告篇，小兔子洞，小小的我，三要素，小泡壳，研究员华，紫杀幽灵，卷毛鱼小哥"
 
         for sid in await uow.skins.all_sid():
             info = await uow.skins.get_info_v2(sid)
@@ -237,7 +237,12 @@ async def _(ctx: MessageContext):
                 info.level = 3
             elif info.name in level4:
                 info.level = 4
-            elif info.name in level0:
+            else:
                 info.level = 0
+            
+            if info.name in n_cd:
+                info.can_draw = False
+            else:
+                info.can_draw = True
             await uow.skins.set_info_v2(sid, info)
     await ctx.reply("ok.")

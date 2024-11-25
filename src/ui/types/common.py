@@ -54,13 +54,14 @@ class AwardInfo(BaseModel):
             3: "#BDDAF5",
             4: "#D4BCE3",
             5: "#F1DD95",
-            10: "#E57D77",
+            # 10: "#E57D77",
+            10: "#696361",
             11: "#75C16D",
             12: "#6F93E7",
             13: "#996FE0",
             14: "#E8BD5A",
         }
-        return level_map[self.display_lid]
+        return level_map.get(self.display_lid, "#696361")
 
     @property
     def image_name(self) -> str:

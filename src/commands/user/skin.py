@@ -71,12 +71,23 @@ async def _(ctx: MessageContext, _):
             set(sinfo.aid for sinfo in sinfos.values())
         )
 
+        sids = sorted(
+            sids,
+            key=lambda sid: (
+                -sinfos[sid].level,
+                -ainfos[sinfos[sid].aid].level.lid,
+                sinfos[sid].aid,
+            ),
+        )
+
         boxes: list[BookBoxData] = []
 
         for sid in sids:
             sinfo = sinfos[sid]
             ainfo = ainfos[sinfo.aid]
             ainfo = sinfo.link(ainfo)
+            
+            flower_attribute = "✿ " if not sinfo.can_draw else ""
 
             if sid not in skin_inventory:
                 boxes.append(BookBoxData.unknown())
@@ -88,8 +99,9 @@ async def _(ctx: MessageContext, _):
                         image=ainfo.image_url,
                         color=ainfo.color,
                         notation_down="使用中" if sid in using else "",
+                        do_glow=not sinfo.can_draw,
                     ),
-                    title1=sinfo.name,
+                    title1=flower_attribute + sinfo.name,
                     title2=ainfo.name,
                 )
             )

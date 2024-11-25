@@ -20,6 +20,9 @@ class SkinData(BaseModel):
     biscuit_price: int
     level: int
 
+    can_draw: bool
+    can_buy: bool
+
     def link(self, award_info: AwardInfo) -> AwardInfo:
         info = award_info.model_copy()
         info.sid = self.sid
@@ -182,6 +185,8 @@ class SkinRepository(DBRepository):
             Skin.price,
             Skin.biscuit,
             Skin.level,
+            Skin.can_be_pulled,
+            Skin.can_be_bought,
         ).filter(Skin.data_id == sid)
 
         res = (await self.session.execute(q)).tuples().one()
@@ -194,6 +199,8 @@ class SkinRepository(DBRepository):
             deprecated_price=res[3],
             biscuit_price=res[4],
             level=res[5],
+            can_draw=res[6] == 1,
+            can_buy=res[7] == 1,
         )
 
     async def set_info_v2(self, sid: int, info: SkinData) -> None:
@@ -207,6 +214,8 @@ class SkinRepository(DBRepository):
                     Skin.price: info.deprecated_price,
                     Skin.biscuit: info.biscuit_price,
                     Skin.level: info.level,
+                    Skin.can_be_bought: int(info.can_buy),
+                    Skin.can_be_pulled: int(info.can_draw),
                 }
             )
         )
