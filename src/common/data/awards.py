@@ -51,7 +51,7 @@ async def generate_random_info(uow: UnitOfWork) -> src.ui.types.common.AwardInfo
     for aid in aids:
         sources.append(KagamiResourceManagers.xiaoge(f"aid_{aid}.png"))
 
-    sids: set[int] = set(i[0] for i in await uow.skins.all())
+    sids: set[int] = await uow.skins.all_sid()
     for sid in sids:
         sources.append(KagamiResourceManagers.xiaoge(f"sid_{sid}.png"))
 

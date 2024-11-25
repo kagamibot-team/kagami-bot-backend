@@ -51,6 +51,7 @@ class SkinRepository(DBRepository):
         q = select(Skin.name, Skin.description).filter(Skin.data_id == sid)
         return (await self.session.execute(q)).tuples().one()
 
+    @deprecated("皮肤系统已经进入 V2，请逐一获取皮肤信息")
     async def all(self) -> list[tuple[int, int, str, str, float]]:
         """获得所有皮肤的信息
 
