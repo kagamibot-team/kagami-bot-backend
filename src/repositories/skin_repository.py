@@ -29,6 +29,7 @@ class SkinData(BaseModel):
         info.skin_name = self.name
         info._img_resource = KagamiResourceManagers.xiaoge(f"sid_{self.sid}.png")
         info.slevel = self.level
+        info.description = self.description
         return info
 
 
