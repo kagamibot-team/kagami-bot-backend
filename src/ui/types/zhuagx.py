@@ -625,8 +625,12 @@ updates = [
     ),
     VersionData(
         version="1.2.11",
+        updates=[UpdateContent(content="修改了和皮肤有关的底层逻辑", tags=["核心"])],
+    ),
+    VersionData(
+        version="1.2.12",
         updates=[
-            UpdateContent(content="修改了和皮肤有关的底层逻辑", tags=["核心"]),
+            UpdateContent(content="修复了皮肤的描述没有正确显示的问题", tags=["修复"])
         ],
     ),
 ]
