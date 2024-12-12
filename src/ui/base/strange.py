@@ -25,9 +25,7 @@ def make_strange(
         for j in range(yGrids):
             left = w * i
             top = h * j
-            source = (
-                get_random().choice(sources).load_pil_image().resize((2000, 1600))
-            )
+            source = get_random().choice(sources).load_pil_image().resize((2000, 1600))
             res = source.crop((left, top, left + w, top + h)).convert("RGBA")
             if premix_background:
                 _res = PIL.Image.new(

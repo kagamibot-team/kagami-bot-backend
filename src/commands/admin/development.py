@@ -239,7 +239,7 @@ async def _(ctx: MessageContext):
                 info.level = 4
             else:
                 info.level = 0
-            
+
             if info.name in n_cd:
                 info.can_draw = False
             else:

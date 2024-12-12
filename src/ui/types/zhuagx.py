@@ -628,7 +628,7 @@ updates = [
         updates=[
             UpdateContent(content="修改了和皮肤有关的底层逻辑", tags=["核心"]),
         ],
-    )
+    ),
 ]
 
 

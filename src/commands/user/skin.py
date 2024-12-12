@@ -86,7 +86,7 @@ async def _(ctx: MessageContext, _):
             sinfo = sinfos[sid]
             ainfo = ainfos[sinfo.aid]
             ainfo = sinfo.link(ainfo)
-            
+
             flower_attribute = "✿ " if not sinfo.can_draw else ""
 
             if sid not in skin_inventory:

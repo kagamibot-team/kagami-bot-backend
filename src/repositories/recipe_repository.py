@@ -1,9 +1,10 @@
-from sqlalchemy import delete, insert, select, update, desc
+from sqlalchemy import delete, desc, insert, select, update
+
+from src.ui.types.recipe import RecipeInfo
 
 from ..base.exceptions import ObjectAlreadyExistsException, RecipeMissingException
 from ..base.repository import DBRepository
 from ..models.models import Recipe
-from src.ui.types.recipe import RecipeInfo
 
 
 class RecipeRepository(DBRepository):

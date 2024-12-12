@@ -80,9 +80,7 @@ class SkinInventoryRepository(DBRepository):
             bool: 用户之前是否已经挂载了这个皮肤
         """
 
-        aid = await self.session.scalar(
-            select(Skin.aid).where(Skin.data_id == sid)
-        )
+        aid = await self.session.scalar(select(Skin.aid).where(Skin.data_id == sid))
         assert aid is not None
 
         if await self.get_using(uid, aid) == sid:

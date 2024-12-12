@@ -84,7 +84,7 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
             flags = set(("p",))
         else:
             flags = set(("l",))
-        
+
     return LiechangData(
         packs=packs,
         user=user,

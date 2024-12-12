@@ -377,7 +377,7 @@ async def _(ctx: MessageContext, res: re.Match[str]):
     # 槽哥说，这个指令是万圣节活动要用的。
     # 所以我就写在这里了。
     # 你们读代码的，嗯，忽略这里吧。
-    
+
     result = res.group(1)
     if result is None:
         return

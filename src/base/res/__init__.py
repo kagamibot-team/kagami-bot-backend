@@ -1,7 +1,11 @@
 from pathlib import Path
 
 from src.base.res.middleware.filter import WithPrefixFilter
-from src.base.res.middleware.image import BlurMiddleware, ResizeMiddleware, ToRGBAMiddleware
+from src.base.res.middleware.image import (
+    BlurMiddleware,
+    ResizeMiddleware,
+    ToRGBAMiddleware,
+)
 from src.base.res.strategy import (
     CombinedStorageStrategy,
     FileStorageStrategy,
