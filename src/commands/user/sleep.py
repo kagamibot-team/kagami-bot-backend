@@ -126,7 +126,7 @@ async def goodnight(ctx: GroupContext, res: Arparma):
         await uow.users.update_sleep_early_data(uid, last_time, count)
 
         awarding = 0
-        if 21 <= now_time.hour < 23:
+        if 21 <= now_time.hour < 23 or get_config().safe_sleep:
             awarding = get_random().randint(50, 100)
             await uow.chips.add(uid, awarding)
 
