@@ -22,7 +22,7 @@ class Config(BaseModel):
     global_data_filename: str = "global_data.json"
     "全局数据的名字"
 
-    safe_sleep = bool = False
+    safe_sleep: bool = False
     "Do punish when sleeping early"
 
     # ================
