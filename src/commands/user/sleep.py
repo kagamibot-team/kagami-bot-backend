@@ -117,7 +117,7 @@ async def goodnight(ctx: GroupContext, res: Arparma):
         last_dt = timestamp_to_datetime(last_time).date()
         if (21 <= now_time.hour < 23 or get_config().safe_sleep) and ((now_time.date() - last_dt).days <= 1):
             count += 1
-        elif 21 <= now_time.hour < 23:
+        elif 21 <= now_time.hour < 23 or get_config().safe_sleep:
             count = 1
         else:
             count = 0
