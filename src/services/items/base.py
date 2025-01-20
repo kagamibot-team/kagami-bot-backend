@@ -28,9 +28,9 @@ class UseItemArgs(BaseModel):
 
     def require_target(self, required: bool = True):
         if required and self.target_uid is None:
-            raise KagamiArgumentException("要制定一个人哦")
+            raise KagamiArgumentException("要指定一个人哦")
         elif not required and self.target_uid is not None:
-            raise KagamiArgumentException("不用制定目标哦")
+            raise KagamiArgumentException("不用指定目标哦")
 
 
 class BaseItem(BaseModel, Generic[T], ABC):

@@ -225,3 +225,16 @@ class SkinRepository(DBRepository):
     async def all_sid(self) -> set[int]:
         q = select(Skin.data_id)
         return set((await self.session.execute(q)).scalars().all())
+
+    async def get_all_sid_grouped_with_level(
+        self, include_no_pickable: bool = False
+    ) -> dict[int, set[int]]:
+        q = select(Skin.data_id, Skin.level)
+        if not include_no_pickable:
+            q = q.filter(Skin.can_be_pulled == 1)
+        result: dict[int, set[int]] = {}
+        for sid, lid in (await self.session.execute(q)).tuples().all():
+            result.setdefault(lid, set())
+            result[lid].add(sid)
+
+        return result
