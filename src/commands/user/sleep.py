@@ -21,6 +21,7 @@ from src.common.command_deco import (
     match_alconna,
     require_awake,
 )
+from src.common.config import get_config
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime
 from src.core.unit_of_work import get_unit_of_work
@@ -114,9 +115,9 @@ async def goodnight(ctx: GroupContext, res: Arparma):
         uid = await uow.users.get_uid(ctx.sender_id)
         last_time, count = await uow.users.get_sleep_early_data(uid)
         last_dt = timestamp_to_datetime(last_time).date()
-        if 21 <= now_time.hour < 23 and (now_time.date() - last_dt).days <= 1:
+        if (21 <= now_time.hour < 23 or get_config().safe_sleep) and ((now_time.date() - last_dt).days <= 1):
             count += 1
-        elif 21 <= now_time.hour < 23:
+        elif 21 <= now_time.hour < 23 or get_config().safe_sleep:
             count = 1
         else:
             count = 0
@@ -125,7 +126,7 @@ async def goodnight(ctx: GroupContext, res: Arparma):
         await uow.users.update_sleep_early_data(uid, last_time, count)
 
         awarding = 0
-        if 21 <= now_time.hour < 23:
+        if 21 <= now_time.hour < 23 or get_config().safe_sleep:
             awarding = get_random().randint(50, 100)
             await uow.chips.add(uid, awarding)
 
