@@ -17,7 +17,7 @@ from src.base.exceptions import (
     UnknownArgException,
 )
 from src.common.command_deco import limited, listen_message, match_alconna
-from src.common.config import get_config
+from src.common.config import Config, get_config
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime
 from src.core.unit_of_work import get_unit_of_work
@@ -115,8 +115,8 @@ async def goodnight(ctx: GroupContext, res: Arparma):
 
         # 更新玩家的起床时间和连胜计数
         last_time, count = await uow.users.get_sleep_early_data(uid)
-        success = await is_sleep_early(now_time)
-        last_time, count = await update_sleep_data(now_time, last_time, count, success)
+        success = is_sleep_early(now_time)
+        last_time, count = update_sleep_data(now_time, last_time, count, success)
 
         # 计算奖励
         awarding = get_random().randint(50, 100) if success else 0
@@ -132,7 +132,7 @@ async def goodnight(ctx: GroupContext, res: Arparma):
     await reply_messages(ctx, name, awarding, count)
 
 
-async def update_sleep_data(
+def update_sleep_data(
     now_time: datetime.datetime,
     last_time: float,
     count: int,
@@ -162,14 +162,15 @@ async def update_sleep_data(
     return now_time.timestamp(), count
 
 
-async def is_sleep_early(now_time: datetime.datetime):
+def is_sleep_early(now_time: datetime.datetime, config: Config | None = None):
     """
     判断当前睡觉时间是否胜利。
 
     参数:
         now_time (datetime.datetime): 当前时间。
     """
-    return 21 <= now_time.hour < 23 or get_config().safe_sleep
+    config = config or get_config()
+    return 21 <= now_time.hour < 23 or config.safe_sleep
 
 
 GOODNIGHT_MESSAGES: list[str | UniMessage[Any]] = [
