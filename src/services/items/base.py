@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, SerializeAsAny
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import (
@@ -33,7 +33,7 @@ class UseItemArgs(BaseModel):
             raise KagamiArgumentException("不用指定目标哦")
 
 
-class BaseItem(BaseModel, Generic[T], ABC):
+class KagamiItem(BaseModel, Generic[T], ABC):
     """
     物品的基类。其中的泛型 T 是在函数间进行信息传输的量。
     在继承的时候，请使用泛型类的方式声明这个类型
@@ -88,7 +88,7 @@ class BaseItem(BaseModel, Generic[T], ABC):
         """
 
 
-class UnuseableItem(BaseItem[None]):
+class UnuseableItem(KagamiItem[None]):
     async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
         return False
 
@@ -99,8 +99,11 @@ class UnuseableItem(BaseItem[None]):
         return None
 
 
-class ItemInventoryDisplay(BaseModel):
-    meta: BaseItem[Any]
+TITEM = TypeVar("TITEM", bound=KagamiItem)
+
+
+class ItemInventoryDisplay(BaseModel, Generic[TITEM]):
+    meta: TITEM
     count: int = -1
     stats: int = -1
 
@@ -110,37 +113,37 @@ class ItemService:
     物品服务
     """
 
-    items: dict[str, BaseItem[Any]]
+    items: dict[str, KagamiItem[Any]]
 
     def __init__(self) -> None:
         self.items = {}
 
-    def get_item(self, item_name: str) -> BaseItem[Any] | None:
+    def get_item(self, item_name: str) -> KagamiItem[Any] | None:
         return self.items.get(item_name, None)
 
-    def get_item_strong(self, item_name: str) -> BaseItem[Any]:
+    def get_item_strong(self, item_name: str) -> KagamiItem[Any]:
         item = self.get_item(item_name)
         if item is None:
             raise ObjectNotFoundException("物品")
         return item
 
-    def register(self, item: BaseItem[Any]) -> None:
+    def register(self, item: KagamiItem[Any]) -> None:
         self._register(item.name, item)
         for alt in item.alt_names:
             self._register(alt, item)
 
-    def _register(self, name: str, item: BaseItem[Any]) -> None:
+    def _register(self, name: str, item: KagamiItem[Any]) -> None:
         assert name not in self.items, f"物品名 {name} 发生冲突了，请检查是否有重复注册"
         self.items[name] = item
 
     async def get_inventory_displays(
         self, uow: UnitOfWork, uid: int | None
-    ) -> list[tuple[str, list[ItemInventoryDisplay]]]:
+    ) -> list[tuple[str, list[ItemInventoryDisplay[Any]]]]:
         """
         获得物品栏的展示清单，如果未提供 uid，则返回所有已经注册的物品。
         """
 
-        _results: dict[str, list[ItemInventoryDisplay]] = {}
+        _results: dict[str, list[ItemInventoryDisplay[Any]]] = {}
 
         if uid is not None:
             inventory = await uow.items.get_dict(uid)
@@ -181,7 +184,7 @@ def get_item_service() -> ItemService:
     return _global_service
 
 
-def register_item(item: BaseItem[Any]):
+def register_item(item: KagamiItem[Any]):
     """
     注册物品
     """

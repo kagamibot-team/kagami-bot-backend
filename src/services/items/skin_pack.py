@@ -1,4 +1,3 @@
-from nonebot_plugin_alconna import UniMessage
 from pydantic import BaseModel
 
 from src.base.command_events import MessageContext
@@ -6,7 +5,7 @@ from src.common.data.awards import get_award_info
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
 from src.repositories.skin_repository import SkinData
-from src.services.items.base import BaseItem, UseItemArgs
+from src.services.items.base import KagamiItem, UseItemArgs
 from src.ui.types.common import AwardInfo
 
 
@@ -40,7 +39,7 @@ class UseItemSkinPackEvent(BaseModel):
     all_skins_data: list[SkinData]
 
 
-class ItemSkinPack(BaseItem[UseItemSkinPackEvent]):
+class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
     name: str = "皮肤盲盒"
     description: str = "打开来，你可以获得一个随机的皮肤"
     group: str = "消耗品"
