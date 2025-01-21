@@ -21,7 +21,7 @@ from src.common.config import get_config
 from src.common.times import now_datetime
 from src.common.webhook import send_webhook
 from src.core.unit_of_work import get_unit_of_work
-from src.logic.admin import isAdmin
+from src.logic.admin import is_admin
 
 T = TypeVar("T")
 TE = TypeVar("TE", bound=MessageContext)
@@ -109,7 +109,7 @@ def require_admin():
 
     def wrapper(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
         async def inner(ctx: TE, *args: Unpack[TA]):
-            if isAdmin(ctx):
+            if is_admin(ctx):
                 return await func(ctx, *args)
 
         return inner
@@ -276,7 +276,7 @@ def limit_no_spam(func: Callable[[TE, *TA], Coroutine[Any, Any, T]]):
             NO_SPAM_LOCKS[ctx.sender_id] = asyncio.Lock()
 
         lock = NO_SPAM_LOCKS[ctx.sender_id]
-        if lock.locked() and not isAdmin(ctx):
+        if lock.locked() and not is_admin(ctx):
             return
 
         async with lock:

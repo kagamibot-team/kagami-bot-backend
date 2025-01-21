@@ -8,7 +8,7 @@ from src.base.exceptions import DoNotHaveException, KagamiArgumentException
 from src.common.command_deco import listen_message, match_alconna
 from src.common.data.awards import get_award_info
 from src.core.unit_of_work import get_unit_of_work
-from src.logic.admin import isAdmin
+from src.logic.admin import is_admin
 from src.services.stats import StatService
 from src.ui.pages.catch import render_award_info_message
 from src.ui.views.award import AwardDisplay
@@ -29,7 +29,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
     if name is None:
         return
     skin_name = res.query[str]("皮肤名")
-    do_admin = res.find("管理员") and isAdmin(ctx)
+    do_admin = res.find("管理员") and is_admin(ctx)
     do_display = res.find("条目")
 
     async with get_unit_of_work() as uow:

@@ -1,8 +1,8 @@
-from src.base.command_events import MessageContext, GroupContext
+from src.base.command_events import GroupContext, MessageContext
 from src.common.config import get_config
 
 
-def isAdmin(ctx: MessageContext) -> bool:
+def is_admin(ctx: MessageContext) -> bool:
     if isinstance(ctx, GroupContext):
         if ctx.event.group_id in get_config().admin_groups:
             return True

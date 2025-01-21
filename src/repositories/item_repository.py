@@ -74,7 +74,6 @@ class ItemRepository(DBRepository):
 
         count, stats = await self.get(uid, item_id)
         count -= delta
-        stats -= delta
         if count < 0:
             raise LackException(item_id, delta, count + delta)
         await self.set(uid, item_id, count, stats)
