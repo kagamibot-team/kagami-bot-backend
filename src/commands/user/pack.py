@@ -1,5 +1,4 @@
 from typing import Any
-from random import Random
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import UniMessage

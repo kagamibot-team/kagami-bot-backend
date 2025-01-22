@@ -1,7 +1,8 @@
 from re import Match
+from typing import Any
 
 from nonebot.adapters.onebot.v11 import MessageSegment
-from nonebot_plugin_alconna import At, Reply, Text
+from nonebot_plugin_alconna import At, Reply, Text, UniMessage
 
 from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_dispatcher import EventDispatcher
@@ -10,20 +11,44 @@ from src.base.exceptions import KagamiArgumentException
 from src.common.command_deco import (
     kagami_exception_handler,
     limit_no_spam,
+    limited,
     match_regex,
-    require_admin,
+    require_awake,
 )
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import is_admin
-from src.services.items.base import UseItemArgs, get_item_service
+from src.services.items.base import (
+    ItemInventoryDisplay,
+    KagamiItem,
+    UseItemArgs,
+    get_item_service,
+)
+from src.ui.base.render import get_render_pool
+from src.ui.types.common import LEVEL_COLOR_MAP, UserData
+from src.ui.types.inventory import BookBoxData, BoxItemList, DisplayBoxData, StorageData
 
 dispatcher = EventDispatcher()
+
+
+def items_to_bookbox(items: list[ItemInventoryDisplay[KagamiItem[Any]]]):
+    return [
+        BookBoxData(
+            display_box=DisplayBoxData(
+                image=i.meta.image.url,
+                color=LEVEL_COLOR_MAP[1],
+                notation_down=str(i.count),
+                notation_up=str(i.stats),
+            ),
+            title1=i.meta.name,
+        )
+        for i in items
+    ]
 
 
 @dispatcher.listen(MessageContext)
 @kagami_exception_handler()
 @limit_no_spam
-@match_regex(r"^(::)?背包 ?(\d+)?$")
+@match_regex(r"^(::)?(背包|物品栏|物品库存) ?(\d+)?$")
 async def _(ctx: MessageContext, res: Match[str]):
     # _admin_key = res.group(1) is not None
     _target: str | None = res.group(2)
@@ -38,13 +63,35 @@ async def _(ctx: MessageContext, res: Match[str]):
         isv = get_item_service()
         uid = await uow.users.get_uid(target)
         displays = await isv.get_inventory_displays(uow, uid)
+        user = UserData(
+            uid=uid,
+            qqid=str(target),
+            name=await ctx.get_sender_name(),
+        )
 
-    await ctx.reply(str(displays))
+    boxes = [
+        BoxItemList(
+            title=group_name,
+            elements=items_to_bookbox(items),
+        )
+        for group_name, items in displays
+    ]
+
+    # await ctx.reply(str(displays))
+    data = StorageData(
+        user=user,
+        title_text="背包",
+        boxes=boxes,
+    )
+    img = await get_render_pool().render("storage", data=data)
+    await ctx.send(UniMessage.image(raw=img))
 
 
 @dispatcher.listen(MessageContext)
 @kagami_exception_handler()
+@limited
 @limit_no_spam
+@require_awake
 async def _(ctx: MessageContext):
     msg = ctx.message
     use_target: int | None = None

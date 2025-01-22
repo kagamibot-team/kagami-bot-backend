@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import (
     Any,
     Generic,
@@ -64,6 +65,12 @@ class MessageContext(ABC):
     @property
     def text(self):
         return self.message.extract_plain_text()
+    
+    async def send_image(self, image: Path | bytes):
+        if isinstance(image, Path):
+            image = image.read_bytes()
+        msg = UniMessage.image(raw=image)
+        return await self.send(msg)
 
 
 class OnebotContext(MessageContext, Generic[TE]):

@@ -102,6 +102,9 @@ class User(Base, BaseMixin):
     # 20241104 追加
     # 上次购买皮肤盲盒的时间
     buy_skin_box_last_time: Mapped[float] = mapped_column(default=0, server_default="0")
+    buy_skin_box_count_in_this_week: Mapped[int] = mapped_column(
+        default=0, server_default="0"
+    )
 
 
 class SkinRecord(Base, BaseMixin):

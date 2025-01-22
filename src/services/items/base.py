@@ -138,12 +138,12 @@ class ItemService:
 
     async def get_inventory_displays(
         self, uow: UnitOfWork, uid: int | None
-    ) -> list[tuple[str, list[ItemInventoryDisplay[Any]]]]:
+    ) -> list[tuple[str, list[ItemInventoryDisplay[KagamiItem[Any]]]]]:
         """
         获得物品栏的展示清单，如果未提供 uid，则返回所有已经注册的物品。
         """
 
-        _results: dict[str, list[ItemInventoryDisplay[Any]]] = {}
+        _results: dict[str, list[ItemInventoryDisplay[KagamiItem[Any]]]] = {}
 
         if uid is not None:
             inventory = await uow.items.get_dict(uid)

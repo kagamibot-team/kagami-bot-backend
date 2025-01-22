@@ -10,6 +10,22 @@ from src.base.res.resource import IResource
 from src.common.times import now_datetime
 
 
+LEVEL_COLOR_MAP = {
+    0: "#9E9D95",
+    1: "#C6C1BF",
+    2: "#C0E8AE",
+    3: "#BDDAF5",
+    4: "#D4BCE3",
+    5: "#F1DD95",
+    # 10: "#E57D77",
+    10: "#696361",
+    11: "#75C16D",
+    12: "#6F93E7",
+    13: "#996FE0",
+    14: "#E8BD5A",
+}
+
+
 class LevelData(BaseModel):
     display_name: str = "未知"
     color: str = "#9e9d95"
@@ -47,21 +63,7 @@ class AwardInfo(BaseModel):
     @computed_field
     @property
     def color(self) -> str:
-        level_map = {
-            0: "#9E9D95",
-            1: "#C6C1BF",
-            2: "#C0E8AE",
-            3: "#BDDAF5",
-            4: "#D4BCE3",
-            5: "#F1DD95",
-            # 10: "#E57D77",
-            10: "#696361",
-            11: "#75C16D",
-            12: "#6F93E7",
-            13: "#996FE0",
-            14: "#E8BD5A",
-        }
-        return level_map.get(self.display_lid, "#696361")
+        return LEVEL_COLOR_MAP.get(self.display_lid, "#696361")
 
     @property
     def image_name(self) -> str:

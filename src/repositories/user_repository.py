@@ -194,22 +194,30 @@ class UserRepository(DBRepository):
         q = update(User).where(User.data_id == uid).values({User.get_up_time: ts})
         await self.session.execute(q)
 
-    async def get_buy_skinbox_last_time(self, uid: int) -> float:
+    async def get_skin_pack_data(self, uid: int) -> tuple[float, int]:
         """
         获得上次购买皮肤盲盒的时间
         """
-        q = select(User.buy_skin_box_last_time).filter(User.data_id == uid)
+        q = select(
+            User.buy_skin_box_last_time,
+            User.buy_skin_box_count_in_this_week,
+        ).filter(User.data_id == uid)
         r = await self.session.execute(q)
-        return r.scalar_one()
+        return r.tuples().one()
 
-    async def set_buy_skinbox_last_time(self, uid: int, ts: float):
+    async def set_skin_pack_data(self, uid: int, ts: float, count: int):
         """
         设置上次购买皮肤盲盒的时间
         """
         q = (
             update(User)
             .where(User.data_id == uid)
-            .values({User.buy_skin_box_last_time: ts})
+            .values(
+                {
+                    User.buy_skin_box_last_time: ts,
+                    User.buy_skin_box_count_in_this_week: count,
+                }
+            )
         )
         await self.session.execute(q)
 
