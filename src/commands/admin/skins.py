@@ -1,10 +1,16 @@
+from functools import reduce
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
 from loguru import logger
 from nonebot_plugin_alconna import Image, UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import ObjectAlreadyExistsException
-from src.common.command_deco import listen_message, match_alconna, require_admin
+from src.common.command_deco import (
+    listen_message,
+    match_alconna,
+    match_literal,
+    require_admin,
+)
 from src.common.data.skins import download_skin_image
 from src.core.unit_of_work import get_unit_of_work
 from src.ui.base.render import get_render_pool
@@ -232,3 +238,17 @@ async def _(ctx: MessageContext, res: Arparma):
         sid = await uow.skins.get_sid_strong(name)
         await uow.skins.delete(sid)
     await ctx.send("ok.")
+
+
+@listen_message()
+@require_admin()
+@match_literal("::skin-no-level")
+async def _(ctx: MessageContext):
+    async with get_unit_of_work() as uow:
+        sids = await uow.skins.get_all_sid_grouped_with_level(True)
+        sids = reduce(
+            lambda x, y: x | y, (v for i, v in sids.items() if i < 1 or i > 4)
+        )
+        names = [(await uow.skins.get_info_v2(sid)).name for sid in sids]
+    
+    await ctx.send(f"No Level: {names}")

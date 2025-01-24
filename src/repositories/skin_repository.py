@@ -240,5 +240,10 @@ class SkinRepository(DBRepository):
         return result
 
     async def get_all_sids_can_be_bought(self) -> set[int]:
-        q = select(Skin.data_id).filter(Skin.can_be_bought == 1).filter(Skin.biscuit > 0)
+        q = (
+            select(Skin.data_id)
+            .filter(Skin.can_be_bought == 1)
+            .filter(Skin.biscuit > 0)
+            .filter(Skin.level > 0)
+        )
         return set((await self.session.execute(q)).scalars().all())

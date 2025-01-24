@@ -13,6 +13,8 @@ class DialogFrom(Enum):
     liechang_huaout = Path("./res/dialog/华出_猎场.txt")
     hecheng_normal = Path("./res/dialog/通常_合成部.txt")
     hecheng_huaout = Path("./res/dialog/华出_合成部.txt")
+    pifudian_normal_shio = Path("./res/dialog/通常_皮肤店_塩.txt")
+    pifudian_normal_jx = Path("./res/dialog/通常_皮肤店_草.txt")
 
 
 def handle_single_line_dialogue(text: str | DialogueMessage) -> DialogueMessage | None:

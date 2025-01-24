@@ -1,11 +1,14 @@
 from pydantic import BaseModel
 
-from src.repositories.skin_repository import SkinData
-from src.ui.types.common import UserData
+from src.ui.types.common import DialogueMessage, UserData
 
 
 class SkinBook(BaseModel):
-    info: SkinData
+    image: str
+    level: int
+    name: str
+    is_drawable: bool
+    price: int
     do_user_have: bool
 
 
@@ -15,3 +18,4 @@ class SkinShop(BaseModel):
     biscuits: int
     skins: list[SkinBook]
     skin_pack_price: int
+    dialog: DialogueMessage

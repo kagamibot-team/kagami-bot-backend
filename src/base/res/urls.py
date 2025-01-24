@@ -1,6 +1,8 @@
 from hashlib import sha256
 from pathlib import Path
 
+from loguru import logger
+
 
 class ResourceURLRegisterator:
     def __init__(self) -> None:
@@ -15,6 +17,8 @@ class ResourceURLRegisterator:
         url = f"/kagami/file/registered/{hashed}"
         self.registered[path] = url
         self.registered_reverse[hashed] = path
+        
+        logger.debug(f"新注册资源 PATH={path} HASH={hashed}")
 
         return url
 
