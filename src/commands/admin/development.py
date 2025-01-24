@@ -6,6 +6,7 @@
 import json
 from pathlib import Path
 from re import Match
+import re
 import time
 from typing import Any
 
@@ -246,3 +247,17 @@ async def _(ctx: MessageContext):
                 info.can_draw = True
             await uow.skins.set_info_v2(sid, info)
     await ctx.reply("ok.")
+
+
+@listen_message()
+@require_admin()
+@match_regex(r"^::render (\S+) ([0-9a-fA-F]+)$")
+async def _(ctx: MessageContext, res: re.Match[str]):
+    page_name = res.group(1)
+    data_hex = res.group(2)
+
+    assert page_name is not None
+    assert data_hex is not None
+    
+    img = await get_render_pool().render(page_name, data=data_hex)
+    await ctx.send_image(img)

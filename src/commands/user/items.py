@@ -51,7 +51,7 @@ def items_to_bookbox(items: list[ItemInventoryDisplay[KagamiItem[Any]]]):
 @match_regex(r"^(::)?(背包|物品栏|物品库存) ?(\d+)?$")
 async def _(ctx: MessageContext, res: Match[str]):
     # _admin_key = res.group(1) is not None
-    _target: str | None = res.group(2)
+    _target: str | None = res.group(3)
     if _target is None:
         target = ctx.sender_id
     elif not is_admin(ctx):

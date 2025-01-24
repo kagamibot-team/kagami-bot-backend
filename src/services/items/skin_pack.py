@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 
 from src.base.command_events import MessageContext
+from src.base.res import KagamiResourceManagers
+from src.base.res.resource import IResource
 from src.common.data.awards import get_award_info
 from src.common.rd import get_random
 from src.core.unit_of_work import UnitOfWork
@@ -43,6 +45,8 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
     name: str = "皮肤盲盒"
     description: str = "打开来，你可以获得一个随机的皮肤"
     group: str = "消耗品"
+    image: IResource = KagamiResourceManagers.res("皮肤盲盒.png")
+    
 
     async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
         return True

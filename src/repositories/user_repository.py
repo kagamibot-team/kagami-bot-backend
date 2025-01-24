@@ -327,11 +327,12 @@ class BiscuitRepository(DBRepository):
         cu = await self.get(uid)
         await self.set(uid, cu + biscuit)
 
-    async def use(self, uid: int, biscuit: int) -> None:
+    async def use(self, uid: int, biscuit: int) -> int:
         cu = await self.get(uid)
         if cu < biscuit:
             raise LackException("饼干", biscuit, cu)
         await self.set(uid, cu - biscuit)
+        return cu - biscuit
 
 
 class UserFlagRepository(DBRepository):

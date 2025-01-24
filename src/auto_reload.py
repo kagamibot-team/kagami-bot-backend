@@ -15,6 +15,7 @@ from nonebot import get_driver
 
 from src.base.event.event_root import root
 from src.common.collections import PriorityList
+from src.services.items import register_inner_items
 
 loaded_modules: list[ModuleType] = []
 to_load_parents = (
@@ -79,7 +80,9 @@ def reload():
 
     while loaded_modules:
         loaded_modules.pop()
+
     load_packages()
+    register_inner_items()
 
 
 def _tree():

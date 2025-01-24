@@ -262,13 +262,16 @@ class RenderPool(Generic[T]):
                 return
 
     async def render(
-        self, path: str, data: BaseModel | dict[str, Any] | None = None
+        self, path: str, data: BaseModel | dict[str, Any] | None | str = None
     ) -> bytes:
         await self.clean()
 
         query = ""
         if data is not None:
-            uuid = backend_register_data(data)
+            if not isinstance(data, str):
+                uuid = backend_register_data(data)
+            else:
+                uuid = data
             query = f"?uuid={uuid}"
             logger.debug(f"已经将数据暂存到 {uuid} 了")
         link = f"http://{self.host}:{self.port}/kagami/pages/{path}{query}"

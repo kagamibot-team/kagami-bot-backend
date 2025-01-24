@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
-from pydantic import BaseModel, SerializeAsAny
+from pydantic import BaseModel
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import (
@@ -149,7 +149,7 @@ class ItemService:
             inventory = await uow.items.get_dict(uid)
             # print(inventory)
             for key, (count, stats) in inventory.items():
-                if key not in self.items:
+                if key not in self.items.keys():
                     continue
                 item = self.items[key]
                 _results.setdefault(item.group, [])

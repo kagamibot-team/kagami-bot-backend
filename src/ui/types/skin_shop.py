@@ -19,3 +19,15 @@ class SkinShop(BaseModel):
     skins: list[SkinBook]
     skin_pack_price: int
     dialog: DialogueMessage
+
+
+class SkinShopBought(BaseModel):
+    user: UserData
+    rest_money: int
+    cost: int
+    unit: str
+    image: str | None = None
+    name: str
+    current_count: int | None = None
+    from_award_name: str | None = None
+    level: int | None = None
