@@ -28,7 +28,7 @@ class EventDispatcher:
     使用方法:
 
     ```python
-    event = EventManager()
+    event = EventDispatcher()
 
     @event.listen(EventType)
     async def event_handler(event: EventType):
