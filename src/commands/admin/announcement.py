@@ -1,4 +1,5 @@
-from nonebot_plugin_alconna import At, Emoji, Image, Text
+from typing import Any
+from nonebot_plugin_alconna import At, Emoji, Image, Text, UniMessage
 
 from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_root import root
@@ -20,7 +21,7 @@ async def _(ctx: GroupContext):
     if not msg0.text.startswith("::广播"):
         return
 
-    msg = msg0.text[4:]
+    msg: UniMessage[Any] = UniMessage.text(msg0.text[4:])
     if len(msg) > 0 and msg[0] in " \n":
         msg = msg[1:]
 
