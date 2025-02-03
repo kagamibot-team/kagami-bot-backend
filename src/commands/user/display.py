@@ -68,7 +68,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
     elif do_admin:
         msg: UniMessage[Any] = (
             UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
-            .image(path=info.image_path)
+            .image(raw=info.image_resource.path.read_bytes())
             .text(
                 f"id={aid};\n"
                 f"main_pack={main_pack}; linked={linked_pack};\n"
@@ -79,7 +79,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
     else:
         msg = (
             UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
-            .image(path=info.image_path)
+            .image(raw=info.image_resource.path.read_bytes())
             .text(f"\n{info.description}")
         )
         await ctx.reply(msg)

@@ -11,6 +11,7 @@ from src.common.command_deco import (
     limit_no_spam,
     limited,
     match_regex,
+    require_admin,
     require_awake,
 )
 from src.common.data.user import get_user_data
@@ -69,6 +70,7 @@ def is_holiday(time: datetime.datetime | None = None) -> bool:
 
 @dispatcher.listen(MessageContext)
 @kagami_exception_handler()
+@require_admin()    # 暂时是测试阶段所以先加上这一行
 @limited
 @limit_no_spam
 @require_awake

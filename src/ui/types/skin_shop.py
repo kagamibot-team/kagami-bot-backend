@@ -31,3 +31,18 @@ class SkinShopBought(BaseModel):
     current_count: int | None = None
     from_award_name: str | None = None
     level: int | None = None
+
+
+class SkinPackOpenBiscuitDelta(BaseModel):
+    delta: int
+    after: int
+
+
+class SkinPackOpen(BaseModel):
+    user: UserData
+    biscuit_delta: None | SkinPackOpenBiscuitDelta
+    image: str
+    level: int
+    dialog: DialogueMessage
+    skin_name: str
+    skin_award_name: str
