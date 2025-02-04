@@ -106,7 +106,7 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
             if get_random().random() < jx_possibility
             else DialogFrom.pifudian_normal_shio
         )
-        dialogs = get_dialog(dialog_from, {"shop"})
+        dialogs = get_dialog(dialog_from, {f"heart{data.skin_data.level}"})
         view = SkinPackOpen(
             user=data.args.user,
             dialog=get_random().choice(dialogs),
