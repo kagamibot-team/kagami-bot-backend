@@ -17,7 +17,7 @@ from src.common.command_deco import (
 from src.common.data.user import get_user_data
 from src.common.dialogue import DialogFrom, get_dialog
 from src.common.rd import get_random
-from src.common.times import now_datetime, timestamp_to_datetime
+from src.common.times import is_holiday, now_datetime, timestamp_to_datetime
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.logic.admin import is_admin
 from src.ui.base.render import get_render_pool
@@ -60,12 +60,6 @@ async def update_skin_pack_data(
     await uow.users.set_skin_pack_data(
         user.uid, current_time.timestamp(), this_week_count + 1
     )
-
-
-def is_holiday(time: datetime.datetime | None = None) -> bool:
-    if time is None:
-        time = now_datetime()
-    return (time.date() - datetime.date(2023, 1, 1)).days % 7 in (0, 6)
 
 
 @dispatcher.listen(MessageContext)

@@ -1,14 +1,19 @@
+from nonebot_plugin_alconna import UniMessage
 from pydantic import BaseModel
 
 from src.base.command_events import MessageContext
 from src.base.res import KagamiResourceManagers
 from src.base.res.resource import IResource
 from src.common.data.awards import get_award_info
+from src.common.dialogue import DialogFrom, get_dialog
 from src.common.rd import get_random
+from src.common.times import is_holiday
 from src.core.unit_of_work import UnitOfWork
 from src.repositories.skin_repository import SkinData
 from src.services.items.base import KagamiItem, UseItemArgs
+from src.ui.base.render import get_render_pool
 from src.ui.types.common import AwardInfo
+from src.ui.types.skin_shop import SkinPackOpen
 
 
 async def choose_random_skin(uow: UnitOfWork) -> int:
@@ -36,6 +41,7 @@ class UseItemSkinPackEvent(BaseModel):
     skin_data: SkinData
     remain: int
     biscuit_return: int
+    biscuit_current: int
     do_user_have_before: bool
     award_info: AwardInfo
     all_skins_data: list[SkinData]
@@ -46,14 +52,14 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
     description: str = "打开来，你可以获得一个随机的皮肤"
     group: str = "消耗品"
     image: IResource = KagamiResourceManagers.res("皮肤盲盒.png")
-    
 
-    async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
+    async def can_be_used(self, uow: UnitOfWork, args: UseItemArgs) -> bool:
         return True
 
-    async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs):
+    async def use(self, uow: UnitOfWork, args: UseItemArgs):
         args.require_count_range(1, 1)
         args.require_target(False)
+        uid = args.user.uid
 
         remain = await self.use_item_in_db(uow, uid, 1)
 
@@ -68,6 +74,7 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
         else:
             await uow.skin_inventory.give(uid, sid)
         await uow.biscuit.add(uid, biscuits_return)
+        biscuit_current = await uow.biscuit.get(uid)
 
         # 补充信息
         award_info = await get_award_info(uow, data.aid, sid=None)
@@ -82,24 +89,31 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
             skin_data=data,
             remain=remain,
             biscuit_return=biscuits_return,
+            biscuit_current=biscuit_current,
             do_user_have_before=do_user_have_before,
             award_info=award_info,
             all_skins_data=all_skins_data,
         )
 
     async def send_use_message(self, ctx: MessageContext, data: UseItemSkinPackEvent):
-        message_parts = [
-            "你使用了一个皮肤盲盒，",
-            f"获得了 {data.skin_data.name} 皮肤，",
-            f"这是一个等级为 {data.skin_data.level} 的皮肤，",
-            f"你还有 {data.remain} 个皮肤盲盒，",
-        ]
+        jx_possibility = 0.8 if is_holiday(data.args.use_time) else 0
+        dialog_from = (
+            DialogFrom.pifudian_normal_jx
+            if get_random().random() < jx_possibility
+            else DialogFrom.pifudian_normal_shio
+        )
+        dialogs = get_dialog(dialog_from, {"shop"})
+        view = SkinPackOpen(
+            user=data.args.user,
+            biscuit_delta=None,
+            dialog=get_random().choice(dialogs),
+            image=KagamiResourceManagers.xiaoge_low(
+                f"sid_{data.skin_data.sid}.png"
+            ).url,
+            level=data.skin_data.level,
+            skin_award_name=data.award_info.name,
+            skin_name=data.skin_data.name,
+        )
 
-        if data.do_user_have_before:
-            message_parts.append(
-                f"你之前已经拥有过这个皮肤，所以这次获得的饼干奖励翻倍了！"
-            )
-
-        message_parts.append(f"返还了 {data.biscuit_return} 个饼干。")
-
-        await ctx.reply("".join(message_parts))
+        image = await get_render_pool().render("skin_pack", view)
+        await ctx.send(UniMessage.image(raw=image))

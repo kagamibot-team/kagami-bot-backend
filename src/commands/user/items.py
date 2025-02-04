@@ -8,6 +8,7 @@ from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_dispatcher import EventDispatcher
 from src.base.event.event_root import root
 from src.base.exceptions import KagamiArgumentException
+from src.base.onebot.onebot_tools import get_name_cached
 from src.common.command_deco import (
     kagami_exception_handler,
     limit_no_spam,
@@ -15,6 +16,8 @@ from src.common.command_deco import (
     match_regex,
     require_awake,
 )
+from src.common.data.user import get_user_data
+from src.common.times import now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.admin import is_admin
 from src.services.items.base import (
@@ -142,9 +145,21 @@ async def _(ctx: MessageContext):
     async with get_unit_of_work() as uow:
         isv = get_item_service()
         item = isv.get_item_strong(use_name)
-        arg = UseItemArgs(count=1, target_uid=use_target)
+
+        user = await get_user_data(ctx, uow)
+        group_id = None
+        if isinstance(ctx, GroupContext):
+            group_id = ctx.group_id
+        target = None
+        if use_target is not None:
+            target = UserData(
+                uid=await uow.users.get_uid(use_target),
+                name=await get_name_cached(group_id, use_target),
+            )
+
+        arg = UseItemArgs(count=1, target=target, user=user, use_time=now_datetime())
         uid = await uow.users.get_uid(ctx.sender_id)
-        data = await item.use(uow, uid, arg)
+        data = await item.use(uow, arg)
         await item.send_use_message(ctx, data)
 
 

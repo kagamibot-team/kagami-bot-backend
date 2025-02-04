@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, func, insert, select, update
 
 from src.base.exceptions import ObjectNotFoundException
 from src.models.level import level_repo
@@ -47,10 +47,12 @@ class AwardRepository(DBRepository):
         Returns:
             int | None: 结果。如果找不到，则返回 None
         """
-        q1 = select(Award.data_id).where(Award.name == name)
+        q1 = select(Award.data_id).where(func.lower(Award.name) == name.lower())
         a = (await self.session.execute(q1)).scalar_one_or_none()
         if a is None:
-            q2 = select(AwardAltName.award_id).where(AwardAltName.name == name)
+            q2 = select(AwardAltName.award_id).where(
+                func.lower(AwardAltName.name) == name.lower()
+            )
             a = (await self.session.execute(q2)).scalar_one_or_none()
 
         return a

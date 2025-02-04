@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, func, insert, select, update
 from typing_extensions import deprecated
 
 from src.base.exceptions import ObjectNotFoundException
@@ -82,10 +82,10 @@ class SkinRepository(DBRepository):
             int | None: 皮肤的 ID，不存在则为 None
         """
 
-        q1 = select(Skin.data_id).where(Skin.name == name)
+        q1 = select(Skin.data_id).where(func.lower(Skin.name) == name.lower())
         a = (await self.session.execute(q1)).scalar_one_or_none()
         if a is None:
-            q2 = select(SkinAltName.skin_id).where(SkinAltName.name == name)
+            q2 = select(SkinAltName.skin_id).where(func.lower(SkinAltName.name) == name.lower())
             a = (await self.session.execute(q2)).scalar_one_or_none()
 
         return a

@@ -44,4 +44,10 @@ def timestamp_to_datetime(ts: float):
     )
 
 
+def is_holiday(time: datetime.datetime | None = None) -> bool:
+    if time is None:
+        time = now_datetime()
+    return (time.date() - datetime.date(2023, 1, 1)).days % 7 in (0, 6)
+
+
 __all__ = ["to_utc8", "timestamp_to_datetime", "now_datetime", "replace_tz", "dttm"]

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import datetime
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
@@ -12,13 +13,16 @@ from src.base.exceptions import (
 from src.base.res import KagamiResourceManagers
 from src.base.res.resource import IResource
 from src.core.unit_of_work import UnitOfWork
+from src.ui.types.common import UserData
 
 T = TypeVar("T")
 
 
 class UseItemArgs(BaseModel):
     count: int = 1
-    target_uid: int | None = None
+    target: UserData | None
+    user: UserData
+    use_time: datetime.datetime
 
     def require_count_range(self, n_min: int | None = None, n_max: int | None = None):
         if n_min is not None and self.count < n_min:
@@ -27,9 +31,9 @@ class UseItemArgs(BaseModel):
             raise KagamiRangeError("物品数量", f"不超过 {n_max}", self.count)
 
     def require_target(self, required: bool = True):
-        if required and self.target_uid is None:
+        if required and self.target is None:
             raise KagamiArgumentException("要指定一个人哦")
-        elif not required and self.target_uid is not None:
+        elif not required and self.target is not None:
             raise KagamiArgumentException("不用指定目标哦")
 
 
@@ -63,7 +67,7 @@ class KagamiItem(BaseModel, Generic[T], ABC):
     "物品的别名"
 
     @abstractmethod
-    async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
+    async def can_be_used(self, uow: UnitOfWork, args: UseItemArgs) -> bool:
         """
         能否使用这个物品，如果需要更改逻辑，请重载这个函数
         """
@@ -75,7 +79,7 @@ class KagamiItem(BaseModel, Generic[T], ABC):
         return await uow.items.use(uid, self.name, count)
 
     @abstractmethod
-    async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> T:
+    async def use(self, uow: UnitOfWork, args: UseItemArgs) -> T:
         """
         使用这个物品触发的逻辑，如果需要更改逻辑，请重载这个函数。
         在这里，你需要实现物品减少的逻辑，并告知用于你使用了这个物品的相关消息。
@@ -89,10 +93,10 @@ class KagamiItem(BaseModel, Generic[T], ABC):
 
 
 class UnuseableItem(KagamiItem[None]):
-    async def can_be_used(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> bool:
+    async def can_be_used(self, uow: UnitOfWork, args: UseItemArgs) -> bool:
         return False
 
-    async def use(self, uow: UnitOfWork, uid: int, args: UseItemArgs) -> None:
+    async def use(self, uow: UnitOfWork, args: UseItemArgs) -> None:
         return None
 
     async def send_use_message(self, ctx: MessageContext, data: None):

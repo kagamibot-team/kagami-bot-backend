@@ -72,6 +72,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             .text(
                 f"id={aid};\n"
                 f"main_pack={main_pack}; linked={linked_pack};\n"
+                f"sid={info.sid}; slevel={info.slevel};\n"
                 f"{info.description}"
             )
         )
