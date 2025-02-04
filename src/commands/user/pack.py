@@ -2,6 +2,8 @@ from typing import Any
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 from nonebot_plugin_alconna import UniMessage
+import sqlalchemy
+import sqlalchemy.exc
 
 from src.base.command_events import MessageContext
 from src.common.command_deco import (
@@ -53,11 +55,16 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
         ]
         acount = sorted(acount, key=lambda v: v.level.display_name, reverse=True)
 
+        try:
+            featured_award_info = await get_award_info(uow, bulletin_award[i], uid)
+        except (sqlalchemy.exc.NoResultFound, IndexError):
+            featured_award_info = await get_award_info(uow, next(iter(aids)), uid)
+
         packs.append(
             SingleLiechang(
                 pack_id=i,
                 award_count=acount,
-                featured_award=await get_award_info(uow, bulletin_award[i], uid),
+                featured_award=featured_award_info,
                 unlocked=i in await uow.user_pack.get_own(uid),
             )
         )
