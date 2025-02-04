@@ -148,7 +148,7 @@ class PoolService:
         """
         购买一个猎场（失败就抛出异常）
         """
-        price = [0, 0, 1000, 3000]
+        price = [0, 0, 1000, 3000, 4500]
 
         max_count = await self.uow.settings.get_pack_count()
         own_packs = await self.uow.user_pack.get_own(uid)
