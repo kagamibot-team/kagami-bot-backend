@@ -1,8 +1,9 @@
-import json
-from pathlib import Path
-import requests
 import asyncio
+import json
 import ssl
+
+import requests
+from loguru import logger
 
 
 # IDK why but works
@@ -16,12 +17,14 @@ class TLSAdapter(requests.adapters.HTTPAdapter):  # type: ignore
 
 
 def request_new_tst(url: str) -> bytes:
-    session = requests.Session()
-    session.mount("https://", TLSAdapter())
-    response = session.get(url, verify=False)
-    content: bytes = response.content
-    
-    if len(content) < 128 and content[0:1] == b'{':
+    # session = requests.Session()
+    # session.mount("https://", TLSAdapter())
+    # response = session.get(url, verify=False)
+    # content: bytes = response.content
+
+    content: bytes = requests.get(url).content
+
+    if len(content) < 128 and content[0:1] == b"{":
         try:
             content_text = content.decode()
             json.loads(content_text)
@@ -30,14 +33,18 @@ def request_new_tst(url: str) -> bytes:
             pass
         except json.JSONDecodeError:
             pass
-    
+
     return content
 
 
-async def download(url: str):
+async def download(url: str) -> bytes:
     loop = asyncio.get_event_loop()
 
-    return await loop.run_in_executor(None, request_new_tst, url)
+    logger.debug(f"开始从 URL 中下载资源：{url}")
+    data = await loop.run_in_executor(None, request_new_tst, url)
+    logger.debug(f"资源下载完成：{url}")
+
+    return data
 
 
 __all__ = ["download"]

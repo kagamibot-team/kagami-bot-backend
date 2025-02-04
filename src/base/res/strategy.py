@@ -1,3 +1,4 @@
+import base64
 import tempfile
 from abc import ABC, abstractmethod
 from hashlib import sha256
@@ -5,6 +6,7 @@ from pathlib import Path
 
 from loguru import logger
 
+from src.base.exceptions import KagamiArgumentException
 from src.base.res.middleware.filter import ITextFilter
 from src.base.res.middleware.image import BaseImageMiddleware
 from src.base.res.resource import IResource, LocalResource
@@ -237,3 +239,71 @@ class CombinedStorageStrategy(IStorageStrategy):
 
     def can_put(self, file_name: str) -> bool:
         return any([strategy.can_put(file_name) for strategy in self.strategies])
+
+
+def is_image_data(data: bytes) -> bool:
+    if not isinstance(data, bytes):
+        return False
+
+    # 检查常见图片格式的魔术字节
+    if len(data) >= 2:
+        # JPEG
+        if data[:2] == b"\xFF\xD8":
+            return True
+        # BMP
+        if data[:2] == b"BM":
+            return True
+
+    if len(data) >= 8:
+        # PNG
+        if data[:8] == b"\x89PNG\r\n\x1a\n":
+            return True
+
+    if len(data) >= 6:
+        # GIF (87a或89a)
+        if data[:6] in (b"GIF87a", b"GIF89a"):
+            return True
+
+    if len(data) >= 4:
+        # TIFF (小端或大端)
+        if data[:4] in (b"\x49\x49\x2A\x00", b"\x4D\x4D\x00\x2A"):
+            return True
+
+    if len(data) >= 12:
+        # WebP
+        if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+            return True
+
+    return False
+
+
+class EnsureItIsImageStorageStrategy(IStorageStrategy):
+    """
+    确保输出的是图片，不然就不存在
+    """
+
+    def __init__(self, origin: IStorageStrategy):
+        self.origin = origin
+
+    def exists(self, file_name: str) -> bool:
+        if not self.origin.exists(file_name):
+            return False
+        return is_image_data(self.origin.get(file_name).path.read_bytes())
+
+    def can_put(self, file_name: str) -> bool:
+        return self.origin.can_put(file_name)
+
+    def put(self, file_name: str, data: bytes) -> IResource:
+        if len(data) > 100:
+            ret_data = base64.b64encode(data[:100]).decode() + "..."
+        else:
+            ret_data = base64.b64encode(data).decode()
+        if not is_image_data(data):
+            raise KagamiArgumentException(
+                f"上传图片时发生错误，解析的数据不是图片类型：{ret_data}"
+            )
+        logger.debug(f"保存图片时，校验通过：IMG={file_name}; DATA={ret_data}")
+        return self.origin.put(file_name, data)
+
+    def get(self, file_name: str) -> IResource:
+        return self.origin.get(file_name)

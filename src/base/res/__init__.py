@@ -8,6 +8,7 @@ from src.base.res.middleware.image import (
 )
 from src.base.res.strategy import (
     CombinedStorageStrategy,
+    EnsureItIsImageStorageStrategy,
     FileStorageStrategy,
     FilteredStorageStrategy,
     JustFallBackStorageStrategy,
@@ -29,13 +30,21 @@ class KagamiResourceManagers:
 
     xiaoge = CombinedStorageStrategy(
         [
-            FilteredStorageStrategy(
-                FileStorageStrategy(Path("./data/awards")), WithPrefixFilter("aid_")
+            EnsureItIsImageStorageStrategy(
+                CombinedStorageStrategy(
+                    [
+                        FilteredStorageStrategy(
+                            FileStorageStrategy(Path("./data/awards")),
+                            WithPrefixFilter("aid_"),
+                        ),
+                        FilteredStorageStrategy(
+                            FileStorageStrategy(Path("./data/skins")),
+                            WithPrefixFilter("sid_"),
+                        ),
+                        StaticStorageStrategy(Path("./res")),
+                    ]
+                )
             ),
-            FilteredStorageStrategy(
-                FileStorageStrategy(Path("./data/skins")), WithPrefixFilter("sid_")
-            ),
-            StaticStorageStrategy(Path("./res")),
             JustFallBackStorageStrategy(Path("./res/default.png")),
         ]
     )

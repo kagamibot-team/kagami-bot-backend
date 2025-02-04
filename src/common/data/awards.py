@@ -4,6 +4,8 @@
 
 import uuid
 
+from loguru import logger
+
 import src
 import src.ui
 import src.ui.types
@@ -89,4 +91,5 @@ async def use_award(uow: UnitOfWork, uid: int, aid: int, count: int):
 
 async def download_award_image(aid: int, url: str):
     data = await download(url)
+    logger.debug(f"将图片资源保存至：aid_{aid}.png")
     KagamiResourceManagers.xiaoge.put(f"aid_{aid}.png", data)
