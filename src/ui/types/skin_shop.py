@@ -33,14 +33,11 @@ class SkinShopBought(BaseModel):
     level: int | None = None
 
 
-class SkinPackOpenBiscuitDelta(BaseModel):
-    delta: int
-    after: int
-
-
 class SkinPackOpen(BaseModel):
     user: UserData
-    biscuit_delta: None | SkinPackOpenBiscuitDelta
+    biscuit_return: int
+    biscuit_after: int
+    do_user_have_before: bool
     image: str
     level: int
     dialog: DialogueMessage

@@ -1,5 +1,7 @@
 from re import Match
 
+from loguru import logger
+
 from src.base.command_events import MessageContext
 from src.base.event.event_dispatcher import EventDispatcher
 from src.base.event.event_root import root
@@ -24,6 +26,9 @@ async def _(ctx: MessageContext, res: Match[str]):
         _item = isv.get_item(item_name)
         if _item is not None:
             item_name = _item.name
+        logger.debug(
+            f"给了物品给玩家。TARGET={target}; NAME={item_name}; COUNT={item_count}"
+        )
         await uow.items.give(await uow.users.get_uid(target), item_name, item_count)
 
     await ctx.reply("ok.")

@@ -1,3 +1,4 @@
+from loguru import logger
 from nonebot_plugin_alconna import UniMessage
 from pydantic import BaseModel
 
@@ -83,7 +84,7 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
             await uow.skins.get_info_v2(sid) for sid in all_skins_of_award
         ]
 
-        return UseItemSkinPackEvent(
+        evt = UseItemSkinPackEvent(
             uid=uid,
             args=args,
             skin_data=data,
@@ -95,6 +96,9 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
             all_skins_data=all_skins_data,
         )
 
+        logger.debug(str(evt))
+        return evt
+
     async def send_use_message(self, ctx: MessageContext, data: UseItemSkinPackEvent):
         jx_possibility = 0.8 if is_holiday(data.args.use_time) else 0
         dialog_from = (
@@ -105,7 +109,6 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
         dialogs = get_dialog(dialog_from, {"shop"})
         view = SkinPackOpen(
             user=data.args.user,
-            biscuit_delta=None,
             dialog=get_random().choice(dialogs),
             image=KagamiResourceManagers.xiaoge_low(
                 f"sid_{data.skin_data.sid}.png"
@@ -113,6 +116,9 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
             level=data.skin_data.level,
             skin_award_name=data.award_info.name,
             skin_name=data.skin_data.name,
+            biscuit_return=data.biscuit_return,
+            biscuit_after=data.biscuit_current,
+            do_user_have_before=data.do_user_have_before,
         )
 
         image = await get_render_pool().render("skin_pack", view)
