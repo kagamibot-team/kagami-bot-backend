@@ -633,6 +633,17 @@ updates = [
             UpdateContent(content="修复了皮肤的描述没有正确显示的问题", tags=["修复"])
         ],
     ),
+    VersionData(
+        version="1.2.13",
+        updates=[
+            UpdateContent(
+                content="修复了在替换协议端内核时出现的无法展示的问题", tags=["修复"]
+            ),
+            UpdateContent(
+                content="修复了即将推出的新功能的内核中存在的问题", tags=["修复"]
+            ),
+        ],
+    ),
 ]
 
 
