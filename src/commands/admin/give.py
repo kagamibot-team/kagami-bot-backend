@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 from arclet.alconna import Alconna, Arg, ArgFlag, Arparma, Option
@@ -6,6 +7,7 @@ from src.base.command_events import MessageContext
 from src.common.command_deco import (
     listen_message,
     match_alconna,
+    match_regex,
     require_admin,
 )
 from src.core.unit_of_work import get_unit_of_work
@@ -37,7 +39,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         return
 
     async with get_unit_of_work() as uow:
-        for uid in await uow.users.all_users():
+        for uid in await uow.users.get_all_uid():
             await uow.chips.add(uid, number)
 
     await ctx.reply("给了。")
@@ -76,6 +78,24 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         else:
             await uow.inventories.give(uid, aid, number, False)
             await ctx.reply("给了。")
+
+
+@listen_message()
+@require_admin()
+@match_regex(r"^::全[部|服]给小哥 (.+)( -\d+)?$")
+async def _(ctx: MessageContext, res: re.Match[str]):
+    name: str = res.group(1)
+    number = int(res.group(2) or 1)
+    if name is None:
+        return
+
+    async with get_unit_of_work() as uow:
+        aid = await uow.awards.get_aid_strong(name)
+
+        for uid in await uow.users.get_all_uid():
+            await uow.inventories.give(uid, aid, number, False)
+
+        await ctx.reply("给了。")
 
 
 @listen_message()

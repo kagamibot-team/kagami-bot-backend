@@ -153,13 +153,6 @@ class UserRepository(DBRepository):
             update(User).where(User.data_id == uid).values({User.special_call: call})
         )
 
-    async def all_users(self) -> list[int]:
-        """
-        获得所有用户的 UID
-        """
-
-        return list((await self.session.execute(select(User.data_id))).scalars())
-
     async def get_sleep_early_data(self, uid: int) -> tuple[float, int]:
         """
         获得上一次早睡时间的时间戳
@@ -220,6 +213,14 @@ class UserRepository(DBRepository):
             )
         )
         await self.session.execute(q)
+        
+    async def get_all_uid(self) -> set[int]:
+        """
+        获得所有 uid
+        """
+        q = select(User.data_id)
+        r = await self.session.execute(q)
+        return set(r.scalars().all())
 
 
 @dataclass

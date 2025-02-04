@@ -258,7 +258,7 @@ async def _(ctx: MessageContext, _: Arparma[Any]):
         pack_progress: list[list[tuple[int, float]]] = [
             [] for _ in range(0, pack_max + 1)
         ]
-        users = await uow.users.all_users()
+        users = await uow.users.get_all_uid()
         for uid in users:
             for pid in range(0, pack_max + 1):
                 lid = None
@@ -320,7 +320,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
     async with get_unit_of_work(ctx.sender_id) as uow:
         listSta: list[str] = []
         listSto: list[str] = []
-        users = await uow.users.all_users()
+        users = await uow.users.get_all_uid()
         for uid in users:
             qqid = await uow.users.get_qqid(uid)
             flagSta = True
@@ -383,7 +383,7 @@ async def _(ctx: MessageContext, res: re.Match[str]):
         return
     async with get_unit_of_work() as uow:
         aid = await uow.awards.get_aid_strong(result)
-        uids = await uow.users.all_users()
+        uids = await uow.users.get_all_uid()
         for uid in uids:
             await uow.inventories.give(uid, aid, 1)
     await ctx.reply("给了。")
