@@ -39,7 +39,7 @@ async def _(ctx: MessageContext, res: Match[str]):
         versions=short,
     )
     image = await get_render_pool().render("update", data)
-    await ctx.send(UniMessage().image(raw=image))
+    await ctx.send_image(image)
 
 
 @listen_message()
@@ -53,7 +53,7 @@ async def _(ctx: MessageContext, res: Match[str]):
             raise ObjectNotFoundException("指令")
         data: HelpData = command_content[command_dict[command]]
         image = await get_render_pool().render("help/detail", data)
-    await ctx.send(UniMessage().image(raw=image))
+    await ctx.send_image(image)
 
 
 @listen_message()
@@ -79,4 +79,4 @@ async def _(ctx: MessageContext, *_):
             "platform": get_platform(),
         },
     )
-    await ctx.send(UniMessage().image(raw=image))
+    await ctx.send_image(image)

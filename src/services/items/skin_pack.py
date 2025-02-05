@@ -122,4 +122,4 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
         )
 
         image = await get_render_pool().render("skin_pack", view)
-        await ctx.send(UniMessage.image(raw=image))
+        await ctx.send_image(image)

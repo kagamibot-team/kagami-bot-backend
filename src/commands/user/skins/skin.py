@@ -116,6 +116,4 @@ async def _(ctx: MessageContext, _):
         ],
     )
 
-    await ctx.send(
-        UniMessage().image(raw=(await get_render_pool().render("storage", data)))
-    )
+    await ctx.send_image(await get_render_pool().render("storage", data))

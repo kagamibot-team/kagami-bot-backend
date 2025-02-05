@@ -1,27 +1,11 @@
 import asyncio
 import json
-import ssl
 
 import requests
 from loguru import logger
 
 
-# IDK why but works
-class TLSAdapter(requests.adapters.HTTPAdapter):  # type: ignore
-    def init_poolmanager(self, *args, **kwargs):
-        context = ssl.create_default_context()
-        context.check_hostname = False
-        context.set_ciphers("DEFAULT")
-        kwargs["ssl_context"] = context
-        return super().init_poolmanager(*args, **kwargs)  # type: ignore
-
-
 def request_new_tst(url: str) -> bytes:
-    # session = requests.Session()
-    # session.mount("https://", TLSAdapter())
-    # response = session.get(url, verify=False)
-    # content: bytes = response.content
-
     content: bytes = requests.get(url).content
 
     if len(content) < 128 and content[0:1] == b"{":

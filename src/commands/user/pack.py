@@ -28,7 +28,7 @@ from src.ui.types.liechang import LiechangCountInfo, LiechangData, SingleLiechan
 
 async def get_pack_data(uow: UnitOfWork, user: UserData):
     packs: list[SingleLiechang] = []
-    bulletin_award = [0, 160, 374, 494]
+    bulletin_award = [0, 160, 374, 494, 648]
     uid = user.uid
 
     for i in range(1, await uow.settings.get_pack_count() + 1):
@@ -118,7 +118,7 @@ async def _(ctx: MessageContext, _):
     browsers = get_render_pool()
     img = await browsers.render("liechang", data)
 
-    await ctx.send(UniMessage.image(raw=img))
+    await ctx.send_image(img)
 
 
 @listen_message()
@@ -168,7 +168,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
     browsers = get_render_pool()
     img = await browsers.render("liechang", data)
 
-    await ctx.send(UniMessage.image(raw=img))
+    await ctx.send_image(img)
 
 
 @listen_message()

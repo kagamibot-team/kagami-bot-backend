@@ -3,6 +3,7 @@ import time
 from nonebot_plugin_alconna import At, Emoji, Text, UniMessage
 from src.base.command_events import GroupContext, MessageContext
 from src.base.event.event_root import root
+from src.base.message import image
 from src.base.onebot.onebot_api import (
     get_name,
     send_group_msg,
@@ -174,10 +175,10 @@ async def reply_call(
             "awa",
             "qaq",
             "李在赣神魔！",
-            UniMessage.image(path=Path("./res/干嘛.jpg")),
+            image(Path("./res/干嘛.jpg")),
             "干嘛。。。",
             "呀！",
-            UniMessage.image(path=Path("./res/小镜指.jpg")),
+            image(Path("./res/小镜指.jpg")),
             "呼呼！",
             "哼哼！",
             "不要乱戳哦！",

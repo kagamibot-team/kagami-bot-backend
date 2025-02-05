@@ -26,6 +26,4 @@ async def _(ctx: GroupContext, _):
 
         await StatService(uow).kbs(uid)
 
-        kbs_info = await get_award_info(uow, 25, sid=37)
-
-        await ctx.send(UniMessage().image(path=Path("./res/三要素.png")))
+        await ctx.send_image(Path("./res/三要素.png"))

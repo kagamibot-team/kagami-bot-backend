@@ -130,7 +130,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             title_text="库存",
         ),
     )
-    await ctx.send(UniMessage.image(raw=img))
+    await ctx.send_image(img)
 
 
 @listen_message()
@@ -251,7 +251,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
             title_text=pack_det + level_det + "抓小哥进度" + progress_det,
         ),
     )
-    await ctx.send(UniMessage.image(raw=img))
+    await ctx.send_image(img)
 
 
 @listen_message()

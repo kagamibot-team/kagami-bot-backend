@@ -5,6 +5,7 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import SoldOutException
+from src.base.message import image
 from src.common.command_deco import (
     limited,
     listen_message,
@@ -47,9 +48,7 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
         ],
     )
 
-    return UniMessage().image(
-        raw=await get_render_pool().render("xjshop/home", shop_data)
-    )
+    return image(await get_render_pool().render("xjshop/home", shop_data))
 
 
 async def shop_buy_message(
@@ -74,7 +73,7 @@ async def shop_buy_message(
         ],
     )
 
-    return UniMessage.image(raw=await get_render_pool().render("xjshop/bought", data))
+    return image(await get_render_pool().render("xjshop/bought", data))
 
 
 @listen_message()

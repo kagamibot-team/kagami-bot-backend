@@ -5,6 +5,7 @@ from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import DoNotHaveException, KagamiArgumentException
+from src.base.message import image, text
 from src.common.command_deco import listen_message, match_alconna
 from src.common.data.awards import get_award_info
 from src.core.unit_of_work import get_unit_of_work
@@ -66,21 +67,19 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         msg = await render_award_info_message(dt, count=sto, stats=sta)
         await ctx.send(msg)
     elif do_admin:
-        msg: UniMessage[Any] = (
-            UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
-            .image(raw=info.image_resource.path.read_bytes())
-            .text(
+        await ctx.reply(
+            text(f"{info.display_name}【{info.level.display_name}】")
+            + image(info.image_resource.path)
+            + text(
                 f"id={aid};\n"
                 f"main_pack={main_pack}; linked={linked_pack};\n"
                 f"sid={info.sid}; slevel={info.slevel};\n"
                 f"{info.description}"
             )
         )
-        await ctx.reply(msg)
     else:
-        msg = (
-            UniMessage.text(f"{info.display_name}【{info.level.display_name}】")
-            .image(raw=info.image_resource.path.read_bytes())
-            .text(f"\n{info.description}")
+        await ctx.reply(
+            text(f"{info.display_name}【{info.level.display_name}】")
+            + image(info.image_resource.path)
+            + text(f"\n{info.description}")
         )
-        await ctx.reply(msg)

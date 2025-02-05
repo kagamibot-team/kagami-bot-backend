@@ -87,7 +87,7 @@ async def _(ctx: MessageContext, res: Match[str]):
         boxes=boxes,
     )
     img = await get_render_pool().render("storage", data=data)
-    await ctx.send(UniMessage.image(raw=img))
+    await ctx.send_image(img)
 
 
 @dispatcher.listen(MessageContext)

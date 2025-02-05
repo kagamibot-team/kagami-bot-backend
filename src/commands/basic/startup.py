@@ -4,6 +4,7 @@ from nonebot.exception import ActionFailed
 from nonebot_plugin_alconna import UniMessage
 
 from src.base.event.event_root import root
+from src.base.message import image
 from src.base.onebot.onebot_api import get_group_list, send_group_msg, set_qq_status
 from src.base.onebot.onebot_enum import QQStatus
 from src.base.onebot.onebot_events import OnebotStartedContext
@@ -30,7 +31,7 @@ async def _(ctx: OnebotStartedContext):
 
     if version != lv.version:
         data = UpdateData(versions=[lv], show_pager=False)
-        msg = UniMessage.image(raw=await get_render_pool().render("update", data))
+        msg = image(await get_render_pool().render("update", data))
         await broadcast(ctx.bot, msg)
     elif get_driver().env != "dev":
         for group in get_config().admin_groups:

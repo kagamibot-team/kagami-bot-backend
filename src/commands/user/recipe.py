@@ -124,9 +124,7 @@ async def _(ctx: GroupContext, res: Arparma):
         )
         bind_dialog(merge_info)
 
-    await ctx.send(
-        UniMessage.image(raw=await get_render_pool().render("recipe", merge_info))
-    )
+    await ctx.send_image(await get_render_pool().render("recipe", merge_info))
     await throw_event(MergeEvent(user_data=user, merge_view=merge_info))
 
 
@@ -340,8 +338,4 @@ async def _(ctx: GroupContext, res: Arparma):
             good_enough=good_enough,
         )
 
-    await ctx.send(
-        UniMessage.image(
-            raw=await get_render_pool().render("recipe_archive", archive_info)
-        )
-    )
+    await ctx.send_image(await get_render_pool().render("recipe_archive", archive_info))
