@@ -644,6 +644,15 @@ updates = [
             ),
         ],
     ),
+    VersionData(
+        version="1.2.14",
+        updates=[
+            UpdateContent(
+                content="修复了在替换协议端内核时出现的无法 kbs 的问题", tags=["修复"]
+            ),
+            UpdateContent(content="为未来的更新做好准备工作", tags=["特性"]),
+        ],
+    ),
 ]
 
 
