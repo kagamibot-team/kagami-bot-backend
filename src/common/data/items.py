@@ -1,4 +1,5 @@
 import datetime
+
 from pydantic import BaseModel
 
 from src.base.exceptions import KagamiArgumentException, KagamiRangeError
