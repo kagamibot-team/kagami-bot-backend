@@ -213,11 +213,11 @@ async def build_xjshop(uow: UnitOfWork) -> ShopService:
     service.register(AddSlots())
 
     # 注册皮肤信息
-    for sid in await uow.skins.all_sid():
-        sinfo = await uow.skins.get_info_v2(sid)
-        ainfo = await uow.awards.get_info(sinfo.aid)
-        if sinfo.deprecated_price <= 0:
-            continue
-        service.register(SkinProduct(ainfo, sinfo))
+    # for sid in await uow.skins.all_sid():
+    #     sinfo = await uow.skins.get_info_v2(sid)
+    #     ainfo = await uow.awards.get_info(sinfo.aid)
+    #     if sinfo.deprecated_price <= 0:
+    #         continue
+    #     service.register(SkinProduct(ainfo, sinfo))
 
     return service
