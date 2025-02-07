@@ -63,6 +63,8 @@ command_dict: dict[str, str] = {
     "zhuagx": "抓小哥更新",
     "关于小镜bot": "关于小镜bot",
     "kagamiabout": "关于小镜bot",
+    "pfsd": "皮肤商店",
+    "皮肤商店": "皮肤商店",
 }
 
 command_content: dict[str, HelpData] = {
@@ -325,4 +327,16 @@ command_content: dict[str, HelpData] = {
         optional_parameters=None,
         related_commands=None,
     ),
+    "皮肤商店": HelpData(
+        command="皮肤商店（pfsd）",
+        description="展示皮肤商店里的商品与其信息。",
+        optional_parameters=HelpParam(
+            note="",
+            content=[
+                HelpPair(key=r"购买 {商品名X}", value="购买名为X的商品。"),
+            ],
+        ),
+        required_parameters=None,
+        related_commands=None,
+    )
 }
