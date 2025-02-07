@@ -1,40 +1,16 @@
 from abc import ABC, abstractmethod
-import datetime
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
 from src.base.command_events import MessageContext
-from src.base.exceptions import (
-    KagamiArgumentException,
-    KagamiRangeError,
-    ObjectNotFoundException,
-)
+from src.base.exceptions import ObjectNotFoundException
 from src.base.res import KagamiResourceManagers
 from src.base.res.resource import IResource
+from src.common.data.items import UseItemArgs
 from src.core.unit_of_work import UnitOfWork
-from src.ui.types.common import UserData
 
 T = TypeVar("T")
-
-
-class UseItemArgs(BaseModel):
-    count: int = 1
-    target: UserData | None
-    user: UserData
-    use_time: datetime.datetime
-
-    def require_count_range(self, n_min: int | None = None, n_max: int | None = None):
-        if n_min is not None and self.count < n_min:
-            raise KagamiRangeError("物品数量", f"至少为 {n_min}", self.count)
-        if n_max is not None and self.count > n_max:
-            raise KagamiRangeError("物品数量", f"不超过 {n_max}", self.count)
-
-    def require_target(self, required: bool = True):
-        if required and self.target is None:
-            raise KagamiArgumentException("要指定一个人哦")
-        elif not required and self.target is not None:
-            raise KagamiArgumentException("不用指定目标哦")
 
 
 class KagamiItem(BaseModel, Generic[T], ABC):

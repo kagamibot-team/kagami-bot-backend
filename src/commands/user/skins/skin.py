@@ -1,5 +1,4 @@
 from arclet.alconna import Alconna, Arg, Arparma
-from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import DoNotHaveException

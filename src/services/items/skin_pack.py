@@ -1,11 +1,10 @@
 from loguru import logger
-from nonebot_plugin_alconna import UniMessage
-from pydantic import BaseModel
 
 from src.base.command_events import MessageContext
 from src.base.res import KagamiResourceManagers
 from src.base.res.resource import IResource
 from src.common.data.awards import get_award_info
+from src.common.data.items import UseItemSkinPackEvent
 from src.common.dialogue import DialogFrom, get_dialog
 from src.common.rd import get_random
 from src.common.times import is_holiday
@@ -13,7 +12,6 @@ from src.core.unit_of_work import UnitOfWork
 from src.repositories.skin_repository import SkinData
 from src.services.items.base import KagamiItem, UseItemArgs
 from src.ui.base.render import get_render_pool
-from src.ui.types.common import AwardInfo
 from src.ui.types.skin_shop import SkinPackOpen
 
 
@@ -34,18 +32,6 @@ def get_skin_return_biscuits(skin_data: SkinData) -> int:
     """
 
     return skin_data.level * (skin_data.level + 1) // 2
-
-
-class UseItemSkinPackEvent(BaseModel):
-    uid: int
-    args: UseItemArgs
-    skin_data: SkinData
-    remain: int
-    biscuit_return: int
-    biscuit_current: int
-    do_user_have_before: bool
-    award_info: AwardInfo
-    all_skins_data: list[SkinData]
 
 
 class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
