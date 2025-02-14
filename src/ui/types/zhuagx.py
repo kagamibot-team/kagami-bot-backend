@@ -656,7 +656,13 @@ updates = [
     VersionData(
         version="1.3",
         updates=[UpdateContent(content="皮肤商店更新", tags=["特性"])],
-    )
+    ),
+    VersionData(
+        version="1.3.1",
+        updates=[
+            UpdateContent(content="修复了一些小哥无法被查询的问题", tags=["修复"]),
+        ],
+    ),
 ]
 
 
