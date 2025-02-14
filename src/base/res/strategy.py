@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from hashlib import sha256
 from pathlib import Path
 
+import PIL
+import PIL.Image
 from loguru import logger
 
 from src.base.exceptions import KagamiArgumentException
@@ -277,6 +279,14 @@ def is_image_data(data: bytes) -> bool:
     return False
 
 
+def is_image_readable(fp: Path) -> bool:
+    try:
+        PIL.Image.open(fp)
+        return True
+    except PIL.UnidentifiedImageError:
+        return False
+
+
 class EnsureItIsImageStorageStrategy(IStorageStrategy):
     """
     确保输出的是图片，不然就不存在
@@ -288,7 +298,8 @@ class EnsureItIsImageStorageStrategy(IStorageStrategy):
     def exists(self, file_name: str) -> bool:
         if not self.origin.exists(file_name):
             return False
-        return is_image_data(self.origin.get(file_name).path.read_bytes())
+        fp = self.origin.get(file_name).path
+        return is_image_data(fp.read_bytes()) and is_image_readable(fp)
 
     def can_put(self, file_name: str) -> bool:
         return self.origin.can_put(file_name)
