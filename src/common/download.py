@@ -25,7 +25,8 @@ async def download(url: str) -> bytes:
     loop = asyncio.get_event_loop()
 
     logger.debug(f"开始从 URL 中下载资源：{url}")
-    data = await loop.run_in_executor(None, request_new_tst, url)
+    async with asyncio.timeout(120):
+        data = await loop.run_in_executor(None, request_new_tst, url)
     logger.debug(f"资源下载完成：{url}")
 
     return data
