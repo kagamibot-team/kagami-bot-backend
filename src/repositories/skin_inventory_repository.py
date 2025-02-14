@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select, update
+from sqlalchemy import delete, insert, select, update
 
 from ..base.repository import DBRepository
 from ..models.models import Skin, SkinRecord
@@ -157,6 +157,13 @@ class SkinInventoryRepository(DBRepository):
             )
 
         return list((await self.session.execute(query)).scalars())
+
+    async def remove_all(self, uid: int):
+        """
+        把一个用户所有的皮肤库存清空
+        """
+
+        await self.session.execute(delete(SkinRecord).where(SkinRecord.user_id == uid))
 
     async def use(self, uid: int, aid: int, sid: int | None):
         """添加一个使用记录

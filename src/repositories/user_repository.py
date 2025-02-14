@@ -51,6 +51,10 @@ class UserRepository(DBRepository):
         result = int((await self.session.execute(query)).scalar_one())
         return result
 
+    async def set_qqid(self, uid: int, qqid: str) -> None:
+        q = update(User).where(User.data_id == uid).values({User.qq_id: qqid})
+        await self.session.execute(q)
+
     async def update_catch_time(self, uid: int, count_remain: int, last_calc: float):
         """更新玩家抓小哥的时间
 
@@ -213,7 +217,7 @@ class UserRepository(DBRepository):
             )
         )
         await self.session.execute(q)
-        
+
     async def get_all_uid(self) -> set[int]:
         """
         获得所有 uid
