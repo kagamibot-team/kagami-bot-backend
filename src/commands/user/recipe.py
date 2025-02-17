@@ -198,6 +198,7 @@ async def _(ctx: GroupContext, res: Arparma):
         aid = await uow.awards.get_aid_strong(name)
         product = await uow.awards.get_info(aid)
         after = await uow.chips.use(uid, costs[product.level.lid])
+        cost = costs[product.level.lid]
 
         stat = await uow.inventories.get_stats(uid, aid)
         if stat == 0:  # 没见过
@@ -333,7 +334,7 @@ async def _(ctx: GroupContext, res: Arparma):
             user=user,
             recipes=recipes_display,
             product=product,
-            cost_chip=costs[product.level.lid],
+            cost_chip=cost,
             own_chip=int(after),
             good_enough=good_enough,
         )
