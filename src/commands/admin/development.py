@@ -258,6 +258,6 @@ async def _(ctx: MessageContext, res: re.Match[str]):
 
     assert page_name is not None
     assert data_hex is not None
-    
+
     img = await get_render_pool().render(page_name, data=data_hex)
     await ctx.send_image(img)

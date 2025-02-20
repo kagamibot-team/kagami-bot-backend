@@ -338,5 +338,5 @@ command_content: dict[str, HelpData] = {
         ),
         required_parameters=None,
         related_commands=None,
-    )
+    ),
 }

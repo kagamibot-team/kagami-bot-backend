@@ -250,7 +250,7 @@ def is_image_data(data: bytes) -> bool:
     # 检查常见图片格式的魔术字节
     if len(data) >= 2:
         # JPEG
-        if data[:2] == b"\xFF\xD8":
+        if data[:2] == b"\xff\xd8":
             return True
         # BMP
         if data[:2] == b"BM":
@@ -268,7 +268,7 @@ def is_image_data(data: bytes) -> bool:
 
     if len(data) >= 4:
         # TIFF (小端或大端)
-        if data[:4] in (b"\x49\x49\x2A\x00", b"\x4D\x4D\x00\x2A"):
+        if data[:4] in (b"\x49\x49\x2a\x00", b"\x4d\x4d\x00\x2a"):
             return True
 
     if len(data) >= 12:

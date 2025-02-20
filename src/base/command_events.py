@@ -65,7 +65,7 @@ class MessageContext(ABC):
     @property
     def text(self):
         return self.message.extract_plain_text()
-    
+
     async def send_image(self, image: Path | bytes):
         if isinstance(image, Path):
             image = image.read_bytes()

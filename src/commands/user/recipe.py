@@ -3,7 +3,6 @@ from random import Random
 
 from arclet.alconna import Alconna, Arg, Arparma
 from loguru import logger
-from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import GroupContext
 from src.base.event.event_root import throw_event

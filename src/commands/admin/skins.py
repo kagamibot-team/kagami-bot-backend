@@ -247,5 +247,5 @@ async def _(ctx: MessageContext):
             lambda x, y: x | y, (v for i, v in sids.items() if i < 1 or i > 4)
         )
         names = [(await uow.skins.get_info_v2(sid)).name for sid in sids]
-    
+
     await ctx.send(f"No Level: {names}")

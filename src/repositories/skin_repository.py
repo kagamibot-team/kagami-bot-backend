@@ -85,7 +85,9 @@ class SkinRepository(DBRepository):
         q1 = select(Skin.data_id).where(func.lower(Skin.name) == name.lower())
         a = (await self.session.execute(q1)).scalar_one_or_none()
         if a is None:
-            q2 = select(SkinAltName.skin_id).where(func.lower(SkinAltName.name) == name.lower())
+            q2 = select(SkinAltName.skin_id).where(
+                func.lower(SkinAltName.name) == name.lower()
+            )
             a = (await self.session.execute(q2)).scalar_one_or_none()
 
         return a
