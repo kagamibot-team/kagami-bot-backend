@@ -1,7 +1,6 @@
 from typing import Any
 
 from arclet.alconna import Alconna, Arg, Arparma, MultiVar, Option
-from nonebot_plugin_alconna import UniMessage
 
 from src.base.command_events import MessageContext
 from src.base.exceptions import SoldOutException
@@ -12,7 +11,7 @@ from src.common.command_deco import (
     match_alconna,
     require_awake,
 )
-from src.common.times import now_datetime
+from src.common.times import is_april_fool, now_datetime
 from src.core.unit_of_work import get_unit_of_work
 from src.services.shop import ShopFreezed, ShopProductFreezed, build_xjshop
 from src.services.stats import StatService
@@ -46,6 +45,7 @@ async def shop_default_message(user: UserData, shop: ShopFreezed, money: float):
             )
             for name, products in shop.items()
         ],
+        is_april_fool=is_april_fool()
     )
 
     return image(await get_render_pool().render("xjshop/home", shop_data))

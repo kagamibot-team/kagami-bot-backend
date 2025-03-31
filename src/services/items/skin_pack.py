@@ -7,7 +7,7 @@ from src.common.data.awards import get_award_info
 from src.common.data.items import UseItemSkinPackEvent
 from src.common.dialogue import DialogFrom, get_dialog
 from src.common.rd import get_random
-from src.common.times import is_holiday
+from src.common.times import is_april_fool, is_holiday
 from src.core.unit_of_work import UnitOfWork
 from src.repositories.skin_repository import SkinData
 from src.services.items.base import KagamiItem, UseItemArgs
@@ -86,12 +86,15 @@ class ItemSkinPack(KagamiItem[UseItemSkinPackEvent]):
         return evt
 
     async def send_use_message(self, ctx: MessageContext, data: UseItemSkinPackEvent):
-        jx_possibility = 0.8 if is_holiday(data.args.use_time) else 0
-        dialog_from = (
-            DialogFrom.pifudian_normal_jx
-            if get_random().random() < jx_possibility
-            else DialogFrom.pifudian_normal_shio
-        )
+        if not is_april_fool():
+            jx_possibility = 0.8 if is_holiday(data.args.use_time) else 0
+            dialog_from = (
+                DialogFrom.pifudian_normal_jx
+                if get_random().random() < jx_possibility
+                else DialogFrom.pifudian_normal_shio
+            )
+        else:
+            dialog_from = DialogFrom.pifudian_april_fool
         dialogs = get_dialog(dialog_from, {f"heart{data.skin_data.level}"})
         view = SkinPackOpen(
             user=data.args.user,

@@ -25,6 +25,9 @@ class Config(BaseModel):
     safe_sleep: bool = False
     "Do punish when sleeping early"
 
+    test_april_fool: bool = False
+    "是否测试愚人节笑话"
+
     # ================
     # |  数据库设置  |
     # ================

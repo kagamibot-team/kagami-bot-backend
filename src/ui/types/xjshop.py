@@ -26,3 +26,4 @@ class ShopDisplay(BaseModel):
     user: UserData
     chips: int
     products: list[ProductGroup]
+    is_april_fool: bool

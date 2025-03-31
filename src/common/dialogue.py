@@ -15,6 +15,9 @@ class DialogFrom(Enum):
     hecheng_huaout = Path("./res/dialog/华出_合成部.txt")
     pifudian_normal_shio = Path("./res/dialog/通常_皮肤店_塩.txt")
     pifudian_normal_jx = Path("./res/dialog/通常_皮肤店_草.txt")
+    hecheng_april_fool = Path("./res/dialog/愚人节_合成部.txt")
+    liechang_april_fool = Path("./res/dialog/愚人节_猎场.txt")
+    pifudian_april_fool = Path("./res/dialog/愚人节_皮肤店.txt")
 
 
 def handle_single_line_dialogue(text: str | DialogueMessage) -> DialogueMessage | None:

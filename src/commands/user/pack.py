@@ -1,9 +1,8 @@
 from typing import Any
 
-from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
-from nonebot_plugin_alconna import UniMessage
 import sqlalchemy
 import sqlalchemy.exc
+from arclet.alconna import Alconna, Arg, ArgFlag, Arparma
 
 from src.base.command_events import MessageContext
 from src.common.command_deco import (
@@ -18,6 +17,7 @@ from src.common.data.awards import get_award_info
 from src.common.dialogue import DialogFrom, get_dialog
 from src.common.global_flags import global_flags
 from src.common.rd import get_random
+from src.common.times import is_april_fool
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.services.pool import PoolService
 from src.services.stats import StatService
@@ -84,6 +84,9 @@ async def get_pack_data(uow: UnitOfWork, user: UserData):
     if hua_out:
         dialog_from = DialogFrom.liechang_huaout
         flags = set(("p",))
+    elif is_april_fool():
+        dialog_from = DialogFrom.liechang_april_fool
+        flags = set(("t",))
     else:
         dialog_from = DialogFrom.liechang_normal
         if random.random() < 0.25:

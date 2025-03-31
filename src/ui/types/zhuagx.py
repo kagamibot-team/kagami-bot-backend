@@ -1,6 +1,8 @@
 from packaging.version import Version
 from pydantic import BaseModel
 
+from src.common.times import is_april_fool
+
 
 class UpdateContent(BaseModel):
     content: str
@@ -664,6 +666,184 @@ updates = [
         ],
     ),
 ]
+
+
+april_fool = VersionData(
+    version="2.0.0",
+    updates=[
+        UpdateContent(
+            content="小镜 BOT 迁移至了基于华为鲲鹏计算芯片、运行 OpenEuler 操作系统的华为云上运行。",
+            tags=["运维"],
+        ),
+        UpdateContent(
+            content="小镜 BOT 从项目管理、产品研发、DevOps 到运维，已全线接入 DeepSeek-R1 全量满血版大模型，赋能小镜 BOT 领导新质生产力，创造时代新价值。",
+            tags=["运维", "AI"],
+        ),
+        UpdateContent(
+            content="抓小哥团队购进了摩尔线程 MTT X300 显卡集群，加速小镜 BOT 图片渲染。",
+            tags=["运维", "界面"],
+        ),
+        UpdateContent(
+            content="小镜 BOT 后端使用了 Rust 重构，不同模块实现了解耦。如果你感兴趣，可以下载小镜 BOT 的源码，使用 k8s 部署 Docker 集群。",
+            tags=["内核"],
+        ),
+        UpdateContent(
+            content="因版权方要求，删除了W.G.皇家科学院相关设定，并订正了剧情涉及小哥的文案描述。",
+            tags=["剧情"],
+        ),
+        UpdateContent(
+            content="稍微调整了NPC 吃鱼 的精力限制——在此问题修复前，贝塔会因为遛狗工作过于艰巨而在工作岗位上睡大觉，并说梦话。",
+            tags=["剧情"],
+        ),
+        UpdateContent(
+            content="稍微调整了NPC吃鱼 与 NPC 拾 的互动限制；在此问题修复前，这两位NPC有概率在啤酒馆地点互动时触发一些预料之外的事件链。",
+            tags=["剧情"],
+        ),
+        UpdateContent(
+            content="几乎每天都来上班打卡的华，今天怎么会无故缺勤呢？请使用hc功能来看看华走了之后的合成部吧！另外，他去干什么了呢？",
+            tags=["剧情"],
+        ),
+        UpdateContent(
+            content="稍微调整了“其他”种类小哥的某些属性……不过这好像导致档案部出现了一些奇怪的事情，请使用查询功能来看看档案部现在变成了什么样子吧！另外，为什么会这样呢？",
+            tags=["剧情"],
+        ),
+        UpdateContent(
+            content="L和鸽出去玩了，结果猎场却？？？？？？？？？？？？？？？？？？请使用 xelc功能来看看猎场的一日皇帝是谁吧！另外，他哪来的？",
+            tags=["剧情"],
+        ),
+        UpdateContent(
+            content="救救我！这个站点有人要杀我",
+            tags=["救命"],
+        ),
+        UpdateContent(
+            content="因未知原因，小哥猎手们会使用小哥进行类昆特牌对战，此问题仍待修复。",
+            tags=["剧情"],
+        ),
+        UpdateContent(
+            content="因为移除了“回转企鹅罐”的内轮梗，愤怒的壳泡将魔爪（饮料）伸向了……请使用 pfsd 功能来看看服装店发生了哪些变化吧！另外，壳泡哪里来的这么大脾气？",
+            tags=["剧情"],
+        ),
+        UpdateContent(
+            content="小镜 BOT 会记下你在闲聊群的消息，并根据你对小镜的态度决定各商店商品价格，但是不会用于 LLM 模型训练。",
+            tags=["功能", "AI"],
+        ),
+        UpdateContent(
+            content="NPC 贝塔现在会在群内选择活跃的小哥猎手填写个人资料问卷，并且贝塔表示绝对不会将这些资料投入在“物质本质探索”等研究课题上。",
+            tags=["功能", "AI"],
+        ),
+        UpdateContent(
+            content="小镜商店即将迎来大装修，现在你可以看到小镜的上半身立绘了。",
+            tags=["功能"],
+        ),
+        UpdateContent(
+            content="投掷粑粑功能加入了对战模式，可对指定玩家或 NPC 发送“吔屎啦你”来开启对战。",
+            tags=["功能"],
+        ),
+        UpdateContent(
+            content="小镜商店推出「补签卡」。如果你忘记签到了，可以在小镜商店购买！",
+            tags=["功能"],
+        ),
+        UpdateContent(
+            content="""小镜商店推出「抢劫」功能。可发送「xjshop 抢劫」对小镜进行抢劫并大概率免费获得商品内容！
+目前可公开的：
+抢劫成功有概率获得：1-99个粑粑小哥，1-3个小华，9薯片，卡槽上线，小镜等。
+抢劫失败则可能遭受惩罚：获得1-99个粑粑小哥/被小镜禁言一天并被小镜每小时投喂一次粑粑小哥/3小时内无法进行kz/被小镜做成小哥/转生来到小哥世界。""",
+            tags=["功能"],
+        ),
+        UpdateContent(
+            content="修复了开包界面中，「塩立绘」会挡住部分描述的问题。",
+            tags=["修复", "界面"],
+        ),
+        UpdateContent(
+            content="修复了在某些极端情况下，小哥描述过长导致的NPC下半身露出问题。",
+            tags=["修复", "界面"],
+        ),
+        UpdateContent(
+            content="修复了在某些情况下，英俊小哥发色异常的问题。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content="修复了小坏枪在被小哥猎手抓到时描述出现刷屏和精神污染的问题。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content="修复了鹦鹉小哥的颜色显示问题。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content="修复了百变小哥[小抽子]的图片显示异常问题——修复前，此问题导致 百变小哥[小抽子]显示为L。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content="巩固了小卷毛鱼的海洋霸主地位。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content="修复了小卷毛鱼的海洋霸主地位，现在它被重新安置进了番茄罐里。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content="修复了因玩家名字过长而无法显示抓取内容的异常问题。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content='为深入贯彻落实国家绿色低碳发展战略全局部署，我司技术团队针对小镜BOT人工智能系统开展了系统性技术优化与迭代升级。以李忠牵头的研究小组通过算法重构与算力调度机制革新，成功解决了历史版本中存在的非必要算力资源挤占问题（涉及与DeepSeek、ChatGPT等平台的冗余竞争性运算），该项技术攻关标志着人工智能领域节能减排工作取得突破性进展。经国际标准化组织(ISO)环境效益计量体系验证，本次升级改造累计节约标准煤0.11111111qr克当量。pastebin.com/ySENxdr1这一成果充分彰显我司作为行业领军企业，在践行生态文明建设、推动数字经济绿色发展方面的责任担当。未来我们将继续秉持"算力向善"理念，积极探索人工智能与碳中和战略深度融合的创新路径，为构建清洁美丽世界贡献科技力量。',
+            tags=["修复", "AI"],
+        ),
+        UpdateContent(
+            content="修复了某些情况下，中山大学宿舍的电费账单会寄送至小哥研究所的问题。现在此电费账单将由小镜BOT向各位小哥猎手们征收。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content="蛋糕不再是谎言，双皮奶也是。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content="修复了部分小哥猎手库存内粑粑小哥过多的问题——在此问题修复前，L会偷偷往部分小哥猎手的库存里搬粑粑小哥。",
+            tags=["修复"],
+        ),
+        UpdateContent(
+            content="现在黑市功能已经实装！您可以通过指令 xchs 来查询我们精心设计的黑市界面，以及新的NPC：槽！（和蒜）",
+            tags=["更新"],
+        ),
+        UpdateContent(
+            content="""新增超级迷你猎场功能，您可以通过指令 xelc 来查询新的超级迷你猎场。现在已经开放的超级迷你猎场：超级至尊无敌小猎场；售价 20 薯片，其中包含：小哥，小哥，小哥，小哥。
+打金服猎场；售价 999 薯片，其中包含：至尊VIP小哥，骷髅小哥，怨♂灵小哥
+W.G.皇家科学院海外飞地猎场；售价 114514 小哥，其中包含：燃！！！！！！！！！小哥。
+苞米地猎场；暂不开放。
+救赎猎场；暂不开放。""",
+            tags=["更新"],
+        ),
+        UpdateContent(
+            content="""新增电子海主题猎场功能。您可以通过指令xelc来查询新的猎场。内有大量和古早迷因小哥以及新的猎场npc等待你探寻！
+包含新的猎场 NPC ：幽灵纱。
+包含可能出现的新小哥：千年虫小哥，XP小哥，2000小哥，摩哥密码，PS小哥，AE小哥、Reaper小哥、Vegas Pro小哥、Aviutl小哥、Blender小哥。""",
+            tags=["更新"],
+        ),
+        UpdateContent(
+            content="移除了 Xiaogebrine。",
+            tags=["更新"],
+        ),
+        UpdateContent(
+            content="Caroline 已被删除。",
+            tags=["更新"],
+        ),
+        UpdateContent(
+            content="""新增地点：小哥农园！通过指令 xgny 与小镜BOT进行互动，与其他NPC们一起探索NPC 沣建设的新时代农业体系庄园吧！
+小哥农园现支持的功能：
+xgny 送一朵花给沣：可以给沣送一朵花。""",
+            tags=["更新"],
+        ),
+        UpdateContent(
+            content="新增功能：小哥宇宙切换！现在可以切换到其他小哥宇宙进行新小哥的抓捕，输入 xgyz 以查看当前可切换的宇宙。当前宇宙：狗。可切换宇宙：2077，深海，美食，锤子，合同，烟花，鱼，停电。",
+            tags=["更新"],
+        ),
+    ],
+)
+
+
+if is_april_fool():
+    updates = updates + [april_fool]
 
 
 updates = sorted(updates, reverse=True, key=lambda i: Version(i.version))

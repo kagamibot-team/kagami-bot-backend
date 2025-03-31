@@ -16,7 +16,12 @@ from src.common.command_deco import (
 from src.common.data.user import get_user_data
 from src.common.dialogue import DialogFrom, get_dialog
 from src.common.rd import get_random
-from src.common.times import is_holiday, now_datetime, timestamp_to_datetime
+from src.common.times import (
+    is_april_fool,
+    is_holiday,
+    now_datetime,
+    timestamp_to_datetime,
+)
 from src.core.unit_of_work import UnitOfWork, get_unit_of_work
 from src.logic.admin import is_admin
 from src.ui.base.render import get_render_pool
@@ -88,13 +93,17 @@ async def shop(ctx: MessageContext, result: re.Match[str]) -> None:
         ]
         biscuits = await uow.biscuit.get(user.uid)
         chips = await uow.chips.get(user.uid)
-        jx_possibility = 0.8 if is_holiday() else 0
-        dialogs = get_dialog(
-            (
+        if not is_april_fool():
+            jx_possibility = 0.8 if is_holiday() else 0
+            dialog_origin = (
                 DialogFrom.pifudian_normal_jx
                 if get_random().random() < jx_possibility
                 else DialogFrom.pifudian_normal_shio
-            ),
+            )
+        else:
+            dialog_origin = DialogFrom.pifudian_april_fool
+        dialogs = get_dialog(
+            dialog_origin,
             {"shop"},
         )
         shop = SkinShop(

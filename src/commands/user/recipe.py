@@ -21,6 +21,7 @@ from src.common.dataclasses.game_events import MergeEvent
 from src.common.dialogue import DialogFrom, get_dialog
 from src.common.global_flags import global_flags
 from src.common.rd import get_random
+from src.common.times import is_april_fool
 from src.core.unit_of_work import get_unit_of_work
 from src.logic.catch import handle_baibianxiaoge
 from src.models.level import level_repo
@@ -148,7 +149,10 @@ def bind_dialog(
         random = get_random()
 
     flags: set[str]
-    if not hua_out:
+    if is_april_fool():
+        dialog_from = DialogFrom.hecheng_april_fool
+        flags = set()
+    elif not hua_out:
         dialog_from = DialogFrom.hecheng_normal
         if random.random() < 0.3:
             if is_strange(data):
@@ -336,6 +340,7 @@ async def _(ctx: GroupContext, res: Arparma):
             cost_chip=cost,
             own_chip=int(after),
             good_enough=good_enough,
+            is_april_fool=is_april_fool(),
         )
 
     await ctx.send_image(await get_render_pool().render("recipe_archive", archive_info))

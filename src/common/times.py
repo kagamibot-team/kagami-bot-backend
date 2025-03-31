@@ -2,6 +2,8 @@ import datetime
 
 import pytz
 
+from src.common.config import get_config
+
 
 def now_datetime():
     return to_utc8(datetime.datetime.now())
@@ -48,6 +50,16 @@ def is_holiday(time: datetime.datetime | None = None) -> bool:
     if time is None:
         time = now_datetime()
     return (time.date() - datetime.date(2023, 1, 1)).days % 7 in (0, 6)
+
+
+def is_april_fool(time: datetime.datetime | None = None) -> bool:
+    if time is None:
+        time = now_datetime()
+    return (
+        (time.month == 4 and time.day == 1)
+        or (time.month == 3 and time.day == 31)
+        or get_config().test_april_fool
+    )
 
 
 __all__ = ["to_utc8", "timestamp_to_datetime", "now_datetime", "replace_tz", "dttm"]

@@ -45,6 +45,7 @@ class RecipeArchiveData(BaseModel):
     own_chip: int
     good_enough: bool
     dialog: DialogueMessage | None = None
+    is_april_fool: bool
 
 
 class RecipeInfo(BaseModel):  # 一整条配方信息
