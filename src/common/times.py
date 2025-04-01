@@ -58,6 +58,12 @@ def is_april_fool(time: datetime.datetime | None = None) -> bool:
     return (
         (time.month == 4 and time.day == 1)
         or (time.month == 3 and time.day == 31)
+        or (time.month == 4 and time.day == 2)
+        or (time.month == 4 and time.day == 3)
+        or (time.month == 4 and time.day == 4)
+        or (time.month == 4 and time.day == 5)
+        or (time.month == 4 and time.day == 6)
+        or (time.month == 4 and time.day == 7)
         or get_config().test_april_fool
     )
 
