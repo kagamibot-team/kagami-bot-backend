@@ -665,6 +665,12 @@ updates = [
             UpdateContent(content="修复了一些小哥无法被查询的问题", tags=["修复"]),
         ],
     ),
+    VersionData(
+        version="1.3.2",
+        updates=[
+            UpdateContent(content="修复了使用皮肤盲盒时可能存在的数据回退", tags=["修复"]),
+        ],
+    )
 ]
 
 
