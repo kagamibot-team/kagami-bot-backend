@@ -56,6 +56,10 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         if do_admin:
             uid = None
         info = await get_award_info(uow, aid, uid, sid)
+        if do_admin and sid is not None:
+            sinfo = await uow.skins.get_info_v2(sid)
+        else:
+            sinfo = None
 
         main_pack = await uow.pack.get_main_pack(aid)
         linked_pack = await uow.pack.get_linked_packs(aid)
@@ -67,6 +71,10 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
         msg = await render_award_info_message(dt, count=sto, stats=sta)
         await ctx.send(msg)
     elif do_admin:
+        sprice = sinfo.biscuit_price if sinfo else None
+        sdraw = sinfo.can_draw if sinfo else None
+        sbuy = sinfo.can_buy if sinfo else None
+
         await ctx.reply(
             text(f"{info.display_name}【{info.level.display_name}】")
             + image(info.image_resource.path)
@@ -74,6 +82,7 @@ async def _(ctx: MessageContext, res: Arparma[Any]):
                 f"id={aid};\n"
                 f"main_pack={main_pack}; linked={linked_pack};\n"
                 f"sid={info.sid}; slevel={info.slevel};\n"
+                f"sprice={sprice}; sdraw={sdraw}; sbuy={sbuy};\n"
                 f"{info.description}"
             )
         )

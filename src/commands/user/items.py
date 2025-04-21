@@ -160,7 +160,8 @@ async def _(ctx: MessageContext):
         arg = UseItemArgs(count=1, target=target, user=user, use_time=now_datetime())
         uid = await uow.users.get_uid(ctx.sender_id)
         data = await item.use(uow, arg)
-        await item.send_use_message(ctx, data)
+
+    await item.send_use_message(ctx, data)
 
 
 root.link(dispatcher)
