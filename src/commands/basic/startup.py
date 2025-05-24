@@ -1,7 +1,6 @@
 from loguru import logger
 from nonebot import get_driver
 from nonebot.exception import ActionFailed
-from nonebot_plugin_alconna import UniMessage
 
 from src.base.event.event_root import root
 from src.base.message import image
@@ -59,3 +58,10 @@ if (itv := get_config().clean_browser_interval) > 0:
     async def _(ctx: OnebotStartedContext):
         pool = get_render_pool()
         await pool.clean()
+
+        idle, working, starting = await pool.get_worker_list()
+        if len(idle) == 0 and len(working) == 0 and len(starting) == 0:
+            logger.warning("没有可用的渲染器！尝试启动一个")
+            await pool.put()
+        else:
+            logger.debug("渲染器状态检测结束")

@@ -197,3 +197,7 @@ async def get_avatar_image(user_id: int):
         f"http://q.qlogo.cn/headimg_dl?dst_uin={user_id}&spec=640&img_type=jpg",
     )
     return req.content
+
+
+async def poke(bot: OnebotBotProtocol, group_id: int, user_id: int):
+    await bot.call_api("group_poke", group_id=group_id, user_id=user_id)

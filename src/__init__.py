@@ -3,6 +3,8 @@
 """
 
 import importlib
+from pathlib import Path
+import sys
 
 from loguru import logger
 
@@ -18,7 +20,10 @@ def load_secret_code(root: EventDispatcher):
         root.link(res)
     except ModuleNotFoundError as e:
         logger.error("请检查是否下载了 secret 代码包！")
-        raise e from e  # 这里抛出错误以后，将阻止程序启动。
+        if Path("./kagami-backend-secret").exists():
+            logger.warning("你已经把 kagami-backend-secret 下载下来了！把它重命名为 secret 吧！")
+        # raise e from e  # 这里抛出错误以后，将阻止程序启动。
+        sys.exit(-1)
 
 
 def init_src():

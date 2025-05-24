@@ -12,7 +12,7 @@ from nonebot.adapters.onebot.v11 import (
     MessageEvent,
     GroupMessageEvent,
 )
-from nonebot_plugin_alconna import Segment, Text
+from nonebot_plugin_alconna import Segment, Text, get_message_id
 from nonebot_plugin_alconna.uniseg.adapters import BUILDER_MAPPING  # type: ignore
 from nonebot_plugin_alconna.uniseg.message import UniMessage
 
@@ -115,7 +115,7 @@ class OnebotContext(MessageContext, Generic[TE]):
         if at:
             msg = UniMessage.at(str(self.sender_id)) + " " + msg
         if ref:
-            msg = UniMessage.reply(self.message.get_message_id()) + msg
+            msg = UniMessage.reply(get_message_id(self.event)) + msg
         return await self.send(msg)
 
     @property
@@ -151,7 +151,7 @@ class GroupContext(OnebotContext[GroupMessageEvent]):
             emoji_id (int | str | QQEmoji): 表情的 ID，参见[相关文档](https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html#EmojiType)
         """
 
-        await set_msg_emoji_like(self.bot, self.message.get_message_id(), emoji_id)
+        await set_msg_emoji_like(self.bot, get_message_id(self.event), emoji_id)
 
     async def is_group_admin(self) -> bool:
         """判断自己是不是这个群的管理员

@@ -2,6 +2,7 @@
 利用 Selenium 渲染图像
 """
 
+import functools
 from typing import Any
 import nonebot
 from src.common.config import get_config

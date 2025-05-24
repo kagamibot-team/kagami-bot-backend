@@ -192,6 +192,8 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
     if res.exist("kill"):
         work_id = res.query[str]("browser_work_id")
         assert work_id is not None
+        if not work_id.startswith("#"):
+            work_id = "#" + work_id
         await pool.kill(work_id)
         await ctx.reply("ok.")
         return
@@ -201,6 +203,7 @@ async def _(ctx: GroupContext, res: Arparma[Any]):
         "::browser-pool --list # 列出当前正在工作的渲染器\n"
         "::browser-pool --reload <browser_work_id>  # 重载指定渲染器\n"
         "::browser-pool --clean  # 清理不可用的渲染器\n"
+        "::browser-pool --kill <browser_work_id>  # 杀死一个渲染器\n"
         "::browser-pool --reload-all  # 重载所有渲染器"
     )
 

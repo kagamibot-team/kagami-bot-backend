@@ -7,6 +7,7 @@
 # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 import os
+import sys
 
 import nonebot
 import nonebot.config
@@ -18,6 +19,8 @@ from nonebot.adapters.onebot.v11 import Adapter as OneBotV11Adapter
 from alembic import command
 from alembic.config import Config
 from src import init_src
+
+main_logger = logger.bind(name="kagami")
 
 
 def pre_init():
@@ -36,6 +39,17 @@ def pre_init():
     if not os.path.exists("./data/db.sqlite3"):
         with open("./data/db.sqlite3", "wb") as _:
             pass
+
+    # 清理所有的日志
+    logger.remove()
+
+    # 添加 stdout 日志
+    logger.add(
+        sys.stdout,
+        level="DEBUG",
+        format="[<green>{time:HH:mm:ss}</green> <level>{level}</level> <cyan>{name}</cyan>:<cyan>{line}</cyan>] <level>{message}</level>",
+        filter=lambda record: not (record.get("name") or "").startswith("nonebot"),
+    )
 
     # 注册日志管理器
     logger.add(
@@ -69,7 +83,7 @@ def nb_init():
     初始化 Nonebot 引擎。在 Nonebot 从项目中解耦之前，无法移除。
     """
 
-    logger.success("NoneBot 引擎正在初始化")
+    main_logger.success("NoneBot 引擎正在初始化")
 
     # 加载配置文件
     # TODO: 将这里的配置文件读取也解耦，完全自己实现，然后从 dotenv 开始转移到 config.json 中
@@ -98,13 +112,13 @@ def init():
     driver = nonebot.get_driver()
     driver.register_adapter(OneBotV11Adapter)  # type: ignore
 
-    logger.info("检查数据库状态")
+    main_logger.info("检查数据库状态")
     config = Config("./alembic.ini")
     command.upgrade(config, "head")
 
-    logger.info("正在检测数据表的更改")
+    main_logger.info("正在检测数据表的更改")
     command.check(config)
-    logger.info("数据库没问题了")
+    main_logger.info("数据库没问题了")
 
     # 需要在 Nonebot 初始化完成后，才能导入插件内容
     init_src()
