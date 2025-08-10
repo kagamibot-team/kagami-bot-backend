@@ -4,6 +4,7 @@ from src.base.command_events import GroupContext
 from src.base.localdata import LocalStorageManager
 from src.base.onebot.onebot_enum import QQEmoji
 from src.common.command_deco import limited, listen_message, match_regex, require_awake
+from src.common.config import get_config
 from src.common.rd import get_random
 from src.common.times import now_datetime, timestamp_to_datetime, to_utc8
 from src.core.unit_of_work import get_unit_of_work
@@ -28,7 +29,7 @@ async def _(ctx: GroupContext, _):
             await ctx.reply("你今天已经签到过了哦～")
             return
 
-        if (now_date - last_sign_date).days > 1:
+        if (now_date - last_sign_date).days > 1 and get_config().do_check_sign_date:
             count = 1
         else:
             count += 1
