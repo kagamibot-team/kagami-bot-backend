@@ -93,15 +93,16 @@ async def shop(ctx: MessageContext, result: re.Match[str]) -> None:
         ]
         biscuits = await uow.biscuit.get(user.uid)
         chips = await uow.chips.get(user.uid)
-        if not is_april_fool():
-            jx_possibility = 0.8 if is_holiday() else 0
+        if True:
+            # jx_possibility = 0.8 if is_holiday() else 0
+            jx_possibility = 1
             dialog_origin = (
                 DialogFrom.pifudian_normal_jx
                 if get_random().random() < jx_possibility
                 else DialogFrom.pifudian_normal_shio
             )
-        else:
-            dialog_origin = DialogFrom.pifudian_april_fool
+        # else:
+        #     dialog_origin = DialogFrom.pifudian_april_fool
         dialogs = get_dialog(
             dialog_origin,
             {"shop"},
